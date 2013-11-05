@@ -17,6 +17,8 @@
 @end
 
 #ifdef ANDROID
+extern NSString* const UIPageViewControllerOptionSpineLocationKey;
+
 typedef NS_ENUM(NSInteger, UIPageViewControllerNavigationOrientation) {
     UIPageViewControllerNavigationOrientationHorizontal = 0,
     UIPageViewControllerNavigationOrientationVertical = 1
