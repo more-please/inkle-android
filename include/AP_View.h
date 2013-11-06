@@ -4,6 +4,7 @@
 
 #import "AP_Layer.h"
 
+@class AP_ViewController;
 @class AP_Window;
 
 @interface AP_View : NSObject
@@ -45,34 +46,36 @@
 - (CGRect)convertRect:(CGRect)rect toView:(AP_View *)view;
 - (CGRect)convertRect:(CGRect)rect fromView:(AP_View *)view;
 
-@property AP_Window* window;
-@property (readonly) AP_View* superview;
-@property (readonly) AP_Layer* layer;
-@property (readonly,copy) NSArray* subviews;
+@property(nonatomic) AP_Window* window;
+@property(nonatomic,readonly) AP_View* superview;
+@property(nonatomic,readonly) AP_Layer* layer;
+@property(nonatomic,readonly,copy) NSArray* subviews;
 
-@property CGRect bounds;
-@property CGRect frame;
-@property CGPoint center;
-@property CGAffineTransform transform;
-@property UIColor* backgroundColor;
+@property(nonatomic) CGRect bounds;
+@property(nonatomic) CGRect frame;
+@property(nonatomic) CGPoint center;
+@property(nonatomic) CGAffineTransform transform;
+@property(nonatomic) UIColor* backgroundColor;
 
-@property UIViewAutoresizing autoresizingMask;
-@property UIViewContentMode contentMode;
-@property CGFloat alpha;
+@property(nonatomic) UIViewAutoresizing autoresizingMask;
+@property(nonatomic) UIViewContentMode contentMode;
+@property(nonatomic) CGFloat alpha;
 
-@property(getter=isOpaque) BOOL opaque; // Default is YES.
-@property(getter=isHidden) BOOL hidden; // Default is NO.
+@property(nonatomic,getter=isOpaque) BOOL opaque; // Default is YES.
+@property(nonatomic,getter=isHidden) BOOL hidden; // Default is NO.
 
-@property BOOL clipsToBounds; // Defaults to NO. Do we really need this?
+@property(nonatomic) BOOL clipsToBounds; // Defaults to NO. Do we really need this?
 
-@property(getter=isUserInteractionEnabled) BOOL userInteractionEnabled; // default is YES.
+@property(nonatomic,getter=isUserInteractionEnabled) BOOL userInteractionEnabled; // default is YES.
 
-@property BOOL autoresizesSubviews; // default is YES. if set, subviews are adjusted according to their autoresizingMask if self.bounds changes
+@property(nonatomic) BOOL autoresizesSubviews; // default is YES. if set, subviews are adjusted according to their autoresizingMask if self.bounds changes
 
 // Internal methods.
 // The transform is from frame coordinates -> glViewport coordinates.
 - (void) renderGL:(CGAffineTransform)transform;
 - (void) renderSelfAndChildrenGL:(CGAffineTransform)transform;
+
+@property(nonatomic,weak) AP_ViewController* viewDelegate;
 
 @end
 

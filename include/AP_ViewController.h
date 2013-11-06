@@ -10,8 +10,10 @@
 
 - (BOOL) isViewLoaded;
 
-- (void) viewDidAppear:(BOOL)animated;
 - (void) viewDidLoad;
+
+- (void) viewWillAppear:(BOOL)animated;
+- (void) viewDidAppear:(BOOL)animated;
 - (void) viewWillDisappear:(BOOL)animated;
 - (void) viewDidDisappear:(BOOL)animated;
 
@@ -28,8 +30,8 @@
 - (void) presentModalViewController:(AP_ViewController*)modalViewController animated:(BOOL)animated;
 - (void) dismissModalViewControllerAnimated:(BOOL)animated;
 
-@property(readonly) UIInterfaceOrientation interfaceOrientation;
-@property(readonly) NSArray* childViewControllers;
+@property(nonatomic,readonly) UIInterfaceOrientation interfaceOrientation;
+@property(nonatomic,readonly) NSArray* childViewControllers;
 
 @end
 
