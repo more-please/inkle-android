@@ -6,6 +6,7 @@
 
 @property (readonly) NSString* assetName;
 @property (readonly) CGSize size;
+@property (readonly) CGSize pixelSize; // Added by Iain
 @property (readonly) CGFloat scale;
 
 + (AP_Image*) imageNamed:(NSString*)assetName;
