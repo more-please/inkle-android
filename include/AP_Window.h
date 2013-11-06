@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
-#import "AP_View.h"
+#import "AP_ViewController.h"
 
 #ifdef AP_REPLACE_UI
 
@@ -12,7 +12,7 @@
 
 @property (readonly) CGRect bounds;
 
-@property AP_View* rootView;
+@property AP_ViewController* rootViewController;
 
 @end
 

@@ -19,7 +19,6 @@
 
 - (void) addChildViewController:(AP_ViewController *)childController;
 - (void) removeFromParentViewController;
-
 - (void) willMoveToParentViewController:(AP_ViewController*)parent;
 - (void) didMoveToParentViewController:(AP_ViewController*)parent;
 
