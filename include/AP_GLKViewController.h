@@ -1,10 +1,11 @@
 #import <GLKit/GLKit.h>
 
+#import "AP_GLKView.h"
 #import "AP_ViewController.h"
 
 #ifdef AP_REPLACE_UI
 
-@interface AP_GLKViewController : AP_ViewController
+@interface AP_GLKViewController : AP_ViewController <AP_GLKViewDelegate>
 
 @end
 

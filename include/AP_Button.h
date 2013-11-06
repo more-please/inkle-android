@@ -12,6 +12,7 @@
 
 - (void) setTitle:(NSString*)title forState:(UIControlState)state;
 - (void) setTitleColor:(UIColor*)color forState:(UIControlState)state;
+- (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state;
 - (void) setImage:(AP_Image*)image forState:(UIControlState)state;
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state;
 
@@ -20,9 +21,10 @@
 - (AP_Image*)imageForState:(UIControlState)state;
 - (AP_Image*)backgroundImageForState:(UIControlState)state;
 
-@property(readonly) AP_Label* titleLabel;
-@property UIEdgeInsets imageEdgeInsets; // default is UIEdgeInsetsZero
-@property BOOL showsTouchWhenHighlighted; // default is NO.
+@property(nonatomic, readonly) AP_Label* titleLabel;
+@property(nonatomic) UIEdgeInsets imageEdgeInsets; // default is UIEdgeInsetsZero
+@property(nonatomic) BOOL showsTouchWhenHighlighted; // default is NO.
+@property(nonatomic) BOOL adjustsImageWhenHighlighted; // default is YES.
 
 @end
 
