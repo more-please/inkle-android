@@ -71,9 +71,8 @@
 @property(nonatomic) BOOL autoresizesSubviews; // default is YES. if set, subviews are adjusted according to their autoresizingMask if self.bounds changes
 
 // Internal methods.
-// The transform is from frame coordinates -> glViewport coordinates.
-- (void) renderGL:(CGAffineTransform)transform;
-- (void) renderSelfAndChildrenGL:(CGAffineTransform)transform;
+- (void) renderGL:(CGAffineTransform)boundsToGL;
+- (void) renderSelfAndChildrenGL:(CGAffineTransform)frameToGL;
 
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
