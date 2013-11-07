@@ -2,6 +2,8 @@
 
 #ifdef AP_REPLACE_UI
 
+#import "AP_Animation.h"
+#import "AP_AnimationProps.h"
 #import "AP_Layer.h"
 
 @class AP_ViewController;
@@ -46,20 +48,32 @@
 - (CGRect)convertRect:(CGRect)rect toView:(AP_View *)view;
 - (CGRect)convertRect:(CGRect)rect fromView:(AP_View *)view;
 
++ (void)animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
+
++ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
+
++ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations;
+
 @property(nonatomic) AP_Window* window;
 @property(nonatomic,readonly) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
 @property(nonatomic,readonly,copy) NSArray* subviews;
 
+// Animatable properties. These delegate to self.currentProps.
 @property(nonatomic) CGRect bounds;
 @property(nonatomic) CGRect frame;
 @property(nonatomic) CGPoint center;
 @property(nonatomic) CGAffineTransform transform;
 @property(nonatomic) UIColor* backgroundColor;
+@property(nonatomic) CGFloat alpha;
+
+// When rendering, use inFlightProps rather than currentProps.
+@property(nonatomic,readonly) AP_AnimationProps* previousProps;
+@property(nonatomic,readonly) AP_AnimationProps* inFlightProps;
+@property(nonatomic,readonly) AP_AnimationProps* currentProps;
 
 @property(nonatomic) UIViewAutoresizing autoresizingMask;
 @property(nonatomic) UIViewContentMode contentMode;
-@property(nonatomic) CGFloat alpha;
 
 @property(nonatomic,getter=isOpaque) BOOL opaque; // Default is YES.
 @property(nonatomic,getter=isHidden) BOOL hidden; // Default is NO.
@@ -70,11 +84,26 @@
 
 @property(nonatomic) BOOL autoresizesSubviews; // default is YES. if set, subviews are adjusted according to their autoresizingMask if self.bounds changes
 
-// Internal methods.
+// ----------------------------------------------------------------------
+// Internal stuff
+
+@property(nonatomic,weak) AP_ViewController* viewDelegate;
+
 - (void) renderGL:(CGAffineTransform)boundsToGL;
 - (void) renderSelfAndChildrenGL:(CGAffineTransform)frameToGL;
 
-@property(nonatomic,weak) AP_ViewController* viewDelegate;
+@property(nonatomic) AP_Animation* animation; // The current animation.
+
+// If an animation is currently being constructed, join it (and cancel any existing animation).
+- (void) maybeJoinActiveAnimation;
+
+- (void) updateAnimation; // Interpolate in-flight properties between previous and current.
+- (void) cancelAnimation; // Stop the current animation, leaving properties in mid-flight.
+- (void) finishAnimation; // Jump to the end of the current animation.
+
+// Callbacks from AP_Animation.
+- (void) animationWasCancelled;
+- (void) animationWasFinished;
 
 @end
 
