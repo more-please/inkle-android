@@ -17,8 +17,6 @@
 - (void) viewWillDisappear:(BOOL)animated;
 - (void) viewDidDisappear:(BOOL)animated;
 
-- (void) didReceiveMemoryWarning;
-
 - (void) addChildViewController:(AP_ViewController *)childController;
 - (void) removeFromParentViewController;
 - (void) willMoveToParentViewController:(AP_ViewController*)parent;
@@ -32,6 +30,12 @@
 
 @property(nonatomic,readonly) UIInterfaceOrientation interfaceOrientation;
 @property(nonatomic,readonly) NSArray* childViewControllers;
+
+// These methods are delegated from the real UIViewController.
+
+- (void) didReceiveMemoryWarning;
+- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
+- (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 
 @end
 
