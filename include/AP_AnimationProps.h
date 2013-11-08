@@ -1,4 +1,4 @@
-#import <Foundation/Foundation.h>
+#import <GLKit/GLKit.h>
 
 // Animatable properties of an AP_View.
 @interface AP_AnimationProps : NSObject <NSCopying>
@@ -8,7 +8,7 @@
 @property (nonatomic) CGPoint center;
 @property (nonatomic) CGAffineTransform transform;
 @property (nonatomic) CGFloat alpha;
-@property (nonatomic) UIColor* backgroundColor;
+@property (nonatomic) GLKVector4 backgroundColor;
 
 - (void) lerpFrom:(AP_AnimationProps*)src to:(AP_AnimationProps*)dest atTime:(CGFloat)time;
 

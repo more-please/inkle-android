@@ -89,8 +89,8 @@
 
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
-- (void) renderGL:(CGAffineTransform)boundsToGL;
-- (void) renderSelfAndChildrenGL:(CGAffineTransform)frameToGL;
+- (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
+- (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
 
 @property(nonatomic) AP_Animation* animation; // The current animation.
 

@@ -9,6 +9,7 @@
 @interface AP_Animation : NSObject
 
 + (NSArray*) animations;
++ (void) setMasterClock:(NSTimeInterval)time;
 
 - (id) initWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options completion:(void (^)(BOOL finished))completion;
 
