@@ -46,6 +46,7 @@ const int MIN_SOLID_WIDTH = 4 * BORDER_SIZE;
 // Maximum total width of all strips in an atlas, including 4 borders per row to allow for splits.
 const int ATLAS_MAX_TOTAL_WIDTH = ATLAS_ROWS * (ATLAS_SIZE - 4 * BORDER_SIZE);
 
+string ANDROID_DIR = ".";
 
 union Pixel {
     Pixel() : r(0), g(0), b(0), a(0) {}
@@ -270,15 +271,17 @@ public:
         cerr << "Writing atlas to temp file: " << pngFile << endl;
         stbi_write_png(pngFile.c_str(), ATLAS_SIZE, ATLAS_SIZE, 4, &data[0], ATLAS_SIZE * 4);
 
+        string binDir = ANDROID_DIR + "/3rd-party/bin";
         string texFile, cmd;
         if (format == FORMAT_ANDROID) {
             // KTX format (Android)
             texFile = tempFile + ".ktx";
-            cmd = "cd `dirname \\`which etcpack\\`` && etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx";
+            cmd = "cd " + binDir + " && ./etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx";
         } else if (format == FORMAT_IOS) {
             // PVR format (iOS)
             texFile = tempFile + ".pvr";
-            cmd = "texturetool -e PVRTC --channel-weighting-perceptual --bits-per-pixel-4 -f PVR -m -s -o " + texFile + " " + pngFile;
+            string texturetool = binDir + "/texturetool";
+            cmd = texturetool + " -e PVRTC --channel-weighting-perceptual --bits-per-pixel-4 -f PVR -m -s -o " + texFile + " " + pngFile;
         } else {
             cerr << "Unknown texture format!" << endl;
             exit(EXIT_FAILURE);
@@ -538,7 +541,7 @@ public:
         for (int i = 0; i < atlases.size(); ++i) {
             string filename = "img_atlas_" + to_string(i) + ".tex";
             cerr << "Writing " << filename << endl;
-            atlases[i].writePng(filename + ".png");
+//            atlases[i].writePng(filename + ".png");
             atlases[i].writePackage(writer, filename.c_str(), format);
         }
     }
@@ -565,6 +568,15 @@ void usage() {
 }
 
 int main(int argc, const char* argv[]) {
+    ANDROID_DIR = argv[0];
+    for (int i = ANDROID_DIR.size() - 1; i >= 0; --i) {
+        if (ANDROID_DIR[i] == '/') {
+            ANDROID_DIR = ANDROID_DIR.substr(0, i);
+            break;
+        }
+    }
+    ANDROID_DIR = ANDROID_DIR + "/..";
+
     bool verbose = false;
     string formatStr;
     string outfile;
