@@ -11,6 +11,8 @@
 
 @interface AP_View : NSObject
 
+@property (nonatomic) BOOL animationTrap;
+
 - (AP_View*) initWithFrame:(CGRect)frame;
 
 - (void) addSubview:(AP_View*)view;
@@ -48,6 +50,16 @@
 - (CGRect)convertRect:(CGRect)rect toView:(AP_View *)view;
 - (CGRect)convertRect:(CGRect)rect fromView:(AP_View *)view;
 
+- (void)willRemoveSubview:(AP_View*)subview;
+- (void)didAddSubview:(AP_View*)subview;
+
+- (void)willMoveToSuperview:(AP_View*)newSuperview;
+- (void)didMoveToSuperview;
+
+- (void)willMoveToWindow:(AP_Window*)newWindow;
+- (void)didMoveToWindow;
+
+
 + (void)animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
 
 + (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
@@ -72,6 +84,7 @@
 @property(nonatomic,readonly) AP_AnimationProps* inFlightProps;
 @property(nonatomic,readonly) AP_AnimationProps* currentProps;
 
+@property(nonatomic) BOOL autoresizesSubviews; // default is YES.
 @property(nonatomic) UIViewAutoresizing autoresizingMask;
 @property(nonatomic) UIViewContentMode contentMode;
 
@@ -81,8 +94,6 @@
 @property(nonatomic) BOOL clipsToBounds; // Defaults to NO. Do we really need this?
 
 @property(nonatomic,getter=isUserInteractionEnabled) BOOL userInteractionEnabled; // default is YES.
-
-@property(nonatomic) BOOL autoresizesSubviews; // default is YES. if set, subviews are adjusted according to their autoresizingMask if self.bounds changes
 
 // ----------------------------------------------------------------------
 // Internal stuff
@@ -95,7 +106,7 @@
 @property(nonatomic) AP_Animation* animation; // The current animation.
 
 // If an animation is currently being constructed, join it (and cancel any existing animation).
-- (void) maybeJoinActiveAnimation;
+- (BOOL) maybeJoinActiveAnimation;
 
 - (void) updateAnimation; // Interpolate in-flight properties between previous and current.
 - (void) cancelAnimation; // Stop the current animation, leaving properties in mid-flight.
