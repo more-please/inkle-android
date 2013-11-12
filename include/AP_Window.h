@@ -14,6 +14,8 @@
 
 @property AP_ViewController* rootViewController;
 
++ (CGSize) realScreenSize;
+
 @end
 
 #else

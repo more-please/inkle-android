@@ -100,6 +100,7 @@
 
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
+- (void) updateGL;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
 
@@ -115,6 +116,10 @@
 // Callbacks from AP_Animation.
 - (void) animationWasCancelled;
 - (void) animationWasFinished;
+
+// Traversing the view hierarchy
+- (void) visitWithBlock:(void(^)(AP_View*))block;
+- (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block;
 
 @end
 
