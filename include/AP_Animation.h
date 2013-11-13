@@ -11,6 +11,8 @@
 + (NSArray*) animations;
 + (void) setMasterClock:(NSTimeInterval)time;
 
+@property (nonatomic) NSString* tag;
+
 - (id) initWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options completion:(void (^)(BOOL finished))completion;
 
 - (void) addView:(AP_View*)view;

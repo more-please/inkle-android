@@ -106,6 +106,8 @@
 
 @property(nonatomic) AP_Animation* animation; // The current animation.
 
++ (void) debugAnimationWithTag:(NSString*)tag;
+
 // If an animation is currently being constructed, join it (and cancel any existing animation).
 - (BOOL) maybeJoinActiveAnimation;
 
