@@ -15,6 +15,7 @@
 @property AP_ViewController* rootViewController;
 
 + (CGSize) realScreenSize;
++ (CGFloat) realScreenScale;
 
 @end
 

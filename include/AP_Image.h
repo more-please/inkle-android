@@ -4,10 +4,10 @@
 
 @interface AP_Image : NSObject
 
-@property (readonly) NSString* assetName;
-@property (readonly) CGSize size;
-@property (readonly) CGSize pixelSize; // Added by Iain
-@property (readonly) CGFloat scale;
+@property (nonatomic,readonly) NSString* assetName;
+@property (nonatomic,readonly) CGSize size;
+@property (nonatomic,readonly) CGSize pixelSize; // Added by Iain
+@property (nonatomic) CGFloat scale;
 
 + (AP_Image*) imageNamed:(NSString*)assetName;
 
