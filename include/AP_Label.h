@@ -17,6 +17,8 @@
 @property(nonatomic) BOOL adjustsFontSizeToFitWidth; // default is NO
 @property(nonatomic) CGFloat minimumFontSize; // default is 0.0
 
+- (void) drawTextInRect:(CGRect)rect;
+
 @end
 
 #else
