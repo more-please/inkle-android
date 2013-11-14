@@ -5,7 +5,7 @@
 
 #include "stb_image_write.h"
 
-void superellipse(const char* filename, int size, double border, double exponent) {
+void superellipse(const char* filename, int size, double border, bool gradient, double exponent) {
     unsigned char* data = (unsigned char*) malloc(size * size);
     double center = size / 2;
     double radius = center - border;
@@ -14,10 +14,13 @@ void superellipse(const char* filename, int size, double border, double exponent
         for (int x = 0; x < size; ++x) {
             double xf = abs(x - center + 0.5) / radius;
             unsigned char* c = &data[y * size + x];
-            if (pow(xf, exponent) + pow(yf, exponent) < 1) {
-                *c = 0;
+            double f = pow(xf, exponent) + pow(yf, exponent);
+            if (gradient) {
+                if (f < 0) f = 0;
+                if (f > 1) f = 1;
+                *c = 255 * (1 - f);
             } else {
-                *c = 255;
+                *c = (f < 1) ? 0 : 255;
             }
         }
     }
@@ -32,6 +35,7 @@ void usage() {
         "  -o, --outfile: output file (required)\n"
         "  -s, --size: size in pixels (default 1024)\n"
         "  -b, --border: border in pixels (default 128)\n"
+        "  -g, --gradient: generate shaded rather than solid output\n"
         "  -e, --exponent: exponent of the superellipse (default 2.0)\n\n");
     fflush(stderr);
     exit(1);
@@ -46,6 +50,7 @@ int main(int argc, const char* argv[]) {
     int size = 1024;
     double border = 128;
     double exponent = 2.0;
+    bool gradient = false;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
         if (isFlag(s, "-o", "--outfile")) {
@@ -56,6 +61,8 @@ int main(int argc, const char* argv[]) {
             border = strtod(argv[++i], NULL);
         } else if (isFlag(s, "-e", "--exponent")) {
             exponent = strtod(argv[++i], NULL);
+        } else if (isFlag(s, "-g", "--gradient")) {
+            gradient = true;
         } else {
             fprintf(stderr, "Bad argument '%s'\n\n", s);
             usage();
@@ -65,6 +72,6 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Missing --outfile\n\n");
         usage();
     }
-    superellipse(outfile, size, border, exponent);
+    superellipse(outfile, size, border, gradient, exponent);
     return 0;
 }
