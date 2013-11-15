@@ -8,9 +8,10 @@
 
 - (void)addTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
 
-@property(getter=isEnabled) BOOL enabled; // default is YES
-@property(getter=isHighlighted) BOOL highlighted; // default is NO
-@property(getter=isSelected) BOOL selected; // default is NO
+@property(nonatomic,getter=isEnabled) BOOL enabled; // default is YES
+@property(nonatomic,getter=isHighlighted) BOOL highlighted; // default is NO
+@property(nonatomic,getter=isSelected) BOOL selected; // default is NO
+@property(nonatomic,readonly,getter=isTracking) BOOL tracking;
 
 @end
 

@@ -22,6 +22,9 @@
 // Create a new font that is identical to the current font except the specified size
 - (AP_Font*) fontWithSize:(CGFloat)fontSize;
 
+// Replacement for [NSString sizeWithFont:]
+- (CGSize) sizeOfText:(NSString*)text;
+
 @property(nonatomic,readonly) UIFont* realFont;
 
 @end

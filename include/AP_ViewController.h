@@ -2,9 +2,10 @@
 
 #ifdef AP_REPLACE_UI
 
+#import "AP_Responder.h"
 #import "AP_View.h"
 
-@interface AP_ViewController : NSObject
+@interface AP_ViewController : AP_Responder
 
 @property(nonatomic, retain) AP_View *view;
 

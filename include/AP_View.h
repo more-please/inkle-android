@@ -5,11 +5,13 @@
 #import "AP_Animation.h"
 #import "AP_AnimationProps.h"
 #import "AP_Layer.h"
+#import "AP_Responder.h"
 
+@class AP_Event;
 @class AP_ViewController;
 @class AP_Window;
 
-@interface AP_View : NSObject
+@interface AP_View : AP_Responder
 
 @property (nonatomic) BOOL animationTrap;
 
@@ -21,12 +23,12 @@
 - (void) insertSubview:(AP_View*)view aboveSubview:(AP_View*)siblingSubview;
 - (void) removeFromSuperview;
 
-- (void)bringSubviewToFront:(AP_View*)view;
-- (void)sendSubviewToBack:(AP_View*)view;
+- (void) bringSubviewToFront:(AP_View*)view;
+- (void) sendSubviewToBack:(AP_View*)view;
 
 - (BOOL) isDescendantOfView:(AP_View*)view; // returns YES for self.
 - (AP_View*) viewWithTag:(NSInteger)tag; // recursive search. includes self
-@property NSInteger tag; // default is 0
+@property (nonatomic) NSInteger tag; // default is 0
 
 - (void) addGestureRecognizer:(UIGestureRecognizer*)gestureRecognizer;
 
@@ -42,8 +44,8 @@
 - (BOOL) resignFirstResponder;
 - (BOOL) isFirstResponder;
 
-- (AP_View*) hitTest:(CGPoint)point withEvent:(UIEvent *)event;
-- (BOOL) pointInside:(CGPoint)point withEvent:(UIEvent *)event;
+- (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event;
+- (BOOL) pointInside:(CGPoint)point withEvent:(AP_Event*)event;
 
 - (CGPoint)convertPoint:(CGPoint)point toView:(AP_View *)view;
 - (CGPoint)convertPoint:(CGPoint)point fromView:(AP_View *)view;
@@ -58,7 +60,6 @@
 
 - (void)willMoveToWindow:(AP_Window*)newWindow;
 - (void)didMoveToWindow;
-
 
 + (void)animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
 
