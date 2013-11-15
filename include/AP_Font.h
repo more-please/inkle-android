@@ -25,8 +25,15 @@
 // Replacement for [NSString sizeWithFont:]
 - (CGSize) sizeOfText:(NSString*)text;
 
+// "Toll-free bridging" between AP_Font and UI_Font
 @property(nonatomic,readonly) UIFont* realFont;
+@property(nonatomic,readonly) AP_Font* fakeFont;
 
+@end
+
+@interface UIFont(AP)
+@property(nonatomic,readonly) UIFont* realFont;
+@property(nonatomic,readonly) AP_Font* fakeFont;
 @end
 
 #else
