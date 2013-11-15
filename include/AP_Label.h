@@ -19,6 +19,7 @@
 @property(nonatomic) CGFloat minimumFontSize; // default is 0.0
 
 - (void) drawTextInRect:(CGRect)rect;
+- (void) drawAttributedText:(NSMutableAttributedString*)text inRect:(CGRect)rect;
 
 @end
 
