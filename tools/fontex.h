@@ -9,7 +9,11 @@ typedef short int16_t;
 typedef unsigned short uint16_t;
 
 struct Header {
-    int16_t lineHeight;
+    char magic[2]; // 'fx'
+    int16_t ascent;
+    int16_t descent;
+    int16_t leading;
+    int16_t emSize;
     int16_t numGlyphs;
     int16_t numLigatures;
     int16_t numKerningPairs;
@@ -32,8 +36,8 @@ struct Glyph {
 
     struct SizeCmp {
         bool operator()(const Glyph& lhs, const Glyph& rhs) {
-            if (lhs.height() != rhs.height()) return lhs.height() < rhs.height();
-            if (lhs.width() != rhs.width()) return lhs.width() < rhs.width();
+            if (lhs.height() != rhs.height()) return lhs.height() > rhs.height();
+            if (lhs.width() != rhs.width()) return lhs.width() > rhs.width();
             return CodepointCmp()(lhs, rhs);
         }
     };

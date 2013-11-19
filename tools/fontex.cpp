@@ -49,6 +49,7 @@ public:
 
     explicit Fontex(const unsigned char* fontData)
         : _fontData(fontData)
+        , _scale(0)
         , gap(8)
         , textureSize(1024)
     {
@@ -68,31 +69,71 @@ public:
                 maybeKern(g1.codepoint, g2.codepoint);
             }
         }
-        sort(_glyphs.begin(), _glyphs.end(), Glyph::SizeCmp());
     }
 
-    void writePng(const char* filename) {
+    void layout() {
+        sort(_glyphs.begin(), _glyphs.end(), Glyph::SizeCmp());
+
         // Find the appropriate scale.
         double maxScale = 1;
         double minScale = 0;
         while ((maxScale - minScale) > 1e-12) {
             double midScale = (minScale + maxScale) / 2;
-            if (layout(midScale) >= 0) {
+            if (tryLayout(midScale) >= 0) {
                 maxScale = midScale;
             } else {
                 minScale = midScale;
             }
         }
+        _scale = minScale;
+        tryLayout(_scale);
+    }
 
+    void writeFont(const char* filename) {
+        sort(_glyphs.begin(), _glyphs.end(), Glyph::CodepointCmp());
+        sort(_ligatures.begin(), _ligatures.end());
+        sort(_kerningPairs.begin(), _kerningPairs.end());
+
+        fprintf(stderr, "Writing font: %s\n", filename);
+        FILE* f = fopen(filename, "wb");
+
+        int ascent, descent, leading;
+        stbtt_GetFontVMetrics(&_font, &ascent, &descent, &leading);
+        
+        Header h;
+        strncpy(h.magic, "fx", 2);
+        h.ascent = ascent;
+        h.descent = descent;
+        h.leading = leading;
+        h.emSize = floor(0.5 + 1.0 / stbtt_ScaleForMappingEmToPixels(&_font, 1.0));
+        h.numGlyphs = _glyphs.size();
+        h.numLigatures = _ligatures.size();
+        h.numKerningPairs = _kerningPairs.size();
+
+        fwrite(&h, sizeof(Header), 1, f);
+        for (int i = 0; i < _glyphs.size(); ++i) {
+            fwrite(&_glyphs[i], sizeof(Glyph), 1, f);
+        }
+        for (int i = 0; i < _ligatures.size(); ++i) {
+            fwrite(&_ligatures[i], sizeof(Ligature), 1, f);
+        }
+        for (int i = 0; i < _kerningPairs.size(); ++i) {
+            fwrite(&_kerningPairs[i], sizeof(KerningPair), 1, f);
+        }
+        fclose(f);
+    }
+
+    void writePng(const char* filename) {
+        fprintf(stderr, "Writing PNG: %s\n", filename);
         unsigned char* data = (unsigned char*) calloc(textureSize, textureSize);
-        render(minScale, data);
-        fprintf(stderr, "Writing %s\n", filename);
+        render(_scale, data);
         stbi_write_png(filename, textureSize, textureSize, 1, data, textureSize);
         free(data);
     }
 
 private:
     const unsigned char* _fontData;
+    double _scale;
     stbtt_fontinfo _font;
     vector<Glyph> _glyphs;
     vector<Ligature> _ligatures;
@@ -100,7 +141,7 @@ private:
 
     void addCodepoint(int codepoint) {
         if (!stbtt_FindGlyphIndex(&_font, codepoint)) {
-            fprintf(stderr, "Codepoint not found: %d\n", codepoint);
+            fprintf(stderr, "Warning: missing codepoint 0x%04x\n", codepoint);
         }
         int x0, y0, x1, y1, advance, bearing;
         stbtt_GetCodepointBitmapBox(&_font, codepoint, 1.0, 1.0, &x0, &y0, &x1, &y1);
@@ -135,7 +176,7 @@ private:
     }
 
     // Return the amount by which we overflow the texture at this scale.
-    long layout(double scale) {
+    long tryLayout(double scale) {
         long w = 0, h = 0;
         long x = 1;
         long y = 1;
@@ -145,8 +186,9 @@ private:
             if (x + w + 1 > textureSize) {
                 x = 1;
                 y += h + gap;
+                h = 0;
             }
-            h = ceil(scale * g.height());
+            h = max(h, long(ceil(scale * g.height())));
             g.xTex = x;
             g.yTex = y;
             x += w + gap;
@@ -157,6 +199,7 @@ private:
         }
         y += h + 1;
         long result = (x + textureSize * y) - (textureSize * textureSize);
+//         fprintf(stderr, "Slop at scale %f is %ld\n", scale, result);
         return result;
     }
 
@@ -166,6 +209,7 @@ private:
             long w = ceil(scale * g.width());
             long h = ceil(scale * g.height());
             unsigned char* ptr = data + (g.yTex * textureSize) + g.xTex;
+//             fprintf(stderr, "Rendering codepoint 0x%04x at %d,%d (size %ld,%ld)\n", g.codepoint, g.xTex, g.yTex, w, h);
             stbtt_MakeCodepointBitmap(&_font, ptr, w, h, textureSize, scale, scale, g.codepoint);
         }
     }
@@ -176,8 +220,9 @@ private:
 void usage() {
     fprintf(stderr,
         "Generates a PNG image containing a font table.\n\n"
-        "Usage: fontex font.ttf -o pngfile [-s size] [-g gap]\n"
-        "  -o, --outfile: output file (required)\n"
+        "Usage: fontex font.ttf -p out.png -f out.apf [-s size] [-g gap]\n"
+        "  -p, --png: output PNG file\n"
+        "  -f, --font: output font data file\n"
         "  -s, --size: size in pixels (default 1024)\n"
         "  -g, --gap: minimum gap between characters (default 8)\n");
     fflush(stderr);
@@ -190,13 +235,16 @@ bool isFlag(const char* s, const char* flag1, const char* flag2) {
 
 int main(int argc, const char* argv[]) {
     const char* infile = NULL;
-    const char* outfile = NULL;
+    const char* outpng = NULL;
+    const char* outfont = NULL;
     int size = 1024;
     int gap = 8;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
-        if (isFlag(s, "-o", "--outfile")) {
-            outfile = argv[++i];
+        if (isFlag(s, "-p", "--png")) {
+            outpng = argv[++i];
+        } else if (isFlag(s, "-f", "--font")) {
+            outfont = argv[++i];
         } else if (isFlag(s, "-s", "--size")) {
             size = atoi(argv[++i]);
         } else if (isFlag(s, "-g", "--gap")) {
@@ -212,10 +260,6 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "No input file specified\n\n");
         usage();
     }
-    if (!outfile) {
-        fprintf(stderr, "Missing --outfile\n\n");
-        usage();
-    }
 
     static unsigned char buffer[1<<25];
     fread(buffer, 1, 1<<25, fopen(infile, "rb"));
@@ -223,6 +267,12 @@ int main(int argc, const char* argv[]) {
     Fontex fontex(buffer);
     fontex.textureSize = size;
     fontex.gap = gap;
-    fontex.writePng(outfile);
+    fontex.layout();
+    if (outpng) {
+        fontex.writePng(outpng);
+    }
+    if (outfont) {
+        fontex.writeFont(outfont);
+    }
     return 0;
 }
