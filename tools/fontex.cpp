@@ -27,6 +27,7 @@ static const Range kRanges[] = {
     { 0x2018, 0x2019 }, // Single quotes
     { 0x201c, 0x201d }, // Double quotes
     { 0x2013, 0x2014 }, // en-dash, em-dash
+    { 0x2026, 0x2026 }, // Ellipsis
     { 0, 0 }
 };
 
