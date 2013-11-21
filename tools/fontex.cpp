@@ -76,10 +76,10 @@ public:
         sort(_glyphs.begin(), _glyphs.end(), Glyph::SizeCmp());
 
         // Find the appropriate scale.
-        double maxScale = 1;
-        double minScale = 0;
-        while ((maxScale - minScale) > 1e-12) {
-            double midScale = (minScale + maxScale) / 2;
+        float maxScale = 1;
+        float minScale = 0;
+        while ((maxScale - minScale) > 1e-6) {
+            float midScale = (minScale + maxScale) / 2;
             if (tryLayout(midScale) >= 0) {
                 maxScale = midScale;
             } else {
@@ -102,7 +102,8 @@ public:
         stbtt_GetFontVMetrics(&_font, &ascent, &descent, &leading);
         
         Header h;
-        strncpy(h.magic, "fx", 2);
+        memset(&h, 0, sizeof(Header));
+        strncpy(h.magic, "fontex02", 8);
         h.ascent = ascent;
         h.descent = descent;
         h.leading = leading;
@@ -110,6 +111,8 @@ public:
         h.numGlyphs = _glyphs.size();
         h.numLigatures = _ligatures.size();
         h.numKerningPairs = _kerningPairs.size();
+        h.textureSize = textureSize;
+        h.textureScale = _scale;
 
         fwrite(&h, sizeof(Header), 1, f);
         for (int i = 0; i < _glyphs.size(); ++i) {
@@ -134,7 +137,7 @@ public:
 
 private:
     const unsigned char* _fontData;
-    double _scale;
+    float _scale;
     stbtt_fontinfo _font;
     vector<Glyph> _glyphs;
     vector<Ligature> _ligatures;
@@ -177,40 +180,44 @@ private:
     }
 
     // Return the amount by which we overflow the texture at this scale.
-    long tryLayout(double scale) {
-        long w = 0, h = 0;
+    long tryLayout(float scale) {
         long x = 1;
         long y = 1;
+        long hMax = 0;
         for (vector<Glyph>::iterator i = _glyphs.begin(); i != _glyphs.end(); ++i) {
             Glyph& g = *i;
-            w = ceil(scale * g.width());
+            long w = 1 + ceil(scale * g.width());
+            long h = 1 + ceil(scale * g.height());
             if (x + w + 1 > textureSize) {
                 x = 1;
-                y += h + gap;
-                h = 0;
+                y += hMax + gap;
+                hMax = 0;
             }
-            h = max(h, long(ceil(scale * g.height())));
+            hMax = max(h, hMax);
             g.xTex = x;
             g.yTex = y;
             x += w + gap;
         }
-        if (x + w + 1 > textureSize) {
-            x = 1;
-            y += h + gap;
-        }
-        y += h + 1;
+        Glyph& g = _glyphs[_glyphs.size() - 1];
+        x = g.xTex + 1 + ceil(scale * g.width());
+        y = g.yTex + hMax;
+//         fprintf(stderr, "Final glyph has coordinates: (%d,%d), (%d,%d)\n", g.xTex0, g.yTex0, g.xTex1, g.yTex1);
         long result = (x + textureSize * y) - (textureSize * textureSize);
-//         fprintf(stderr, "Slop at scale %f is %ld\n", scale, result);
+//         fprintf(stderr, "Slop at scale %f is %ld\n", scale * 1e6, result);
         return result;
     }
 
-    void render(double scale, unsigned char* data) {
+    void render(float scale, unsigned char* data) {
+//         fprintf(stderr, "Rendering at scale: %f\n", scale * 1e6);
         for (vector<Glyph>::iterator i = _glyphs.begin(); i != _glyphs.end(); ++i) {
             const Glyph& g = *i;
-            long w = ceil(scale * g.width());
-            long h = ceil(scale * g.height());
+            long w = 1 + ceil(scale * g.width());
+            long h = 1 + ceil(scale * g.height());
             unsigned char* ptr = data + (g.yTex * textureSize) + g.xTex;
-//             fprintf(stderr, "Rendering codepoint 0x%04x at %d,%d (size %ld,%ld)\n", g.codepoint, g.xTex, g.yTex, w, h);
+//             fprintf(stderr, "Rendering codepoint 0x%04x at %d,%d (size %ld,%ld)\n", g.codepoint, g.xTex0, g.yTex0, w, h);
+            if (w >= textureSize || h >= textureSize) {
+                continue;
+            }
             stbtt_MakeCodepointBitmap(&_font, ptr, w, h, textureSize, scale, scale, g.codepoint);
         }
     }
@@ -225,7 +232,7 @@ void usage() {
         "  -p, --png: output PNG file\n"
         "  -f, --font: output font data file\n"
         "  -s, --size: size in pixels (default 1024)\n"
-        "  -g, --gap: minimum gap between characters (default 8)\n");
+        "  -g, --gap: minimum gap between characters (default 4)\n");
     fflush(stderr);
     exit(1);
 }
@@ -239,7 +246,7 @@ int main(int argc, const char* argv[]) {
     const char* outpng = NULL;
     const char* outfont = NULL;
     int size = 1024;
-    int gap = 8;
+    int gap = 4;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
         if (isFlag(s, "-p", "--png")) {
