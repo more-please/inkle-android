@@ -22,6 +22,10 @@
 - (AP_Font_Run*) runForString:(NSString*)string;
 - (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size;
 
++ (AP_Font*) systemFontOfSize:(CGFloat)fontSize;
++ (AP_Font*) boldSystemFontOfSize:(CGFloat)fontSize;
++ (AP_Font*) italicSystemFontOfSize:(CGFloat)fontSize;
+
 @end
 
 #else

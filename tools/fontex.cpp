@@ -22,6 +22,7 @@ struct Range {
 };
 
 static const Range kRanges[] = {
+    { 10, 10 }, // Newline
     { 32, 126 }, // Basic ASCII
     { 192, 255 }, // Accented letters
     { 0x2018, 0x2019 }, // Single quotes
@@ -144,12 +145,18 @@ private:
     vector<KerningPair> _kerningPairs;
 
     void addCodepoint(int codepoint) {
-        if (!stbtt_FindGlyphIndex(&_font, codepoint)) {
-            fprintf(stderr, "Warning: missing codepoint 0x%04x\n", codepoint);
+        int metricsCodepoint = codepoint;
+        if (codepoint == 10) {
+            // Newline, use metrics for space.
+            metricsCodepoint = 32;
+        }
+        if (!stbtt_FindGlyphIndex(&_font, metricsCodepoint)) {
+            fprintf(stderr, "Warning: missing codepoint 0x%04x, skipping\n", codepoint);
+            return;
         }
         int x0, y0, x1, y1, advance, bearing;
-        stbtt_GetCodepointBitmapBox(&_font, codepoint, 1.0, 1.0, &x0, &y0, &x1, &y1);
-        stbtt_GetCodepointHMetrics(&_font, codepoint, &advance, &bearing);
+        stbtt_GetCodepointBitmapBox(&_font, metricsCodepoint, 1.0, 1.0, &x0, &y0, &x1, &y1);
+        stbtt_GetCodepointHMetrics(&_font, metricsCodepoint, &advance, &bearing);
         Glyph g;
         g.codepoint = codepoint;
         g.advance = advance;
