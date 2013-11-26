@@ -15,7 +15,7 @@
 
 - (const fontex_glyph_t*) dataForGlyph:(unsigned char)glyph;
 - (int16_t) kerningForGlyph1:(unsigned char)c1 glyph2:(unsigned char)c2;
-- (BOOL) ligatureForGlyph1:(unsigned char)c1 glyph2:(unsigned char)c2 ligature:(unsigned char*)ligature;
+- (BOOL) ligatureForGlyph1:(unsigned char)c1 glyph2:(unsigned char)c2 ligature:(unsigned char*)ligature index:(int)index;
 
 - (BOOL) isWordBreak:(unsigned char)c;
 - (BOOL) isLineBreak:(unsigned char)c;
