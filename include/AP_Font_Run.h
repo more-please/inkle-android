@@ -9,6 +9,8 @@
 @property(nonatomic,readonly) CGFloat lineHeight;
 @property(nonatomic,readonly) CGSize size;
 @property(nonatomic,readonly) size_t numChars;
+@property(nonatomic,readonly) int start;
+@property(nonatomic,readonly) int end;
 
 @property(nonatomic) CGPoint origin;
 @property(nonatomic) UIColor* textColor; // default is nil (text draws black)
