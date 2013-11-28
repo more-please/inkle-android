@@ -10,5 +10,6 @@
 - (GLint) attr:(NSString*)name;
 - (GLint) uniform:(NSString*)name;
 - (void) use;
+- (BOOL) link;
 
 @end
