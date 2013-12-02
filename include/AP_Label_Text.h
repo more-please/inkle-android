@@ -4,7 +4,7 @@
 
 @class AP_Font;
 
-@interface AP_Label_Text : NSString
+@interface AP_Label_Text : NSObject
 - (AP_Label_Text*) initWithText:(NSString*)text;
 - (CGSize) sizeWithFont:(AP_Font*)font constrainedToSize:(CGSize)size; // Uses NSLineBreakModeWordWrap
 - (CGSize) sizeWithFont:(AP_Font*)font;
@@ -14,6 +14,7 @@
 - (NSUInteger)length;
 - (unichar)characterAtIndex:(NSUInteger)index;
 - (void)getCharacters:(unichar *)buffer range:(NSRange)aRange;
+- (BOOL)isEqualToString:(NSString *)aString;
 @end
 
 #endif

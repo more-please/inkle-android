@@ -1,12 +1,11 @@
 #ifndef _fontex_h
 #define _fontex_h
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 namespace fontex {
 #endif
-
-typedef short int16_t;
-typedef unsigned short uint16_t;
 
 typedef struct Header {
     char magic[8]; // 'fontex02'
