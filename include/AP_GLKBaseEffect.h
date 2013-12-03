@@ -5,6 +5,16 @@
 #import "AP_GLKEffectPropertyTexture.h"
 #import "AP_GLKEffectPropertyTransform.h"
 
+// On some devices (I'm looking at you, Qualcomm) the attribute indices must be fully packed: we
+// can't reserve any indices for unused attributes. Our renderer doesn't have "normal" or "color".
+enum {
+    AP_GLKVertexAttribPosition,
+    // GLKVertexAttribNormal,
+    // GLKVertexAttribColor,
+    AP_GLKVertexAttribTexCoord0,
+    // GLKVertexAttribTexCoord1
+};
+
 @interface AP_GLKBaseEffect : NSObject
 
 @property (nonatomic, readonly) AP_GLKEffectPropertyTransform* transform; // Identity Matrices
@@ -17,5 +27,10 @@
 @end
 
 #else
+
+#define AP_GLKVertexAttribPosition GLKVertexAttribPosition
+#define AP_GLKVertexAttribTexCoord0 GLKVertexAttribTexCoord0
+
 typedef GLKBaseEffect AP_GLKBaseEffect;
+
 #endif
