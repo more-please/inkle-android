@@ -15,6 +15,10 @@
 - (unichar)characterAtIndex:(NSUInteger)index;
 - (void)getCharacters:(unichar *)buffer range:(NSRange)aRange;
 - (BOOL)isEqualToString:(NSString *)aString;
+
+// Bit of a hack... if we copy this object, return a real string!
+// This lets us "cast" to NSString safely on both Android and iOS.
+- (NSString*) copy;
 @end
 
 #endif
