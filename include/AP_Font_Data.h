@@ -7,6 +7,7 @@
 
 @property(nonatomic,readonly) NSString* name;
 @property(nonatomic,readonly) const fontex_header_t* header;
+@property(nonatomic,readonly) AP_GLTexture* texture;
 
 + (AP_Font_Data*) fontDataNamed:(NSString*)name;
 
