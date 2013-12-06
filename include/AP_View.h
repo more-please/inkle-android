@@ -70,7 +70,7 @@
 @property(nonatomic) AP_Window* window;
 @property(nonatomic,readonly) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
-@property(nonatomic,readonly,copy) NSArray* subviews;
+@property(nonatomic,readonly,copy) NSMutableArray* subviews;
 
 // Animatable properties. These delegate to self.currentProps.
 @property(nonatomic) CGRect bounds;
