@@ -9,6 +9,7 @@
 @interface AP_Animation : NSObject
 
 + (NSArray*) animations;
++ (NSTimeInterval) masterClock;
 + (void) setMasterClock:(NSTimeInterval)time;
 
 @property (nonatomic) NSString* tag;
