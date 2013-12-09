@@ -26,6 +26,7 @@
 @property(nonatomic,readonly) AP_Label* titleLabel;
 @property(nonatomic,readonly) AP_ImageView *imageView;
 
+@property(nonatomic) UIEdgeInsets titleEdgeInsets; // default is UIEdgeInsetsZero
 @property(nonatomic) UIEdgeInsets imageEdgeInsets; // default is UIEdgeInsetsZero
 @property(nonatomic) BOOL showsTouchWhenHighlighted; // default is NO.
 @property(nonatomic) BOOL adjustsImageWhenHighlighted; // default is YES.
