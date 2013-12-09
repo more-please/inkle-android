@@ -2,6 +2,7 @@
 
 #import "AP_Control.h"
 #import "AP_Image.h"
+#import "AP_ImageView.h"
 #import "AP_Label.h"
 
 #ifdef AP_REPLACE_UI
@@ -18,10 +19,13 @@
 
 - (NSString*)titleForState:(UIControlState)state;
 - (UIColor*)titleColorForState:(UIControlState)state;
+- (UIColor*)titleShadowColorForState:(UIControlState)state;
 - (AP_Image*)imageForState:(UIControlState)state;
 - (AP_Image*)backgroundImageForState:(UIControlState)state;
 
-@property(nonatomic, readonly) AP_Label* titleLabel;
+@property(nonatomic,readonly) AP_Label* titleLabel;
+@property(nonatomic,readonly) AP_ImageView *imageView;
+
 @property(nonatomic) UIEdgeInsets imageEdgeInsets; // default is UIEdgeInsetsZero
 @property(nonatomic) BOOL showsTouchWhenHighlighted; // default is NO.
 @property(nonatomic) BOOL adjustsImageWhenHighlighted; // default is YES.
