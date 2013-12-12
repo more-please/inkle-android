@@ -41,8 +41,8 @@ typedef NS_ENUM(NSInteger, UIPageViewControllerTransitionStyle) {
 
 @interface AP_PageViewController : AP_ViewController
 
-@property (assign) id<AP_PageViewControllerDataSource> dataSource;
-@property (assign) id<AP_PageViewControllerDelegate> delegate;
+@property (weak) id<AP_PageViewControllerDataSource> dataSource;
+@property (weak) id<AP_PageViewControllerDelegate> delegate;
 @property (readonly) NSArray *viewControllers;
 @property (getter=isDoubleSided) BOOL doubleSided; // Default is 'NO'.
 @property (readonly) UIPageViewControllerSpineLocation spineLocation;

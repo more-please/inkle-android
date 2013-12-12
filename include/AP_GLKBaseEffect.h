@@ -19,8 +19,8 @@ enum {
 
 @property (nonatomic, readonly) AP_GLKEffectPropertyTransform* transform; // Identity Matrices
 @property (nonatomic, readonly) AP_GLKEffectPropertyTexture* texture2d0;
-@property (nonatomic, assign) GLboolean useConstantColor; // GL_TRUE
-@property (nonatomic, assign) GLKVector4 constantColor; // { 1.0, 1.0, 1.0, 1.0 }
+@property (nonatomic) GLboolean useConstantColor; // GL_TRUE
+@property (nonatomic) GLKVector4 constantColor; // { 1.0, 1.0, 1.0, 1.0 }
 
 - (void) prepareToDraw; // Bind programs and textures
 

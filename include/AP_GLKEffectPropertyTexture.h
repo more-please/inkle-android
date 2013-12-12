@@ -4,7 +4,7 @@
 
 @interface AP_GLKEffectPropertyTexture : NSObject
 
-@property (nonatomic, assign) GLuint name;
+@property (nonatomic) GLuint name;
 
 @end
 
