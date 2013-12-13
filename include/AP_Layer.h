@@ -1,20 +1,21 @@
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
 
 #ifdef AP_REPLACE_UI
 
 @interface AP_Layer : NSObject
 
-@property CGFloat zPosition;
+@property(nonatomic) CGFloat zPosition;
 
-@property CGColorRef shadowColor; // Default is black
-@property float shadowOpacity; // Default is 0
-@property CGSize shadowOffset; // Default is (0, -3)
-@property CGFloat shadowRadius; // Default is 3
-@property CGFloat cornerRadius; // Default is 0
+//@property CGColorRef shadowColor; // Default is black
+@property(nonatomic) float shadowOpacity; // Default is 0
+@property(nonatomic) CGSize shadowOffset; // Default is (0, -3)
+@property(nonatomic) CGFloat shadowRadius; // Default is 3
+@property(nonatomic) CGFloat cornerRadius; // Default is 0
 
-@property AP_Layer* mask; // Wow, I hope nobody actually uses this
-@property CGPoint anchorPoint; // Default is (0.5, 0.5), i.e. the center of the bounds rect
-@property CGPoint position;
+@property(nonatomic,strong) AP_Layer* mask; // Wow, I hope nobody actually uses this
+@property(nonatomic) CGPoint anchorPoint; // Default is (0.5, 0.5), i.e. the center of the bounds rect
+@property(nonatomic) CGPoint position;
 
 - (void)removeAllAnimations;
 

@@ -14,11 +14,11 @@
 
 @end
 
+#ifndef ANDROID
 @interface UITouch(AP)
-
 @property (nonatomic) AP_Touch* android;
-
 @end
+#endif
 
 #else
 typedef UITouch AP_Touch;

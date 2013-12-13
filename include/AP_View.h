@@ -1,3 +1,4 @@
+#import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 
 #ifdef AP_REPLACE_UI
@@ -67,7 +68,7 @@
 
 + (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations;
 
-@property(nonatomic) AP_Window* window;
+@property(nonatomic,weak) AP_Window* window;
 @property(nonatomic,readonly) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
 @property(nonatomic,readonly,copy) NSMutableArray* subviews;
@@ -77,13 +78,13 @@
 @property(nonatomic) CGRect frame;
 @property(nonatomic) CGPoint center;
 @property(nonatomic) CGAffineTransform transform;
-@property(nonatomic) UIColor* backgroundColor;
+@property(nonatomic,strong) UIColor* backgroundColor;
 @property(nonatomic) CGFloat alpha;
 
 // When rendering, use inFlightProps rather than currentProps.
-@property(nonatomic,readonly) AP_AnimationProps* previousProps;
-@property(nonatomic,readonly) AP_AnimationProps* inFlightProps;
-@property(nonatomic,readonly) AP_AnimationProps* currentProps;
+@property(nonatomic,readonly,strong) AP_AnimationProps* previousProps;
+@property(nonatomic,readonly,strong) AP_AnimationProps* inFlightProps;
+@property(nonatomic,readonly,strong) AP_AnimationProps* currentProps;
 
 @property(nonatomic) BOOL autoresizesSubviews; // default is YES.
 @property(nonatomic) UIViewAutoresizing autoresizingMask;
@@ -105,7 +106,7 @@
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
 
-@property(nonatomic) AP_Animation* animation; // The current animation.
+@property(nonatomic,strong) AP_Animation* animation; // The current animation.
 
 + (void) debugAnimationWithTag:(NSString*)tag;
 

@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 #ifdef AP_REPLACE_UI
 
@@ -12,7 +13,7 @@
 + (NSTimeInterval) masterClock;
 + (void) setMasterClock:(NSTimeInterval)time;
 
-@property (nonatomic) NSString* tag;
+@property (nonatomic,strong) NSString* tag;
 @property (nonatomic,readonly) UIViewAnimationOptions options;
 
 - (id) initWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options completion:(void (^)(BOOL finished))completion;

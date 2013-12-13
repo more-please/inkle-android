@@ -1,4 +1,6 @@
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <UIKit/UIKit.h>
 
 #ifdef AP_REPLACE_UI
 

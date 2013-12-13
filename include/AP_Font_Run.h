@@ -1,4 +1,7 @@
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <GLKit/GLKit.h>
+#import <UIKit/UIKit.h>
 
 @class AP_Font_Data;
 

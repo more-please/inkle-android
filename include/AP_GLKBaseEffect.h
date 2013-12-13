@@ -1,3 +1,4 @@
+#import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
 #ifdef AP_REPLACE_UI

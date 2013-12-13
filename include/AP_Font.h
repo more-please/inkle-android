@@ -1,4 +1,6 @@
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <UIKit/UIKit.h>
 
 #ifdef AP_REPLACE_UI
 
@@ -25,6 +27,9 @@
 + (AP_Font*) systemFontOfSize:(CGFloat)fontSize;
 + (AP_Font*) boldSystemFontOfSize:(CGFloat)fontSize;
 + (AP_Font*) italicSystemFontOfSize:(CGFloat)fontSize;
+
++ (AP_Font*) fontWithUIFont:(UIFont*)font;
+- (UIFont*) UIFont;
 
 @end
 

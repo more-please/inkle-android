@@ -19,24 +19,32 @@
 #ifdef ANDROID
 extern NSString* const UIPageViewControllerOptionSpineLocationKey;
 
-typedef NS_ENUM(NSInteger, UIPageViewControllerNavigationOrientation) {
+typedef enum UIPageViewControllerNavigationOrientation {
     UIPageViewControllerNavigationOrientationHorizontal = 0,
     UIPageViewControllerNavigationOrientationVertical = 1
-};
-typedef NS_ENUM(NSInteger, UIPageViewControllerSpineLocation) {
+}
+UIPageViewControllerNavigationOrientation;
+
+typedef enum UIPageViewControllerSpineLocation {
     UIPageViewControllerSpineLocationNone = 0,
     UIPageViewControllerSpineLocationMin = 1,
     UIPageViewControllerSpineLocationMid = 2,
     UIPageViewControllerSpineLocationMax = 3
-};
-typedef NS_ENUM(NSInteger, UIPageViewControllerNavigationDirection) {
+}
+UIPageViewControllerSpineLocation;
+
+typedef enum UIPageViewControllerNavigationDirection {
     UIPageViewControllerNavigationDirectionForward,
     UIPageViewControllerNavigationDirectionReverse
-};
-typedef NS_ENUM(NSInteger, UIPageViewControllerTransitionStyle) {
+}
+UIPageViewControllerNavigationDirection;
+
+typedef enum UIPageViewControllerTransitionStyle {
     UIPageViewControllerTransitionStylePageCurl = 0,
     UIPageViewControllerTransitionStyleScroll = 1
-};
+}
+UIPageViewControllerTransitionStyle;
+
 #endif // ANDROID
 
 @interface AP_PageViewController : AP_ViewController
