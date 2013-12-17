@@ -1,5 +1,11 @@
 #pragma once
 
-@interface GAI : NSObject
-@end
+#import "GAITracker.h"
 
+@interface GAI : NSObject
+
++ (GAI*) sharedInstance;
+
+@property(nonatomic,assign) id<GAITracker> defaultTracker;
+
+@end

@@ -5,6 +5,7 @@
 
 #import "AP_Animation.h"
 #import "AP_AnimationProps.h"
+#import "AP_GestureRecognizer.h"
 #import "AP_Layer.h"
 #import "AP_Responder.h"
 
@@ -31,7 +32,7 @@
 - (AP_View*) viewWithTag:(NSInteger)tag; // recursive search. includes self
 @property (nonatomic) NSInteger tag; // default is 0
 
-- (void) addGestureRecognizer:(UIGestureRecognizer*)gestureRecognizer;
+- (void) addGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer;
 
 - (CGSize) sizeThatFits:(CGSize)size;
 - (void) sizeToFit;

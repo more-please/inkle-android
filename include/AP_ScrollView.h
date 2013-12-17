@@ -4,6 +4,11 @@
 
 #ifdef AP_REPLACE_UI
 
+#ifdef ANDROID
+extern const CGFloat UIScrollViewDecelerationRateNormal;
+extern const CGFloat UIScrollViewDecelerationRateFast;
+#endif
+
 @protocol AP_ScrollViewDelegate <NSObject>
 @end
 

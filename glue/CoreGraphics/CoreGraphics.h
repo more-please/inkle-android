@@ -34,6 +34,10 @@ typedef enum CGRectEdge CGRectEdge;
 extern const CGPoint CGPointZero;
 extern const CGSize CGSizeZero;
 extern const CGRect CGRectZero;
+extern const CGRect CGRectNull;
+
+extern CGPoint CGPointFromString(NSString*);
+extern NSString* NSStringFromCGPoint(CGPoint);
 
 // Note: assuming non-negative-sized rects...
 
@@ -59,6 +63,14 @@ static inline CGFloat CGRectGetMidY(CGRect rect) {
 
 static inline CGFloat CGRectGetMaxY(CGRect rect) {
     return rect.origin.y + rect.size.height;
+}
+
+static inline CGFloat CGRectGetWidth(CGRect rect) {
+    return rect.size.width;
+}
+
+static inline CGFloat CGRectGetHeight(CGRect rect) {
+    return rect.size.height;
 }
 
 static inline CGPoint CGPointMake(CGFloat x, CGFloat y) {
@@ -91,6 +103,22 @@ static inline CGRect CGRectMake(CGFloat x, CGFloat y, CGFloat width, CGFloat hei
     return rect;
 }
 
+static inline CGRect CGRectUnion(CGRect r1, CGRect r2) {
+    CGFloat x1 = MIN(CGRectGetMinX(r1), CGRectGetMinX(r2));
+    CGFloat x2 = MAX(CGRectGetMaxX(r1), CGRectGetMaxX(r2));
+    CGFloat y1 = MIN(CGRectGetMinY(r1), CGRectGetMinY(r2));
+    CGFloat y2 = MAX(CGRectGetMaxY(r1), CGRectGetMaxY(r2));
+    return CGRectMake(x1, y1, x2-x1, y2-y1);
+}
+
+static inline CGRect CGRectInset(CGRect rect, CGFloat dx, CGFloat dy) {
+    rect.origin.x += dx;
+    rect.origin.y += dy;
+    rect.size.width -= 2 * dx;
+    rect.size.height -= 2 * dy;
+    return rect;
+}
+
 static inline bool CGPointEqualToPoint(CGPoint point1, CGPoint point2) {
     return point1.x == point2.x
         && point1.y == point2.y;
@@ -104,6 +132,10 @@ static inline bool CGSizeEqualToSize(CGSize size1, CGSize size2) {
 static inline bool CGRectEqualToRect(CGRect rect1, CGRect rect2) {
     return CGPointEqualToPoint(rect1.origin, rect2.origin)
         && CGSizeEqualToSize(rect2.size, rect2.size);
+}
+
+static inline bool CGRectIsNull(CGRect rect) {
+    return CGRectEqualToRect(rect, CGRectNull);
 }
 
 static inline bool CGRectContainsPoint(CGRect rect, CGPoint point) {

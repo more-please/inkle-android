@@ -20,11 +20,11 @@ typedef enum UIViewAnimationOptions {
     UIViewAnimationOptionShowHideTransitionViews   = 1 <<  8, // flip to/from hidden state instead of adding/removing
     UIViewAnimationOptionOverrideInheritedOptions  = 1 <<  9, // do not inherit any options or animation type
     
-//    UIViewAnimationOptionCurveEaseInOut            = 0 << 16, // default
-//    UIViewAnimationOptionCurveEaseIn               = 1 << 16,
-//    UIViewAnimationOptionCurveEaseOut              = 2 << 16,
-//    UIViewAnimationOptionCurveLinear               = 3 << 16,
-//    
+    UIViewAnimationOptionCurveEaseInOut            = 0 << 16, // default
+    UIViewAnimationOptionCurveEaseIn               = 1 << 16,
+    UIViewAnimationOptionCurveEaseOut              = 2 << 16,
+    UIViewAnimationOptionCurveLinear               = 3 << 16,
+//
 //    UIViewAnimationOptionTransitionNone            = 0 << 20, // default
 //    UIViewAnimationOptionTransitionFlipFromLeft    = 1 << 20,
 //    UIViewAnimationOptionTransitionFlipFromRight   = 2 << 20,
@@ -174,9 +174,6 @@ static inline CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets) {
     rect.size.height -= (insets.top  + insets.bottom);
     return rect;
 }
-
-@interface UIGestureRecognizer : NSObject
-@end
 
 extern NSString* const UIApplicationDidReceiveMemoryWarningNotification;
 

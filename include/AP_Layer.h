@@ -7,7 +7,7 @@
 
 @property(nonatomic) CGFloat zPosition;
 
-//@property CGColorRef shadowColor; // Default is black
+@property(nonatomic,strong) UIColor* shadowColor; // Default is black
 @property(nonatomic) float shadowOpacity; // Default is 0
 @property(nonatomic) CGSize shadowOffset; // Default is (0, -3)
 @property(nonatomic) CGFloat shadowRadius; // Default is 3

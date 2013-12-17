@@ -20,6 +20,15 @@
     return result;
 }
 
++ (UIColor*) grayColor
+{
+    static UIColor* result;
+    if (!result) {
+        result = [UIColor colorWithWhite:0.5 alpha:1];
+    }
+    return result;
+}
+
 + (UIColor*) clearColor
 {
     static UIColor* result;
@@ -46,6 +55,11 @@
     UIColor* result = [[UIColor alloc] init];
     result->_rgba = rgba;
     return result;
+}
+
+- (UIColor*) CGColor
+{
+    return self;
 }
 
 @end
