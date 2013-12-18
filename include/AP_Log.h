@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 
 #define AP_LogError(...) AP_LogError_(__FILE__, __LINE__, __VA_ARGS__)

@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <GLKit/GLKit.h>
@@ -24,6 +26,8 @@
 // interpolate between the given values for other screen sizes.
 // (For non-Retina devices, the value will be divided by 2.)
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad;
+
+- (void) makeKeyAndVisible;
 
 @end
 

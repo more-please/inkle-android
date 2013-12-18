@@ -63,7 +63,7 @@ GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 m) {
         q2 *= SIGN(r32 + r23);
         q3 *= +1.0f;
     } else {
-        AP_LogError("coding error");
+        NSLog(@"GLKQuaternionMakeWithMatrix3 - coding error");
     }
     r = NORM(q0, q1, q2, q3);
     q0 /= r;

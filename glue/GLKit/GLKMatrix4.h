@@ -241,5 +241,10 @@ static inline GLKMatrix4 GLKMatrix4MakeWithQuaternion(GLKQuaternion quaternion) 
     return m;
 }
 
+static inline GLKVector3 GLKMatrix4MultiplyVector3(GLKMatrix4 matrixLeft, GLKVector3 vectorRight) {
+    GLKVector4 v4 = GLKMatrix4MultiplyVector4(matrixLeft, GLKVector4Make(vectorRight.v[0], vectorRight.v[1], vectorRight.v[2], 0.0f));
+    return GLKVector3Make(v4.v[0], v4.v[1], v4.v[2]);
+}
+
 extern GLKQuaternion GLKQuaternionMakeWithMatrix4(GLKMatrix4 matrix);
 

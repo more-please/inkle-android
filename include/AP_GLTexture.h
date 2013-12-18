@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 #import <OpenGLES/ES2/gl.h>
 

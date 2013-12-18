@@ -39,6 +39,9 @@ extern const CGRect CGRectNull;
 extern CGPoint CGPointFromString(NSString*);
 extern NSString* NSStringFromCGPoint(CGPoint);
 
+extern CGRect CGRectFromString(NSString*);
+extern NSString* NSStringFromCGRect(CGRect);
+
 // Note: assuming non-negative-sized rects...
 
 static inline CGFloat CGRectGetMinX(CGRect rect) {
@@ -144,6 +147,8 @@ static inline bool CGRectContainsPoint(CGRect rect, CGPoint point) {
         && point.y >= rect.origin.y
         && point.y <= (rect.origin.y + rect.size.height);
 }
+
+extern CGRect CGRectIntersection(CGRect r1, CGRect r2);
 
 // CGAffineTransform algorithms borrowed from GNUstep.
 

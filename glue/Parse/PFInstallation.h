@@ -1,9 +1,12 @@
 #pragma once
 
 #import "PFCommon.h"
+#import "PFObject.h"
 
-@interface PFInstallation : NSObject
+@interface PFInstallation : PFObject
 
-- (void) addUniqueObject:(id)object forKey:(NSString*)key;
++ (instancetype) currentInstallation;
+
+- (void) setDeviceTokenFromData:(NSData*)deviceTokenData;
 
 @end

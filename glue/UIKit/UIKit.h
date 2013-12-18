@@ -8,6 +8,15 @@
 #import "UIDevice.h"
 #import "UIFont.h"
 
+typedef enum UIRemoteNotificationType {
+    UIRemoteNotificationTypeNone    = 0,
+    UIRemoteNotificationTypeBadge   = 1 << 0,
+    UIRemoteNotificationTypeSound   = 1 << 1,
+    UIRemoteNotificationTypeAlert   = 1 << 2,
+    UIRemoteNotificationTypeNewsstandContentAvailability = 1 << 3,
+}
+UIRemoteNotificationType;
+
 typedef enum UIViewAnimationOptions {
     UIViewAnimationOptionLayoutSubviews            = 1 <<  0,
     UIViewAnimationOptionAllowUserInteraction      = 1 <<  1, // turn on user interaction while animating
@@ -178,3 +187,5 @@ static inline CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets) {
 extern NSString* const UIApplicationDidReceiveMemoryWarningNotification;
 
 extern CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment);
+
+extern UIEdgeInsets UIEdgeInsetsFromString(NSString* string);

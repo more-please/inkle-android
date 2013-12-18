@@ -1,5 +1,7 @@
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 #import "GAITracker.h"
 
 @interface GAI : NSObject

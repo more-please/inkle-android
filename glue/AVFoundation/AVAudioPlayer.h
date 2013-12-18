@@ -1,5 +1,7 @@
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 @protocol AVAudioPlayerDelegate <NSObject>
 @end
 

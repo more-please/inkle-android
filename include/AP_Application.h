@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 
 #import "AP_View.h"
@@ -17,6 +19,8 @@
 
 - (BOOL) openURL:(NSURL*)url;
 - (BOOL) canOpenURL:(NSURL*)url;
+
+- (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
 
 @end
 

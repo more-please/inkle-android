@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 
 #import "AP_Font.h"
@@ -39,6 +41,8 @@
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 
 @end
+
+typedef AP_Label OHAttributedLabel;
 
 #else
 typedef UILabel AP_Label;

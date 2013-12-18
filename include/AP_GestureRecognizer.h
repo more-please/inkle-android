@@ -1,3 +1,5 @@
+#pragma once
+
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -36,6 +38,7 @@ UIGestureRecognizerState;
 
 - (id) initWithTarget:(id)target action:(SEL)action;
 
+- (CGPoint) locationInView:(AP_View*)view;
 - (NSUInteger) numberOfTouches;
 
 @end
@@ -52,7 +55,8 @@ UIGestureRecognizerState;
 @end
 
 @interface AP_PanGestureRecognizer : AP_GestureRecognizer
-- (CGPoint)translationInView:(AP_View*)view;
+- (CGPoint) velocityInView:(AP_View *)view;
+- (CGPoint) translationInView:(AP_View*)view;
 @end
 
 #else

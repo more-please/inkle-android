@@ -1,5 +1,7 @@
 #import "CoreGraphics.h"
 
+#import <Foundation/NSGeometry.h>
+
 const CGPoint CGPointZero = {0, 0};
 const CGSize CGSizeZero = {0, 0};
 const CGRect CGRectZero = {{0, 0}, {0, 0}};
