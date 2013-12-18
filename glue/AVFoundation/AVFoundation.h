@@ -5,5 +5,3 @@
 #import "AVAudioPlayer.h"
 
 typedef NSTimeInterval CFTimeInterval;
-
-extern CFTimeInterval CACurrentMediaTime();

@@ -3,6 +3,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "GLKVector3.h"
+#import "GLKMatrix3.h"
 
 union _GLKQuaternion
 {

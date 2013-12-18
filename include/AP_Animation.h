@@ -5,6 +5,10 @@
 
 #ifdef AP_REPLACE_UI
 
+#ifdef ANDROID
+extern NSTimeInterval CACurrentMediaTime();
+#endif
+
 @class AP_View;
 
 // Holds the timing and callback info for a single animation, which may affect multiple views.

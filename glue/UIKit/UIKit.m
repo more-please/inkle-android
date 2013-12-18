@@ -20,3 +20,10 @@ CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment
 
 const UIEdgeInsets UIEdgeInsetsZero = {0, 0};
 const UIOffset UIOffsetZero = {0, 0};
+
+NSString* const UIApplicationDidReceiveMemoryWarningNotification = @"UIApplicationDidReceiveMemoryWarningNotification";
+
+UIEdgeInsets UIEdgeInsetsFromString(NSString* string) {
+    NSLog(@"UIEdgeInsetsFromString(%@) not implemented!", string);
+    return UIEdgeInsetsZero;
+}

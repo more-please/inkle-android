@@ -2,6 +2,8 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 
+#import "GLKVector3.h"
+#import "GLKVector4.h"
 #import "GLKQuaternion.h"
 
 union _GLKMatrix4
@@ -246,5 +248,11 @@ static inline GLKVector3 GLKMatrix4MultiplyVector3(GLKMatrix4 matrixLeft, GLKVec
     return GLKVector3Make(v4.v[0], v4.v[1], v4.v[2]);
 }
 
-extern GLKQuaternion GLKQuaternionMakeWithMatrix4(GLKMatrix4 matrix);
-
+static inline GLKQuaternion GLKQuaternionMakeWithMatrix4(GLKMatrix4 m4) {
+    GLKMatrix3 m3 = {
+        m4.m00, m4.m01, m4.m02,
+        m4.m10, m4.m11, m4.m12,
+        m4.m20, m4.m21, m4.m22,
+    };
+    return GLKQuaternionMakeWithMatrix3(m3);
+}

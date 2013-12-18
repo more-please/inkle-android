@@ -168,9 +168,6 @@ typedef struct UIOffset {
     CGFloat horizontal, vertical;
 } UIOffset;
 
-extern const UIEdgeInsets UIEdgeInsetsZero;
-extern const UIOffset UIOffsetZero;
-
 static inline UIEdgeInsets UIEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right) {
     UIEdgeInsets insets = {top, left, bottom, right};
     return insets;
@@ -183,6 +180,9 @@ static inline CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets) {
     rect.size.height -= (insets.top  + insets.bottom);
     return rect;
 }
+
+extern const UIEdgeInsets UIEdgeInsetsZero;
+extern const UIOffset UIOffsetZero;
 
 extern NSString* const UIApplicationDidReceiveMemoryWarningNotification;
 
