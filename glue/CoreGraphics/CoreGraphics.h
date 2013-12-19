@@ -148,7 +148,13 @@ static inline bool CGRectContainsPoint(CGRect rect, CGPoint point) {
         && point.y <= (rect.origin.y + rect.size.height);
 }
 
-extern CGRect CGRectIntersection(CGRect r1, CGRect r2);
+static inline CGRect CGRectIntersection(CGRect r1, CGRect r2) {
+    CGFloat x0 = MAX(CGRectGetMinX(r1), CGRectGetMinX(r2));
+    CGFloat y0 = MAX(CGRectGetMinY(r1), CGRectGetMinY(r2));
+    CGFloat x1 = MIN(CGRectGetMaxX(r1), CGRectGetMaxX(r2));
+    CGFloat y1 = MIN(CGRectGetMaxY(r1), CGRectGetMaxY(r2));
+    return CGRectMake(x0, y0, x1-x0, y1-y0);
+}
 
 // CGAffineTransform algorithms borrowed from GNUstep.
 
