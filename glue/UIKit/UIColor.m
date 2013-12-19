@@ -57,9 +57,9 @@
     return result;
 }
 
-- (UIColor*) CGColor
+- (CGColorRef) CGColor
 {
-    return self;
+    return _rgba;
 }
 
 @end

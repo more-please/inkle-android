@@ -1,5 +1,20 @@
 #import "UIKit.h"
 
+const UIEdgeInsets UIEdgeInsetsZero = {0, 0};
+const UIOffset UIOffsetZero = {0, 0};
+
+const CGFloat UIScrollViewDecelerationRateNormal = 1.0;
+const CGFloat UIScrollViewDecelerationRateFast = 2.0;
+
+NSString* const UIApplicationDidReceiveMemoryWarningNotification = @"UIApplicationDidReceiveMemoryWarningNotification";
+
+NSString* const UIPageViewControllerOptionSpineLocationKey = @"spineLocation";
+
+UIEdgeInsets UIEdgeInsetsFromString(NSString* string) {
+    NSLog(@"UIEdgeInsetsFromString(%@) not implemented!", string);
+    return UIEdgeInsetsZero;
+}
+
 CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment) {
     switch (nsTextAlignment) {
         case NSTextAlignmentLeft:
@@ -16,14 +31,4 @@ CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment
             NSLog(@"Unexpected NSTextAlignment: %d", nsTextAlignment);
             return kCTTextAlignmentNatural;
     }
-}
-
-const UIEdgeInsets UIEdgeInsetsZero = {0, 0};
-const UIOffset UIOffsetZero = {0, 0};
-
-NSString* const UIApplicationDidReceiveMemoryWarningNotification = @"UIApplicationDidReceiveMemoryWarningNotification";
-
-UIEdgeInsets UIEdgeInsetsFromString(NSString* string) {
-    NSLog(@"UIEdgeInsetsFromString(%@) not implemented!", string);
-    return UIEdgeInsetsZero;
 }
