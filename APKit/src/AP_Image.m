@@ -129,7 +129,7 @@ static float sqrtSize(CGSize size) {
     if (result) {
         // This is typically a 4x image for retina iPads (2048x1536 screen).
         // Adjust the scale proportionately to the size of the screen.
-        result->_scale = [AP_Window iPhone:2.0 iPad:4.0];
+        result->_scale = [AP_Window iPhone:4.0 iPad:2.0];
     }
     return result;
 }

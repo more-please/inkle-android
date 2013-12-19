@@ -25,6 +25,4 @@
 // (For non-Retina devices, the value will be divided by 2.)
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad;
 
-- (void) makeKeyAndVisible;
-
 @end
