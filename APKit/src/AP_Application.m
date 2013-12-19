@@ -1,5 +1,7 @@
 #import "AP_Application.h"
 
+#import "AP_Check.h"
+
 @implementation AP_Application
 
 static AP_Application* g_Application;

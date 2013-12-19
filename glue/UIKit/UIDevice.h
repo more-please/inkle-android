@@ -38,4 +38,7 @@ UIUserInterfaceIdiom;
 
 + (UIDevice*) currentDevice;
 
+- (void)beginGeneratingDeviceOrientationNotifications;
+- (void)endGeneratingDeviceOrientationNotifications;
+
 @end

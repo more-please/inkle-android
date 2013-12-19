@@ -1,5 +1,7 @@
 #import "AP_GestureRecognizer.h"
 
+#import "AP_Check.h"
+
 @implementation AP_GestureRecognizer
 
 - (id) initWithTarget:(id)target action:(SEL)action

@@ -91,28 +91,10 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     // but IT DOESN'T. As far as I can tell, if you launch in landscape mode, the root view
     // is initially portrait, then resized to landscape. ????!??
     UIScreen* screen = [UIScreen mainScreen];
-#ifdef ANDROID
-    // For extra fun, Apportable lies about the initial device orientation.
-    AndroidDisplay* display = [AndroidActivity currentActivity].applicationContext.windowManager.defaultDisplay;
-    AndroidDisplayOrientation orientation = display.orientation;
-    BOOL isLandscape = (orientation == AndroidDisplayOrientationLandscapeRight || orientation == AndroidDisplayOrientationLandscapeLeft);
-    g_ScreenScale = display.metrics.density;
-    if (g_ScreenScale < 0.1 || g_ScreenScale > 10 || isnan(g_ScreenScale)) {
-        NSLog(@"Crazy screen density value (%.1f), trying densitydpi", g_ScreenScale);
-        g_ScreenScale = display.metrics.densityDpi / 160.0;
-    }
-    if (g_ScreenScale < 0.1 || g_ScreenScale > 10 || isnan(g_ScreenScale)) {
-        NSLog(@"Screen density still crazy (%.1f), let's just say it's 1.0", g_ScreenScale);
-        g_ScreenScale = 1;
-    }
-    g_ScreenSize = screen.bounds.size;
-    g_ScreenSize = CGSizeMake(g_ScreenSize.width / g_ScreenScale, g_ScreenSize.height / g_ScreenScale);
-#else
     UIInterfaceOrientation orientation = self.interfaceOrientation;
     BOOL isLandscape = UIInterfaceOrientationIsLandscape(orientation);
     g_ScreenScale = screen.scale;
     g_ScreenSize = screen.bounds.size;
-#endif
     if (isLandscape) {
         g_ScreenSize = CGSizeMake(g_ScreenSize.height, g_ScreenSize.width);
     }

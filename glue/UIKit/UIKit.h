@@ -7,6 +7,9 @@
 #import "UIColor.h"
 #import "UIDevice.h"
 #import "UIFont.h"
+#import "UIScreen.h"
+#import "UIViewController.h"
+#import "UIWindow.h"
 
 extern const CGFloat UIScrollViewDecelerationRateNormal;
 extern const CGFloat UIScrollViewDecelerationRateFast;
