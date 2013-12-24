@@ -8,10 +8,23 @@ static AP_Application* g_Application;
 
 + (AP_Application*) sharedApplication
 {
-    if (!g_Application) {
-        g_Application = [[AP_Application alloc] init];
-    }
     return g_Application;
+}
+
+- (id) init
+{
+    self = [super init];
+    if (self) {
+        AP_CHECK(!g_Application, return nil);
+        g_Application = self;
+    }
+    return self;
+}
+
+- (void) dealloc
+{
+    AP_CHECK(g_Application == self, return);
+    g_Application = nil;
 }
 
 - (BOOL) openURL:(NSURL*)url

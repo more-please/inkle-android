@@ -7,6 +7,9 @@
 @class AP_Application;
 
 @protocol AP_ApplicationDelegate <NSObject>
+
+- (BOOL) application:(AP_Application*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions;
+
 @end
 
 @interface AP_Application : NSObject
