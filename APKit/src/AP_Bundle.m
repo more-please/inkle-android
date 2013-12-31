@@ -44,7 +44,7 @@ static AP_Bundle* g_Bundle;
             return data;
         }
     }
-    NSString* path = [[NSBundle mainBundle] pathForResource:name ofType:ext];
+    NSString* path = [[AP_Bundle mainBundle] pathForResource:name ofType:ext];
     if (!path) {
         return nil;
     }
@@ -53,6 +53,52 @@ static AP_Bundle* g_Bundle;
 #else
     return [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:nil];
 #endif
+}
+
+#ifdef ANDROID
++ (AP_Bundle*) mainBundle
+{
+    static AP_Bundle* s_MainBundle;
+    if (!s_MainBundle) {
+        s_MainBundle = [[AP_Bundle alloc] init];
+    }
+    return s_MainBundle;
+}
+#else
++ (NSBundle*) mainBundle
+{
+    return [NSBundle mainBundle];
+}
+#endif
+
+- (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
+{
+    NSLog(@"pathsForResourcesOfType:%@ inDirectory:%@", ext, dir);
+    return nil;
+}
+
+- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext
+{
+    NSLog(@"pathForResource:%@ ofType:%@", name, ext);
+    return nil;
+}
+
+- (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
+{
+    NSLog(@"URLForResource:%@ withExtension:%@", name, ext);
+    return nil;
+}
+
+- (NSDictionary*) infoDictionary
+{
+    NSLog(@"infoDictionary");
+    return nil;
+}
+
+- (id) objectForInfoDictionaryKey:(NSString*)key
+{
+    NSLog(@"objectForInfoDictionaryKey:%@", key);
+    return nil;
 }
 
 @end

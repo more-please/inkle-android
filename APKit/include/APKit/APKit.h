@@ -9,6 +9,7 @@
 #import "AP_AlertView.h"
 #import "AP_Application.h"
 #import "AP_Button.h"
+#import "AP_Bundle.h"
 #import "AP_Control.h"
 #import "AP_Event.h"
 #import "AP_Font.h"
@@ -48,6 +49,7 @@
 #define AP_Application                  UIApplication
 #define AP_ApplicationDelegate          UIApplicationDelegate
 #define AP_Button                       UIButton
+#define AP_Bundle                       NSBundle
 #define AP_Control                      UIControl
 #define AP_Event                        UIEvent
 #define AP_Font                         UIFont

@@ -14,4 +14,16 @@
 // Add the given .pak file to the end of the resource search path.
 + (void) addPak:(AP_PakReader*)pak;
 
+#ifdef ANDROID
++ (AP_Bundle*) mainBundle;
+#else
++ (NSBundle*) mainBundle;
+#endif
+
+- (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
+- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
+- (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
+- (NSDictionary*) infoDictionary;
+- (id) objectForInfoDictionaryKey:(NSString*)key;
+
 @end
