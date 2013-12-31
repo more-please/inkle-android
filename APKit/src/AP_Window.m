@@ -119,14 +119,15 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 #ifndef ANDROID
 - (void) glkView:(GLKView *)view drawInRect:(CGRect)r
 {
-    _clock = AP_TimeInSeconds();
-    [AP_Animation setMasterClock:_clock];
     [self drawInSize:view.bounds.size];
 }
 #endif
 
 - (void) drawInSize:(CGSize)s
 {
+    _clock = AP_TimeInSeconds();
+    [AP_Animation setMasterClock:_clock];
+
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 

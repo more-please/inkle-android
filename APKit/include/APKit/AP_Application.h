@@ -10,6 +10,8 @@
 
 - (BOOL) application:(AP_Application*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions;
 
+@property (nonatomic, retain) UIWindow* window;
+
 @end
 
 @interface AP_Application : NSObject
