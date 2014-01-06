@@ -8,7 +8,7 @@
 @interface AVAudioPlayer : NSObject
 
 @property(nonatomic,assign) id<AVAudioPlayerDelegate> delegate;
-@property(nonatomic,readonly,getter=isPlaying) BOOL playing; /* is it playing or not? */
+@property(nonatomic,readonly,getter=isPlaying) BOOL playing;
 @property(nonatomic) NSTimeInterval currentTime;
 @property(nonatomic) BOOL enableRate;
 @property(nonatomic) float rate;
