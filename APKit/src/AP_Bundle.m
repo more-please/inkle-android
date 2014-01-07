@@ -4,6 +4,7 @@
 
 @implementation AP_Bundle {
     NSMutableArray* _paks;
+    NSDictionary* _info;
 }
 
 static AP_Bundle* g_Bundle;
@@ -20,11 +21,19 @@ static AP_Bundle* g_Bundle;
 
 - (AP_Bundle*) init
 {
+    AP_CHECK(!g_Bundle, return nil);
+
     self = [super init];
     if (self) {
         _paks = [NSMutableArray array];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    AP_CHECK(g_Bundle == self, return);
+    g_Bundle = nil;
 }
 
 + (void) addPak:(AP_PakReader *)pak
@@ -58,11 +67,7 @@ static AP_Bundle* g_Bundle;
 #ifdef ANDROID
 + (AP_Bundle*) mainBundle
 {
-    static AP_Bundle* s_MainBundle;
-    if (!s_MainBundle) {
-        s_MainBundle = [[AP_Bundle alloc] init];
-    }
-    return s_MainBundle;
+    return g_Bundle;
 }
 #else
 + (NSBundle*) mainBundle
@@ -79,8 +84,12 @@ static AP_Bundle* g_Bundle;
 
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext
 {
-    NSLog(@"pathForResource:%@ ofType:%@", name, ext);
-    return nil;
+    NSString* path = [self.root stringByAppendingPathComponent:name];
+    if (ext) {
+        path = [path stringByAppendingPathExtension:ext];
+    }
+    NSLog(@"pathForResource:%@ ofType:%@ -> %@", name, ext, path);
+    return path;
 }
 
 - (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
@@ -91,14 +100,21 @@ static AP_Bundle* g_Bundle;
 
 - (NSDictionary*) infoDictionary
 {
-    NSLog(@"infoDictionary");
-    return nil;
+    if (!_info) {
+        NSLog(@"Loading info dictionary...");
+        NSString* path = [self pathForResource:@"Info" ofType:@"plist"];
+        _info = [[NSDictionary alloc] initWithContentsOfFile:path];
+        AP_CHECK(_info, return nil);
+        NSLog(@"Loading info dictionary... Done.");
+    }
+    return _info;
 }
 
 - (id) objectForInfoDictionaryKey:(NSString*)key
 {
-    NSLog(@"objectForInfoDictionaryKey:%@", key);
-    return nil;
+    id result = [[self infoDictionary] objectForKey:key];
+    NSLog(@"objectForInfoDictionaryKey:%@ -> %@", key, result);
+    return result;
 }
 
 @end

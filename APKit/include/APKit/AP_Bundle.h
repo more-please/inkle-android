@@ -20,6 +20,8 @@
 + (NSBundle*) mainBundle;
 #endif
 
+@property(nonatomic,strong) NSString* root;
+
 - (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
 - (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
