@@ -10,7 +10,7 @@
 
 - (BOOL) application:(AP_Application*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions;
 
-@property (nonatomic, retain) UIWindow* window;
+@property (nonatomic,strong) UIWindow* window;
 
 @end
 
@@ -18,7 +18,7 @@
 
 + (AP_Application*) sharedApplication;
 
-@property(nonatomic,assign) id<AP_ApplicationDelegate> delegate;
+@property(nonatomic,strong) id<AP_ApplicationDelegate> delegate;
 
 - (BOOL) openURL:(NSURL*)url;
 - (BOOL) canOpenURL:(NSURL*)url;

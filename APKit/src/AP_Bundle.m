@@ -88,7 +88,6 @@ static AP_Bundle* g_Bundle;
     if (ext) {
         path = [path stringByAppendingPathExtension:ext];
     }
-    NSLog(@"pathForResource:%@ ofType:%@ -> %@", name, ext, path);
     return path;
 }
 

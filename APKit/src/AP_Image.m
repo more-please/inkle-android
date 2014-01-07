@@ -103,10 +103,10 @@ static AP_Image_Program* g_AlphaProg;
     return [g_ImageCache get:name withLoader:^{
         NSData* data = nil;
         if (!data) {
-            data = [AP_Bundle dataForResource:name ofType:@".png.img"];
+            data = [AP_Bundle dataForResource:name ofType:@".img"];
         }
         if (!data) {
-            data = [AP_Bundle dataForResource:name ofType:@".img"];
+            data = [AP_Bundle dataForResource:name ofType:@".png.img"];
         }
         if (!data) {
             data = [AP_Bundle dataForResource:name ofType:nil];
