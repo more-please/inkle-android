@@ -132,8 +132,8 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     glClear(GL_COLOR_BUFFER_BIT);
 
     [_fps tick];
-    if (_fps.count % 16 == 0) {
-//        NSLog(@"FPS = %.2f", _fps.fps);
+    if (_fps.count % 30 == 0) {
+       NSLog(@"FPS = %.2f", _fps.fps);
     }
     
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
