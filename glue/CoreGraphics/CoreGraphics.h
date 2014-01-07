@@ -42,6 +42,9 @@ extern NSString* NSStringFromCGPoint(CGPoint);
 extern CGRect CGRectFromString(NSString*);
 extern NSString* NSStringFromCGRect(CGRect);
 
+extern CGRect CGRectUnion(CGRect r1, CGRect r2);
+extern CGRect CGRectIntersection(CGRect r1, CGRect r2);
+
 // Note: assuming non-negative-sized rects...
 
 static inline CGFloat CGRectGetMinX(CGRect rect) {
@@ -106,14 +109,6 @@ static inline CGRect CGRectMake(CGFloat x, CGFloat y, CGFloat width, CGFloat hei
     return rect;
 }
 
-static inline CGRect CGRectUnion(CGRect r1, CGRect r2) {
-    CGFloat x1 = MIN(CGRectGetMinX(r1), CGRectGetMinX(r2));
-    CGFloat x2 = MAX(CGRectGetMaxX(r1), CGRectGetMaxX(r2));
-    CGFloat y1 = MIN(CGRectGetMinY(r1), CGRectGetMinY(r2));
-    CGFloat y2 = MAX(CGRectGetMaxY(r1), CGRectGetMaxY(r2));
-    return CGRectMake(x1, y1, x2-x1, y2-y1);
-}
-
 static inline CGRect CGRectInset(CGRect rect, CGFloat dx, CGFloat dy) {
     rect.origin.x += dx;
     rect.origin.y += dy;
@@ -146,14 +141,6 @@ static inline bool CGRectContainsPoint(CGRect rect, CGPoint point) {
         && point.x <= (rect.origin.x + rect.size.width)
         && point.y >= rect.origin.y
         && point.y <= (rect.origin.y + rect.size.height);
-}
-
-static inline CGRect CGRectIntersection(CGRect r1, CGRect r2) {
-    CGFloat x0 = MAX(CGRectGetMinX(r1), CGRectGetMinX(r2));
-    CGFloat y0 = MAX(CGRectGetMinY(r1), CGRectGetMinY(r2));
-    CGFloat x1 = MIN(CGRectGetMaxX(r1), CGRectGetMaxX(r2));
-    CGFloat y1 = MIN(CGRectGetMaxY(r1), CGRectGetMaxY(r2));
-    return CGRectMake(x0, y0, x1-x0, y1-y0);
 }
 
 // CGAffineTransform algorithms borrowed from GNUstep.
