@@ -140,7 +140,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     _clock = AP_TimeInSeconds();
     [AP_Animation setMasterClock:_clock];
 
-    glClearColor(0, 0, 0, 0);
+    glClearColor(1, 0, 0.5, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     [_fps tick];
@@ -174,7 +174,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
                 -1.0, -1.0),
             2.0 / s.width, 2.0 / s.height);
 
-    glViewport(0, 0, s.width * g_ScreenScale, s.height * g_ScreenScale);
+    glViewport(0, 0, s.width * scale, s.height * scale);
 
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;

@@ -2,10 +2,9 @@
 
 @implementation UIScreen
 
-static UIScreen* g_Screen;
-
 + (UIScreen*) mainScreen
 {
+    static UIScreen* g_Screen;
     if (!g_Screen) {
         g_Screen = [[UIScreen alloc] init];
     }

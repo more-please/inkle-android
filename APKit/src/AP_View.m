@@ -503,7 +503,6 @@ static AP_Animation* g_ActiveAnimation = nil;
     if (CGRectEqualToRect(oldBounds, newBounds)) {
         return;
     }
-    
     AP_ViewController* controller = _viewDelegate;
     if (controller) {
         [controller viewWillLayoutSubviews];

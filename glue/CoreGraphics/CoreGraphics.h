@@ -129,7 +129,7 @@ static inline bool CGSizeEqualToSize(CGSize size1, CGSize size2) {
 
 static inline bool CGRectEqualToRect(CGRect rect1, CGRect rect2) {
     return CGPointEqualToPoint(rect1.origin, rect2.origin)
-        && CGSizeEqualToSize(rect2.size, rect2.size);
+        && CGSizeEqualToSize(rect1.size, rect2.size);
 }
 
 static inline bool CGRectIsNull(CGRect rect) {
