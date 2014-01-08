@@ -16,24 +16,16 @@ static UIScreen* g_Screen;
 {
     self = [super init];
     if (self) {
-//        // For extra fun, Apportable lies about the initial device orientation.
-//        AndroidDisplay* display = [AndroidActivity currentActivity].applicationContext.windowManager.defaultDisplay;
-//        AndroidDisplayOrientation orientation = display.orientation;
-//        BOOL isLandscape = (orientation == AndroidDisplayOrientationLandscapeRight || orientation == AndroidDisplayOrientationLandscapeLeft);
-//        g_ScreenScale = display.metrics.density;
-//        if (g_ScreenScale < 0.1 || g_ScreenScale > 10 || isnan(g_ScreenScale)) {
-//            NSLog(@"Crazy screen density value (%.1f), trying densitydpi", g_ScreenScale);
-//            g_ScreenScale = display.metrics.densityDpi / 160.0;
-//        }
-//        if (g_ScreenScale < 0.1 || g_ScreenScale > 10 || isnan(g_ScreenScale)) {
-//            NSLog(@"Screen density still crazy (%.1f), let's just say it's 1.0", g_ScreenScale);
-//            g_ScreenScale = 1;
-//        }
-//        g_ScreenSize = screen.bounds.size;
-//        g_ScreenSize = CGSizeMake(g_ScreenSize.width / g_ScreenScale, g_ScreenSize.height / g_ScreenScale);
         _bounds = CGRectMake(0, 0, 768, 1024);
+        _scale = 1.0;
     }
     return self;
+}
+
+- (void) setSize:(CGSize)size scale:(CGFloat)scale
+{
+    _bounds = CGRectMake(0, 0, size.width, size.height);
+    _scale = scale;
 }
 
 @end

@@ -49,6 +49,12 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
         _fps = [[AP_FPSCounter alloc] init];
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
+#ifdef ANDROID
+        UIScreen* screen = [UIScreen mainScreen];
+        g_ScreenSize = screen.bounds.size;
+        g_ScreenScale = screen.scale;
+        NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenSize.width, (int) g_ScreenSize.height, g_ScreenScale);
+#endif
     }
     return self;
 }
@@ -98,7 +104,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     if (isLandscape) {
         g_ScreenSize = CGSizeMake(g_ScreenSize.height, g_ScreenSize.width);
     }
-    NSLog(@"Screen size %dx%d, density %.1f", (int) g_ScreenSize.width, (int) g_ScreenSize.height, g_ScreenScale);
+    NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenSize.width, (int) g_ScreenSize.height, g_ScreenScale);
 }
 
 - (void)dealloc
@@ -119,11 +125,17 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 #ifndef ANDROID
 - (void) glkView:(GLKView *)view drawInRect:(CGRect)r
 {
-    [self drawInSize:view.bounds.size];
+    [self drawWithSize:view.bounds.size scale:[UIScreen mainScreen].scale];
 }
 #endif
 
-- (void) drawInSize:(CGSize)s
+- (void) draw
+{
+    UIScreen* screen = [UIScreen mainScreen];
+    [self drawWithSize:screen.bounds.size scale:screen.scale];
+}
+
+- (void) drawWithSize:(CGSize)s scale:(CGFloat)scale
 {
     _clock = AP_TimeInSeconds();
     [AP_Animation setMasterClock:_clock];
@@ -135,7 +147,19 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     if (_fps.count % 30 == 0) {
        NSLog(@"FPS = %.2f", _fps.fps);
     }
-    
+
+    if (scale != g_ScreenScale) {
+        g_ScreenScale = scale;
+    }
+
+    if (!CGSizeEqualToSize(s, g_ScreenSize)) {
+        NSLog(@"Screen size changed: was %dx%d, now %dx%d", (int) g_ScreenSize.width, (int) g_ScreenSize.height, (int) s.width, (int) s.height);
+        g_ScreenSize = s;
+        if (_rootViewController) {
+            _rootViewController.view.frame = CGRectMake(0, 0, s.width, s.height);
+        }
+    }
+
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
     // - scale from screen size to (2, 2).
     // - translate from (0, 0) to (-1, -1).
@@ -151,14 +175,6 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
             2.0 / s.width, 2.0 / s.height);
 
     glViewport(0, 0, s.width * g_ScreenScale, s.height * g_ScreenScale);
-
-    if (!CGSizeEqualToSize(s, g_ScreenSize)) {
-        NSLog(@"Screen size changed: was %dx%d, now %dx%d", (int) g_ScreenSize.width, (int) g_ScreenSize.height, (int) s.width, (int) s.height);
-        g_ScreenSize = s;
-        if (_rootViewController) {
-            _rootViewController.view.frame = CGRectMake(0, 0, s.width, s.height);
-        }
-    }
 
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;

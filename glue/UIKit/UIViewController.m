@@ -2,9 +2,9 @@
 
 @implementation UIViewController
 
-- (void) drawInSize:(CGSize)size
+- (void) draw
 {
-    NSLog(@"[UIViewController drawInSize:]");
+    NSLog(@"[UIViewController draw]");
 }
 
 @end

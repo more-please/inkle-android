@@ -7,6 +7,6 @@
 
 @property (nonatomic, getter=isPaused) BOOL paused;
 
-- (void) drawInSize:(CGSize)s;
+- (void) draw;
 
 @end
