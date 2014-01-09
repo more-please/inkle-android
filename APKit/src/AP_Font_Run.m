@@ -61,7 +61,7 @@ typedef struct VertexData {
     if (self) {
         _fontData = data;
 
-        NSMutableData* runData = [NSMutableData dataWithLength:(length * (sizeof(float) + sizeof(unsigned char)))];
+        NSMutableData* runData = [NSMutableData dataWithLength:((length + 1) * sizeof(float) + length * sizeof(unsigned char))];
         _runData = runData;
         _start = 0;
         _end = length;
