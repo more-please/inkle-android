@@ -3,6 +3,7 @@
 #import <OpenGLES/ES2/gl.h>
 
 #import "AP_FPSCounter.h"
+#import "AP_Touch.h"
 #import "AP_Utils.h"
 
 @implementation AP_Window {
@@ -193,8 +194,6 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     }
 }
 
-#ifndef ANDROID
-
 //------------------------------------------------------------------------------------
 #pragma mark - Input
 //------------------------------------------------------------------------------------
@@ -212,10 +211,6 @@ static NSSet* mapTouches(NSSet* touches) {
     for (UITouch* touch in touches) {
         [_activeTouches addObject:touch];
         CGPoint p = [touch locationInView:self.view];
-#ifdef ANDROID
-        p.x /= g_ScreenScale;
-        p.y /= g_ScreenScale;
-#endif
         touch.android = [AP_Touch touchWithWindowPos:p];
         if (!_hitTestView) {
             _hitTestView = [_rootViewController.view hitTest:touch.android.windowPos withEvent:nil];
@@ -256,16 +251,14 @@ static NSSet* mapTouches(NSSet* touches) {
 {
     for (UITouch* touch in touches) {
         CGPoint p = [touch locationInView:self.view];
-#ifdef ANDROID
-        p.x /= g_ScreenScale;
-        p.y /= g_ScreenScale;
-#endif
         touch.android.windowPos = p;
     }
     if (_hitTestView) {
         [_hitTestView touchesMoved:mapTouches(touches) withEvent:nil];
     }
 }
+
+#ifndef ANDROID
 
 //------------------------------------------------------------------------------------
 #pragma mark - Delegated UIViewController methods

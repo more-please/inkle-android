@@ -3,7 +3,19 @@
 #import <objc/runtime.h>
 #import "AP_View.h"
 
-#ifndef ANDROID
+#ifdef ANDROID
+
+@implementation UITouch
+
+- (CGPoint)locationInView:(UIView*)view
+{
+    return _location;
+}
+
+@end
+
+#else
+
 @implementation UITouch(AP)
 - (void) setAndroid:(AP_Touch*)t
 {
@@ -14,6 +26,7 @@
     return objc_getAssociatedObject(self, @selector(android));
 }
 @end
+
 #endif
 
 @implementation AP_Touch
