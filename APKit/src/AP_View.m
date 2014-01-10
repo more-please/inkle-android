@@ -210,19 +210,40 @@ static AP_Animation* g_ActiveAnimation = nil;
 #pragma mark - Hit testing & event dispatch
 //------------------------------------------------------------------------------------
 
-- (CGPoint) convertPoint:(CGPoint)point fromView:(AP_View*)view
-{
-    for (AP_View* v = view; v && v->_superview; v = v->_superview) {
+static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
+    for (AP_View* v = dest; v && v->_superview; v = v->_superview) {
         CGRect frame = v.frame;
         point.x += frame.origin.x;
         point.y += frame.origin.y;
     }
-    for (AP_View* v = self; v && v->_superview; v = v->_superview) {
+    for (AP_View* v = src; v && v->_superview; v = v->_superview) {
         CGRect frame = v.frame;
         point.x -= frame.origin.x;
         point.y -= frame.origin.y;
     }
     return point;
+}
+
+- (CGPoint) convertPoint:(CGPoint)point fromView:(AP_View*)view
+{
+    return convertPoint(point, self, view);
+}
+
+- (CGPoint) convertPoint:(CGPoint)point toView:(AP_View*)view
+{
+    return convertPoint(point, view, self);
+}
+
+- (CGRect) convertRect:(CGRect)rect fromView:(AP_View *)view
+{
+    rect.origin = convertPoint(rect.origin, self, view);
+    return rect;
+}
+
+- (CGRect) convertRect:(CGRect)rect toView:(AP_View *)view
+{
+    rect.origin = convertPoint(rect.origin, view, self);
+    return rect;
 }
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event
