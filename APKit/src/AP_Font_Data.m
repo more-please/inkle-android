@@ -106,7 +106,7 @@ static LigatureRHS g_ZeroLigature;
                 _ligatureMap.rhs[g1] = (LigatureRHS*)[data bytes];
             }
             _ligatureMap.rhs[g1]->ligature[g2] = [self glyphForChar:ligature->ligature];
-            _ligatureMap.rhs[g1]->rarity[g2] = quaint ? 3 : 1;
+            _ligatureMap.rhs[g1]->rarity[g2] = quaint ? 5 : 1;
         }
         for (int i = 0; i < _header->numKerningPairs; ++i) {
             const fontex_kerning_pair_t* kerning = _kerning + i;
