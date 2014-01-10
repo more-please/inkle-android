@@ -86,7 +86,10 @@
 
 - (void) setText:(NSString *)text
 {
-    AP_CHECK(text, return);
+    if (!text) {
+        // This often happens with textless buttons... Should the text be nil or empty?
+        text = @"";
+    }
     _text = [NSMutableAttributedString attributedStringWithString:text];
     [_text setFont:_font];
     [_text setTextColor:_textColor];
