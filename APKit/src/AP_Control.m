@@ -1,11 +1,13 @@
 #import "AP_Control.h"
 
+#import "AP_Check.h"
 #import "AP_Touch.h"
 
 @interface AP_Control_Action : NSObject 
 @property (nonatomic,weak) id target;
 @property (nonatomic) SEL action;
 @property (nonatomic) UIControlEvents events;
+@property (nonatomic) int numArgs;
 @end
 
 @implementation AP_Control_Action
@@ -42,6 +44,8 @@
     ack.target = target;
     ack.action = action;
     ack.events = controlEvents;
+    ack.numArgs = [target methodSignatureForSelector:action].numberOfArguments;
+    AP_CHECK(ack.numArgs <= 4, return);
     [_actions addObject:ack];
 }
 
@@ -58,8 +62,17 @@
             id target = ack.target;
             if (target) {
                 IMP imp = [target methodForSelector:ack.action];
-                void (*func)(id, SEL, AP_Control*) = (void *)imp;
-                func(target, ack.action, self);
+                if (ack.numArgs == 2) {
+                    void (*func)(id, SEL) = (void *)imp;
+                    func(target, ack.action);
+                } else if (ack.numArgs == 3) {
+                    void (*func)(id, SEL, AP_Control*) = (void *)imp;
+                    func(target, ack.action, self);
+                } else {
+                    AP_CHECK(ack.numArgs == 4, continue);
+                    void (*func)(id, SEL, AP_Control*, UIEvent*) = (void *)imp;
+                    func(target, ack.action, self, nil);
+                }
             }
         }
     }
