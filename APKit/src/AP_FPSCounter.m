@@ -6,6 +6,7 @@ const int NUM_FRAME_TIMES = 16;
 @implementation AP_FPSCounter {
     unsigned _count;
     double _frameTimes[NUM_FRAME_TIMES];
+    double _lastLogTime;
 }
 
 - (AP_FPSCounter*) init
@@ -25,7 +26,15 @@ const int NUM_FRAME_TIMES = 16;
 }
 
 - (void) tick {
-    _frameTimes[++_count % NUM_FRAME_TIMES] = AP_TimeInSeconds();
+    double t = AP_TimeInSeconds();
+    _frameTimes[++_count % NUM_FRAME_TIMES] = t;
+    if (_logInterval > 0 && t > (_lastLogTime + _logInterval)) {
+        _lastLogTime += _logInterval;
+        if (_lastLogTime < t) {
+            _lastLogTime = t;
+        }
+        NSLog(@"FPS: %.1f", self.fps);
+    }
 }
 
 - (double) fps {
