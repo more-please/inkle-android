@@ -425,14 +425,24 @@ static AP_Animation* g_ActiveAnimation = nil;
     }
 }
 
-- (void) bringSubviewToFront:(AP_View *)view
+- (void) bringSubviewToFront:(AP_View*)view
 {
-    AP_NOT_IMPLEMENTED;
+    AP_CHECK(view, return);
+    AP_CHECK(view->_superview == self, return);
+    if ([_subviews lastObject] != view) {
+        [_subviews removeObject:view];
+        [_subviews addObject:view];
+    }
 }
 
-- (void) sendSubviewToBack:(AP_View *)view
+- (void) sendSubviewToBack:(AP_View*)view
 {
-    AP_NOT_IMPLEMENTED;
+    AP_CHECK(view, return);
+    AP_CHECK(view->_superview == self, return);
+    if ([_subviews objectAtIndex:0] != view) {
+        [_subviews removeObject:view];
+        [_subviews insertObject:view atIndex:0];
+    }
 }
 
 - (void) visitWithBlock:(void(^)(AP_View*))block
