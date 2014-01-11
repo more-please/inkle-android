@@ -34,7 +34,10 @@
         CGRect bounds = props.bounds;
         CGPoint pos = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
         CGSize size = _image.size;
-        
+
+        CGFloat xGap = (size.width - bounds.size.width) / 2;
+        CGFloat yGap = (size.height - bounds.size.height) / 2;
+
         switch (self.contentMode) {
             case UIViewContentModeScaleToFill:
                 size = bounds.size;
@@ -64,13 +67,41 @@
                 break;
 
             case UIViewContentModeTop:
+                pos.y -= yGap;
+                break;
+
             case UIViewContentModeBottom:
+                pos.y += yGap;
+                break;
+
             case UIViewContentModeLeft:
+                pos.x -= xGap;
+                break;
+
             case UIViewContentModeRight:
+                pos.x += xGap;
+                break;
+
             case UIViewContentModeTopLeft:
+                pos.x -= xGap;
+                pos.y -= yGap;
+                break;
+
             case UIViewContentModeTopRight:
+                pos.x += xGap;
+                pos.y -= yGap;
+                break;
+
             case UIViewContentModeBottomLeft:
+                pos.x -= xGap;
+                pos.y += yGap;
+                break;
+
             case UIViewContentModeBottomRight:
+                pos.x += xGap;
+                pos.y += yGap;
+                break;
+
             case UIViewContentModeRedraw:
             default:
                 AP_LogError("Content mode %d not implemented", self.contentMode);
