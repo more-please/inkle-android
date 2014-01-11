@@ -126,7 +126,7 @@
 //        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", _image.assetName, pos.x, pos.y, size.width, size.height, alpha);
 
         if (self.clipsToBounds) {
-            CGRect r = [self convertRect:bounds toView:nil];
+            CGRect r = [self convertInFlightRect:bounds toView:nil];
             UIScreen* screen = [UIScreen mainScreen];
             CGFloat scale = screen.scale;
             int x = r.origin.x * scale;

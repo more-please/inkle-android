@@ -212,12 +212,26 @@ static AP_Animation* g_ActiveAnimation = nil;
 
 static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
     for (AP_View* v = dest; v && v->_superview; v = v->_superview) {
-        CGRect frame = v.frame;
+        CGRect frame = v->_currentProps.frame;
         point.x += frame.origin.x;
         point.y += frame.origin.y;
     }
     for (AP_View* v = src; v && v->_superview; v = v->_superview) {
-        CGRect frame = v.frame;
+        CGRect frame = v->_currentProps.frame;
+        point.x -= frame.origin.x;
+        point.y -= frame.origin.y;
+    }
+    return point;
+}
+
+static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) {
+    for (AP_View* v = dest; v && v->_superview; v = v->_superview) {
+        CGRect frame = v->_inFlightProps.frame;
+        point.x += frame.origin.x;
+        point.y += frame.origin.y;
+    }
+    for (AP_View* v = src; v && v->_superview; v = v->_superview) {
+        CGRect frame = v->_inFlightProps.frame;
         point.x -= frame.origin.x;
         point.y -= frame.origin.y;
     }
@@ -243,6 +257,28 @@ static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
 - (CGRect) convertRect:(CGRect)rect toView:(AP_View *)view
 {
     rect.origin = convertPoint(rect.origin, view, self);
+    return rect;
+}
+
+- (CGPoint) convertInFlightPoint:(CGPoint)point fromView:(AP_View*)view
+{
+    return convertInFlightPoint(point, self, view);
+}
+
+- (CGPoint) convertInFlightPoint:(CGPoint)point toView:(AP_View*)view
+{
+    return convertInFlightPoint(point, view, self);
+}
+
+- (CGRect) convertInFlightRect:(CGRect)rect fromView:(AP_View *)view
+{
+    rect.origin = convertInFlightPoint(rect.origin, self, view);
+    return rect;
+}
+
+- (CGRect) convertInFlightRect:(CGRect)rect toView:(AP_View *)view
+{
+    rect.origin = convertInFlightPoint(rect.origin, view, self);
     return rect;
 }
 

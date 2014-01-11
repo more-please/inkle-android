@@ -54,6 +54,12 @@
 - (CGRect)convertRect:(CGRect)rect toView:(AP_View *)view;
 - (CGRect)convertRect:(CGRect)rect fromView:(AP_View *)view;
 
+// As above, but uses the intermediate values during animations.
+- (CGPoint)convertInFlightPoint:(CGPoint)point toView:(AP_View *)view;
+- (CGPoint)convertInFlightPoint:(CGPoint)point fromView:(AP_View *)view;
+- (CGRect)convertInFlightRect:(CGRect)rect toView:(AP_View *)view;
+- (CGRect)convertInFlightRect:(CGRect)rect fromView:(AP_View *)view;
+
 - (void)willRemoveSubview:(AP_View*)subview;
 - (void)didAddSubview:(AP_View*)subview;
 
