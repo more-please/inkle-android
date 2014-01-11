@@ -33,6 +33,8 @@
 
 - (void) labelCommonInit
 {
+    self.userInteractionEnabled = NO;
+
     _text = [NSMutableAttributedString attributedStringWithString:@""];
     _font = [UIFont systemFontOfSize:17];
     _alignment = NSTextAlignmentNatural;
