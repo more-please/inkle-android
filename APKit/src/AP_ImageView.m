@@ -1,5 +1,7 @@
 #import "AP_ImageView.h"
 
+#import <OpenGLES/ES2/gl.h>
+
 #import "AP_Log.h"
 
 @implementation AP_ImageView
@@ -28,10 +30,10 @@
     if (alpha > 1) {
         alpha = 1;
     }
-
     if (_image) {
         AP_AnimationProps* props = self.inFlightProps;
         CGRect bounds = props.bounds;
+
         CGPoint pos = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
         CGSize size = _image.size;
 
@@ -122,7 +124,24 @@
             size.height / _image.pixelSize.height);
 
 //        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", _image.assetName, pos.x, pos.y, size.width, size.height, alpha);
+
+        if (self.clipsToBounds) {
+            CGRect r = [self convertRect:bounds toView:nil];
+            UIScreen* screen = [UIScreen mainScreen];
+            CGFloat scale = screen.scale;
+            int x = r.origin.x * scale;
+            int y = (screen.bounds.size.height - (r.origin.y + r.size.height)) * scale;
+            int w = r.size.width * scale;
+            int h = r.size.height * scale;
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(x, y, w, h);
+        }
+
         [_image renderGLWithTransform:t alpha:alpha];
+
+        if (self.clipsToBounds) {
+            glDisable(GL_SCISSOR_TEST);
+        }
     }
 }
 
