@@ -356,8 +356,11 @@ static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
 
 - (void) addSubview:(AP_View*)view
 {
-    AP_CHECK(![_subviews containsObject:view], return);
-    [self insertSubview:view atIndex:[_subviews count]];
+    if ([_subviews containsObject:view]) {
+        [self bringSubviewToFront:view];
+    } else {
+        [self insertSubview:view atIndex:[_subviews count]];
+    }
 }
 
 - (void) insertSubview:(AP_View *)view aboveSubview:(AP_View*)siblingSubview
