@@ -292,6 +292,20 @@ static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
 #pragma mark - View & window hierarchy
 //------------------------------------------------------------------------------------
 
+- (AP_View*) viewWithTag:(NSInteger)tag
+{
+    for (AP_View* v in _subviews) {
+        AP_View* result = [v viewWithTag:tag];
+        if (result) {
+            return result;
+        }
+    }
+    if (_tag == tag) {
+        return self;
+    }
+    return nil;
+}
+
 - (AP_Window*) window
 {
     if (_window) {
