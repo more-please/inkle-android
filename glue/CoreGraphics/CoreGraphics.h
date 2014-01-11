@@ -193,7 +193,7 @@ static inline CGAffineTransform CGAffineTransformMakeScale(CGFloat sx, CGFloat s
 static inline CGAffineTransform CGAffineTransformMakeRotation(CGFloat angle) {
     CGFloat c = cos(angle);
     CGFloat s = sin(angle);
-    CGAffineTransform result = { c, -s, s, c, 0, 0 };
+    CGAffineTransform result = { c, s, -s, c, 0, 0 };
     return result;
 }
 
