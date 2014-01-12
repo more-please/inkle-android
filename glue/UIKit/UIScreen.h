@@ -8,8 +8,10 @@
 + (UIScreen*) mainScreen;
 
 @property(nonatomic,readonly) CGRect bounds;
+@property(nonatomic,readonly) CGRect applicationFrame;
 @property(nonatomic,readonly) CGFloat scale;
+@property(nonatomic,readonly) CGFloat statusBarHeight;
 
-- (void) setSize:(CGSize)size scale:(CGFloat)scale;
+- (void) setBounds:(CGRect)bounds applicationFrame:(CGRect)frame scale:(CGFloat)scale;
 
 @end
