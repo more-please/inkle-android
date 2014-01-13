@@ -10,6 +10,9 @@
 @implementation AP_View {
     AP_Window* _window;
     BOOL _needsLayout;
+
+    NSArray* _zSortedSubviews;
+    int _zSortIndex;
 }
 
 - (AP_View*) init
@@ -441,12 +444,14 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (superview) {
         [superview willRemoveSubview:view];
         [superview->_subviews removeObject:view];
+        [superview zOrderChanged];
         view->_superview = nil;
     }
 
     AP_CHECK(index >= 0, return);
     AP_CHECK(index <= _subviews.count, return);
     [_subviews insertObject:view atIndex:index];
+    [self zOrderChanged];
 
     view->_superview = self;
     view->_window = nil;
@@ -488,6 +493,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     [_superview setNeedsLayout];
 
     [_superview->_subviews removeObject:self];
+    [_superview zOrderChanged];
     _superview = nil;
     _window = nil;
 
@@ -508,6 +514,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if ([_subviews lastObject] != view) {
         [_subviews removeObject:view];
         [_subviews addObject:view];
+        [self zOrderChanged];
     }
 }
 
@@ -518,6 +525,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if ([_subviews objectAtIndex:0] != view) {
         [_subviews removeObject:view];
         [_subviews insertObject:view atIndex:0];
+        [self zOrderChanged];
     }
 }
 
@@ -785,6 +793,30 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     }
 }
 
+- (void) zOrderChanged
+{
+    _zSortedSubviews = nil;
+}
+
+- (NSComparisonResult) zCompare:(AP_View*)other
+{
+    float z = _layer.zPosition;
+    float zOther = other->_layer.zPosition;
+    int i = _zSortIndex;
+    int iOther = other->_zSortIndex;
+    if (z < zOther) {
+        return NSOrderedAscending;
+    } else if (z > zOther) {
+        return NSOrderedDescending;
+    } else if (i < iOther) {
+        return NSOrderedAscending;
+    } else if (i > iOther) {
+        return NSOrderedDescending;
+    } else {
+        return NSOrderedSame;
+    }
+}
+
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha
 {
     // Update inFlightProps, if necessary.
@@ -821,8 +853,22 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     boundsToGL = CGAffineTransformConcat(boundsToGL, frameToGL);
 
     [self renderWithBoundsToGL:boundsToGL alpha:alpha];
-    
-    for (AP_View* view in _subviews) {
+
+    if (_zSortedSubviews) {
+        // Sanity check
+        AP_CHECK(_zSortedSubviews.count == _subviews.count, _zSortedSubviews = nil);
+    }
+
+    if (!_zSortedSubviews) {
+        // Rebuild z-ordered subview list
+        int i = 0;
+        for (AP_View* view in _subviews) {
+            view->_zSortIndex = i++;
+        }
+        _zSortedSubviews = [_subviews sortedArrayUsingSelector:@selector(zCompare:)];
+    }
+
+    for (AP_View* view in _zSortedSubviews) {
         [view renderSelfAndChildrenWithFrameToGL:boundsToGL alpha:alpha];
     }
 }

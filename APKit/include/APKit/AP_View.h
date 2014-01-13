@@ -107,6 +107,8 @@
 // ----------------------------------------------------------------------
 // Internal stuff
 
+- (void) zOrderChanged;
+
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
 - (void) updateGL;

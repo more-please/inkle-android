@@ -44,6 +44,14 @@ AP_BAN_EVIL_INIT
     _view.currentProps.center = p;
 }
 
+- (void) setZPosition:(CGFloat)zPosition
+{
+    if (zPosition != _zPosition) {
+        _zPosition = zPosition;
+        [_view zOrderChanged];
+    }
+}
+
 - (void) removeAllAnimations
 {
     [_view cancelAnimation];
