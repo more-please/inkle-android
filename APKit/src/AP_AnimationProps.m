@@ -12,6 +12,7 @@
     if (self) {
         _bounds = CGRectMake(0, 0, 0, 0);
         _frame = CGRectMake(0, 0, 0, 0);
+        _anchorPoint = CGPointMake(0.5, 0.5);
         _alpha = 1.0;
         _transform = CGAffineTransformIdentity;
         _backgroundColor = GLKVector4Make(0, 0, 0, 0);
@@ -31,6 +32,7 @@
     AP_CHECK(other, return);
     _frame = other->_frame;
     _bounds = other->_bounds;
+    _anchorPoint = other->_anchorPoint;
     _transform = other->_transform;
     _alpha = other->_alpha;
     _backgroundColor = other->_backgroundColor;
@@ -71,6 +73,7 @@ static inline GLKVector4 lerpVector(GLKVector4 src, GLKVector4 dest, CGFloat tim
     time = AP_CLAMP(time, 0, 1);
     _bounds = lerpRect(src->_bounds, dest->_bounds, time);
     _frame = lerpRect(src->_frame, dest->_frame, time);
+    _anchorPoint = lerpPoint(src->_anchorPoint, dest->_anchorPoint, time);
     _alpha = AP_Lerp(src->_alpha, dest->_alpha, time);
 
     // This probably won't be quite right for rotations, but what the hell..
@@ -88,8 +91,8 @@ static inline GLKVector4 lerpVector(GLKVector4 src, GLKVector4 dest, CGFloat tim
 {
     CGSize sizeDiff = CGSizeMake(r.size.width - _bounds.size.width, r.size.height - _bounds.size.height);
     _bounds = r;
-    _frame.origin.x -= sizeDiff.width/2;
-    _frame.origin.y -= sizeDiff.height/2;
+    _frame.origin.x -= sizeDiff.width * _anchorPoint.x;
+    _frame.origin.y -= sizeDiff.height * _anchorPoint.y;
     _frame.size.width += sizeDiff.width;
     _frame.size.height += sizeDiff.height;
 }
@@ -104,12 +107,26 @@ static inline GLKVector4 lerpVector(GLKVector4 src, GLKVector4 dest, CGFloat tim
 
 - (CGPoint) center
 {
-    return CGPointMake(_frame.origin.x + _frame.size.width/2, _frame.origin.y + _frame.size.height/2);
+    return CGPointMake(
+        _frame.origin.x + _frame.size.width * _anchorPoint.x,
+        _frame.origin.y + _frame.size.height * _anchorPoint.y);
 }
 
 - (void) setCenter:(CGPoint)p
 {
     CGPoint delta = CGPointMake(p.x - self.center.x, p.y - self.center.y);
+    _frame.origin.x += delta.x;
+    _frame.origin.y += delta.y;
+}
+
+- (void) setAnchorPoint:(CGPoint)p
+{
+    CGPoint oldCenter = self.center;
+    _anchorPoint = p;
+    CGPoint newCenter = self.center;
+
+    // Adjust frame, so that center actually stays in the same place.
+    CGPoint delta = CGPointMake(oldCenter.x - newCenter.x, oldCenter.y - newCenter.y);
     _frame.origin.x += delta.x;
     _frame.origin.y += delta.y;
 }

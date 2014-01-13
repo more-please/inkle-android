@@ -6,10 +6,10 @@
 #import "AP_Animation.h"
 #import "AP_AnimationProps.h"
 #import "AP_GestureRecognizer.h"
-#import "AP_Layer.h"
 #import "AP_Responder.h"
 
 @class AP_Event;
+@class AP_Layer;
 @class AP_ViewController;
 @class AP_Window;
 

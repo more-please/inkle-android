@@ -3,6 +3,7 @@
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
+#import "AP_Layer.h"
 #import "AP_Utils.h"
 #import "NSObject+AP_KeepAlive.h"
 
@@ -20,6 +21,7 @@
 {
     self = [super init];
     if (self) {
+        _layer = [[AP_Layer alloc] initWithView:self];
         _subviews = [NSMutableArray array];
 
         _currentProps = [[AP_AnimationProps alloc] init];

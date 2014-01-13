@@ -6,7 +6,7 @@
 
 // Use this macro to ensure raw init: isn't called.
 #define AP_BAN_EVIL_INIT \
-    - (id) init \
+    - (instancetype) init \
     { \
         AP_LogFatal("Don't call init!"); \
         return nil; \

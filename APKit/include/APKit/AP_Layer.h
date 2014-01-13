@@ -4,6 +4,8 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <UIKit/UIKit.h>
 
+@class AP_View;
+
 @interface AP_Layer : NSObject
 
 @property(nonatomic) CGFloat zPosition;
@@ -19,5 +21,9 @@
 @property(nonatomic) CGPoint position;
 
 - (void)removeAllAnimations;
+
+@property(nonatomic,readonly,weak) AP_View* view;
+
+- (instancetype) initWithView:(AP_View*)view;
 
 @end

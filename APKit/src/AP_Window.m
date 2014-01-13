@@ -104,10 +104,10 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     g_ScreenScale = screen.scale;
     g_ScreenBounds = screen.bounds;
     if (isLandscape) {
-        g_ScreenBounds.origin = CGSizeMake(g_ScreenBounds.origin.y, g_ScreenBounds.origin.x);
-        g_ScreenBounds.size = CGSizeMake(g_ScreenBounds.size.height, g_ScreenSize.size.width);
+        g_ScreenBounds.origin = CGPointMake(g_ScreenBounds.origin.y, g_ScreenBounds.origin.x);
+        g_ScreenBounds.size = CGSizeMake(g_ScreenBounds.size.height, g_ScreenBounds.size.width);
     }
-    NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenSize.width, (int) g_ScreenSize.height, g_ScreenScale);
+    NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, g_ScreenScale);
 }
 
 - (void)dealloc

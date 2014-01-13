@@ -9,6 +9,7 @@
 @property (nonatomic,assign) CGRect frame;
 @property (nonatomic,assign) CGRect bounds;
 @property (nonatomic,assign) CGPoint center;
+@property (nonatomic,assign) CGPoint anchorPoint;
 @property (nonatomic,assign) CGAffineTransform transform;
 @property (nonatomic,assign) CGFloat alpha;
 @property (nonatomic) GLKVector4 backgroundColor;
