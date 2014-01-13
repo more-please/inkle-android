@@ -838,13 +838,17 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         return;
     }
 
+    CGPoint anchor = _inFlightProps.anchorPoint;
     CGRect bounds = _inFlightProps.bounds;
     CGRect frame = _inFlightProps.frame;
 
     CGAffineTransform boundsCenterToOrigin = CGAffineTransformMakeTranslation(
-        -(bounds.origin.x + bounds.size.width/2), -(bounds.origin.y + bounds.size.height/2));
+        -(bounds.origin.x + anchor.x * bounds.size.width),
+        -(bounds.origin.y + anchor.y * bounds.size.height));
+
     CGAffineTransform originToFrameCenter = CGAffineTransformMakeTranslation(
-        (frame.origin.x + frame.size.width/2), (frame.origin.y + frame.size.height/2));
+        (frame.origin.x + anchor.x * frame.size.width),
+        (frame.origin.y + anchor.y * frame.size.height));
 
     CGAffineTransform boundsToGL = CGAffineTransformIdentity;
     boundsToGL = CGAffineTransformConcat(boundsToGL, boundsCenterToOrigin);
