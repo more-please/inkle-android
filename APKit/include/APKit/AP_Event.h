@@ -4,7 +4,9 @@
 
 @interface AP_Event : NSObject
 
-- (NSSet*) allTouches;
+@property(nonatomic,strong) NSSet* allTouches;
+
+//- (NSSet*) allTouches;
 //- (NSSet*) touchesForWindow:(AP_Window*)window;
 //- (NSSet*) touchesForView:(UIView *)view;
 //- (NSSet*) touchesForGestureRecognizer:(UIGestureRecognizer *)gesture NS_AVAILABLE_IOS(3_2);

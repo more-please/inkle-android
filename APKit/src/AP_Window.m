@@ -212,14 +212,18 @@ static NSSet* mapTouches(NSSet* touches) {
         }
     }
     if (_hitTestView) {
-        [_hitTestView touchesBegan:mapTouches(touches) withEvent:nil];
+        AP_Event* androidEvent = [[AP_Event alloc] init];
+        androidEvent.allTouches = _activeTouches;
+        [_hitTestView touchesBegan:mapTouches(touches) withEvent:androidEvent];
     }
 }
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
 {
     if (_hitTestView) {
-        [_hitTestView touchesCancelled:mapTouches(touches) withEvent:nil];
+        AP_Event* androidEvent = [[AP_Event alloc] init];
+        androidEvent.allTouches = _activeTouches;
+        [_hitTestView touchesCancelled:mapTouches(touches) withEvent:androidEvent];
     }
     for (UITouch* touch in touches) {
         [_activeTouches removeObject:touch];
@@ -232,7 +236,9 @@ static NSSet* mapTouches(NSSet* touches) {
 - (void) touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
 {
     if (_hitTestView) {
-        [_hitTestView touchesEnded:mapTouches(touches) withEvent:nil];
+        AP_Event* androidEvent = [[AP_Event alloc] init];
+        androidEvent.allTouches = _activeTouches;
+        [_hitTestView touchesEnded:mapTouches(touches) withEvent:androidEvent];
     }
     for (UITouch* touch in touches) {
         [_activeTouches removeObject:touch];
@@ -249,7 +255,9 @@ static NSSet* mapTouches(NSSet* touches) {
         touch.android.windowPos = p;
     }
     if (_hitTestView) {
-        [_hitTestView touchesMoved:mapTouches(touches) withEvent:nil];
+        AP_Event* androidEvent = [[AP_Event alloc] init];
+        androidEvent.allTouches = _activeTouches;
+        [_hitTestView touchesMoved:mapTouches(touches) withEvent:androidEvent];
     }
 }
 

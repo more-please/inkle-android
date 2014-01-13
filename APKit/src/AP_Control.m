@@ -49,7 +49,7 @@
     [_actions addObject:ack];
 }
 
-- (void) dispatchEvent:(UIControlEvents)event
+- (void) dispatch:(UIControlEvents)mask event:(AP_Event*)event
 {
     if (!self.isUserInteractionEnabled) {
         return;
@@ -58,7 +58,7 @@
         return;
     }
     for (AP_Control_Action* ack in _actions) {
-        if (ack.events & event) {
+        if (ack.events & mask) {
             id target = ack.target;
             if (target) {
                 IMP imp = [target methodForSelector:ack.action];
@@ -70,8 +70,8 @@
                     func(target, ack.action, self);
                 } else {
                     AP_CHECK(ack.numArgs == 4, continue);
-                    void (*func)(id, SEL, AP_Control*, UIEvent*) = (void *)imp;
-                    func(target, ack.action, self, nil);
+                    void (*func)(id, SEL, AP_Control*, AP_Event*) = (void *)imp;
+                    func(target, ack.action, self, event);
                 }
             }
         }
@@ -89,7 +89,7 @@
         for (AP_Touch* touch in touches) {
             _touch = touch;
             self.highlighted = YES;
-            [self dispatchEvent:UIControlEventTouchDown];
+            [self dispatch:UIControlEventTouchDown event:event];
             return;
         }
     }
@@ -101,7 +101,7 @@
         if (touch == _touch) {
             _touch = nil;
             self.highlighted = NO;
-            [self dispatchEvent:UIControlEventTouchCancel];
+            [self dispatch:UIControlEventTouchCancel event:event];
         }
     }
 }
@@ -114,7 +114,7 @@
             self.highlighted = NO;
             CGPoint p = [touch locationInView:self];
             BOOL inside = [self pointInside:p withEvent:event];
-            [self dispatchEvent:(inside ? UIControlEventTouchUpInside : UIControlEventTouchUpOutside)];
+            [self dispatch:(inside ? UIControlEventTouchUpInside : UIControlEventTouchUpOutside) event:event];
         }
     }
 }
@@ -128,9 +128,9 @@
             BOOL inside = [self pointInside:p withEvent:event];
             self.highlighted = inside;
             if (inside != wasInside) {
-                [self dispatchEvent:(inside ? UIControlEventTouchDragEnter : UIControlEventTouchDragExit)];
+                [self dispatch:(inside ? UIControlEventTouchDragEnter : UIControlEventTouchDragExit) event:event];
             }
-            [self dispatchEvent:(inside ? UIControlEventTouchDragInside : UIControlEventTouchDragOutside)];
+            [self dispatch:(inside ? UIControlEventTouchDragInside : UIControlEventTouchDragOutside) event:event];
         }
     }
 }
