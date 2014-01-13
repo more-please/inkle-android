@@ -289,7 +289,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event
 {
-    if (_inFlightProps.alpha < 0.01) {
+    if (_hidden || _inFlightProps.alpha < 0.01) {
         return nil;
     }
     if (!self.isUserInteractionEnabled) {
@@ -834,7 +834,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     }
 
     alpha *= _inFlightProps.alpha;
-    if (alpha <= 0) {
+    if (_hidden || alpha <= 0) {
         return;
     }
 
