@@ -21,7 +21,7 @@
 
 - (UIUserInterfaceIdiom) userInterfaceIdiom
 {
-    GLUE_NOT_IMPLEMENTED;
+//    GLUE_NOT_IMPLEMENTED;
     return UIUserInterfaceIdiomPad;
 }
 
