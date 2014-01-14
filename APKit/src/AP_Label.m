@@ -92,6 +92,8 @@
         // This often happens with textless buttons... Should the text be nil or empty?
         text = @"";
     }
+    // Assume that if the text isn't styled, we want to center vertically like UILabel does.
+    _centerVertically = YES;
     _text = [NSMutableAttributedString attributedStringWithString:text];
     [_text setFont:_font];
     [_text setTextColor:_textColor];
