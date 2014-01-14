@@ -158,12 +158,12 @@
 - (void) finishCurrentLine
 {
     if (!_atStartOfLine) {
-        _formattedSize.width = MAX(_formattedSize.width, _cursor.x + _currentStyle.tailIndent);
+        _formattedSize.width = MAX(_formattedSize.width, _cursor.x - _currentStyle.tailIndent);
 
         CGPoint offset;
         
         // Calculate x offset based on line length and alignment.
-        CGFloat xGap = self.bounds.size.width - (_cursor.x + _currentStyle.tailIndent);
+        CGFloat xGap = (_layoutWidth + _currentStyle.tailIndent) - _cursor.x;
         switch (_currentStyle.alignment) {
             case kCTTextAlignmentRight:
                 offset.x = xGap;
@@ -265,7 +265,7 @@
             // Word-wrap as necessary.
             while (run.numChars > 0) {
                 AP_Font_Run* nextLine;
-                run = [run splitAtWidth:(_layoutWidth - _cursor.x - _currentStyle.tailIndent) leaving:&nextLine];
+                run = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
                 if (run.numChars > 0) {
                     if (_atStartOfParagraph) {
                         _cursor.y += _currentStyle.paragraphSpacingBefore;
