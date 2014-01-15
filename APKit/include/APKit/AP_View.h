@@ -79,6 +79,7 @@
 @property(nonatomic,readonly) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
 @property(nonatomic,readonly,copy) NSMutableArray* subviews;
+@property(nonatomic,readonly,copy) NSMutableArray* gestureRecognizers;
 
 // Animatable properties. These delegate to self.currentProps.
 @property(nonatomic) CGRect bounds;

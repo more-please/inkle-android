@@ -7,6 +7,7 @@
 @property (nonatomic,weak) id target;
 @property (nonatomic) SEL action;
 @property (nonatomic) UIControlEvents events;
+@property (nonatomic) IMP imp;
 @property (nonatomic) int numArgs;
 @end
 
@@ -44,6 +45,7 @@
     ack.target = target;
     ack.action = action;
     ack.events = controlEvents;
+    ack.imp = [target methodForSelector:ack.action];
     ack.numArgs = [target methodSignatureForSelector:action].numberOfArguments;
     AP_CHECK(ack.numArgs <= 4, return);
     [_actions addObject:ack];
@@ -61,16 +63,15 @@
         if (ack.events & mask) {
             id target = ack.target;
             if (target) {
-                IMP imp = [target methodForSelector:ack.action];
                 if (ack.numArgs == 2) {
-                    void (*func)(id, SEL) = (void *)imp;
+                    void (*func)(id, SEL) = (void*) (ack.imp);
                     func(target, ack.action);
                 } else if (ack.numArgs == 3) {
-                    void (*func)(id, SEL, AP_Control*) = (void *)imp;
+                    void (*func)(id, SEL, AP_Control*) = (void*) (ack.imp);
                     func(target, ack.action, self);
                 } else {
                     AP_CHECK(ack.numArgs == 4, continue);
-                    void (*func)(id, SEL, AP_Control*, AP_Event*) = (void *)imp;
+                    void (*func)(id, SEL, AP_Control*, AP_Event*) = (void*) (ack.imp);
                     func(target, ack.action, self, event);
                 }
             }

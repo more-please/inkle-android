@@ -26,6 +26,7 @@
     if (self) {
         _layer = [[AP_Layer alloc] initWithView:self];
         _subviews = [NSMutableArray array];
+        _gestureRecognizers = [NSMutableArray array];
 
         _currentProps = [[AP_AnimationProps alloc] init];
         _currentProps.frame = frame;
@@ -881,9 +882,10 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 #pragma mark - Misc unimplemented
 //------------------------------------------------------------------------------------
 
-- (void) addGestureRecognizer:(AP_GestureRecognizer *)gestureRecognizer
+- (void) addGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer
 {
-    AP_NOT_IMPLEMENTED;
+    [_gestureRecognizers addObject:gestureRecognizer];
+    [gestureRecognizer wasAddedToView:self];
 }
 
 - (void) setNeedsDisplay

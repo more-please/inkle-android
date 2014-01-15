@@ -193,39 +193,48 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 #pragma mark - Input
 //------------------------------------------------------------------------------------
 
-static NSSet* mapTouches(NSSet* touches) {
-    NSMutableSet* result = [NSMutableSet set];
-    for (UITouch* touch in touches) {
-        [result addObject:touch.android];
-    }
-    return result;
-}
-
-- (void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
+- (void) touchesBegan:(NSSet*)ts withEvent:(UIEvent*)e
 {
-    for (UITouch* touch in touches) {
+    NSMutableSet* touches = [NSMutableSet set];
+    for (UITouch* t in ts) {
+        CGPoint p = [t locationInView:self.view];
+        AP_Touch* touch = [AP_Touch touchWithWindowPos:p];
+        t.android = touch;
         [_activeTouches addObject:touch];
-        CGPoint p = [touch locationInView:self.view];
-        touch.android = [AP_Touch touchWithWindowPos:p];
+        [touches addObject:touch];
+    }
+    AP_Event* event = [[AP_Event alloc] init];
+    event.allTouches = _activeTouches;
+
+    for (AP_Touch* touch in touches) {
         if (!_hitTestView) {
-            _hitTestView = [_rootViewController.view hitTest:touch.android.windowPos withEvent:nil];
+            _hitTestView = [_rootViewController.view hitTest:touch.windowPos withEvent:event];
         }
     }
     if (_hitTestView) {
-        AP_Event* androidEvent = [[AP_Event alloc] init];
-        androidEvent.allTouches = _activeTouches;
-        [_hitTestView touchesBegan:mapTouches(touches) withEvent:androidEvent];
+        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+            [g touchesBegan:touches withEvent:event];
+        }
+        [_hitTestView touchesBegan:touches withEvent:event];
     }
 }
 
-- (void) touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
+- (void) touchesCancelled:(NSSet*)ts withEvent:(UIEvent*)e
 {
-    if (_hitTestView) {
-        AP_Event* androidEvent = [[AP_Event alloc] init];
-        androidEvent.allTouches = _activeTouches;
-        [_hitTestView touchesCancelled:mapTouches(touches) withEvent:androidEvent];
+    NSMutableSet* touches = [NSMutableSet set];
+    for (UITouch* t in ts) {
+        [touches addObject:t.android];
     }
-    for (UITouch* touch in touches) {
+    AP_Event* event = [[AP_Event alloc] init];
+    event.allTouches = _activeTouches;
+
+    if (_hitTestView) {
+        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+            [g touchesCancelled:touches withEvent:event];
+        }
+        [_hitTestView touchesCancelled:touches withEvent:event];
+    }
+    for (AP_Touch* touch in touches) {
         [_activeTouches removeObject:touch];
     }
     if (_activeTouches.count == 0) {
@@ -233,14 +242,22 @@ static NSSet* mapTouches(NSSet* touches) {
     }
 }
 
-- (void) touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
+- (void) touchesEnded:(NSSet*)ts withEvent:(UIEvent*)e
 {
-    if (_hitTestView) {
-        AP_Event* androidEvent = [[AP_Event alloc] init];
-        androidEvent.allTouches = _activeTouches;
-        [_hitTestView touchesEnded:mapTouches(touches) withEvent:androidEvent];
+    NSMutableSet* touches = [NSMutableSet set];
+    for (UITouch* t in ts) {
+        [touches addObject:t.android];
     }
-    for (UITouch* touch in touches) {
+    AP_Event* event = [[AP_Event alloc] init];
+    event.allTouches = _activeTouches;
+
+    if (_hitTestView) {
+        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+            [g touchesEnded:touches withEvent:event];
+        }
+        [_hitTestView touchesEnded:touches withEvent:event];
+    }
+    for (AP_Touch* touch in touches) {
         [_activeTouches removeObject:touch];
     }
     if (_activeTouches.count == 0) {
@@ -248,17 +265,33 @@ static NSSet* mapTouches(NSSet* touches) {
     }
 }
 
-- (void) touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event
+- (void) touchesMoved:(NSSet*)ts withEvent:(UIEvent*)e
 {
-    for (UITouch* touch in touches) {
-        CGPoint p = [touch locationInView:self.view];
-        touch.android.windowPos = p;
+    NSMutableSet* touches = [NSMutableSet set];
+    for (UITouch* t in ts) {
+        t.android.windowPos = [t locationInView:self.view];
+        [touches addObject:t.android];
     }
+    AP_Event* event = [[AP_Event alloc] init];
+    event.allTouches = _activeTouches;
+
     if (_hitTestView) {
-        AP_Event* androidEvent = [[AP_Event alloc] init];
-        androidEvent.allTouches = _activeTouches;
-        [_hitTestView touchesMoved:mapTouches(touches) withEvent:androidEvent];
+        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+            [g touchesMoved:touches withEvent:event];
+        }
+        [_hitTestView touchesMoved:touches withEvent:event];
     }
+}
+
+- (void) resetTouches
+{
+    if (_hitTestView) {
+        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+            [g reset];
+        }
+    }
+    _hitTestView = nil;
+    _activeTouches = [NSMutableSet set];
 }
 
 #ifndef ANDROID

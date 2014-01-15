@@ -3,7 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@class AP_GestureRecognizer;
+@class AP_Event;
 @class AP_View;
 
 @protocol AP_GestureRecognizerDelegate <NSObject>
@@ -11,16 +11,27 @@
 
 @interface AP_GestureRecognizer : NSObject
 
-@property(nonatomic,assign) id<AP_GestureRecognizerDelegate> delegate;
+@property(nonatomic,weak) id<AP_GestureRecognizerDelegate> delegate;
 @property(nonatomic,getter=isEnabled) BOOL enabled;
 @property(nonatomic,readonly) UIGestureRecognizerState state;
-@property(nonatomic,readonly) AP_View* view;
+@property(nonatomic,readonly,weak) AP_View* view;
 @property(nonatomic) BOOL cancelsTouchesInView;
 
 - (id) initWithTarget:(id)target action:(SEL)action;
 
 - (CGPoint) locationInView:(AP_View*)view;
 - (NSUInteger) numberOfTouches;
+
+// Methods for subclasses
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event;
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event;
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event;
+- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event;
+- (void) reset;
+
+// Private stuff
+- (void) wasAddedToView:(AP_View*)view;
+- (void) fire;
 
 @end
 

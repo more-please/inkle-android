@@ -27,4 +27,9 @@
     NSLog(@"[UIViewController touchesMoved]");
 }
 
+- (void) resetTouches
+{
+    NSLog(@"[UIViewController resetTouches]");
+}
+
 @end
