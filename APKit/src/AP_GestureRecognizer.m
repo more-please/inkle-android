@@ -76,43 +76,117 @@
 @implementation AP_LongPressGestureRecognizer
 @end
 
-@implementation AP_PinchGestureRecognizer
-@end
-
-@implementation AP_PanGestureRecognizer {
+@implementation AP_PinchGestureRecognizer {
     NSMutableSet* _touches;
-    CGPoint _translation;
+}
+
+- (NSUInteger) numberOfTouches
+{
+    return _touches.count;
 }
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (!_touches) {
-        _touches = [NSMutableSet setWithSet:touches];
-        _translation = CGPointZero;
+    if (!_touches && event.allTouches.count == 2) {
+        _touches = [NSMutableSet setWithSet:event.allTouches];
         [self fireWithState:UIGestureRecognizerStateBegan];
     }
 }
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    BOOL gotGesture = NO;
     for (AP_Touch* t in _touches) {
         if (t.phase == UITouchPhaseMoved) {
-            gotGesture = YES;
-            break;
+            [self fireWithState:UIGestureRecognizerStateChanged];
+            return;
         }
     }
+}
 
-    if (gotGesture) {
-        _translation = CGPointZero;
-        for (AP_Touch* t in _touches) {
-            _translation.x += (t.windowPos.x - t.initialWindowPos.x);
-            _translation.y += (t.windowPos.y - t.initialWindowPos.y);
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_touches) {
+        [_touches minusSet:touches];
+        if ([_touches count] < 2) {
+            [self fireWithState:UIGestureRecognizerStateEnded];
+            [self reset];
         }
-        _translation.x /= [_touches count];
-        _translation.y /= [_touches count];
+    }
+}
 
-        [self fireWithState:UIGestureRecognizerStateChanged];
+- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_touches) {
+        [_touches minusSet:touches];
+        if ([_touches count] == 0) {
+            [self fireWithState:UIGestureRecognizerStateCancelled];
+            [self reset];
+        }
+    }
+}
+
+- (void) reset
+{
+    _touches = nil;
+    [super reset];
+}
+
+static inline CGFloat distance(CGPoint a, CGPoint b) {
+    CGPoint p = {a.x - b.x, a.y - b.y};
+    return sqrtf(p.x * p.x + p.y * p.y);
+}
+
+- (CGFloat)scale
+{
+    if (!_touches || _touches.count != 2) {
+        return 1;
+    }
+    AP_Touch* pinch[2];
+    int i = 0;
+    for (AP_Touch* t in _touches) {
+        pinch[i++] = t;
+    }
+    CGFloat d0 = distance(pinch[0].initialWindowPos, pinch[1].initialWindowPos);
+    CGFloat d1 = distance(pinch[0].windowPos, pinch[1].windowPos);
+    if (d0 <= 0) {
+        return 1;
+    } else {
+        return d1 / d0;
+    }
+}
+
+- (CGFloat) velocity
+{
+    AP_NOT_IMPLEMENTED;
+    return 0;
+}
+
+@end
+
+@implementation AP_PanGestureRecognizer {
+    NSMutableSet* _touches;
+}
+
+- (NSUInteger) numberOfTouches
+{
+    return _touches.count;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (!_touches) {
+        _touches = [NSMutableSet setWithSet:touches];
+        [self fireWithState:UIGestureRecognizerStateBegan];
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    for (AP_Touch* t in _touches) {
+        if (t.phase == UITouchPhaseMoved) {
+            [self fireWithState:UIGestureRecognizerStateChanged];
+            return;
+        }
     }
 }
 
@@ -152,8 +226,14 @@
 
 - (CGPoint) translationInView:(AP_View*)view
 {
-    // Not sure what difference the view is supposed to make...
-    return _translation;
+    CGPoint translation = CGPointZero;
+    for (AP_Touch* t in _touches) {
+        translation.x += (t.windowPos.x - t.initialWindowPos.x);
+        translation.y += (t.windowPos.y - t.initialWindowPos.y);
+    }
+    translation.x /= [_touches count];
+    translation.y /= [_touches count];
+    return translation;
 }
 
 @end
