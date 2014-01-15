@@ -40,7 +40,7 @@ static const Ligature kLigatures[] = {
     { 0xfb00, 'i', 0xfb03 }, // ffi
     { 0xfb00, 'l', 0xfb04 }, // ffl
 //    { 'f', 't', 0xfb05 }, // I don't like this one
-    { 's', 't', 0xfb06 }, // This is considered 'quaint', don't overuse it!
+//    { 's', 't', 0xfb06 }, // This is considered 'quaint', don't overuse it!
     { 0, 0 }
 };
 // Good discussion here: http://english.stackexchange.com/questions/50660/when-should-i-not-use-a-ligature-in-english-typesetting

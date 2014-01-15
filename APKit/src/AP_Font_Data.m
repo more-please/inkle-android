@@ -14,7 +14,6 @@ typedef struct KerningLHS {
 
 typedef struct LigatureRHS {
     unsigned char ligature[256];
-    unsigned char rarity[256];
 } LigatureRHS;
 
 typedef struct LigatureLHS {
@@ -100,13 +99,16 @@ static LigatureRHS g_ZeroLigature;
             unsigned char g1 = [self glyphForChar:ligature->lhs];
             unsigned char g2 = [self glyphForChar:ligature->rhs];
             BOOL quaint = ligature->ligature >= 0xfb05;
+            if (quaint) {
+                // Quaint ligatures like "st" are too distracting, skip them.
+                continue;
+            }
             if (_ligatureMap.rhs[g1] == &g_ZeroLigature) {
                 NSMutableData* data = [NSMutableData dataWithBytes:&g_ZeroLigature length:sizeof(LigatureRHS)];
                 [_extraMaps addObject:data];
                 _ligatureMap.rhs[g1] = (LigatureRHS*)[data bytes];
             }
             _ligatureMap.rhs[g1]->ligature[g2] = [self glyphForChar:ligature->ligature];
-            _ligatureMap.rhs[g1]->rarity[g2] = quaint ? 5 : 1;
         }
         for (int i = 0; i < _header->numKerningPairs; ++i) {
             const fontex_kerning_pair_t* kerning = _kerning + i;
@@ -159,8 +161,7 @@ static LigatureRHS g_ZeroLigature;
 - (BOOL) ligatureForGlyph1:(unsigned char)c1 glyph2:(unsigned char)c2 ligature:(unsigned char*)ligature index:(int)index
 {
     *ligature = _ligatureMap.rhs[c1]->ligature[c2];
-    unsigned char rarity = _ligatureMap.rhs[c1]->rarity[c2];
-    return (*ligature != c2) && (index % rarity == 0);
+    return (*ligature != c2);
 }
 
 - (BOOL) isLineBreak:(unsigned char)c
