@@ -200,6 +200,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
         CGPoint p = [t locationInView:self.view];
         AP_Touch* touch = [AP_Touch touchWithWindowPos:p];
         t.android = touch;
+        touch.phase = UITouchPhaseBegan;
         [_activeTouches addObject:touch];
         [touches addObject:touch];
     }
@@ -211,10 +212,12 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
             _hitTestView = [_rootViewController.view hitTest:touch.windowPos withEvent:event];
         }
     }
-    if (_hitTestView) {
-        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             [g touchesBegan:touches withEvent:event];
         }
+    }
+    if (_hitTestView) {
         [_hitTestView touchesBegan:touches withEvent:event];
     }
 }
@@ -223,17 +226,21 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
+        t.android.phase = UITouchPhaseCancelled;
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    if (_hitTestView) {
-        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             [g touchesCancelled:touches withEvent:event];
         }
+    }
+    if (_hitTestView) {
         [_hitTestView touchesCancelled:touches withEvent:event];
     }
+
     for (AP_Touch* touch in touches) {
         [_activeTouches removeObject:touch];
     }
@@ -246,17 +253,21 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
+        t.android.phase = UITouchPhaseEnded;
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    if (_hitTestView) {
-        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             [g touchesEnded:touches withEvent:event];
         }
+    }
+    if (_hitTestView) {
         [_hitTestView touchesEnded:touches withEvent:event];
     }
+
     for (AP_Touch* touch in touches) {
         [_activeTouches removeObject:touch];
     }
@@ -267,25 +278,35 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 
 - (void) touchesMoved:(NSSet*)ts withEvent:(UIEvent*)e
 {
+    for (AP_Touch* touch in _activeTouches) {
+        touch.phase = UITouchPhaseStationary;
+    }
+
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
         t.android.windowPos = [t locationInView:self.view];
+        t.android.phase = UITouchPhaseMoved;
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    if (_hitTestView) {
-        for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             [g touchesMoved:touches withEvent:event];
         }
+    }
+    if (_hitTestView) {
         [_hitTestView touchesMoved:touches withEvent:event];
     }
 }
 
 - (void) resetTouches
 {
-    if (_hitTestView) {
+    for (AP_Touch* touch in _activeTouches) {
+        touch.phase = UITouchPhaseCancelled;
+    }
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
         for (AP_GestureRecognizer* g in _hitTestView.gestureRecognizers) {
             [g reset];
         }

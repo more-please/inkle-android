@@ -1,6 +1,7 @@
 #import "AP_GestureRecognizer.h"
 
 #import "AP_Check.h"
+#import "AP_Touch.h"
 
 @implementation AP_GestureRecognizer {
     __weak id _target;
@@ -32,8 +33,10 @@
     _view = view;
 }
 
-- (void) fire
+- (void) fireWithState:(UIGestureRecognizerState)state
 {
+    _state = state;
+    AP_CHECK(_state != UIGestureRecognizerStatePossible, return);
     if (_numArgs == 2) {
         void (*func)(id, SEL) = (void*) _imp;
         func(_target, _action);
@@ -76,7 +79,70 @@
 @implementation AP_PinchGestureRecognizer
 @end
 
-@implementation AP_PanGestureRecognizer
+@implementation AP_PanGestureRecognizer {
+    NSMutableSet* _touches;
+    CGPoint _translation;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (!_touches) {
+        _touches = [NSMutableSet setWithSet:touches];
+        _translation = CGPointZero;
+        [self fireWithState:UIGestureRecognizerStateBegan];
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    BOOL gotGesture = NO;
+    for (AP_Touch* t in _touches) {
+        if (t.phase == UITouchPhaseMoved) {
+            gotGesture = YES;
+            break;
+        }
+    }
+
+    if (gotGesture) {
+        _translation = CGPointZero;
+        for (AP_Touch* t in _touches) {
+            _translation.x += (t.windowPos.x - t.initialWindowPos.x);
+            _translation.y += (t.windowPos.y - t.initialWindowPos.y);
+        }
+        _translation.x /= [_touches count];
+        _translation.y /= [_touches count];
+
+        [self fireWithState:UIGestureRecognizerStateChanged];
+    }
+}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_touches) {
+        [_touches minusSet:touches];
+        if ([_touches count] == 0) {
+            [self fireWithState:UIGestureRecognizerStateEnded];
+            [self reset];
+        }
+    }
+}
+
+- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_touches) {
+        [_touches minusSet:touches];
+        if ([_touches count] == 0) {
+            [self fireWithState:UIGestureRecognizerStateCancelled];
+            [self reset];
+        }
+    }
+}
+
+- (void) reset
+{
+    _touches = nil;
+    [super reset];
+}
 
 - (CGPoint) velocityInView:(AP_View *)view
 {
@@ -86,8 +152,8 @@
 
 - (CGPoint) translationInView:(AP_View*)view
 {
-    AP_NOT_IMPLEMENTED;
-    return CGPointZero;
+    // Not sure what difference the view is supposed to make...
+    return _translation;
 }
 
 @end

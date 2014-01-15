@@ -11,6 +11,7 @@
 
 - (BOOL) isViewLoaded;
 
+- (void) loadView;
 - (void) viewDidLoad;
 
 - (void) viewWillAppear:(BOOL)animated;

@@ -31,7 +31,7 @@
 
 // Private stuff
 - (void) wasAddedToView:(AP_View*)view;
-- (void) fire;
+- (void) fireWithState:(UIGestureRecognizerState)state;
 
 @end
 
