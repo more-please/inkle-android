@@ -4,6 +4,7 @@
 #import <UIKit/UIKit.h>
 
 @class AP_Event;
+@class AP_Touch;
 @class AP_View;
 
 @protocol AP_GestureRecognizerDelegate <NSObject>
@@ -33,6 +34,11 @@
 - (void) wasAddedToView:(AP_View*)view;
 - (void) fireWithState:(UIGestureRecognizerState)state;
 
+@property(nonatomic,readonly,strong) NSMutableSet* touches;
+
+- (void) addTouch:(AP_Touch*)touch withValue:(id)value;
+- (id) valueForTouch:(AP_Touch*)touch;
+
 @end
 
 @interface AP_TapGestureRecognizer : AP_GestureRecognizer
@@ -43,10 +49,8 @@
 
 @interface AP_PinchGestureRecognizer : AP_GestureRecognizer
 @property (nonatomic,readonly) CGFloat scale;               // scale relative to the touch points in screen coordinates
-@property (nonatomic,readonly) CGFloat velocity;            // velocity of the pinch in scale/second
 @end
 
 @interface AP_PanGestureRecognizer : AP_GestureRecognizer
-- (CGPoint) velocityInView:(AP_View *)view;
 - (CGPoint) translationInView:(AP_View*)view;
 @end

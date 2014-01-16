@@ -16,11 +16,9 @@ typedef enum UITouchPhase {
 
 @interface AP_Touch : NSObject
 
-- (CGPoint) initialLocationInView:(AP_View*)view;
 - (CGPoint) locationInView:(AP_View*)view;
 
 @property (nonatomic) UITouchPhase phase;
-@property (nonatomic,assign) CGPoint initialWindowPos;
 @property (nonatomic,assign) CGPoint windowPos;
 
 + (AP_Touch*) touchWithWindowPos:(CGPoint)pos;

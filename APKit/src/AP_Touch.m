@@ -36,16 +36,10 @@
     return [view convertPoint:_windowPos fromView:nil];
 }
 
-- (CGPoint) initialLocationInView:(AP_View*)view
-{
-    return [view convertPoint:_initialWindowPos fromView:nil];
-}
-
 + (AP_Touch*) touchWithWindowPos:(CGPoint)windowPos
 {
     AP_Touch* result = [[AP_Touch alloc] init];
     result->_windowPos = windowPos;
-    result->_initialWindowPos = windowPos;
     result->_phase = UITouchPhaseBegan;
     return result;
 }
