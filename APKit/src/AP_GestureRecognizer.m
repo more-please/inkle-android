@@ -35,6 +35,7 @@
 {
     AP_CHECK(!_view, _view = nil);
     _view = view;
+    [self reset];
 }
 
 - (void) fireWithState:(UIGestureRecognizerState)state
@@ -53,8 +54,28 @@
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event {}
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event {}
-- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event {}
-- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event {}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (self.touches.count >= 1) {
+        [self.touches minusSet:touches];
+        if ([self.touches count] == 0) {
+            [self fireWithState:UIGestureRecognizerStateEnded];
+            [self reset];
+        }
+    }
+}
+
+- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (self.touches.count >= 1) {
+        [self.touches minusSet:touches];
+        if ([self.touches count] == 0) {
+            [self fireWithState:UIGestureRecognizerStateCancelled];
+            [self reset];
+        }
+    }
+}
 
 - (CGPoint) locationInView:(AP_View*)view
 {
@@ -102,49 +123,75 @@
 @implementation AP_Pinch_Value
 @end
 
-@implementation AP_PinchGestureRecognizer
+@implementation AP_PinchGestureRecognizer {
+    CGPoint _origin;
+    float _initialScale;
+}
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.state == UIGestureRecognizerStatePossible && event.allTouches.count >= 2) {
-        for (AP_Touch* t in event.allTouches) {
-            AP_Pinch_Value* value = [[AP_Pinch_Value alloc] init];
-            value.initialPos = t.windowPos;
-            [self addTouch:t withValue:value];
+    if (self.touches.count >= 2) {
+        // Adding more touches to an existing gesture,
+        // make sure we don't change the scale.
+        _initialScale = self.scale;
+    }
+
+    for (AP_Touch* t in touches) {
+        [self addTouch:t withValue:[[AP_Pinch_Value alloc] init]];
+    }
+    for (AP_Touch* t in self.touches) {
+        AP_Pinch_Value* value = [self valueForTouch:t];
+        value.initialPos = t.windowPos;
+    }
+
+    if (self.touches.count == 1) {
+        // Could be a gesture but not yet.
+        _initialScale = 1;
+    } else if (self.state == UIGestureRecognizerStatePossible) {
+        // Started zooming. Fix the origin now.
+        _origin = CGPointZero;
+        for (AP_Touch* t in self.touches) {
+            AP_Pinch_Value* v = [self valueForTouch:t];
+            _origin.x += v.initialPos.x / self.touches.count;
+            _origin.y += v.initialPos.y / self.touches.count;
         }
         [self fireWithState:UIGestureRecognizerStateBegan];
+    } else {
+        // Resuming a suspended gesture.
+        // 'initial state' was saved on the last touchesEnded.
+        [self fireWithState:UIGestureRecognizerStateChanged];
     }
 }
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    for (AP_Touch* t in self.touches) {
-        if (t.phase == UITouchPhaseMoved) {
-            [self fireWithState:UIGestureRecognizerStateChanged];
-            return;
+    if (self.touches.count >= 2) {
+        for (AP_Touch* t in self.touches) {
+            if (t.phase == UITouchPhaseMoved) {
+                [self fireWithState:UIGestureRecognizerStateChanged];
+                return;
+            }
         }
     }
 }
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 2) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] < 2) {
-            [self fireWithState:UIGestureRecognizerStateEnded];
-            [self reset];
-        }
+    float oldScale = self.scale;
+    [super touchesEnded:touches withEvent:event];
+    if (self.touches.count == 1) {
+        // Gesture paused -- stash the current scale.
+        _initialScale = oldScale;
     }
 }
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 2) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] < 2) {
-            [self fireWithState:UIGestureRecognizerStateCancelled];
-            [self reset];
-        }
+    float oldScale = self.scale;
+    [super touchesCancelled:touches withEvent:event];
+    if (self.touches.count == 1) {
+        // Gesture paused -- stash the current scale.
+        _initialScale = oldScale;
     }
 }
 
@@ -156,8 +203,12 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 - (CGFloat)scale
 {
     NSSet* touches = self.touches;
-    if (touches.count < 2) {
+    if (touches.count == 0) {
         return 1.0;
+    }
+    if (touches.count == 1) {
+        // Gesture is paused, return the last known scale.
+        return _initialScale;
     }
 
     CGPoint oldCenter = CGPointZero;
@@ -178,23 +229,13 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         newDist += distance(t.windowPos, newCenter) / touches.count;
     }
 
-    return (oldDist == 0) ? 1 : (newDist / oldDist);
+    float averageScale = (oldDist == 0) ? 1 : (newDist / oldDist);
+    return averageScale * _initialScale;
 }
 
 - (CGPoint) locationInView:(AP_View*)view
 {
-    NSSet* touches = self.touches;
-    if (touches.count < 2) {
-        return CGPointZero;
-    }
-
-    CGPoint oldCenter = CGPointZero;
-    for (AP_Touch* t in touches) {
-        AP_Pinch_Value* v = [self valueForTouch:t];
-        oldCenter.x += v.initialPos.x / touches.count;
-        oldCenter.y += v.initialPos.y / touches.count;
-    }
-    return oldCenter;
+    return _origin;
 }
 
 @end
@@ -208,21 +249,26 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 @implementation AP_PanGestureRecognizer
 
+- (void) zapTranslation:(CGPoint)translation
+{
+    for (AP_Touch* t in self.touches) {
+        // Give this touch an initial value such that its impact
+        // on the given translation is zero.
+        CGPoint p = t.windowPos;
+        p.x -= translation.x;
+        p.y -= translation.y;
+        AP_Pan_Value* value = [self valueForTouch:t];
+        value.initialPos = p;
+    }
+}
+
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
     CGPoint currentTranslation = [self translationInView:nil];
-
     for (AP_Touch* t in touches) {
-        // Give this touch an initial value such that its impact
-        // on the current translation is zero.
-        CGPoint p = t.windowPos;
-        p.x -= currentTranslation.x;
-        p.y -= currentTranslation.y;
-
-        AP_Pan_Value* value = [[AP_Pan_Value alloc] init];
-        value.initialPos = p;
-        [self addTouch:t withValue:value];
+        [self addTouch:t withValue:[[AP_Pan_Value alloc] init]];
     }
+    [self zapTranslation:currentTranslation];
 
     if (self.state == UIGestureRecognizerStatePossible) {
         [self fireWithState:UIGestureRecognizerStateBegan];
@@ -243,24 +289,16 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 1) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] < 1) {
-            [self fireWithState:UIGestureRecognizerStateEnded];
-            [self reset];
-        }
-    }
+    CGPoint currentTranslation = [self translationInView:nil];
+    [super touchesEnded:touches withEvent:event];
+    [self zapTranslation:currentTranslation];
 }
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 1) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] < 1) {
-            [self fireWithState:UIGestureRecognizerStateCancelled];
-            [self reset];
-        }
-    }
+    CGPoint currentTranslation = [self translationInView:nil];
+    [super touchesEnded:touches withEvent:event];
+    [self zapTranslation:currentTranslation];
 }
 
 - (CGPoint) translationInView:(AP_View*)view
