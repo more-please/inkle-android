@@ -11,6 +11,14 @@
     NSMutableDictionary* _touchValues;
 }
 
+- (void) setEnabled:(BOOL)enabled
+{
+    if (_enabled != enabled) {
+        _enabled = enabled;
+        [self reset];
+    }
+}
+
 - (id) initWithTarget:(id)target action:(SEL)action
 {
     AP_CHECK(target, return nil);
@@ -42,13 +50,15 @@
 {
     _state = state;
     AP_CHECK(_state != UIGestureRecognizerStatePossible, return);
-    if (_numArgs == 2) {
-        void (*func)(id, SEL) = (void*) _imp;
-        func(_target, _action);
-    } else {
-        AP_CHECK(_numArgs == 3, return);
-        void (*func)(id, SEL, id) = (void*) _imp;
-        func(_target, _action, self);
+    if (_enabled) {
+        if (_numArgs == 2) {
+            void (*func)(id, SEL) = (void*) _imp;
+            func(_target, _action);
+        } else {
+            AP_CHECK(_numArgs == 3, return);
+            void (*func)(id, SEL, id) = (void*) _imp;
+            func(_target, _action, self);
+        }
     }
 }
 
