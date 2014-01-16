@@ -229,7 +229,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         newDist += distance(t.windowPos, newCenter) / touches.count;
     }
 
-    float averageScale = (oldDist == 0) ? 1 : (newDist / oldDist);
+    float kFudge = 30; // Make very small pinches more stable
+    float averageScale = (newDist + kFudge) / (oldDist + kFudge);
     return averageScale * _initialScale;
 }
 
