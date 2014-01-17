@@ -3,6 +3,11 @@
 #import "AP_Check.h"
 #import "AP_GestureRecognizer.h"
 
+#ifdef ANDROID
+const CGFloat UIScrollViewDecelerationRateNormal = 3.0;
+const CGFloat UIScrollViewDecelerationRateFast = 6.0;
+#endif
+
 @implementation AP_ScrollView {
     AP_PanGestureRecognizer* _gesture;
     BOOL _inGesture;
@@ -25,9 +30,12 @@
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
 {
     if (animated) {
-        AP_NOT_IMPLEMENTED;
+        [AP_View animateWithDuration:1.0 animations:^{
+            self.contentOffset = contentOffset;
+        }];
+    } else {
+        self.contentOffset = contentOffset;
     }
-    self.contentOffset = contentOffset;
 }
 
 - (CGPoint) contentOffset
@@ -37,9 +45,20 @@
 
 - (void) setContentOffset:(CGPoint)offset;
 {
+    CGSize size = self.frame.size;
+    offset.x = MAX(0, MIN(_contentSize.width - size.width, offset.x));
+    offset.y = MAX(0, MIN(_contentSize.height - size.height, offset.y));
+
     CGRect r = self.bounds;
     r.origin = offset;
     self.bounds = r;
+}
+
+- (void) setContentSize:(CGSize)contentSize
+{
+    CGPoint offset = self.contentOffset;
+    _contentSize = contentSize;
+    self.contentOffset = offset;
 }
 
 - (void) pan
@@ -55,39 +74,43 @@
     }
 }
 
+static CGFloat magnitude(CGFloat x, CGFloat y) {
+    return sqrt(x * x + y * y);
+}
+
 - (void) updateGL
 {
     // Measure the time step since the previous call
     static double previousTime = 0;
     double time = CACurrentMediaTime();
-    double timeStep = (time - previousTime);
-    if (timeStep > 1) {
-        timeStep = 1;
-    }
+    double timeStep = MIN(0.01, MAX(1, time - previousTime));
     previousTime = time;
 
     if (_inGesture) {
         _velocity.x = _previousTranslation.x - _nextTranslation.x;
         _velocity.y = _previousTranslation.y - _nextTranslation.y;
         _previousTranslation = _nextTranslation;
+        if (_directionalLockEnabled) {
+            if (abs(_velocity.x) < abs(_velocity.y)) {
+                _velocity.x = 0;
+            } else {
+                _velocity.y = 0;
+            }
+        }
     }
 
-    float vCurrent = sqrtf(_velocity.x * _velocity.x + _velocity.y * _velocity.y);
+    // Get the current velocity per second (not per frame!)
+    float vCurrent = magnitude(_velocity.x / timeStep, _velocity.y / timeStep);
     if (vCurrent > 0) {
         CGPoint p = self.contentOffset;
         p.x += _velocity.x;
         p.y += _velocity.y;
-
-        CGSize size = self.frame.size;
-        p.x = MAX(0, MIN(_contentSize.width - size.width, p.x));
-        p.y = MAX(0, MIN(_contentSize.height - size.height, p.y));
         self.contentOffset = p;
 
         // Velocity decay
-        static const float kDecayPerSecond = 4.0f;
-        static const float kFriction = 0.001f;
-        float decay = exp(-kDecayPerSecond * timeStep);
-        float vNext = (vCurrent + kFriction) * decay - kFriction;
+        static const float kMinSpeed = 5;
+        float decay = exp(-_decelerationRate * timeStep);
+        float vNext = (vCurrent + kMinSpeed) * decay - kMinSpeed;
         if (vNext < 0) {
             vNext = 0;
         }

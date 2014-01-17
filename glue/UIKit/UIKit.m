@@ -3,9 +3,6 @@
 const UIEdgeInsets UIEdgeInsetsZero = {0, 0};
 const UIOffset UIOffsetZero = {0, 0};
 
-const CGFloat UIScrollViewDecelerationRateNormal = 1.0;
-const CGFloat UIScrollViewDecelerationRateFast = 2.0;
-
 NSString* const UIApplicationDidReceiveMemoryWarningNotification = @"UIApplicationDidReceiveMemoryWarningNotification";
 
 NSString* const UIPageViewControllerOptionSpineLocationKey = @"spineLocation";

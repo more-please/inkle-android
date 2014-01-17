@@ -9,24 +9,24 @@
 
 @interface AP_ScrollView : AP_View
 
-@property CGPoint contentOffset; // default CGPointZero
-@property CGSize contentSize; // default CGSizeZero
+@property(nonatomic) CGPoint contentOffset; // default CGPointZero
+@property(nonatomic) CGSize contentSize; // default CGSizeZero
 
-@property BOOL showsHorizontalScrollIndicator;
-@property BOOL showsVerticalScrollIndicator;
+@property(nonatomic) BOOL showsHorizontalScrollIndicator;
+@property(nonatomic) BOOL showsVerticalScrollIndicator;
 
-@property(weak) id<AP_ScrollViewDelegate> delegate;
+@property(nonatomic,weak) id<AP_ScrollViewDelegate> delegate;
 
-@property(getter=isPagingEnabled) BOOL pagingEnabled;// default NO. if YES, stop on multiples of view bounds
+@property(nonatomic,getter=isPagingEnabled) BOOL pagingEnabled;// default NO. if YES, stop on multiples of view bounds
 
-@property BOOL scrollsToTop; // default is YES.
-@property BOOL bounces; // default YES. if YES, bounces past edge of content and back again
+@property(nonatomic) BOOL scrollsToTop; // Scroll to the top on status bar tap. Currently ignored on Android.
+@property(nonatomic) BOOL bounces; // default YES. if YES, bounces past edge of content and back again
 
-@property BOOL delaysContentTouches; // default is YES. if NO, we immediately call -touchesShouldBegin:withEvent:inContentView:
-@property BOOL canCancelContentTouches; // default is YES. if NO, then once we start tracking, we don't try to drag if the touch moves
+@property(nonatomic) BOOL delaysContentTouches; // default is YES. if NO, we immediately call -touchesShouldBegin:withEvent:inContentView:
+@property(nonatomic) BOOL canCancelContentTouches; // default is YES. if NO, then once we start tracking, we don't try to drag if the touch moves
 
-@property(getter=isDirectionalLockEnabled) BOOL directionalLockEnabled; // default NO.
-@property CGFloat decelerationRate;
+@property(nonatomic,getter=isDirectionalLockEnabled) BOOL directionalLockEnabled; // default NO.
+@property(nonatomic) CGFloat decelerationRate;
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;  // animate at constant velocity to new offset
 
