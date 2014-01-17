@@ -113,9 +113,12 @@
 
 - (void) reset
 {
-    _state = UIGestureRecognizerStatePossible;
     [_touches removeAllObjects];
     [_touchValues removeAllObjects];
+    if (_state == UIGestureRecognizerStateBegan || _state == UIGestureRecognizerStateChanged) {
+        [self fireWithState:UIGestureRecognizerStateCancelled];
+    }
+    _state = UIGestureRecognizerStatePossible;
 }
 
 @end
