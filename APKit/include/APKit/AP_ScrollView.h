@@ -4,7 +4,15 @@
 
 #import "AP_View.h"
 
+@class AP_ScrollView;
+
 @protocol AP_ScrollViewDelegate <NSObject>
+@optional
+- (void) scrollViewDidScroll:(AP_ScrollView*)scrollView; // Any offset changes
+
+- (void) scrollViewWillBeginDragging:(AP_ScrollView*)scrollView; // Called on start of dragging
+- (void) scrollViewDidEndDragging:(AP_ScrollView*)scrollView willDecelerate:(BOOL)decelerate; // Called on finger up if the user dragged.
+- (void)scrollViewDidEndDecelerating:(AP_ScrollView*)scrollView; // Called then scroll view grinds to a halt.
 @end
 
 @interface AP_ScrollView : AP_View
