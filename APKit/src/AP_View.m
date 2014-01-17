@@ -217,74 +217,78 @@ static AP_Animation* g_ActiveAnimation = nil;
 //------------------------------------------------------------------------------------
 
 static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
-    for (AP_View* v = dest; v && v->_superview; v = v->_superview) {
+    for (AP_View* v = dest; v; v = v->_superview) {
+        CGRect bounds = v->_currentProps.bounds;
         CGRect frame = v->_currentProps.frame;
-        point.x += frame.origin.x;
-        point.y += frame.origin.y;
+        point.x -= frame.origin.x - bounds.origin.x;
+        point.y -= frame.origin.y - bounds.origin.y;
     }
-    for (AP_View* v = src; v && v->_superview; v = v->_superview) {
+    for (AP_View* v = src; v; v = v->_superview) {
+        CGRect bounds = v->_currentProps.bounds;
         CGRect frame = v->_currentProps.frame;
-        point.x -= frame.origin.x;
-        point.y -= frame.origin.y;
+        point.x += frame.origin.x - bounds.origin.x;
+        point.y += frame.origin.y - bounds.origin.y;
     }
     return point;
 }
 
 static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) {
-    for (AP_View* v = dest; v && v->_superview; v = v->_superview) {
+    for (AP_View* v = dest; v; v = v->_superview) {
+        CGRect bounds = v->_inFlightProps.bounds;
         CGRect frame = v->_inFlightProps.frame;
-        point.x += frame.origin.x;
-        point.y += frame.origin.y;
+        point.x -= frame.origin.x - bounds.origin.x;
+        point.y -= frame.origin.y - bounds.origin.y;
     }
-    for (AP_View* v = src; v && v->_superview; v = v->_superview) {
+    for (AP_View* v = src; v; v = v->_superview) {
+        CGRect bounds = v->_inFlightProps.bounds;
         CGRect frame = v->_inFlightProps.frame;
-        point.x -= frame.origin.x;
-        point.y -= frame.origin.y;
+        point.x += frame.origin.x - bounds.origin.x;
+        point.y += frame.origin.y - bounds.origin.y;
     }
     return point;
 }
 
 - (CGPoint) convertPoint:(CGPoint)point fromView:(AP_View*)view
 {
-    return convertPoint(point, self, view);
+    return convertPoint(point, view, self);
 }
 
 - (CGPoint) convertPoint:(CGPoint)point toView:(AP_View*)view
 {
-    return convertPoint(point, view, self);
+    return convertPoint(point, self, view);
 }
 
 - (CGRect) convertRect:(CGRect)rect fromView:(AP_View *)view
-{
-    rect.origin = convertPoint(rect.origin, self, view);
-    return rect;
-}
-
-- (CGRect) convertRect:(CGRect)rect toView:(AP_View *)view
 {
     rect.origin = convertPoint(rect.origin, view, self);
     return rect;
 }
 
-- (CGPoint) convertInFlightPoint:(CGPoint)point fromView:(AP_View*)view
+- (CGRect) convertRect:(CGRect)rect toView:(AP_View *)view
 {
-    return convertInFlightPoint(point, self, view);
+    rect.origin = convertPoint(rect.origin, self, view);
+    return rect;
 }
 
-- (CGPoint) convertInFlightPoint:(CGPoint)point toView:(AP_View*)view
+- (CGPoint) convertInFlightPoint:(CGPoint)point fromView:(AP_View*)view
 {
     return convertInFlightPoint(point, view, self);
 }
 
+- (CGPoint) convertInFlightPoint:(CGPoint)point toView:(AP_View*)view
+{
+    return convertInFlightPoint(point, self, view);
+}
+
 - (CGRect) convertInFlightRect:(CGRect)rect fromView:(AP_View *)view
 {
-    rect.origin = convertInFlightPoint(rect.origin, self, view);
+    rect.origin = convertInFlightPoint(rect.origin, view, self);
     return rect;
 }
 
 - (CGRect) convertInFlightRect:(CGRect)rect toView:(AP_View *)view
 {
-    rect.origin = convertInFlightPoint(rect.origin, view, self);
+    rect.origin = convertInFlightPoint(rect.origin, self, view);
     return rect;
 }
 
@@ -301,8 +305,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     }
     if ([self pointInside:point withEvent:event]) {
         for (AP_View* view in [_subviews reverseObjectEnumerator]) {
-            CGRect r = view->_inFlightProps.frame;
-            CGPoint p = CGPointMake(point.x - r.origin.x, point.y - r.origin.y);
+            CGPoint p = [view convertInFlightPoint:point fromView:self];
             AP_View* v = [view hitTest:p withEvent:event];
             if (v) {
                 return v;
@@ -315,7 +318,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (BOOL) pointInside:(CGPoint)point withEvent:(AP_Event*)event
 {
-    return CGRectContainsPoint(_inFlightProps.bounds, point);
+    CGRect r = _inFlightProps.bounds;
+    return CGRectContainsPoint(r, point);
 }
 
 - (AP_Responder*) nextResponder

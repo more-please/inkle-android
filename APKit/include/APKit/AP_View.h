@@ -28,7 +28,6 @@
 - (void) bringSubviewToFront:(AP_View*)view;
 - (void) sendSubviewToBack:(AP_View*)view;
 
-- (BOOL) isDescendantOfView:(AP_View*)view; // returns YES for self.
 - (AP_View*) viewWithTag:(NSInteger)tag; // recursive search. includes self
 @property (nonatomic) NSInteger tag; // default is 0
 
