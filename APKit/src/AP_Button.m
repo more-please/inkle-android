@@ -25,7 +25,7 @@
 
     _imageView = [[AP_ImageView alloc] initWithFrame:self.bounds];
     _imageView.autoresizingMask = -1;
-    _imageView.contentMode = UIViewContentModeCenter;
+    _imageView.contentMode = UIViewContentModeScaleToFill;
 
     _titleEdgeInsets = UIEdgeInsetsZero;
     _imageEdgeInsets = UIEdgeInsetsZero;
@@ -61,38 +61,65 @@
 - (void) layoutSubviews
 {
     CGRect bounds = self.bounds;
-    _titleLabel.frame = UIEdgeInsetsInsetRect(bounds, _titleEdgeInsets);
-    _imageView.frame = UIEdgeInsetsInsetRect(bounds, _imageEdgeInsets);
+    NSLog(@"Laying out button... bounds: %.1f %.1f %.1f %.1f",
+        bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+
+    CGSize imageSize = CGSizeZero;
+    if ([self imageForState:UIControlStateNormal]) {
+        imageSize = [self imageForState:UIControlStateNormal].size;
+    }
+    CGSize textSize = [_titleLabel sizeThatFits:bounds.size];
+    NSLog(@"image size: %.1f %.1f, text size: %.1f %.1f",
+        imageSize.width, imageSize.height, textSize.width, textSize.height);
+
+    // Image on the left, text on the right, everything centered.
+    CGRect imageFrame;
+    imageFrame.origin.x = bounds.origin.x + 0.5 * (bounds.size.width - (imageSize.width + textSize.width));
+    imageFrame.origin.y = bounds.origin.y + 0.5 * (bounds.size.height - imageSize.height);
+    imageFrame.size = imageSize;
+    _imageView.frame = imageFrame;
+
+    CGRect textFrame;
+    textFrame.origin.x = imageFrame.origin.x + imageFrame.size.width;
+    textFrame.origin.y = bounds.origin.y + 0.5 * (bounds.size.height - textSize.height);
+    textFrame.size = textSize;
+    _titleLabel.frame = textFrame;
+}
+
+- (void) setNeedsLayout
+{
+    _needsStateRefresh = YES;
+    [super setNeedsLayout];
 }
 
 - (void) setTitle:(NSString*)title forState:(UIControlState)state
 {
     [_title setObject:title forKey:[NSNumber numberWithInt:state]];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (void) setTitleColor:(UIColor*)color forState:(UIControlState)state
 {
     [_titleColor setObject:color forKey:[NSNumber numberWithInt:state]];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state
 {
     [_titleShadowColor setObject:color forKey:[NSNumber numberWithInt:state]];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (void) setImage:(AP_Image*)image forState:(UIControlState)state
 {
     [_image setObject:image forKey:[NSNumber numberWithInt:state]];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state
 {
     [_backgroundImage setObject:image forKey:[NSNumber numberWithInt:state]];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (NSString*)titleForState:(UIControlState)state
@@ -149,7 +176,7 @@
 - (void) setHighlighted:(BOOL)highlighted
 {
     [super setHighlighted:highlighted];
-    _needsStateRefresh = YES;
+    [self setNeedsLayout];
 }
 
 - (void) refreshStateIfNeeded
