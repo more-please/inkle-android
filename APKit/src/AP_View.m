@@ -426,7 +426,6 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 - (void) insertSubview:(AP_View *)view atIndex:(NSInteger)index
 {
     AP_CHECK(view, return);
-    AP_CHECK(view->_superview != self, return);
 
     AP_Window* oldWindow = view.window;
     AP_Window* newWindow = self.window;
