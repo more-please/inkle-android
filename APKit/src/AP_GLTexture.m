@@ -36,7 +36,7 @@
     }];
 }
 
-+ (AP_GLTexture*) textureWithPath:(NSString*)path
++ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path
 {
     NSData* data = [NSData dataWithContentsOfMappedFile:path];
     return [AP_GLTexture textureWithData:data];
