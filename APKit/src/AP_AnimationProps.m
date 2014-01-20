@@ -90,19 +90,16 @@ static inline GLKVector4 lerpVector(GLKVector4 src, GLKVector4 dest, CGFloat tim
 - (void) setBounds:(CGRect)r
 {
     CGSize sizeDiff = CGSizeMake(r.size.width - _bounds.size.width, r.size.height - _bounds.size.height);
-    _bounds = r;
     _frame.origin.x -= sizeDiff.width * _anchorPoint.x;
     _frame.origin.y -= sizeDiff.height * _anchorPoint.y;
-    _frame.size.width += sizeDiff.width;
-    _frame.size.height += sizeDiff.height;
+    _frame.size = r.size;
+    _bounds = r;
 }
 
 - (void) setFrame:(CGRect)r
 {
-    CGSize sizeDiff = CGSizeMake(r.size.width - _frame.size.width, r.size.height - _frame.size.height);
+    _bounds.size = r.size;
     _frame = r;
-    _bounds.size.width += sizeDiff.width;
-    _bounds.size.height += sizeDiff.height;
 }
 
 - (CGPoint) center

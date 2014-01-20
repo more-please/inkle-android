@@ -644,7 +644,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
                 newBounds.size.width - oldBounds.size.width,
                 newBounds.size.height - oldBounds.size.height);
 
-            if (widthFactor > 0) {
+            if (fabs(widthFactor) > 1e-6) {
                 if (mask & UIViewAutoresizingFlexibleLeftMargin) {
                     r.origin.x += delta.width * (leftMargin / widthFactor);
                 }
@@ -657,7 +657,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
                 r.origin.x += delta.width;
             }
             
-            if (heightFactor > 0) {
+            if (fabs(heightFactor) > 1e-6) {
                 if (mask & UIViewAutoresizingFlexibleTopMargin) {
                     r.origin.y += delta.height * (topMargin / heightFactor);
                 }
