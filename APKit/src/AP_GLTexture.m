@@ -16,7 +16,7 @@
     int _minLevel;
 }
 
-+ (AP_GLTexture*) textureNamed:(NSString *)name
++ (AP_GLTexture*) textureNamed:(NSString*)name
 {
     static AP_Cache* g_TextureCache;
     if (!g_TextureCache) {
@@ -24,27 +24,37 @@
     }
     AP_CHECK(g_TextureCache, return nil);
     return [g_TextureCache get:name withLoader:^{
-        AP_GLTexture* result = nil;
-
         NSData* data = [AP_Bundle dataForResource:name ofType:nil];
-        AP_CHECK(data, return (AP_GLTexture*) nil);
-
-        if ([AP_GLTexture_PVR isPVR:data]) {
-            result = [AP_GLTexture_PVR withData:data];
-        } else if ([AP_GLTexture_KTX isKTX:data]) {
-            result = [AP_GLTexture_KTX withData:data];
-        } else if ([AP_GLTexture_PNG isPNG:data]) {
-            result = [AP_GLTexture_PNG withData:data];
-        } else {
-            AP_LogError("Texture '%@' is in an unknown format", name);
-        }
-
+        AP_GLTexture* result = [AP_GLTexture textureWithData:data];
         if (result) {
             result->_assetName = name;
             NSLog(@"Loaded texture: %@", name);
+        } else {
+            NSLog(@"Failed to load texture: %@", name);
         }
         return result;
     }];
+}
+
++ (AP_GLTexture*) textureWithPath:(NSString*)path
+{
+    NSData* data = [NSData dataWithContentsOfMappedFile:path];
+    return [AP_GLTexture textureWithData:data];
+}
+
++ (AP_GLTexture*) textureWithData:(NSData*)data
+{
+    AP_CHECK(data, return nil);
+    if ([AP_GLTexture_PVR isPVR:data]) {
+        return [AP_GLTexture_PVR withData:data];
+    } else if ([AP_GLTexture_KTX isKTX:data]) {
+        return [AP_GLTexture_KTX withData:data];
+    } else if ([AP_GLTexture_PNG isPNG:data]) {
+        return [AP_GLTexture_PNG withData:data];
+    } else {
+        NSLog(@"Texture is in unknown format!");
+        return nil;
+    }
 }
 
 - (AP_GLTexture*) init

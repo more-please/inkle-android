@@ -91,6 +91,11 @@ static AP_Bundle* g_Bundle;
     return path;
 }
 
+- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath
+{
+    return [self pathForResource:[subpath stringByAppendingPathComponent:name] ofType:ext];
+}
+
 - (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
 {
     NSLog(@"URLForResource:%@ withExtension:%@", name, ext);

@@ -22,4 +22,7 @@
 // The results are cached, so the same object may be returned in subsequent calls.
 + (AP_GLTexture*) textureNamed:(NSString*)name;
 
++ (AP_GLTexture*) textureWithPath:(NSString*)path;
++ (AP_GLTexture*) textureWithData:(NSData*)data;
+
 @end

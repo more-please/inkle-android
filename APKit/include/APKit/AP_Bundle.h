@@ -24,6 +24,7 @@
 
 - (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
+- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath;
 - (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
 - (NSDictionary*) infoDictionary;
 - (id) objectForInfoDictionaryKey:(NSString*)key;
