@@ -60,30 +60,56 @@
 
 - (void) layoutSubviews
 {
+    [self refreshStateIfNeeded];
+
+    // The behaviour of the insets is a bit weird. As far as I can figure out,
+    // the image insets are applied to the button bounds, and the image is laid
+    // out within those bounds as if the label were present; then the label insets
+    // are applied and the label is laid out as if the image were present.
+
     CGRect bounds = self.bounds;
-    NSLog(@"Laying out button... bounds: %.1f %.1f %.1f %.1f",
-        bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    CGRect boundsForImage = UIEdgeInsetsInsetRect(bounds, _imageEdgeInsets);
+    CGRect boundsForLabel = UIEdgeInsetsInsetRect(bounds, _titleEdgeInsets);
 
-    CGSize imageSize = CGSizeZero;
-    if ([self imageForState:UIControlStateNormal]) {
-        imageSize = [self imageForState:UIControlStateNormal].size;
-    }
-    CGSize textSize = [_titleLabel sizeThatFits:bounds.size];
-    NSLog(@"image size: %.1f %.1f, text size: %.1f %.1f",
-        imageSize.width, imageSize.height, textSize.width, textSize.height);
+    CGRect imageFrame, labelFrame, unusedFrame;
+    [self layoutWithBounds:boundsForImage imageFrame:&imageFrame labelFrame:&unusedFrame];
+    [self layoutWithBounds:boundsForLabel imageFrame:&unusedFrame labelFrame:&labelFrame];
 
-    // Image on the left, text on the right, everything centered.
-    CGRect imageFrame;
-    imageFrame.origin.x = bounds.origin.x + 0.5 * (bounds.size.width - (imageSize.width + textSize.width));
-    imageFrame.origin.y = bounds.origin.y + 0.5 * (bounds.size.height - imageSize.height);
-    imageFrame.size = imageSize;
     _imageView.frame = imageFrame;
+    _titleLabel.frame = labelFrame;
+}
 
-    CGRect textFrame;
-    textFrame.origin.x = imageFrame.origin.x + imageFrame.size.width;
-    textFrame.origin.y = bounds.origin.y + 0.5 * (bounds.size.height - textSize.height);
-    textFrame.size = textSize;
-    _titleLabel.frame = textFrame;
+- (void) layoutWithBounds:(CGRect)bounds imageFrame:(CGRect*)imageFrame labelFrame:(CGRect*)labelFrame
+{
+    *imageFrame = CGRectZero;
+    *labelFrame = CGRectZero;
+
+    // Both image and text have their natural size.
+    if ([self imageForState:UIControlStateNormal]) {
+        imageFrame->size = [self imageForState:UIControlStateNormal].size;
+    }
+    labelFrame->size = [_titleLabel sizeThatFits:CGSizeMake(2000.0, 2000.0)];
+
+    // The horizontal positioning depends on the button width.
+    if (bounds.size.width > imageFrame->size.width + labelFrame->size.width) {
+        // The button is wide: image on the left, text on the right, everything centered.
+        imageFrame->origin.x = bounds.origin.x + 0.5 * (bounds.size.width - (imageFrame->size.width + labelFrame->size.width));
+    } else if (bounds.size.width > imageFrame->size.width) {
+        // The button is wide enough for the image, but not the text.
+        // Left-align the image and fit in as much of the text as we can.
+        imageFrame->origin.x = bounds.origin.x;
+    } else {
+        // The button isn't wide enough for the image.
+        // iOS shrinks it, but I think it looks better if we center it.
+        imageFrame->origin.x = bounds.origin.x + 0.5 * (bounds.size.width - imageFrame->size.width);
+    }
+
+    // The label is always immediately to the right of the image.
+    labelFrame->origin.x = imageFrame->origin.x + imageFrame->size.width;
+
+    // Both image and text are centered vertically.
+    imageFrame->origin.y = bounds.origin.y + 0.5 * (bounds.size.height - imageFrame->size.height);
+    labelFrame->origin.y = bounds.origin.y + 0.5 * (bounds.size.height - labelFrame->size.height);
 }
 
 - (void) setNeedsLayout
@@ -101,13 +127,13 @@
 - (void) setTitleColor:(UIColor*)color forState:(UIControlState)state
 {
     [_titleColor setObject:color forKey:[NSNumber numberWithInt:state]];
-    [self setNeedsLayout];
+    _needsStateRefresh = YES;
 }
 
 - (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state
 {
     [_titleShadowColor setObject:color forKey:[NSNumber numberWithInt:state]];
-    [self setNeedsLayout];
+    _needsStateRefresh = YES;
 }
 
 - (void) setImage:(AP_Image*)image forState:(UIControlState)state
@@ -119,7 +145,7 @@
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state
 {
     [_backgroundImage setObject:image forKey:[NSNumber numberWithInt:state]];
-    [self setNeedsLayout];
+    _needsStateRefresh = YES;
 }
 
 - (NSString*)titleForState:(UIControlState)state
@@ -193,9 +219,13 @@
     }
 }
 
-- (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha
+- (void) updateGL
 {
     [self refreshStateIfNeeded];
+}
+
+- (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha
+{
     [super renderSelfAndChildrenWithFrameToGL:frameToGL alpha:alpha];
 }
 
