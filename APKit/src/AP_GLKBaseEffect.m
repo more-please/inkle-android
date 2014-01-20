@@ -57,16 +57,18 @@
 
     static const char* kFragment = MULTILINE(
         precision highp float;
+        uniform vec4 color;
         uniform sampler2D texture;
         varying vec2 fragTexCoord;
         void main() {
-            gl_FragColor = texture2D(texture, fragTexCoord);
+            gl_FragColor = color * texture2D(texture, fragTexCoord);
         }
     );
 
     static AP_GLKBaseEffect_Program* prog;
     static GLint modelViewProjectionMatrix;
     static GLint texture;
+    static GLint color;
 
     static BOOL initialized = NO;
     if (!initialized) {
@@ -74,6 +76,7 @@
         prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragment];
         modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
         texture = [prog uniform:@"texture"];
+        color = [prog uniform:@"color"];
     }
 
     AP_CHECK(prog, return);
@@ -83,6 +86,11 @@
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture2d0.name);
     glUniform1i(texture, 0);
+    if (_useConstantColor) {
+        glUniform4fv(color, 1, &_constantColor.v[0]);
+    } else {
+        glUniform4f(color, 1, 1, 1, 1);
+    }
 
     GLKMatrix4 modelViewProjection = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
     glUniformMatrix4fv(modelViewProjectionMatrix, 1, NO, modelViewProjection.m);
