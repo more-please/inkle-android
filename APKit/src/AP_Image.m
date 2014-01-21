@@ -97,14 +97,13 @@ static AP_Image_Program* g_AlphaProg;
     NSString* img;
     if ([name hasSuffix:@".png.img"]) {
         img = name;
-    } else if ([name hasSuffix:@".png"]) {
+    } else if ([name hasSuffix:@".png"] || [name hasSuffix:@".jpg"]) {
         img = [name stringByAppendingString:@".img"];
     } else {
         img = [name stringByAppendingString:@".png.img"];
     }
 
-    NSString* png = [img stringByDeletingPathExtension];
-    AP_CHECK([png hasSuffix:@".png"], return (AP_Image*)nil);
+    NSString* tex = [img stringByDeletingPathExtension];
 
     static AP_Cache* g_ImageCache;
     if (!g_ImageCache) {
@@ -118,12 +117,12 @@ static AP_Image_Program* g_AlphaProg;
             return [[AP_Image alloc] initWithName:img data:data];
         }
 
-        AP_GLTexture* texture = [AP_GLTexture textureNamed:png];
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:tex];
         if (texture) {
             return [[AP_Image alloc] initWithName:img texture:texture];
         }
 
-        NSLog(@"Failed to load image: %@", png);
+        NSLog(@"Failed to load image: %@", tex);
         return (AP_Image*)nil;
     }];
 
