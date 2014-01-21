@@ -193,6 +193,29 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 #pragma mark - Input
 //------------------------------------------------------------------------------------
 
+- (void) dispatchGestureWithBlock:(void(^)(AP_GestureRecognizer*))block
+{
+    AP_GestureRecognizer* blocker;
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
+            UIGestureRecognizerState state = g.state;
+            BOOL active = (state == UIGestureRecognizerStateBegan)
+                || (state == UIGestureRecognizerStateChanged);
+            if (blocker
+                && ![blocker shouldRecognizeSimultaneouslyWithGestureRecognizer:g]
+                && ![g shouldRecognizeSimultaneouslyWithGestureRecognizer:blocker]) {
+                if (active) {
+                    [g reset];
+                }
+            }
+            block(g);
+            if (!blocker && active) {
+                blocker = g;
+            }
+        }
+    }
+}
+
 - (void) touchesBegan:(NSSet*)ts withEvent:(UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
@@ -212,11 +235,9 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
             _hitTestView = [_rootViewController.view hitTest:touch.windowPos withEvent:event];
         }
     }
-    for (AP_View* v = _hitTestView; v; v = v.superview) {
-        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
-            [g touchesBegan:touches withEvent:event];
-        }
-    }
+    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+        [g touchesBegan:touches withEvent:event];
+    }];
     if (_hitTestView) {
         [_hitTestView touchesBegan:touches withEvent:event];
     }
@@ -232,11 +253,9 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    for (AP_View* v = _hitTestView; v; v = v.superview) {
-        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
-            [g touchesCancelled:touches withEvent:event];
-        }
-    }
+    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+        [g touchesCancelled:touches withEvent:event];
+    }];
     if (_hitTestView) {
         [_hitTestView touchesCancelled:touches withEvent:event];
     }
@@ -259,11 +278,9 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    for (AP_View* v = _hitTestView; v; v = v.superview) {
-        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
-            [g touchesEnded:touches withEvent:event];
-        }
-    }
+    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+        [g touchesEnded:touches withEvent:event];
+    }];
     if (_hitTestView) {
         [_hitTestView touchesEnded:touches withEvent:event];
     }
@@ -291,11 +308,9 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     AP_Event* event = [[AP_Event alloc] init];
     event.allTouches = _activeTouches;
 
-    for (AP_View* v = _hitTestView; v; v = v.superview) {
-        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
-            [g touchesMoved:touches withEvent:event];
-        }
-    }
+    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+        [g touchesMoved:touches withEvent:event];
+    }];
     if (_hitTestView) {
         [_hitTestView touchesMoved:touches withEvent:event];
     }

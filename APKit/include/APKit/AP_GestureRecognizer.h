@@ -4,10 +4,12 @@
 #import <UIKit/UIKit.h>
 
 @class AP_Event;
+@class AP_GestureRecognizer;
 @class AP_Touch;
 @class AP_View;
 
 @protocol AP_GestureRecognizerDelegate <NSObject>
+- (BOOL) gestureRecognizer:(AP_GestureRecognizer*)recognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(AP_GestureRecognizer*)other;
 @end
 
 @interface AP_GestureRecognizer : NSObject
@@ -31,6 +33,7 @@
 - (void) reset;
 
 // Private stuff
+- (BOOL) shouldRecognizeSimultaneouslyWithGestureRecognizer:(AP_GestureRecognizer*)other;
 - (void) wasAddedToView:(AP_View*)view;
 - (void) fireWithState:(UIGestureRecognizerState)state;
 

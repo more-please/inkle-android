@@ -62,14 +62,23 @@
     }
 }
 
+- (BOOL) shouldRecognizeSimultaneouslyWithGestureRecognizer:(AP_GestureRecognizer*)other
+{
+    if ([_delegate respondsToSelector:@selector(gestureRecognizer:shouldRecognizeSimultaneouslyWithGestureRecognizer:)]) {
+        return [_delegate gestureRecognizer:self shouldRecognizeSimultaneouslyWithGestureRecognizer:other];
+    } else {
+        return NO;
+    }
+}
+
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event {}
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event {}
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 1) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] == 0) {
+    if (_touches.count >= 1) {
+        [_touches minusSet:touches];
+        if ([_touches count] == 0) {
             [self fireWithState:UIGestureRecognizerStateEnded];
             [self reset];
         }
@@ -78,9 +87,9 @@
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    if (self.touches.count >= 1) {
-        [self.touches minusSet:touches];
-        if ([self.touches count] == 0) {
+    if (_touches.count >= 1) {
+        [_touches minusSet:touches];
+        if ([_touches count] == 0) {
             [self fireWithState:UIGestureRecognizerStateCancelled];
             [self reset];
         }
@@ -89,8 +98,12 @@
 
 - (CGPoint) locationInView:(AP_View*)view
 {
-    AP_NOT_IMPLEMENTED;
-    return CGPointZero;
+    CGPoint pos = CGPointZero;
+    for (AP_Touch* t in _touches) {
+        pos.x += t.windowPos.x / _touches.count;
+        pos.y += t.windowPos.y / _touches.count;
+    }
+    return pos;
 }
 
 - (NSUInteger) numberOfTouches
@@ -325,17 +338,6 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         delta.y += (t.windowPos.y - v.initialPos.y) / touches.count;
     }
     return delta;
-}
-
-- (CGPoint) locationInView:(AP_View*)view
-{
-    NSSet* touches = self.touches;
-    CGPoint pos = CGPointZero;
-    for (AP_Touch* t in touches) {
-        pos.x += t.windowPos.x / touches.count;
-        pos.y += t.windowPos.y / touches.count;
-    }
-    return pos;
 }
 
 @end
