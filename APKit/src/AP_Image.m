@@ -74,7 +74,8 @@ static const char* kSolidFragment = MULTILINE(
     uniform sampler2D texture;
     void main() {
         vec4 pixel = texture2D(texture, solidTexCoord, -1.0);
-        gl_FragColor = vec4(pixel.rgb, alpha);
+        pixel.a *= alpha;
+        gl_FragColor = pixel;
     }
 );
 
@@ -93,6 +94,17 @@ static AP_Image_Program* g_AlphaProg;
 + (AP_Image*) imageNamed:(NSString *)name
 {
     AP_CHECK(name, return nil);
+    NSString* img;
+    if ([name hasSuffix:@".png.img"]) {
+        img = name;
+    } else if ([name hasSuffix:@".png"]) {
+        img = [name stringByAppendingString:@".img"];
+    } else {
+        img = [name stringByAppendingString:@".png.img"];
+    }
+
+    NSString* png = [img stringByDeletingPathExtension];
+    AP_CHECK([png hasSuffix:@".png"], return (AP_Image*)nil);
 
     static AP_Cache* g_ImageCache;
     if (!g_ImageCache) {
@@ -100,23 +112,22 @@ static AP_Image_Program* g_AlphaProg;
     }
     AP_CHECK(g_ImageCache, return nil);
 
-    return [g_ImageCache get:name withLoader:^{
-        NSData* data = nil;
-        if (!data) {
-            data = [AP_Bundle dataForResource:name ofType:@".img"];
+    AP_Image* result = [g_ImageCache get:img withLoader:^{
+        NSData* data = [AP_Bundle dataForResource:img ofType:nil];
+        if (data) {
+            return [[AP_Image alloc] initWithName:img data:data];
         }
-        if (!data) {
-            data = [AP_Bundle dataForResource:name ofType:@".png.img"];
+
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:png];
+        if (texture) {
+            return [[AP_Image alloc] initWithName:img texture:texture];
         }
-        if (!data) {
-            data = [AP_Bundle dataForResource:name ofType:nil];
-        }
-        if (!data) {
-            AP_LogError("Can't find image named: %@", name);
-            return (AP_Image*)nil;
-        }
-        return [[AP_Image alloc] initWithName:name data:data];
+
+        NSLog(@"Failed to load image: %@", png);
+        return (AP_Image*)nil;
     }];
+
+    return result;
 }
 
 static float sqrtSize(CGSize size) {
@@ -164,6 +175,68 @@ typedef struct VertexData {
 
 AP_BAN_EVIL_INIT
 
+- (void) commonInit
+{
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
+        g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
+    }
+    AP_CHECK(g_SolidProg, abort());
+    AP_CHECK(g_AlphaProg, abort());
+}
+
+- (AP_Image*) initWithName:(NSString*)name texture:(AP_GLTexture*)texture
+{
+    AP_CHECK(name, return nil);
+    AP_CHECK(texture, return nil);
+
+    self = [super init];
+    if (self) {
+        [self commonInit];
+        _assetName = name;
+        _texture = texture;
+        _size = CGSizeMake(_texture.width, _texture.height);
+        _scale = 1;
+        _numAlpha = 0;
+        _numSolid = 1;
+
+        // For each quad, we need 4 vertices (16 bytes each) and 6 indices (2 bytes each).
+        NSMutableData* vertexData = [NSMutableData dataWithLength:(4 * 16)];
+        NSMutableData* indexData = [NSMutableData dataWithLength:(6 * 2)];
+        VertexData* vPtr = (VertexData*) vertexData.bytes;
+        GLushort* iPtr = (GLushort*) indexData.bytes;
+
+        for (int x = 0; x <= 1; ++x) {
+            for (int y = 0; y <= 1; ++y) {
+                vPtr->x = (x - 0.5) * _size.width;
+                vPtr->y = (y - 0.5) * _size.height;
+                vPtr->xTex = x;
+                vPtr->yTex = y;
+                ++vPtr;
+            }
+        }
+
+        GLushort index = 0;
+        GLushort bottomLeft = index;
+        GLushort bottomRight = index + 1;
+        GLushort topLeft = index + 2;
+        GLushort topRight = index + 3;
+        *iPtr++ = bottomRight;
+        *iPtr++ = bottomLeft;
+        *iPtr++ = topLeft;
+        *iPtr++ = topLeft;
+        *iPtr++ = topRight;
+        *iPtr++ = bottomRight;
+
+        _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
+        _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
+    }
+    NSLog(@"Loaded image: %@", name);
+    return self;
+}
+
 - (AP_Image*) initWithName:(NSString*)name data:(NSData*)data {
     AP_CHECK(name, return nil);
     AP_CHECK(data, return nil);
@@ -171,17 +244,9 @@ AP_BAN_EVIL_INIT
     AP_CHECK_EQ(sizeof(Header), 8, return nil);
     AP_CHECK_EQ(sizeof(Quad), 12, return nil);
 
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
-        g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
-    }
-    AP_CHECK(g_SolidProg, return nil);
-    AP_CHECK(g_AlphaProg, return nil);
-
     self = [super init];
     if (self) {
+        [self commonInit];
         _assetName = name;
 
         const uint8_t* bytes = data.bytes;
@@ -249,10 +314,7 @@ AP_BAN_EVIL_INIT
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
     }
-
-    if (self) {
-        NSLog(@"Loaded image: %@", _assetName);
-    }
+    NSLog(@"Loaded image: %@", name);
     return self;
 }
 
