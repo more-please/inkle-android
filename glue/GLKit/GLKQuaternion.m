@@ -5,20 +5,20 @@ const GLKQuaternion GLKQuaternionIdentity = {
 };
 
 // Taken from: http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche52.html
-// Might need transposition!
+// Might need transposition! (Answer: yes it did)
 
 static inline float SIGN(float x) {return (x >= 0.0f) ? +1.0f : -1.0f;}
 static inline float NORM(float a, float b, float c, float d) {return sqrt(a * a + b * b + c * c + d * d);}
 
 GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 m) {
     float r11 = m.m00;
-    float r12 = m.m01;
-    float r13 = m.m02;
-    float r21 = m.m10;
+    float r12 = m.m10;
+    float r13 = m.m20;
+    float r21 = m.m01;
     float r22 = m.m11;
-    float r23 = m.m12;
-    float r31 = m.m20;
-    float r32 = m.m21;
+    float r23 = m.m21;
+    float r31 = m.m02;
+    float r32 = m.m12;
     float r33 = m.m22;
     float q0, q1, q2, q3, r;
 
@@ -55,7 +55,7 @@ GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 m) {
         q2 *= SIGN(r32 + r23);
         q3 *= +1.0f;
     } else {
-        NSLog(@"GLKQuaternionMakeWithMatrix3 - coding error");
+        // Must be a NaN in the input.
     }
     r = NORM(q0, q1, q2, q3);
     q0 /= r;
@@ -63,5 +63,6 @@ GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 m) {
     q2 /= r;
     q3 /= r;
 
-    return GLKQuaternionMake(q0, q1, q2, q3);
-}
+    // Magical parity fix. Can't be bothered figuring it out properly,
+    // but this gives the same results as the real iOS code!
+    return GLKQuaternionMake(q1, q2, q3, q0);}
