@@ -3,6 +3,13 @@
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
+const float kMaxTapDistance = 3;
+
+static inline CGFloat distance(CGPoint a, CGPoint b) {
+    CGPoint p = {a.x - b.x, a.y - b.y};
+    return sqrtf(p.x * p.x + p.y * p.y);
+}
+
 @implementation AP_GestureRecognizer {
     __weak id _target;
     SEL _action;
@@ -64,6 +71,9 @@
 
 - (BOOL) shouldRecognizeSimultaneouslyWithGestureRecognizer:(AP_GestureRecognizer*)other
 {
+    if (other == self) {
+        return YES;
+    }
     if ([_delegate respondsToSelector:@selector(gestureRecognizer:shouldRecognizeSimultaneouslyWithGestureRecognizer:)]) {
         return [_delegate gestureRecognizer:self shouldRecognizeSimultaneouslyWithGestureRecognizer:other];
     } else {
@@ -103,12 +113,17 @@
         pos.x += t.windowPos.x / _touches.count;
         pos.y += t.windowPos.y / _touches.count;
     }
-    return pos;
+    return [view convertPoint:pos fromView:nil];
 }
 
 - (NSUInteger) numberOfTouches
 {
     return _touches.count;
+}
+
+- (void) addTouch:(AP_Touch*)touch
+{
+    [_touches addObject:touch];
 }
 
 - (void) addTouch:(AP_Touch*)touch withValue:(id)value
@@ -136,7 +151,48 @@
 
 @end
 
-@implementation AP_TapGestureRecognizer
+@implementation AP_TapGestureRecognizer {
+    CGPoint _origin;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    // Only count the initial touch(es)
+    if (self.touches.count == 0) {
+        for (AP_Touch* t in touches) {
+            [self addTouch:t];
+        }
+        _origin = [self locationInView:self.view];
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > kMaxTapDistance) {
+        [self fireWithState:UIGestureRecognizerStateFailed];
+        [self reset];
+    }
+}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > kMaxTapDistance) {
+        [self fireWithState:UIGestureRecognizerStateFailed];
+        [self reset];
+        return;
+    }
+    for (AP_Touch* t in self.touches) {
+        if (t.phase != UITouchPhaseEnded) {
+            [super touchesEnded:touches withEvent:event];
+            return;
+        }
+    }
+    [self fireWithState:UIGestureRecognizerStateEnded];
+    [self reset];
+}
+
 @end
 
 @implementation AP_LongPressGestureRecognizer
@@ -221,11 +277,6 @@
     }
 }
 
-static inline CGFloat distance(CGPoint a, CGPoint b) {
-    CGPoint p = {a.x - b.x, a.y - b.y};
-    return sqrtf(p.x * p.x + p.y * p.y);
-}
-
 - (CGFloat)scale
 {
     NSSet* touches = self.touches;
@@ -289,6 +340,17 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     }
 }
 
+- (void) maybeStartedOrChanged
+{
+    if (self.state == UIGestureRecognizerStatePossible) {
+        if (distance(CGPointZero, [self translationInView:nil]) > kMaxTapDistance) {
+            [self fireWithState:UIGestureRecognizerStateBegan];
+        }
+    } else {
+        [self fireWithState:UIGestureRecognizerStateChanged];
+    }
+}
+
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
     CGPoint currentTranslation = [self translationInView:nil];
@@ -296,19 +358,14 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         [self addTouch:t withValue:[[AP_Pan_Value alloc] init]];
     }
     [self zapTranslation:currentTranslation];
-
-    if (self.state == UIGestureRecognizerStatePossible) {
-        [self fireWithState:UIGestureRecognizerStateBegan];
-    } else {
-        [self fireWithState:UIGestureRecognizerStateChanged];
-    }
+    [self maybeStartedOrChanged];
 }
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
     for (AP_Touch* t in self.touches) {
         if (t.phase == UITouchPhaseMoved) {
-            [self fireWithState:UIGestureRecognizerStateChanged];
+            [self maybeStartedOrChanged];
             return;
         }
     }

@@ -39,6 +39,7 @@
 
 @property(nonatomic,readonly,strong) NSMutableSet* touches;
 
+- (void) addTouch:(AP_Touch*)touch;
 - (void) addTouch:(AP_Touch*)touch withValue:(id)value;
 - (id) valueForTouch:(AP_Touch*)touch;
 

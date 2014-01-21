@@ -11,6 +11,7 @@
     AP_FPSCounter* _fps;
     double _clock;
     AP_View* _hitTestView;
+    AP_GestureRecognizer* _hitTestGesture;
     NSMutableSet* _activeTouches;
 }
 
@@ -193,24 +194,36 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
 #pragma mark - Input
 //------------------------------------------------------------------------------------
 
+static BOOL isActive(AP_GestureRecognizer* g) {
+    UIGestureRecognizerState state = g.state;
+    return (state == UIGestureRecognizerStateBegan)
+        || (state == UIGestureRecognizerStateChanged);
+}
+
 - (void) dispatchGestureWithBlock:(void(^)(AP_GestureRecognizer*))block
 {
-    AP_GestureRecognizer* blocker;
     for (AP_View* v = _hitTestView; v; v = v.superview) {
         for (AP_GestureRecognizer* g in v.gestureRecognizers) {
-            UIGestureRecognizerState state = g.state;
-            BOOL active = (state == UIGestureRecognizerStateBegan)
-                || (state == UIGestureRecognizerStateChanged);
-            if (blocker
-                && ![blocker shouldRecognizeSimultaneouslyWithGestureRecognizer:g]
-                && ![g shouldRecognizeSimultaneouslyWithGestureRecognizer:blocker]) {
-                if (active) {
-                    [g reset];
+            if (g == _hitTestGesture) {
+                // This is the hit test gesture. It always gets to run.
+                block(g);
+                if (!isActive(g)) {
+                    _hitTestGesture = nil;
                 }
-            }
-            block(g);
-            if (!blocker && active) {
-                blocker = g;
+            } else {
+                // If there's another hit test gesture, it could block us.
+                if (_hitTestGesture
+                    && ![_hitTestGesture shouldRecognizeSimultaneouslyWithGestureRecognizer:g]
+                    && ![g shouldRecognizeSimultaneouslyWithGestureRecognizer:_hitTestGesture]) {
+                    if (isActive(g)) {
+                        [g reset];
+                    }
+                    continue;
+                }
+                block(g);
+                if (!_hitTestGesture && isActive(g)) {
+                    _hitTestGesture = g;
+                }
             }
         }
     }
@@ -265,6 +278,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     }
     if (_activeTouches.count == 0) {
         _hitTestView = nil;
+        _hitTestGesture = nil;
     }
 }
 
@@ -290,6 +304,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     }
     if (_activeTouches.count == 0) {
         _hitTestView = nil;
+        _hitTestGesture = nil;
     }
 }
 
@@ -327,6 +342,7 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
         }
     }
     _hitTestView = nil;
+    _hitTestGesture = nil;
     _activeTouches = [NSMutableSet set];
 }
 
