@@ -89,9 +89,11 @@ AP_BAN_EVIL_INIT;
         NSLog(@"Removing view:%@ property:%@ from animation: %@", prop.view, prop, _tag);
     }
 
-    [_props removeObject:prop];
-    if ([_props count] == 0) {
-        [self cancel];
+    if (_props.count > 0) {
+        [_props removeObject:prop];
+        if (_props.count == 0) {
+            [self cancel];
+        }
     }
 }
 
