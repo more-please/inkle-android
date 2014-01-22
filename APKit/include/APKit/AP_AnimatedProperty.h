@@ -28,9 +28,6 @@
 + (AP_Animation*) currentAnimation;
 + (void) setCurrentAnimation:(AP_Animation*)animation;
 
-// Internal stuff
-- (BOOL) maybeJoinCurrentAnimation;
-
 @end
 
 @interface AP_AnimatedFloat : AP_AnimatedProperty

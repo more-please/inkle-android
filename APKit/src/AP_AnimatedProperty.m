@@ -42,16 +42,6 @@ static AP_Animation* g_CurrentAnimation = nil;
     }
 }
 
-- (BOOL) maybeJoinCurrentAnimation
-{
-    if (g_CurrentAnimation) {
-        self.animation = g_CurrentAnimation;
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
 - (void) leaveAnimation
 {
     [_animation removeProp:self];
@@ -109,7 +99,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGFloat)dest
 {
     if (dest != _dest) {
-        [self maybeJoinCurrentAnimation];
+        self.animation = g_CurrentAnimation;
         _dest = dest;
     }
     if (!self.animation) {
@@ -165,7 +155,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGPoint)dest
 {
     if (!CGPointEqualToPoint(dest, _dest)) {
-        [self maybeJoinCurrentAnimation];
+        self.animation = g_CurrentAnimation;
         _dest = dest;
     }
     if (!self.animation) {
@@ -221,7 +211,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGSize)dest
 {
     if (!CGSizeEqualToSize(dest, _dest)) {
-        [self maybeJoinCurrentAnimation];
+        self.animation = g_CurrentAnimation;
         _dest = dest;
     }
     if (!self.animation) {
@@ -272,7 +262,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(GLKVector4)dest
 {
     if (!GLKVector4AllEqualToVector4(dest, _dest)) {
-        [self maybeJoinCurrentAnimation];
+        self.animation = g_CurrentAnimation;
         _dest = dest;
     }
     if (!self.animation) {
@@ -326,7 +316,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGAffineTransform)dest
 {
     if (!CGAffineTransformEqualToTransform(dest, _dest)) {
-        [self maybeJoinCurrentAnimation];
+        self.animation = g_CurrentAnimation;
         _dest = dest;
     }
     if (!self.animation) {
