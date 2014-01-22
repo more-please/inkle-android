@@ -55,7 +55,7 @@ AP_BAN_EVIL_INIT
 - (void) removeAllAnimations
 {
     for (AP_AnimatedProperty* p in _view.animatedProperties) {
-        [p finishAnimation];
+        [p leaveAnimation];
     }
 }
 

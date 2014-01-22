@@ -52,6 +52,11 @@ static AP_Animation* g_CurrentAnimation = nil;
     }
 }
 
+- (void) leaveAnimation
+{
+    [_animation removeProp:self];
+}
+
 - (void) cancelAnimation
 {
     if (_animation) {
@@ -80,8 +85,6 @@ static AP_Animation* g_CurrentAnimation = nil;
     _animation = nil;
 }
 
-
-
 @end
 
 
@@ -106,11 +109,19 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGFloat)dest
 {
     if (dest != _dest) {
-        if (![self maybeJoinCurrentAnimation]) {
-            _src = _inFlight = dest;
-        }
+        [self maybeJoinCurrentAnimation];
         _dest = dest;
     }
+    if (!self.animation) {
+        _src = _inFlight = dest;
+    }
+}
+
+- (void) leaveAnimation
+{
+    _src = _dest;
+    _inFlight = _dest;
+    [super leaveAnimation];
 }
 
 - (void) animationWasCancelled
@@ -154,11 +165,19 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGPoint)dest
 {
     if (!CGPointEqualToPoint(dest, _dest)) {
-        if (![self maybeJoinCurrentAnimation]) {
-            _src = _inFlight = dest;
-        }
+        [self maybeJoinCurrentAnimation];
         _dest = dest;
     }
+    if (!self.animation) {
+        _src = _inFlight = dest;
+    }
+}
+
+- (void) leaveAnimation
+{
+    _src = _dest;
+    _inFlight = _dest;
+    [super leaveAnimation];
 }
 
 - (void) animationWasCancelled
@@ -202,11 +221,19 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGSize)dest
 {
     if (!CGSizeEqualToSize(dest, _dest)) {
-        if (![self maybeJoinCurrentAnimation]) {
-            _src = _inFlight = dest;
-        }
+        [self maybeJoinCurrentAnimation];
         _dest = dest;
     }
+    if (!self.animation) {
+        _src = _inFlight = dest;
+    }
+}
+
+- (void) leaveAnimation
+{
+    _src = _dest;
+    _inFlight = _dest;
+    [super leaveAnimation];
 }
 
 - (void) animationWasCancelled
@@ -245,11 +272,19 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(GLKVector4)dest
 {
     if (!GLKVector4AllEqualToVector4(dest, _dest)) {
-        if (![self maybeJoinCurrentAnimation]) {
-            _src = _inFlight = dest;
-        }
+        [self maybeJoinCurrentAnimation];
         _dest = dest;
     }
+    if (!self.animation) {
+        _src = _inFlight = dest;
+    }
+}
+
+- (void) leaveAnimation
+{
+    _src = _dest;
+    _inFlight = _dest;
+    [super leaveAnimation];
 }
 
 - (void) animationWasCancelled
@@ -291,11 +326,19 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setDest:(CGAffineTransform)dest
 {
     if (!CGAffineTransformEqualToTransform(dest, _dest)) {
-        if (![self maybeJoinCurrentAnimation]) {
-            _src = _inFlight = dest;
-        }
+        [self maybeJoinCurrentAnimation];
         _dest = dest;
     }
+    if (!self.animation) {
+        _src = _inFlight = dest;
+    }
+}
+
+- (void) leaveAnimation
+{
+    _src = _dest;
+    _inFlight = _dest;
+    [super leaveAnimation];
 }
 
 - (void) animationWasCancelled

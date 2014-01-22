@@ -79,6 +79,9 @@ AP_BAN_EVIL_INIT;
     if (_tag) {
         NSLog(@"Adding view:%@ property:%@ to animation:%@", prop.view, prop, _tag);
     }
+    if (_alreadyFinished) {
+        NSLog(@"Joining an animation that's already finished -- super bad!");
+    }
 
     [_props addObject:prop];
 }

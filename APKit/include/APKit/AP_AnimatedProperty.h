@@ -16,6 +16,7 @@
 - (instancetype) initWithName:(NSString*)name view:(AP_View*)view;
 
 - (void) updateWithProgress:(CGFloat)progress; // Interpolate in-flight properties between previous and current.
+- (void) leaveAnimation; // Leave the animation running but detach from it.
 - (void) cancelAnimation; // Stop the current animation, leaving properties in mid-flight.
 - (void) finishAnimation; // Jump to the end of the current animation.
 
