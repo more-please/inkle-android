@@ -4,7 +4,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "AP_Animation.h"
-#import "AP_AnimationProps.h"
+#import "AP_AnimatedProperty.h"
 #import "AP_GestureRecognizer.h"
 #import "AP_Responder.h"
 
@@ -74,13 +74,30 @@
 
 + (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations;
 
++ (void)debugAnimationWithTag:(NSString*)tag;
+
 @property(nonatomic,weak) AP_Window* window;
 @property(nonatomic,readonly) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
 @property(nonatomic,readonly,copy) NSMutableArray* subviews;
 @property(nonatomic,readonly,copy) NSMutableArray* gestureRecognizers;
 
-// Animatable properties. These delegate to self.currentProps.
+// Animated properties.
+@property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedBoundsOrigin;
+@property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedFrameOrigin;
+@property(nonatomic,readonly,strong) AP_AnimatedSize* animatedSize;
+@property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedAnchor;
+@property(nonatomic,readonly,strong) AP_AnimatedTransform* animatedTransform;
+@property(nonatomic,readonly,strong) AP_AnimatedVector4* animatedBackgroundColor;
+@property(nonatomic,readonly,strong) AP_AnimatedFloat* animatedAlpha;
+
+// Convenience accessor for all the animated properties as an array.
+@property(nonatomic,readonly,strong) NSArray* animatedProperties;
+
+// Called by [AP_AnimatedProperty initWithView:]
+- (void) animatedPropertyWasAdded:(AP_AnimatedProperty*)prop;
+
+// These delegate to the current value of the animated properties.
 @property(nonatomic) CGRect bounds;
 @property(nonatomic) CGRect frame;
 @property(nonatomic) CGPoint center;
@@ -88,10 +105,7 @@
 @property(nonatomic,strong) UIColor* backgroundColor;
 @property(nonatomic) CGFloat alpha;
 
-// When rendering, use inFlightProps rather than currentProps.
-@property(nonatomic,readonly,strong) AP_AnimationProps* previousProps;
-@property(nonatomic,readonly,strong) AP_AnimationProps* inFlightProps;
-@property(nonatomic,readonly,strong) AP_AnimationProps* currentProps;
+@property(nonatomic,readonly) CGRect inFlightBounds;
 
 @property(nonatomic) BOOL autoresizesSubviews; // default is YES.
 @property(nonatomic) UIViewAutoresizing autoresizingMask;
@@ -114,21 +128,6 @@
 - (void) updateGL;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
-
-@property(nonatomic,strong) AP_Animation* animation; // The current animation.
-
-+ (void) debugAnimationWithTag:(NSString*)tag;
-
-// If an animation is currently being constructed, join it (and cancel any existing animation).
-- (BOOL) maybeJoinActiveAnimation;
-
-- (void) updateAnimation; // Interpolate in-flight properties between previous and current.
-- (void) cancelAnimation; // Stop the current animation, leaving properties in mid-flight.
-- (void) finishAnimation; // Jump to the end of the current animation.
-
-// Callbacks from AP_Animation.
-- (void) animationWasCancelled;
-- (void) animationWasFinished;
 
 // Traversing the view hierarchy
 - (void) visitWithBlock:(void(^)(AP_View*))block;

@@ -11,6 +11,8 @@
     AP_Window* _window;
     BOOL _needsLayout;
 
+    NSMutableArray* _animatedProperties;
+
     NSArray* _zSortedSubviews;
     int _zSortIndex;
 }
@@ -27,18 +29,24 @@
         _layer = [[AP_Layer alloc] initWithView:self];
         _subviews = [NSMutableArray array];
         _gestureRecognizers = [NSMutableArray array];
+        _animatedProperties = [NSMutableArray array];
 
-        _currentProps = [[AP_AnimationProps alloc] init];
-        _currentProps.frame = frame;
-        _currentProps.bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
+        _animatedBoundsOrigin = [[AP_AnimatedPoint alloc] initWithName:@"boundsOrigin" view:self];
+        _animatedFrameOrigin = [[AP_AnimatedPoint alloc] initWithName:@"frameOrigin" view:self];
+        _animatedSize = [[AP_AnimatedSize alloc] initWithName:@"size" view:self];
+        _animatedAnchor = [[AP_AnimatedPoint alloc] initWithName:@"anchor" view:self];
+        _animatedAlpha = [[AP_AnimatedFloat alloc] initWithName:@"alpha" view:self];
+        _animatedTransform = [[AP_AnimatedTransform alloc] initWithName:@"transform" view:self];
+        _animatedBackgroundColor = [[AP_AnimatedVector4 alloc] initWithName:@"backgroundColor" view:self];
+        AP_CHECK(_animatedProperties.count == 7, return nil);
 
-        _previousProps = [[AP_AnimationProps alloc] init];
-        _previousProps.frame = frame;
-        _previousProps.bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
-
-        _inFlightProps = [[AP_AnimationProps alloc] init];
-        _inFlightProps.frame = frame;
-        _inFlightProps.bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
+        _animatedBoundsOrigin.dest = CGPointZero;
+        _animatedFrameOrigin.dest = frame.origin;
+        _animatedSize.dest = frame.size;
+        _animatedAnchor.dest = CGPointMake(0.5, 0.5);
+        _animatedAlpha.dest = 1;
+        _animatedTransform.dest = CGAffineTransformIdentity;
+        _animatedBackgroundColor.dest = GLKVector4Make(0, 0, 0, 0);
 
         _autoresizesSubviews = YES;
         _autoresizingMask = UIViewAutoresizingNone;
@@ -51,6 +59,11 @@
     return self;
 }
 
+- (void) animatedPropertyWasAdded:(AP_AnimatedProperty*)prop
+{
+    [_animatedProperties addObject:prop];
+}
+
 - (void) dealloc
 {
     NSLog(@"Deleting AP_View: %@", self);
@@ -60,120 +73,93 @@
 #pragma mark - Animation
 //------------------------------------------------------------------------------------
 
-- (CGRect) bounds { return _currentProps.bounds; }
-- (CGRect) frame { return _currentProps.frame; }
-- (CGPoint) center { return _currentProps.center; }
-- (CGAffineTransform) transform { return _currentProps.transform; }
-- (CGFloat) alpha { return _currentProps.alpha; }
-- (UIColor*) backgroundColor { return AP_VectorToColor(_currentProps.backgroundColor); }
+- (CGRect) bounds
+{
+    CGRect r;
+    r.origin = _animatedBoundsOrigin.dest;
+    r.size = _animatedSize.dest;
+    return r;
+}
+
+- (CGRect) inFlightBounds
+{
+    CGRect r;
+    r.origin = _animatedBoundsOrigin.inFlight;
+    r.size = _animatedSize.inFlight;
+    return r;
+}
+
+- (CGRect) frame
+{
+    CGRect r;
+    r.origin = _animatedFrameOrigin.dest;
+    r.size = _animatedSize.dest;
+    return r;
+}
+
+- (CGPoint) center
+{
+    CGPoint anchor = _animatedAnchor.dest;
+    CGPoint origin = _animatedFrameOrigin.dest;
+    CGSize size = _animatedSize.dest;
+    return CGPointMake(
+        origin.x + size.width * anchor.x,
+        origin.y + size.height * anchor.y);
+}
+
+- (CGAffineTransform) transform
+{
+    return _animatedTransform.dest;
+}
+
+- (CGFloat) alpha
+{
+    return _animatedAlpha.dest;
+}
+
+- (UIColor*) backgroundColor
+{
+    return AP_VectorToColor(_animatedBackgroundColor.dest);
+}
 
 - (void) setBounds:(CGRect)bounds
 {
-    CGRect oldBounds = _currentProps.bounds;
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setBounds:bounds];
-    }
-    [_currentProps setBounds:bounds];
+    CGRect oldBounds = self.bounds;
+    _animatedBoundsOrigin.dest = bounds.origin;
+    _animatedSize.dest = bounds.size;
     [self maybeAutolayout:oldBounds];
 }
 
 - (void) setFrame:(CGRect)frame
 {
-    CGRect oldBounds = _currentProps.bounds;
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setFrame:frame];
-    }
-    [_currentProps setFrame:frame];
+    CGRect oldBounds = self.bounds;
+    _animatedFrameOrigin.dest = frame.origin;
+    _animatedSize.dest = frame.size;
     [self maybeAutolayout:oldBounds];
 }
 
 - (void) setCenter:(CGPoint)center
 {
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setCenter:center];
-    }
-    [_currentProps setCenter:center];
+    CGPoint oldCenter = self.center;
+    CGPoint origin = _animatedFrameOrigin.dest;
+    origin.x += (center.x - oldCenter.x);
+    origin.y += (center.y - oldCenter.y);
+    _animatedFrameOrigin.dest = origin;
 }
 
 - (void) setTransform:(CGAffineTransform)transform
 {
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setTransform:transform];
-    }
-    [_currentProps setTransform:transform];
+    _animatedTransform.dest = transform;
 }
 
 - (void) setAlpha:(CGFloat)alpha
 {
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setAlpha:alpha];
-    }
-    [_currentProps setAlpha:alpha];
+    _animatedAlpha.dest = alpha;
 }
 
 - (void) setBackgroundColor:(UIColor*)color
 {
-    GLKVector4 rgba = AP_ColorToVector(color);
-    if (![self maybeJoinActiveAnimation]) {
-        [_previousProps setBackgroundColor:rgba];
-    }
-    [_currentProps setBackgroundColor:rgba];
-}
-
-- (void) setAnimation:(AP_Animation *)animation
-{
-    if (_animationTrap) {
-        NSLog(@"Animation trap!");
-    }
-    if (_animation != animation) {
-        if (_animation) {
-            [self finishAnimation];
-        }
-        _animation = animation;
-        if (_animation) {
-            [_animation addView:self];
-        }
-    }
-}
-
-- (void) cancelAnimation
-{
-    if (_animation) {
-        [_animation cancel];
-    }
-}
-
-- (void) finishAnimation
-{
-    if (_animation) {
-        [_animation finish];
-    }
-}
-
-- (void) updateAnimation
-{
-    if (_animation) {
-        if (_animationTrap) {
-            NSLog(@"Animation trap!");
-        }
-        [_inFlightProps lerpFrom:_previousProps to:_currentProps atTime:[_animation progress]];
-    } else {
-        [_previousProps copyFrom:_currentProps];
-        [_inFlightProps copyFrom:_currentProps];
-    }
-}
-
-- (void) animationWasCancelled
-{
-    [_previousProps copyFrom:_inFlightProps];
-    _animation = nil;
-}
-
-- (void) animationWasFinished
-{
-    [_previousProps copyFrom:_currentProps];
-    [_inFlightProps copyFrom:_currentProps];
-    _animation = nil;
+    _animatedBackgroundColor.dest = AP_ColorToVector(color);
 }
 
 + (void) animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations
@@ -186,30 +172,19 @@
     [AP_View animateWithDuration:duration delay:0 options:0 animations:animations completion:completion];
 }
 
-static AP_Animation* g_ActiveAnimation = nil;
-
 + (void) animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options animations:(void (^)(void))animations completion:(void (^)(BOOL))completion
 {
-    AP_Animation* oldAnimation = g_ActiveAnimation;
-    g_ActiveAnimation = [[AP_Animation alloc] initWithDuration:duration delay:delay options:options completion:completion];
+    AP_Animation* animation = [[AP_Animation alloc] initWithDuration:duration delay:delay options:options completion:completion];
+
+    AP_Animation* oldAnimation = [AP_AnimatedProperty currentAnimation];
+    [AP_AnimatedProperty setCurrentAnimation:animation];
     animations();
-    g_ActiveAnimation = oldAnimation;
+    [AP_AnimatedProperty setCurrentAnimation:oldAnimation];
 }
 
-- (BOOL) maybeJoinActiveAnimation
++ (void) debugAnimationWithTag:(NSString*)tag
 {
-    if (g_ActiveAnimation) {
-        self.animation = g_ActiveAnimation;
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
-+ (void) debugAnimationWithTag:(NSString *)tag
-{
-    AP_CHECK(g_ActiveAnimation, return);
-    g_ActiveAnimation.tag = tag;
+    [AP_AnimatedProperty currentAnimation].tag = tag;
 }
 
 //------------------------------------------------------------------------------------
@@ -218,32 +193,32 @@ static AP_Animation* g_ActiveAnimation = nil;
 
 static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
     for (AP_View* v = dest; v; v = v->_superview) {
-        CGRect bounds = v->_currentProps.bounds;
-        CGRect frame = v->_currentProps.frame;
-        point.x -= frame.origin.x - bounds.origin.x;
-        point.y -= frame.origin.y - bounds.origin.y;
+        CGPoint boundsOrigin = v->_animatedBoundsOrigin.dest;
+        CGPoint frameOrigin = v->_animatedFrameOrigin.dest;
+        point.x -= frameOrigin.x - boundsOrigin.x;
+        point.y -= frameOrigin.y - boundsOrigin.y;
     }
     for (AP_View* v = src; v; v = v->_superview) {
-        CGRect bounds = v->_currentProps.bounds;
-        CGRect frame = v->_currentProps.frame;
-        point.x += frame.origin.x - bounds.origin.x;
-        point.y += frame.origin.y - bounds.origin.y;
+        CGPoint boundsOrigin = v->_animatedBoundsOrigin.dest;
+        CGPoint frameOrigin = v->_animatedFrameOrigin.dest;
+        point.x += frameOrigin.x - boundsOrigin.x;
+        point.y += frameOrigin.y - boundsOrigin.y;
     }
     return point;
 }
 
 static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) {
     for (AP_View* v = dest; v; v = v->_superview) {
-        CGRect bounds = v->_inFlightProps.bounds;
-        CGRect frame = v->_inFlightProps.frame;
-        point.x -= frame.origin.x - bounds.origin.x;
-        point.y -= frame.origin.y - bounds.origin.y;
+        CGPoint boundsOrigin = v->_animatedBoundsOrigin.inFlight;
+        CGPoint frameOrigin = v->_animatedFrameOrigin.inFlight;
+        point.x -= frameOrigin.x - boundsOrigin.x;
+        point.y -= frameOrigin.y - boundsOrigin.y;
     }
     for (AP_View* v = src; v; v = v->_superview) {
-        CGRect bounds = v->_inFlightProps.bounds;
-        CGRect frame = v->_inFlightProps.frame;
-        point.x += frame.origin.x - bounds.origin.x;
-        point.y += frame.origin.y - bounds.origin.y;
+        CGPoint boundsOrigin = v->_animatedBoundsOrigin.inFlight;
+        CGPoint frameOrigin = v->_animatedFrameOrigin.inFlight;
+        point.x += frameOrigin.x - boundsOrigin.x;
+        point.y += frameOrigin.y - boundsOrigin.y;
     }
     return point;
 }
@@ -294,14 +269,17 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event
 {
-    if (_hidden || _inFlightProps.alpha < 0.01) {
+    if (_hidden || _animatedAlpha.inFlight < 0.01) {
         return nil;
     }
     if (!self.isUserInteractionEnabled) {
         return nil;
     }
-    if (self.animation && !(self.animation.options & UIViewAnimationOptionAllowUserInteraction)) {
-        return nil;
+    for (AP_AnimatedProperty* prop in _animatedProperties) {
+        AP_Animation* a = prop.animation;
+        if (a && !(a.options & UIViewAnimationOptionAllowUserInteraction)) {
+            return nil;
+        }
     }
     if ([self pointInside:point withEvent:event]) {
         for (AP_View* view in [_subviews reverseObjectEnumerator]) {
@@ -318,7 +296,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (BOOL) pointInside:(CGPoint)point withEvent:(AP_Event*)event
 {
-    CGRect r = _inFlightProps.bounds;
+    CGRect r = self.inFlightBounds;
     return CGRectContainsPoint(r, point);
 }
 
@@ -374,8 +352,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         }];
     }
     if (oldWindow && !window) {
-        if (_animation) {
-            [_animation removeView:self];
+        for (AP_AnimatedProperty* prop in _animatedProperties) {
+            [prop finishAnimation];
         }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
@@ -483,8 +461,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
-        if (_animation) {
-            [_animation removeView:self];
+        for (AP_AnimatedProperty* prop in _animatedProperties) {
+            [prop finishAnimation];
         }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
@@ -759,7 +737,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         color = [prog uniform:@"color"];
     }
 
-    GLKVector4 backgroundColor = _inFlightProps.backgroundColor;
+    GLKVector4 backgroundColor = _animatedBackgroundColor.inFlight;
     static BOOL s_debugViewBorders = NO;
     if (s_debugViewBorders) {
         // Highlight all views in red, for debugging...
@@ -770,7 +748,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         AP_CHECK(prog, return);
         AP_CHECK(buffer, return);
 
-        CGRect r = _inFlightProps.bounds;
+        CGRect r = self.inFlightBounds;
 //        NSLog(@"Rendering background %.2f,%.2f,%.2f, origin: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", backgroundColor.r, backgroundColor.g, backgroundColor.b, r.origin.x, r.origin.y, r.size.width, r.size.height, backgroundColor.a);
 
         float data[8] = {
@@ -823,40 +801,38 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha
 {
-    // Update inFlightProps, if necessary.
-    [self updateAnimation];
-
     // Build a transform that takes a point in bounds coordinates, and:
     // - moves bounds.center to (0,0)
     // - applies self.transform
     // - moves (0,0) to frame.center
     // - applies frameToGL
 
-    if (alpha < 1 && _inFlightProps.alpha < 1) {
+    if (alpha < 1 && _animatedAlpha.inFlight < 1) {
 //        AP_LogError("Warning - incorrect alpha compositing!");
         // TODO: If this is a problem, we may have to render the parent view to a framebuffer.
     }
 
-    alpha *= _inFlightProps.alpha;
+    alpha *= _animatedAlpha.inFlight;
     if (_hidden || alpha <= 0) {
         return;
     }
 
-    CGPoint anchor = _inFlightProps.anchorPoint;
-    CGRect bounds = _inFlightProps.bounds;
-    CGRect frame = _inFlightProps.frame;
+    CGPoint anchor = _animatedAnchor.inFlight;
+    CGPoint boundsOrigin = _animatedBoundsOrigin.inFlight;
+    CGPoint frameOrigin = _animatedFrameOrigin.inFlight;
+    CGSize size = _animatedSize.inFlight;
 
     CGAffineTransform boundsCenterToOrigin = CGAffineTransformMakeTranslation(
-        -(bounds.origin.x + anchor.x * bounds.size.width),
-        -(bounds.origin.y + anchor.y * bounds.size.height));
+        -(boundsOrigin.x + anchor.x * size.width),
+        -(boundsOrigin.y + anchor.y * size.height));
 
     CGAffineTransform originToFrameCenter = CGAffineTransformMakeTranslation(
-        (frame.origin.x + anchor.x * frame.size.width),
-        (frame.origin.y + anchor.y * frame.size.height));
+        (frameOrigin.x + anchor.x * size.width),
+        (frameOrigin.y + anchor.y * size.height));
 
     CGAffineTransform boundsToGL = CGAffineTransformIdentity;
     boundsToGL = CGAffineTransformConcat(boundsToGL, boundsCenterToOrigin);
-    boundsToGL = CGAffineTransformConcat(boundsToGL, _inFlightProps.transform);
+    boundsToGL = CGAffineTransformConcat(boundsToGL, _animatedTransform.inFlight);
     boundsToGL = CGAffineTransformConcat(boundsToGL, originToFrameCenter);
     boundsToGL = CGAffineTransformConcat(boundsToGL, frameToGL);
 

@@ -19,7 +19,7 @@ NSTimeInterval CACurrentMediaTime() {
     double _progress;
     BOOL _reverse;
     void (^_completion)(BOOL finished);
-    NSMutableArray* _views;
+    NSMutableArray* _props;
     BOOL _alreadyFinished;
 }
 
@@ -67,30 +67,30 @@ AP_BAN_EVIL_INIT;
         _options = options;
         _reverse = NO;
         _completion = completion;
-        _views = [NSMutableArray array];
+        _props = [NSMutableArray array];
 
         [g_Animations addObject:self];
     }
     return self;
 }
 
-- (void) addView:(AP_View *)view
+- (void) addProp:(AP_AnimatedProperty*)prop
 {
     if (_tag) {
-        NSLog(@"Adding view: %@ to animation: %@", view, _tag);
+        NSLog(@"Adding view:%@ property:%@ to animation:%@", prop.view, prop, _tag);
     }
 
-    [_views addObject:view];
+    [_props addObject:prop];
 }
 
-- (void) removeView:(AP_View *)view
+- (void) removeProp:(AP_AnimatedProperty*)prop
 {
     if (_tag) {
-        NSLog(@"Removing view: %@ from animation: %@", view, _tag);
+        NSLog(@"Removing view:%@ property:%@ from animation: %@", prop.view, prop, _tag);
     }
 
-    [_views removeObject:view];
-    if ([_views count] == 0) {
+    [_props removeObject:prop];
+    if ([_props count] == 0) {
         [self cancel];
     }
 }
@@ -136,6 +136,10 @@ AP_BAN_EVIL_INIT;
         NSLog(@"Updating animation: %@ (progress: %.1f)", _tag, _progress);
     }
 
+    for (AP_AnimatedProperty* prop in _props) {
+        [prop updateWithProgress:_progress];
+    }
+
     if (t >= _finishTime) {
         [self finish];
     }
@@ -162,10 +166,10 @@ AP_BAN_EVIL_INIT;
 
     [g_Animations removeObject:self];
 
-    NSMutableArray* views = _views.mutableCopy;
-    _views = nil;
-    for (AP_View* view in views) {
-        [view animationWasCancelled];
+    NSMutableArray* props = _props.mutableCopy;
+    _props = nil;
+    for (AP_AnimatedProperty* prop in props) {
+        [prop animationWasCancelled];
     }
 
     if (protectSelf->_completion) {
@@ -190,10 +194,10 @@ AP_BAN_EVIL_INIT;
     [g_Animations removeObject:self];
     _progress = 1;
 
-    NSMutableArray* views = _views.mutableCopy;
-    _views = nil;
-    for (AP_View* view in views) {
-        [view animationWasFinished];
+    NSMutableArray* props = _props.mutableCopy;
+    _props = nil;
+    for (AP_AnimatedProperty* prop in props) {
+        [prop animationWasFinished];
     }
 
     if (protectSelf->_completion) {

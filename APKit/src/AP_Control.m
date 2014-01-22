@@ -56,8 +56,11 @@
     if (!self.isUserInteractionEnabled) {
         return;
     }
-    if (self.animation && !(self.animation.options & UIViewAnimationOptionAllowUserInteraction)) {
-        return;
+    for (AP_AnimatedProperty* p in self.animatedProperties) {
+        AP_Animation* a = p.animation;
+        if (a && !(a.options & UIViewAnimationOptionAllowUserInteraction)) {
+            return;
+        }
     }
     for (AP_Control_Action* ack in _actions) {
         if (ack.events & mask) {

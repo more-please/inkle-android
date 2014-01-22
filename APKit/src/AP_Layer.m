@@ -26,22 +26,22 @@ AP_BAN_EVIL_INIT
 
 - (CGPoint) anchorPoint
 {
-    return _view.currentProps.anchorPoint;
+    return _view.animatedAnchor.dest;
 }
 
 - (void) setAnchorPoint:(CGPoint)p
 {
-    _view.currentProps.anchorPoint = p;
+    _view.animatedAnchor.dest = p;
 }
 
 - (CGPoint) position
 {
-    return _view.currentProps.center;
+    return _view.center;
 }
 
 - (void) setPosition:(CGPoint)p
 {
-    _view.currentProps.center = p;
+    _view.center = p;
 }
 
 - (void) setZPosition:(CGFloat)zPosition
@@ -54,7 +54,9 @@ AP_BAN_EVIL_INIT
 
 - (void) removeAllAnimations
 {
-    [_view cancelAnimation];
+    for (AP_AnimatedProperty* p in _view.animatedProperties) {
+        [p cancelAnimation];
+    }
 }
 
 @end

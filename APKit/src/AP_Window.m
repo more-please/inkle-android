@@ -139,6 +139,10 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
     [AP_Animation setMasterClock:_clock];
     [_fps tick];
 
+    for (AP_Animation* animation in [AP_Animation animations]) {
+        [animation update];
+    }
+
     UIScreen* screen = [UIScreen mainScreen];
     float scale = screen.scale;
     CGRect bounds = screen.bounds;
@@ -178,10 +182,6 @@ static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
         [v visitWithBlock:^(AP_View* view) {
             [view updateGL];
         }];
-    }
-
-    for (AP_Animation* animation in [AP_Animation animations]) {
-        [animation update];
     }
 
     if (_rootViewController) {

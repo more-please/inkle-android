@@ -31,8 +31,7 @@
         alpha = 1;
     }
     if (_image) {
-        AP_AnimationProps* props = self.inFlightProps;
-        CGRect bounds = props.bounds;
+        CGRect bounds = self.inFlightBounds;
 
         CGPoint pos = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
         CGSize size = _image.size;

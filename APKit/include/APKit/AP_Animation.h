@@ -7,7 +7,7 @@
 extern NSTimeInterval CACurrentMediaTime();
 #endif
 
-@class AP_View;
+@class AP_AnimatedProperty;
 
 // Holds the timing and callback info for a single animation, which may affect multiple views.
 // Doesn't correspond directly to any UIKit class.
@@ -22,8 +22,8 @@ extern NSTimeInterval CACurrentMediaTime();
 
 - (id) initWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options completion:(void (^)(BOOL finished))completion;
 
-- (void) addView:(AP_View*)view;
-- (void) removeView:(AP_View*)view;
+- (void) addProp:(AP_AnimatedProperty*)prop;
+- (void) removeProp:(AP_AnimatedProperty*)prop;
 
 // Called by AP_Window at the start of each GL frame.
 - (void) update;
