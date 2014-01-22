@@ -49,10 +49,9 @@ const CGFloat UIScrollViewDecelerationRateFast = 6.0;
     offset.x = MAX(0, MIN(_contentSize.width - size.width, offset.x));
     offset.y = MAX(0, MIN(_contentSize.height - size.height, offset.y));
 
-    CGRect r = self.bounds;
-    if (!CGPointEqualToPoint(offset, r.origin)) {
-        r.origin = offset;
-        self.bounds = r;
+    AP_AnimatedPoint* origin = self.animatedBoundsOrigin;
+    if (!CGPointEqualToPoint(offset, origin.dest)) {
+        origin.dest = offset;   
         if ([_delegate respondsToSelector:@selector(scrollViewDidScroll:)]) {
             [_delegate scrollViewDidScroll:self];
         }
