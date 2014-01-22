@@ -35,24 +35,29 @@
 @interface AP_AnimatedFloat : AP_AnimatedProperty
 @property(nonatomic) CGFloat dest;
 @property(nonatomic,readonly) CGFloat inFlight;
+- (void) setAll:(CGFloat)value;
 @end
 
 @interface AP_AnimatedPoint : AP_AnimatedProperty
 @property(nonatomic) CGPoint dest;
 @property(nonatomic,readonly) CGPoint inFlight;
+- (void) setAll:(CGPoint)value;
 @end
 
 @interface AP_AnimatedSize : AP_AnimatedProperty
 @property(nonatomic) CGSize dest;
 @property(nonatomic,readonly) CGSize inFlight;
+- (void) setAll:(CGSize)size;
 @end
 
 @interface AP_AnimatedVector4 : AP_AnimatedProperty
 @property(nonatomic) GLKVector4 dest;
 @property(nonatomic,readonly) GLKVector4 inFlight;
+- (void) setAll:(GLKVector4)value;
 @end
 
 @interface AP_AnimatedTransform : AP_AnimatedProperty
 @property(nonatomic) CGAffineTransform dest;
 @property(nonatomic,readonly) CGAffineTransform inFlight;
+- (void) setAll:(CGAffineTransform)value;
 @end

@@ -89,6 +89,11 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGFloat _src;
 }
 
+- (void) setAll:(CGFloat)value
+{
+    _src = _inFlight = _dest = value;
+}
+
 - (void) updateWithProgress:(CGFloat)progress
 {
     CGFloat newValue = AP_Lerp(_src, _dest, progress);
@@ -127,6 +132,11 @@ static AP_Animation* g_CurrentAnimation = nil;
 
 @implementation AP_AnimatedPoint {
     CGPoint _src;
+}
+
+- (void) setAll:(CGPoint)value
+{
+    _src = _inFlight = _dest = value;
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -172,6 +182,11 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGSize _src;
 }
 
+- (void) setAll:(CGSize)value
+{
+    _src = _inFlight = _dest = value;
+}
+
 - (void) updateWithProgress:(CGFloat)progress
 {
     CGSize newValue;
@@ -215,6 +230,11 @@ static AP_Animation* g_CurrentAnimation = nil;
     GLKVector4 _src;
 }
 
+- (void) setAll:(GLKVector4)value
+{
+    _src = _inFlight = _dest = value;
+}
+
 - (void) updateWithProgress:(CGFloat)progress
 {
     for (int i = 0; i < 4; ++i) {
@@ -251,6 +271,11 @@ static AP_Animation* g_CurrentAnimation = nil;
 
 @implementation AP_AnimatedTransform {
     CGAffineTransform _src;
+}
+
+- (void) setAll:(CGAffineTransform)value
+{
+    _src = _inFlight = _dest = value;
 }
 
 - (void) updateWithProgress:(CGFloat)progress

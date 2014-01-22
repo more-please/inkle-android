@@ -40,13 +40,13 @@
         _animatedBackgroundColor = [[AP_AnimatedVector4 alloc] initWithName:@"backgroundColor" view:self];
         AP_CHECK(_animatedProperties.count == 7, return nil);
 
-        _animatedBoundsOrigin.dest = CGPointZero;
-        _animatedFrameOrigin.dest = frame.origin;
-        _animatedSize.dest = frame.size;
-        _animatedAnchor.dest = CGPointMake(0.5, 0.5);
-        _animatedAlpha.dest = 1;
-        _animatedTransform.dest = CGAffineTransformIdentity;
-        _animatedBackgroundColor.dest = GLKVector4Make(0, 0, 0, 0);
+        [_animatedBoundsOrigin setAll:CGPointZero];
+        [_animatedFrameOrigin setAll:frame.origin];
+        [_animatedSize setAll:frame.size];
+        [_animatedAnchor setAll:CGPointMake(0.5, 0.5)];
+        [_animatedAlpha setAll:1];
+        [_animatedTransform setAll:CGAffineTransformIdentity];
+        [_animatedBackgroundColor setAll:GLKVector4Make(0, 0, 0, 0)];
 
         _autoresizesSubviews = YES;
         _autoresizingMask = UIViewAutoresizingNone;
