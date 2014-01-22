@@ -30,3 +30,11 @@ static inline float GLKVector4Length(GLKVector4 vector) {
                 vector.v[3] * vector.v[3]);
 #endif
 }
+
+static inline BOOL GLKVector4AllEqualToVector4(GLKVector4 lhs, GLKVector4 rhs) {
+    return lhs.v[0] == rhs.v[0]
+        && lhs.v[1] == rhs.v[1]
+        && lhs.v[2] == rhs.v[2]
+        && lhs.v[3] == rhs.v[3];
+}
+
