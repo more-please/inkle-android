@@ -82,13 +82,35 @@ static const char* kSolidFragment = MULTILINE(
 static AP_Image_Program* g_SolidProg;
 static AP_Image_Program* g_AlphaProg;
 
+typedef struct Header {
+    int16_t width;
+    int16_t height;
+    int16_t numAlpha;
+    int16_t numSolid;
+} Header;
+
+typedef struct Quad {
+    int16_t x, y;
+    int16_t xTex, yTex;
+    int16_t width, height;
+} Quad;
+
+typedef struct VertexData {
+    GLfloat x, y;
+    GLfloat xTex, yTex;
+} VertexData;
+
 @implementation AP_Image {
+    AP_GLTexture* _texture;
+    CGSize _size;
+    NSMutableData* _solidQuads;
+    NSMutableData* _alphaQuads;
+
+    // These are constructed lazily at render time.
     AP_GLBuffer* _arrayBuffer;
     AP_GLBuffer* _indexBuffer;
-    AP_GLTexture* _texture;
-    int _numAlpha;
     int _numSolid;
-    CGSize _size;
+    int _numAlpha;
 }
 
 + (AP_Image*) imageNamed:(NSString *)name
@@ -154,24 +176,6 @@ static float sqrtSize(CGSize size) {
     return _size;
 }
 
-typedef struct Header {
-    int16_t width;
-    int16_t height;
-    int16_t numAlpha;
-    int16_t numSolid;
-} Header;
-
-typedef struct Quad {
-    int16_t x, y;
-    int16_t xTex, yTex;
-    int16_t width, height;
-} Quad;
-
-typedef struct VertexData {
-    GLfloat x, y;
-    GLfloat xTex, yTex;
-} VertexData;
-
 AP_BAN_EVIL_INIT
 
 - (void) commonInit
@@ -184,6 +188,24 @@ AP_BAN_EVIL_INIT
     }
     AP_CHECK(g_SolidProg, abort());
     AP_CHECK(g_AlphaProg, abort());
+
+    _scale = 1;
+
+    _solidQuads = [NSMutableData data];
+    _alphaQuads = [NSMutableData data];
+
+    _arrayBuffer = nil;
+    _indexBuffer = nil;
+}
+
+- (void) addSolidQuad:(const Quad*)quad
+{
+    [_solidQuads appendBytes:quad length:sizeof(Quad)];
+}
+
+- (void) addAlphaQuad:(const Quad*)quad
+{
+    [_alphaQuads appendBytes:quad length:sizeof(Quad)];
 }
 
 - (AP_Image*) initWithName:(NSString*)name texture:(AP_GLTexture*)texture
@@ -197,40 +219,16 @@ AP_BAN_EVIL_INIT
         _assetName = name;
         _texture = texture;
         _size = CGSizeMake(_texture.width, _texture.height);
-        _scale = 1;
-        _numAlpha = 0;
-        _numSolid = 1;
 
-        // For each quad, we need 4 vertices (16 bytes each) and 6 indices (2 bytes each).
-        NSMutableData* vertexData = [NSMutableData dataWithLength:(4 * 16)];
-        NSMutableData* indexData = [NSMutableData dataWithLength:(6 * 2)];
-        VertexData* vPtr = (VertexData*) vertexData.bytes;
-        GLushort* iPtr = (GLushort*) indexData.bytes;
+        Quad q;
+        q.x = 0;
+        q.y = 0;
+        q.xTex = 0;
+        q.yTex = 0;
+        q.width = _texture.width;
+        q.height = _texture.height;
 
-        for (int x = 0; x <= 1; ++x) {
-            for (int y = 0; y <= 1; ++y) {
-                vPtr->x = (x - 0.5) * _size.width;
-                vPtr->y = (y - 0.5) * _size.height;
-                vPtr->xTex = x;
-                vPtr->yTex = y;
-                ++vPtr;
-            }
-        }
-
-        GLushort index = 0;
-        GLushort bottomLeft = index;
-        GLushort bottomRight = index + 1;
-        GLushort topLeft = index + 2;
-        GLushort topRight = index + 3;
-        *iPtr++ = bottomRight;
-        *iPtr++ = bottomLeft;
-        *iPtr++ = topLeft;
-        *iPtr++ = topLeft;
-        *iPtr++ = topRight;
-        *iPtr++ = bottomRight;
-
-        _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
-        _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
+        [self addSolidQuad:&q];
     }
     NSLog(@"Loaded image: %@", name);
     return self;
@@ -255,11 +253,14 @@ AP_BAN_EVIL_INIT
         AP_CHECK_GE(data.length, sizeof(Header), return nil);
 
         _size = CGSizeMake(header->width, header->height);
-        _scale = 1;
-        _numAlpha = header->numAlpha;
-        _numSolid = header->numSolid;
 
-        int numQuads = _numAlpha + _numSolid;
+        int numQuads = header->numAlpha + header->numSolid;
+        for (int i = 0; i < header->numAlpha; i++) {
+            [self addAlphaQuad:(quads + i)];
+        }
+        for (int i = header->numAlpha; i < numQuads; i++) {
+            [self addSolidQuad:(quads + i)];
+        }
 
         int texNameStart = sizeof(Header) + numQuads * sizeof(Quad);
         int texNameLength = data.length - texNameStart - 1;
@@ -269,16 +270,37 @@ AP_BAN_EVIL_INIT
 
         NSString* texName = [[NSString alloc] initWithBytes:texNamePtr length:texNameLength encoding:NSUTF8StringEncoding];
         _texture = [AP_GLTexture textureNamed:texName];
-
         AP_CHECK(_texture, return nil);
+    }
+    NSLog(@"Loaded image: %@", name);
+    return self;
+}
 
-        [_texture bind];
+- (void) dealloc
+{
+    NSLog(@"Deleted image: %@", _assetName);
+    if (_texture) {
+        [_texture keepAliveForTimeInterval:3.0];
+    }
+}
 
+- (void) renderGLWithTransform:(CGAffineTransform)transform alpha:(CGFloat)alpha
+{
+    if (alpha <= 0) {
+        return;
+    }
+
+    if (!_indexBuffer || !_arrayBuffer) {
+        // Upload the quads as GL triangles.
         GLfloat texWidth = _texture.width;
         GLfloat texHeight = _texture.height;
 
-        AP_CHECK_GE(texWidth, 0, return nil);
-        AP_CHECK_GE(texHeight, 0, return nil);
+        _numSolid = _solidQuads.length / sizeof(Quad);
+        _numAlpha = _alphaQuads.length / sizeof(Quad);
+        int numQuads = _numSolid + _numAlpha;
+        NSMutableData* data = [_alphaQuads mutableCopy];
+        [data appendData:_solidQuads];
+        const Quad* quads = (const Quad*)(data.bytes);
 
         // For each quad, we need 4 vertices (16 bytes each) and 6 indices (2 bytes each).
         NSMutableData* vertexData = [NSMutableData dataWithLength:(4 * numQuads * 16)];
@@ -312,23 +334,6 @@ AP_BAN_EVIL_INIT
 
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
-    }
-    NSLog(@"Loaded image: %@", name);
-    return self;
-}
-
-- (void) dealloc
-{
-    NSLog(@"Deleted image: %@", _assetName);
-    if (_texture) {
-        [_texture keepAliveForTimeInterval:3.0];
-    }
-}
-
-- (void) renderGLWithTransform:(CGAffineTransform)transform alpha:(CGFloat)alpha
-{
-    if (alpha <= 0) {
-        return;
     }
 
     GLKMatrix3 matrix = GLKMatrix3Make(
@@ -379,8 +384,12 @@ AP_BAN_EVIL_INIT
 
 - (AP_Image*) stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight
 {
-    AP_NOT_IMPLEMENTED;
-    return self;
+    UIEdgeInsets insets;
+    insets.left = leftCapWidth;
+    insets.right = (_size.width / _scale) - leftCapWidth - 1;
+    insets.top = topCapHeight;
+    insets.bottom = (_size.height / _scale) - topCapHeight - 1;
+    return [self resizableImageWithCapInsets:insets];
 }
 
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor
