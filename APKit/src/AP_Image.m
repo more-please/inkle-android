@@ -190,6 +190,7 @@ AP_BAN_EVIL_INIT
     AP_CHECK(g_AlphaProg, abort());
 
     _scale = 1;
+    _insets = UIEdgeInsetsZero;
 
     _solidQuads = [NSMutableData data];
     _alphaQuads = [NSMutableData data];
@@ -206,6 +207,48 @@ AP_BAN_EVIL_INIT
 - (void) addAlphaQuad:(const Quad*)quad
 {
     [_alphaQuads appendBytes:quad length:sizeof(Quad)];
+}
+
+- (AP_Image*) stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight
+{
+    UIEdgeInsets insets;
+    insets.left = leftCapWidth;
+    insets.right = (_size.width / _scale) - leftCapWidth - 1;
+    insets.top = topCapHeight;
+    insets.bottom = (_size.height / _scale) - topCapHeight - 1;
+    return [self resizableImageWithCapInsets:insets];
+}
+
+- (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets
+{
+    return [[AP_Image alloc] initWithImage:self insets:capInsets];
+}
+
+- (AP_Image*) initWithImage:(AP_Image*)other insets:(UIEdgeInsets)insets
+{
+    self = [super init];
+    if (self) {
+        [self commonInit];
+
+        _insets = insets;
+        _assetName = other->_assetName;
+        _texture = other->_texture;
+        _size = other->_size;
+
+        int numAlpha = other->_alphaQuads.length / sizeof(Quad);
+        const Quad* alphaQuads = (const Quad*) other->_alphaQuads.bytes;
+        for (int i = 0; i < numAlpha; i++) {
+            [self addAlphaQuad:(alphaQuads + i)];
+        }
+
+        int numSolid = other->_solidQuads.length / sizeof(Quad);
+        const Quad* solidQuads = (const Quad*) other->_solidQuads.bytes;
+        for (int i = 0; i < numSolid; i++) {
+            [self addSolidQuad:(solidQuads + i)];
+        }
+    }
+    NSLog(@"Added insets to image: %@", _assetName);
+    return self;
 }
 
 - (AP_Image*) initWithName:(NSString*)name texture:(AP_GLTexture*)texture
@@ -374,22 +417,6 @@ AP_BAN_EVIL_INIT
     glVertexAttribPointer(g_SolidProg.texCoord, 2, GL_FLOAT, false, 16, (void*)8);
 
     glDrawElements(GL_TRIANGLES, 6 * _numSolid, GL_UNSIGNED_SHORT, (void*)(12 * _numAlpha));
-}
-
-- (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets
-{
-    AP_NOT_IMPLEMENTED;
-    return self;
-}
-
-- (AP_Image*) stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight
-{
-    UIEdgeInsets insets;
-    insets.left = leftCapWidth;
-    insets.right = (_size.width / _scale) - leftCapWidth - 1;
-    insets.top = topCapHeight;
-    insets.bottom = (_size.height / _scale) - topCapHeight - 1;
-    return [self resizableImageWithCapInsets:insets];
 }
 
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor
