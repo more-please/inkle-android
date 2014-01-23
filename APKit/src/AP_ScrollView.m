@@ -4,8 +4,8 @@
 #import "AP_GestureRecognizer.h"
 
 #ifdef ANDROID
-const CGFloat UIScrollViewDecelerationRateNormal = 3.0;
-const CGFloat UIScrollViewDecelerationRateFast = 6.0;
+const CGFloat UIScrollViewDecelerationRateNormal = 5.0;
+const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 #endif
 
 @implementation AP_ScrollView {
