@@ -235,14 +235,11 @@
     AP_Image* image = [self backgroundImageForState:state];
     if (image) {
         CGRect bounds = self.inFlightBounds;
-        CGAffineTransform t = CGAffineTransformScale(
-                CGAffineTransformTranslate(
-                    boundsToGL,
-                    bounds.origin.x, bounds.origin.y),
-            bounds.size.width / image.pixelSize.width,
-            bounds.size.height / image.pixelSize.height);
+        CGAffineTransform t = CGAffineTransformTranslate(
+            boundsToGL,
+            bounds.origin.x, bounds.origin.y);
 
-        [image renderGLWithTransform:t alpha:alpha];
+        [image renderGLWithSize:bounds.size transform:t alpha:alpha];
     }
 }
 

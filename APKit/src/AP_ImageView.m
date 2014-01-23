@@ -33,7 +33,7 @@
     if (_image) {
         CGRect bounds = self.inFlightBounds;
 
-        CGPoint pos = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
+        CGPoint center = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
         CGSize size = _image.size;
 
         CGFloat xGap = (size.width - bounds.size.width) / 2;
@@ -68,39 +68,39 @@
                 break;
 
             case UIViewContentModeTop:
-                pos.y -= yGap;
+                center.y -= yGap;
                 break;
 
             case UIViewContentModeBottom:
-                pos.y += yGap;
+                center.y += yGap;
                 break;
 
             case UIViewContentModeLeft:
-                pos.x -= xGap;
+                center.x -= xGap;
                 break;
 
             case UIViewContentModeRight:
-                pos.x += xGap;
+                center.x += xGap;
                 break;
 
             case UIViewContentModeTopLeft:
-                pos.x -= xGap;
-                pos.y -= yGap;
+                center.x -= xGap;
+                center.y -= yGap;
                 break;
 
             case UIViewContentModeTopRight:
-                pos.x += xGap;
-                pos.y -= yGap;
+                center.x += xGap;
+                center.y -= yGap;
                 break;
 
             case UIViewContentModeBottomLeft:
-                pos.x -= xGap;
-                pos.y += yGap;
+                center.x -= xGap;
+                center.y += yGap;
                 break;
 
             case UIViewContentModeBottomRight:
-                pos.x += xGap;
-                pos.y += yGap;
+                center.x += xGap;
+                center.y += yGap;
                 break;
 
             case UIViewContentModeRedraw:
@@ -110,18 +110,13 @@
         }
 
         // The image will be rendered with its top-left corner at 0,0.
-        // To transform it into GL coordinates, we need to do the following:
-        // - scale to the correct size
-        // - translate it into bounds coordinates
-        // - apply boundsToGL.
+        // To transform it into GL coordinates, we need to translate it
+        // into bounds coordinates, then apply boundsToGL.
         
-        CGAffineTransform t = CGAffineTransformScale(
-                CGAffineTransformTranslate(
-                    boundsToGL,
-                    pos.x - size.width/2,
-                    pos.y - size.height/2),
-            size.width / _image.pixelSize.width,
-            size.height / _image.pixelSize.height);
+        CGAffineTransform t = CGAffineTransformTranslate(
+            boundsToGL,
+            center.x - size.width/2,
+            center.y - size.height/2);
 
 //        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", _image.assetName, pos.x, pos.y, size.width, size.height, alpha);
 
@@ -137,7 +132,7 @@
             glScissor(x, y, w, h);
         }
 
-        [_image renderGLWithTransform:t alpha:alpha];
+        [_image renderGLWithSize:size transform:t alpha:alpha];
 
         if (self.clipsToBounds) {
             glDisable(GL_SCISSOR_TEST);

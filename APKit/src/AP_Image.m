@@ -212,7 +212,34 @@ AP_BAN_EVIL_INIT
     _indexBuffer = nil;
 }
 
-- (void) addQuad:(RawQuad)raw solid:(BOOL)solid
+- (void) addRaw:(RawQuad)raw solid:(BOOL)solid
+{
+    CGRect r = {
+        raw.x,
+        raw.y,
+        raw.width,
+        raw.height
+    };
+    CGPoint texPos = {
+        raw.xTex / (CGFloat)_texture.width,
+        raw.yTex / (CGFloat)_texture.height,
+    };
+    [self addRect:r texPos:texPos solid:solid];
+}
+
+- (void) addStretchy:(StretchyQuad)quad solid:(BOOL)solid
+{
+    CGRect r = {
+        quad.edge.origin.x + quad.stretch.origin.x,
+        quad.edge.origin.y + quad.stretch.origin.y,
+        quad.edge.size.width + quad.stretch.size.width,
+        quad.edge.size.height + quad.stretch.size.height,
+    };
+    CGPoint texPos = quad.tex.origin;
+    [self addRect:r texPos:texPos solid:solid];
+}
+
+- (void) addRect:(CGRect)r texPos:(CGPoint)texPos solid:(BOOL)solid
 {
     // Depending on the edge insets, we may have to split
     // up each input quad into as many as nine pieces.
@@ -251,8 +278,8 @@ AP_BAN_EVIL_INIT
 
     StretchyQuad q;
     for (int i = 0; i < 3; i++) {
-        float left = MAX(edgePos[i].x + stretchPos[i].x, raw.x);
-        float right = MIN(edgePos[i+1].x + stretchPos[i+1].x, raw.x + raw.width);
+        float left = MAX(edgePos[i].x + stretchPos[i].x, r.origin.x);
+        float right = MIN(edgePos[i+1].x + stretchPos[i+1].x, r.origin.x + r.size.width);
         if (left >= right) {
             continue;
         }
@@ -270,8 +297,8 @@ AP_BAN_EVIL_INIT
         }
 
         for (int j = 0; j < 3; j++) {
-            float top = MAX(edgePos[j].y + stretchPos[j].y, raw.y);
-            float bottom = MIN(edgePos[j+1].y + stretchPos[j+1].y, raw.y + raw.height);
+            float top = MAX(edgePos[j].y + stretchPos[j].y, r.origin.y);
+            float bottom = MIN(edgePos[j+1].y + stretchPos[j+1].y, r.origin.y + r.size.height);
             if (top >= bottom) {
                 continue;
             }
@@ -288,8 +315,8 @@ AP_BAN_EVIL_INIT
                 q.edge.size.height = bottom - top;
             }
 
-            q.tex.origin.x = (raw.xTex + q.edge.origin.x + q.stretch.origin.x - raw.x) / texWidth;
-            q.tex.origin.y = (raw.yTex + q.edge.origin.y + q.stretch.origin.y - raw.y) / texHeight;
+            q.tex.origin.x = texPos.x + (q.edge.origin.x + q.stretch.origin.x - r.origin.x) / texWidth;
+            q.tex.origin.y = texPos.y + (q.edge.origin.y + q.stretch.origin.y - r.origin.y) / texHeight;
             q.tex.size.width = (q.edge.size.width + q.stretch.size.width) / texWidth;
             q.tex.size.height = (q.edge.size.height + q.stretch.size.height) / texHeight;
 
@@ -329,16 +356,16 @@ AP_BAN_EVIL_INIT
         _size = other->_size;
         _scale = other->_scale;
 
-        int numAlpha = other->_alphaQuads.length / sizeof(RawQuad);
-        const RawQuad* alphaQuads = (const RawQuad*) other->_alphaQuads.bytes;
+        int numAlpha = other->_alphaQuads.length / sizeof(StretchyQuad);
+        const StretchyQuad* alphaQuads = (const StretchyQuad*) other->_alphaQuads.bytes;
         for (int i = 0; i < numAlpha; i++) {
-            [self addQuad:alphaQuads[i] solid:NO];
+            [self addStretchy:alphaQuads[i] solid:NO];
         }
 
-        int numSolid = other->_solidQuads.length / sizeof(RawQuad);
-        const RawQuad* solidQuads = (const RawQuad*) other->_solidQuads.bytes;
+        int numSolid = other->_solidQuads.length / sizeof(StretchyQuad);
+        const StretchyQuad* solidQuads = (const StretchyQuad*) other->_solidQuads.bytes;
         for (int i = 0; i < numSolid; i++) {
-            [self addQuad:solidQuads[i] solid:YES];
+            [self addStretchy:solidQuads[i] solid:YES];
         }
     }
     NSLog(@"Added insets to image: %@", _assetName);
@@ -366,7 +393,7 @@ AP_BAN_EVIL_INIT
         q.width = _texture.width;
         q.height = _texture.height;
 
-        [self addQuad:q solid:YES];
+        [self addRaw:q solid:YES];
     }
     NSLog(@"Loaded image: %@", name);
     return self;
@@ -408,10 +435,10 @@ AP_BAN_EVIL_INIT
 
         // Load quads
         for (int i = 0; i < header->numAlpha; i++) {
-            [self addQuad:quads[i] solid:NO];
+            [self addRaw:quads[i] solid:NO];
         }
         for (int i = header->numAlpha; i < numQuads; i++) {
-            [self addQuad:quads[i] solid:YES];
+            [self addRaw:quads[i] solid:YES];
         }
     }
     NSLog(@"Loaded image: %@", name);
@@ -426,7 +453,7 @@ AP_BAN_EVIL_INIT
     }
 }
 
-- (void) renderGLWithTransform:(CGAffineTransform)transform alpha:(CGFloat)alpha
+- (void) renderGLWithSize:(CGSize)size transform:(CGAffineTransform)transform alpha:(CGFloat)alpha
 {
     if (alpha <= 0) {
         return;
@@ -478,6 +505,21 @@ AP_BAN_EVIL_INIT
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
     }
 
+    CGSize edgeSize = {
+        _insets.left + _insets.right,
+        _insets.top + _insets.bottom,
+    };
+    CGSize stretchSize = {
+        _size.width / _scale - edgeSize.width,
+        _size.height / _scale - edgeSize.height,
+    };
+    CGSize stretchScale = {
+        (size.width - edgeSize.width) / stretchSize.width,
+        (size.height - edgeSize.height) / stretchSize.height,
+    };
+
+    transform = CGAffineTransformScale(transform, 1 / _scale, 1 / _scale);
+
     GLKMatrix3 matrix = GLKMatrix3Make(
         transform.a, transform.b, 0,
         transform.c, transform.d, 0,
@@ -495,7 +537,7 @@ AP_BAN_EVIL_INIT
 
     glUniform1f(g_AlphaProg.alpha, alpha);
     glUniformMatrix3fv(g_AlphaProg.transform, 1, false, matrix.m);
-    glUniform2f(g_AlphaProg.stretch, 1, 1);
+    glUniform2f(g_AlphaProg.stretch, stretchScale.width, stretchScale.height);
 
     glEnableVertexAttribArray(g_AlphaProg.edgePos);
     glEnableVertexAttribArray(g_AlphaProg.stretchPos);
@@ -512,7 +554,7 @@ AP_BAN_EVIL_INIT
 
     glUniform1f(g_SolidProg.alpha, alpha);
     glUniformMatrix3fv(g_SolidProg.transform, 1, false, matrix.m);
-    glUniform2f(g_SolidProg.stretch, 1, 1);
+    glUniform2f(g_SolidProg.stretch, stretchScale.width, stretchScale.height);
 
     glEnableVertexAttribArray(g_SolidProg.edgePos);
     glEnableVertexAttribArray(g_SolidProg.stretchPos);

@@ -23,7 +23,7 @@
 + (AP_Image*) imageWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 - (id) initWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 
-// Draw the image, centered around 0,0.
-- (void) renderGLWithTransform:(CGAffineTransform)transform alpha:(CGFloat)alpha;
+// Draw the image at the given size, with the top-left at 0,0.
+- (void) renderGLWithSize:(CGSize)size transform:(CGAffineTransform)transform alpha:(CGFloat)alpha;
 
 @end
