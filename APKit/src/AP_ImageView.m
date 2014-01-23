@@ -109,7 +109,7 @@
                 return;
         }
 
-        // The image will be rendered around 0,0, at its natural size.
+        // The image will be rendered with its top-left corner at 0,0.
         // To transform it into GL coordinates, we need to do the following:
         // - scale to the correct size
         // - translate it into bounds coordinates
@@ -118,7 +118,8 @@
         CGAffineTransform t = CGAffineTransformScale(
                 CGAffineTransformTranslate(
                     boundsToGL,
-                    pos.x, pos.y),
+                    pos.x - size.width/2,
+                    pos.y - size.height/2),
             size.width / _image.pixelSize.width,
             size.height / _image.pixelSize.height);
 
