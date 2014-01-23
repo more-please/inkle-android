@@ -25,4 +25,7 @@
 // (For non-Retina devices, the value will be divided by 2.)
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad;
 
+// As above, but scale the value appropriately if we're in landscape mode.
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape;
+
 @end

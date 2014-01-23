@@ -33,14 +33,26 @@ static CGFloat g_ScreenScale = 1.0;
     return g_ScreenScale;
 }
 
-static float iPhoneDiagonal = 391.9183588453085; // sqrt(320 * 480)
-static float iPadDiagonal = 886.8100134752651; // sqrt(1024 * 768)
+static CGSize iPhonePortrait = { 320, 480 };
+static CGSize iPadPortrait = { 768, 1024 };
 
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
 {
-    CGFloat deviceDiagonal = sqrt(g_ScreenBounds.size.width * g_ScreenBounds.size.height);
-    CGFloat deviceRatio = (deviceDiagonal - iPhoneDiagonal) / (iPadDiagonal - iPhoneDiagonal);
+    CGFloat width = MIN(g_ScreenBounds.size.width, g_ScreenBounds.size.height);
+    CGFloat deviceRatio = (width - iPhonePortrait.width) / (iPadPortrait.width - iPhonePortrait.width);
     return AP_Lerp(iPhone, iPad, deviceRatio);
+}
+
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape
+{
+    CGFloat result = [self iPhone:iPhone iPad:iPad];
+    if (g_ScreenBounds.size.width > g_ScreenBounds.size.height) {
+        const float iPadAspect = iPadPortrait.height / iPadPortrait.width;
+        const float myAspect = g_ScreenBounds.size.width / g_ScreenBounds.size.height;
+        result *= myAspect / iPadAspect;
+        result *= landscape / iPad;
+    }
+    return result;
 }
 
 - (AP_Window*) init
