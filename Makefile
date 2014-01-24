@@ -1,21 +1,21 @@
 # Note: on OS 10.9, this only works with Xcode 5. However, Apportable needs Xcode 4!
 # Until they fix Apportable you'll need to switch back and forth via xcode-select.
 
-CXX = clang++ -x c++ -O4 -I./3rd-party/src
+CXX = clang++ -x c++ -O4 -I./3rd-party/stb
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
 	tools/package_writer.h \
-	3rd-party/src/stb_image_write.h \
-	3rd-party/src/stb_image.h \
-	3rd-party/src/stb_truetype.h
+	3rd-party/stb/stb_image_write.h \
+	3rd-party/stb/stb_image.h \
+	3rd-party/stb/stb_truetype.h
 
 COMMON_SRCS = \
 	tools/file_scanner.cpp \
 	tools/package_writer.cpp \
-	3rd-party/src/stb_image_write.c \
-	3rd-party/src/stb_image.c \
-	3rd-party/src/stb_truetype.c
+	3rd-party/stb/stb_image_write.c \
+	3rd-party/stb/stb_image.c \
+	3rd-party/stb/stb_truetype.c
 
 all: build/pak build/atlas build/superellipse build/fontex
 

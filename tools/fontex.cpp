@@ -29,6 +29,17 @@ static const Range kRanges[] = {
     { 0x201c, 0x201d }, // Double quotes
     { 0x2013, 0x2014 }, // en-dash, em-dash
     { 0x2026, 0x2026 }, // Ellipsis
+
+    // Some fancy characters used in spellcasting
+    { 0x03B4, 0x03B4 },
+    { 0x03C6, 0x03C6 },
+    { 0x0F6B, 0x0F6B },
+    { 0x0F49, 0x0F49 },
+    { 0x0F65, 0x0F65 },
+
+    // Hebrew maybe?
+    // { 0x05D1, 0x05EA },
+
     { 0, 0 }
 };
 
