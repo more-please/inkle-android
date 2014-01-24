@@ -137,7 +137,7 @@ typedef struct VertexData {
 {
     // This is typically a 4x image for retina iPads (2048x1536 screen).
     // Adjust the scale proportionately to the size of the screen.
-    CGFloat scale = [AP_Window iPhone:4.0 iPad:2.0];
+    CGFloat scale = [AP_Window scaleForIPhone:4.0 iPad:2.0];
     AP_Image* result = [AP_Image imageNamed:name scale:scale];
     return result;
 }

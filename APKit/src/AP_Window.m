@@ -33,15 +33,37 @@ static CGFloat g_ScreenScale = 1.0;
     return g_ScreenScale;
 }
 
-static CGSize iPhonePortrait = { 320, 480 };
-static CGSize iPadPortrait = { 768, 1024 };
-static CGSize iPadLandscape = { 1024, 768 };
+static const CGSize iPhonePortrait = { 320, 480 };
+static const CGSize iPhoneLandscape = { 480, 320 };
+static const CGSize iPadPortrait = { 768, 1024 };
+static const CGSize iPadLandscape = { 1024, 768 };
 
-+ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
++ (CGFloat) widthForIPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
 {
-    CGFloat width = MIN(g_ScreenBounds.size.width, g_ScreenBounds.size.height);
-    CGFloat deviceRatio = (width - iPhonePortrait.width) / (iPadPortrait.width - iPhonePortrait.width);
-    CGFloat result = AP_Lerp(iPhone, iPad, deviceRatio);
+    CGFloat widthRatio = (g_ScreenBounds.size.width > g_ScreenBounds.size.height)
+        ? (g_ScreenBounds.size.width - iPhoneLandscape.width) / (iPadLandscape.width - iPhoneLandscape.width)
+        : (g_ScreenBounds.size.width - iPhonePortrait.width) / (iPadPortrait.width - iPhonePortrait.width);
+    CGFloat result = AP_Lerp(iPhone, iPad, widthRatio);
+    return result;
+}
+
++ (CGFloat) heightForIPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
+{
+    CGFloat heightRatio = (g_ScreenBounds.size.width > g_ScreenBounds.size.height)
+        ? (g_ScreenBounds.size.height - iPhoneLandscape.height) / (iPadLandscape.height - iPhoneLandscape.height)
+        : (g_ScreenBounds.size.height - iPhonePortrait.height) / (iPadPortrait.height - iPhonePortrait.height);
+    CGFloat result = AP_Lerp(iPhone, iPad, heightRatio);
+    return result;
+}
+
+static inline CGFloat side(CGSize size) {
+    return sqrt(size.width * size.height);
+}
+
++ (CGFloat) scaleForIPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
+{
+    CGFloat sizeRatio = (side(g_ScreenBounds.size) - side(iPhonePortrait)) / (side(iPadPortrait) - side(iPhonePortrait));
+    CGFloat result = AP_Lerp(iPhone, iPad, sizeRatio);
     return result;
 }
 
@@ -51,11 +73,13 @@ static inline CGFloat aspect(CGSize size) {
 
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape
 {
-    CGFloat result = [self iPhone:iPhone iPad:iPad];
+    CGFloat portraitWidth = MIN(g_ScreenBounds.size.width, g_ScreenBounds.size.height);
+    CGFloat deviceRatio = (portraitWidth - iPhonePortrait.width) / (iPadPortrait.width - iPhonePortrait.width);
+    CGFloat result = AP_Lerp(iPhone, iPad, deviceRatio);
     if (g_ScreenBounds.size.width > g_ScreenBounds.size.height) {
         CGFloat delta = (landscape - iPad) / iPad;
         CGFloat adjustedDelta = delta * aspect(g_ScreenBounds.size) / aspect(iPadLandscape);
-        CGFloat adjustedLandscape = landscape + adjustedDelta * iPad;
+        CGFloat adjustedLandscape = iPad + adjustedDelta * iPad;
         result *= (adjustedLandscape / iPad);
     }
     return result;
