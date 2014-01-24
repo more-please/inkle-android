@@ -360,11 +360,24 @@ AP_BAN_EVIL_INIT
     if (self) {
         [self commonInit];
 
-        _insets = insets;
         _assetName = other->_assetName;
         _texture = other->_texture;
         _size = other->_size;
         _scale = other->_scale;
+
+        _insets = insets;
+
+        // Make sure there's at least a 1-pixel space in the middle.
+        if (_insets.left + _insets.right + 1 > _size.width / _scale) {
+            CGFloat scale = (_insets.left + _insets.right + 1) / (_size.width / _scale);
+            _insets.left /= scale;
+            _insets.right /= scale;
+        }
+        if (_insets.top + _insets.bottom + 1 > _size.height / _scale) {
+            CGFloat scale = (_insets.bottom + _insets.bottom + 1) / (_size.height / _scale);
+            _insets.top /= scale;
+            _insets.bottom /= scale;
+        }
 
         int numAlpha = other->_alphaQuads.length / sizeof(StretchyQuad);
         const StretchyQuad* alphaQuads = (const StretchyQuad*) other->_alphaQuads.bytes;
