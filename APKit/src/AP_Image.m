@@ -142,6 +142,15 @@ typedef struct VertexData {
     return result;
 }
 
++ (AP_Image*) imageWithContentsOfFileNamed2x:(NSString*)name
+{
+    // This is a 2x image for retina iPhones or iPads.
+    // It shouldn't be scaled down unless we're on a non-retina iPhone.
+    CGFloat scale = [AP_Window scaleForIPhone:2.0 iPad:2.0];
+    AP_Image* result = [AP_Image imageNamed:name scale:scale];
+    return result;
+}
+
 + (AP_Image*) imageNamed:(NSString*)name scale:(CGFloat)scale
 {
     AP_CHECK(name, return nil);
@@ -177,6 +186,7 @@ typedef struct VertexData {
         return (AP_Image*)nil;
     }];
 
+    AP_CHECK(result.scale == scale, return nil);
     return result;
 }
 

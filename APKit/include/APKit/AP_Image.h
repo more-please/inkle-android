@@ -10,7 +10,7 @@
 @property (nonatomic,readonly) CGSize size;
 @property (nonatomic,readonly) CGSize pixelSize; // Added by Iain
 @property (nonatomic,readonly) UIEdgeInsets insets;
-@property (nonatomic) CGFloat scale;
+@property (nonatomic,readonly) CGFloat scale;
 
 + (AP_Image*) imageNamed:(NSString*)assetName;
 
