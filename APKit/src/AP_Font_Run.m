@@ -118,6 +118,9 @@ typedef struct VertexData {
         }
         *posPtr++ = xPos;
 
+        AP_CHECK((const char*)vPtr == (const char*)vertexData.bytes + vertexData.length, abort());
+        AP_CHECK((const char*)iPtr == (const char*)indexData.bytes + indexData.length, abort());
+
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
 
