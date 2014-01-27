@@ -390,6 +390,9 @@ AP_BAN_EVIL_INIT
         for (int i = 0; i < numSolid; i++) {
             [self addStretchy:solidQuads[i] solid:YES];
         }
+
+        // Speculative: is "other" being collected by ARC?
+        [other self];
     }
     NSLog(@"Added insets to image: %@", _assetName);
     return self;
@@ -492,6 +495,8 @@ AP_BAN_EVIL_INIT
         [data appendData:_solidQuads];
         const StretchyQuad* quads = (const StretchyQuad*)(data.bytes);
 
+        AP_CHECK(numQuads * sizeof(StretchyQuad) == data.length, abort());
+
         // For each quad, we need 4 vertices (24 bytes each) and 6 indices (2 bytes each).
         NSMutableData* vertexData = [NSMutableData dataWithLength:(4 * numQuads * 24)];
         NSMutableData* indexData = [NSMutableData dataWithLength:(6 * numQuads * 2)];
@@ -523,6 +528,12 @@ AP_BAN_EVIL_INIT
             *iPtr++ = topRight;
             *iPtr++ = bottomRight;
         }
+
+        // Speculative: is "data" being collected by ARC?
+        [data self];
+
+        AP_CHECK((const char*)vPtr == (const char*)vertexData.bytes + vertexData.length, abort());
+        AP_CHECK((const char*)iPtr == (const char*)indexData.bytes + indexData.length, abort());
 
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
