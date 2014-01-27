@@ -186,6 +186,7 @@ typedef struct VertexData {
         return (AP_Image*)nil;
     }];
 
+    AP_CHECK([result isKindOfClass:[AP_Image class]], abort());
     AP_CHECK(result.scale == scale, return nil);
     return result;
 }

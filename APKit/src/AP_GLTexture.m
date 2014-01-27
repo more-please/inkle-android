@@ -23,7 +23,8 @@
         g_TextureCache = [[AP_Cache alloc] init];
     }
     AP_CHECK(g_TextureCache, return nil);
-    return [g_TextureCache get:name withLoader:^{
+
+    AP_GLTexture* result = [g_TextureCache get:name withLoader:^{
         NSData* data = [AP_Bundle dataForResource:name ofType:nil];
         AP_GLTexture* result = [AP_GLTexture textureWithData:data];
         if (result) {
@@ -34,6 +35,9 @@
         }
         return result;
     }];
+
+    AP_CHECK([result isKindOfClass:[AP_GLTexture class]], abort());
+    return result;
 }
 
 + (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path
