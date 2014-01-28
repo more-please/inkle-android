@@ -64,11 +64,6 @@
     [_animatedProperties addObject:prop];
 }
 
-- (void) dealloc
-{
-    NSLog(@"Deleting AP_View: %@", self);
-}
-
 //------------------------------------------------------------------------------------
 #pragma mark - Animation
 //------------------------------------------------------------------------------------
@@ -306,8 +301,9 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (controller) {
         return controller;
     }
-    if (_superview) {
-        return _superview;
+    AP_View* superview = _superview;
+    if (superview) {
+        return superview;
     }
     return nil;
 }
@@ -459,6 +455,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         return;
     }
 
+    id protectSelf = self;
+
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
         for (AP_AnimatedProperty* prop in _animatedProperties) {
@@ -487,6 +485,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
             [vc viewDidDisappear:NO];
         }];
     }
+
+    [protectSelf self];
 }
 
 - (void) bringSubviewToFront:(AP_View*)view

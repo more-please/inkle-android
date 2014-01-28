@@ -77,7 +77,7 @@
 + (void)debugAnimationWithTag:(NSString*)tag;
 
 @property(nonatomic,weak) AP_Window* window;
-@property(nonatomic,readonly) AP_View* superview;
+@property(nonatomic,readonly,weak) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
 @property(nonatomic,readonly,copy) NSMutableArray* subviews;
 @property(nonatomic,readonly,copy) NSMutableArray* gestureRecognizers;

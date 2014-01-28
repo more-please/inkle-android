@@ -165,8 +165,7 @@ AP_BAN_EVIL_INIT;
         return;
     }
     _alreadyFinished = YES;
-    
-    [self keepAliveForTimeInterval:0.1];
+
     AP_Animation* protectSelf = self;
 
     [g_Animations removeObject:self];
@@ -180,6 +179,7 @@ AP_BAN_EVIL_INIT;
     if (protectSelf->_completion) {
         protectSelf->_completion(NO);
     }
+    [protectSelf self];
 }
 
 - (void) finish
@@ -192,8 +192,7 @@ AP_BAN_EVIL_INIT;
         return;
     }
     _alreadyFinished = YES;
-    
-    [self keepAliveForTimeInterval:0.1];
+
     AP_Animation* protectSelf = self;
 
     [g_Animations removeObject:self];
@@ -208,6 +207,7 @@ AP_BAN_EVIL_INIT;
     if (protectSelf->_completion) {
         protectSelf->_completion(YES);
     }
+    [protectSelf self];
 }
 
 @end

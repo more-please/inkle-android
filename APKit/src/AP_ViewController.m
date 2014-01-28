@@ -5,7 +5,7 @@
 
 @implementation AP_ViewController {
     AP_View* _view;
-    AP_ViewController* _parent;
+    __weak AP_ViewController* _parent;
     NSMutableArray* _childViewControllers;
 }
 
@@ -16,11 +16,6 @@
         _childViewControllers = [NSMutableArray array];
     }
     return self;
-}
-
-- (void) dealloc
-{
-    NSLog(@"Deleting AP_ViewController: %@", self);
 }
 
 - (AP_View*) view
@@ -64,8 +59,9 @@
 
     [child willMoveToParentViewController:self];
 
-    if (child->_parent) {
-        [child->_parent->_childViewControllers removeObject:child];
+    AP_ViewController* p = child->_parent;
+    if (p) {
+        [p->_childViewControllers removeObject:child];
     }
     [_childViewControllers addObject:child];
     child->_parent = self;
@@ -75,12 +71,15 @@
 
 - (void) removeFromParentViewController
 {
-    if (_parent) {
+    id protectSelf = self;
+    AP_ViewController* p = _parent;
+    if (p) {
         [self willMoveToParentViewController:self];
-        [_parent->_childViewControllers removeObject:self];
+        [p->_childViewControllers removeObject:self];
         _parent = nil;
         [self didMoveToParentViewController:nil];
     }
+    [protectSelf self];
 }
 
 - (void) willMoveToParentViewController:(AP_ViewController*)parent {}
@@ -92,11 +91,13 @@
 
 - (AP_Responder*) nextResponder
 {
-    if (_view.superview) {
-        return _view.superview;
+    AP_View* superview = _view.superview;
+    if (superview) {
+        return superview;
     }
-    if (_parent) {
-        return _parent;
+    AP_ViewController* p = _parent;
+    if (p) {
+        return p;
     }
     return nil;
 }
