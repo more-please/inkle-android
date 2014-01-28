@@ -51,6 +51,9 @@ typedef struct VertexData {
         // Adjust pointers.
         _start = MIN(start, run->_end);
         _end = MIN(end, run->_end);
+        AP_CHECK(_start <= _end, abort());
+        AP_CHECK(_start >= run->_start, abort());
+        AP_CHECK(_end <= run->_end, abort());
     }
     return self;
 }
@@ -67,6 +70,7 @@ typedef struct VertexData {
         _end = length;
         _positions = (float*) [runData bytes];
         _glyphs = (unsigned char*) (_positions + 1 + length);
+        AP_CHECK(_glyphs + length == (unsigned char*)runData.bytes + runData.length, abort());
 
         // Each character = one quad = four vertices, six indices.
         NSMutableData* vertexData = [NSMutableData dataWithLength:(length * 4 * sizeof(VertexData))];

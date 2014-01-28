@@ -339,6 +339,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) setWindow:(AP_Window *)window
 {
+    id protectSelf = self;
+
     AP_CHECK(!_superview, return);
 
     AP_Window* oldWindow = self.window;
@@ -372,6 +374,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
             [vc viewDidDisappear:NO];
         }];
     }
+
+    [protectSelf self];
 }
 
 - (void) addSubview:(AP_View*)view
@@ -513,25 +517,27 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) visitWithBlock:(void(^)(AP_View*))block
 {
+    id protectSelf = self;
     AP_CHECK(block, return);
-    NSArray* subviews = [_subviews mutableCopy];
     block(self);
-    for (AP_View* v in subviews) {
+    for (AP_View* v in _subviews.copy) {
         [v visitWithBlock:block];
     }
+    [protectSelf self];
 }
 
 - (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block
 {
+    id protectSelf = self;
     AP_CHECK(block, return);
-    NSArray* subviews = [_subviews mutableCopy];
     AP_ViewController* controller = _viewDelegate;
     if (controller) {
         block(controller);
     }
-    for (AP_View* v in subviews) {
+    for (AP_View* v in _subviews.copy) {
         [v visitControllersWithBlock:block];
     }
+    [protectSelf self];
 }
 
 //------------------------------------------------------------------------------------
@@ -556,6 +562,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) layoutSelfAndChildren
 {
+    id protectSelf = self;
+
     for (AP_View* view in _subviews.copy) {
         [view layoutSelfAndChildren];
     }
@@ -571,6 +579,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (controller) {
         [controller viewDidLayoutSubviews];
     }
+
+    [protectSelf self];
 }
 
 - (void) maybeAutolayout:(CGRect)oldBounds

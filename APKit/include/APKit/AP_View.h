@@ -15,8 +15,6 @@
 
 @interface AP_View : AP_Responder
 
-@property (nonatomic) BOOL animationTrap;
-
 - (AP_View*) initWithFrame:(CGRect)frame;
 
 - (void) addSubview:(AP_View*)view;

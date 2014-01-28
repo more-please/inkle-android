@@ -104,7 +104,7 @@ static LigatureRHS g_ZeroLigature;
                 continue;
             }
             if (_ligatureMap.rhs[g1] == &g_ZeroLigature) {
-                NSMutableData* data = [NSMutableData dataWithBytes:&g_ZeroLigature length:sizeof(LigatureRHS)];
+                NSData* data = [NSData dataWithBytes:&g_ZeroLigature length:sizeof(LigatureRHS)];
                 [_extraMaps addObject:data];
                 _ligatureMap.rhs[g1] = (LigatureRHS*)[data bytes];
             }
@@ -115,7 +115,7 @@ static LigatureRHS g_ZeroLigature;
             unsigned char g1 = [self glyphForChar:kerning->lhs];
             unsigned char g2 = [self glyphForChar:kerning->rhs];
             if (_kerningMap.rhs[g1] == &g_ZeroKerning) {
-                NSMutableData* data = [NSMutableData dataWithBytes:&g_ZeroKerning length:sizeof(KerningRHS)];
+                NSData* data = [NSData dataWithBytes:&g_ZeroKerning length:sizeof(KerningRHS)];
                 [_extraMaps addObject:data];
                 _kerningMap.rhs[g1] = (KerningRHS*)[data bytes];
             }
