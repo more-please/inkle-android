@@ -105,6 +105,7 @@ CGFloat UIFont_getDescender(UIFont* font) {
         }
         *dest++ = c;
     }
+    AP_CHECK(dest <= buffer + size, abort());
 
     AP_Font_Run* result = [[AP_Font_Run alloc] initWithData:_font pointSize:_size glyphs:buffer length:(dest - buffer)];
     free(buffer);

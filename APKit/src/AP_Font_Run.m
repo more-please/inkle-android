@@ -121,6 +121,7 @@ typedef struct VertexData {
             *iPtr++ = bottomRight;
         }
         *posPtr++ = xPos;
+        AP_CHECK(posPtr == (float*)_glyphs, abort());
 
         AP_CHECK((const char*)vPtr == (const char*)vertexData.bytes + vertexData.length, abort());
         AP_CHECK((const char*)iPtr == (const char*)indexData.bytes + indexData.length, abort());
@@ -148,7 +149,7 @@ typedef struct VertexData {
     return _end - _start;
 }
 
-- (AP_Font_Run*) splitAtWidth:(CGFloat)width leaving:(AP_Font_Run* __autoreleasing *)leftover
+- (AP_Font_Run*) splitAtWidth:(CGFloat)width leaving:(AP_Font_Run**)leftover
 {
     int lastBreak = _start - 1;
     for (int i = _start; i < _end; ++i) {
@@ -164,7 +165,7 @@ typedef struct VertexData {
     return self;
 }
 
-- (AP_Font_Run*) splitAtLineBreakLeaving: (AP_Font_Run* __autoreleasing *)leftover
+- (AP_Font_Run*) splitAtLineBreakLeaving: (AP_Font_Run**)leftover
 {
     for (int i = _start; i < _end; ++i) {
         if ([_fontData isLineBreak:_glyphs[i]]) {
