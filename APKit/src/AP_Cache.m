@@ -1,11 +1,12 @@
 #import "AP_Cache.h"
 
+#import "AP_Animation.h"
 #import "AP_Check.h"
 
-// Should just be an NSMapTable, but Apportable doesn't have it...
-
 @interface AP_Cache_Entry : NSObject
-@property (nonatomic,weak) id value;
+@property (nonatomic,strong) NSString* key;
+@property (nonatomic,strong) id value;
+@property (nonatomic) NSTimeInterval timestamp;
 @end
 
 @implementation AP_Cache_Entry
@@ -15,26 +16,60 @@
     NSMutableDictionary* _dict;
 }
 
-- (AP_Cache*) init
+- (AP_Cache*) initWithSize:(int)size
 {
     self = [super init];
     if (self) {
+        _size = size;
         _dict = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
-- (id) get:(NSString *)name withLoader:(id (^)(void))loader
+- (AP_Cache*) init
+{
+    return [self initWithSize:5];
+}
+
+- (void) setSize:(int)size
+{
+    _size = size;
+    while (_dict.count > _size) {
+        [self deleteOldestItem];
+    }
+}
+
+- (id) get:(NSString*)name withLoader:(id (^)(void))loader
 {
     AP_Cache_Entry* entry = [_dict objectForKey:name];
-    id result = entry ? entry.value : nil;
-    if (!result) {
-        result = loader();
+    if (!entry) {
+        while (_dict.count >= _size) {
+            [self deleteOldestItem];
+        }
+        id result = loader();
         AP_CHECK(result, return nil);
         entry = [[AP_Cache_Entry alloc] init];
+        entry.key = name;
         entry.value = result;
         [_dict setObject:entry forKey:name];
     }
-    return result;
+    entry.timestamp = CACurrentMediaTime();
+    AP_CHECK(entry.value, return nil);
+    return entry.value;
 }
+
+- (void) deleteOldestItem
+{
+    AP_Cache_Entry* oldest = nil;
+    for (NSString* key in _dict) {
+        AP_Cache_Entry* entry = [_dict objectForKey:key];
+        if (!oldest || entry.timestamp < oldest.timestamp) {
+            oldest = entry;
+        }
+    }
+    AP_CHECK(oldest || _dict.count == 0, abort());
+//    NSLog(@"*** Pruning cache entry %@: %@", oldest.key, oldest.value);
+    [_dict removeObjectForKey:oldest.key];
+}
+
 @end

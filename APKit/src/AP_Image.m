@@ -167,7 +167,9 @@ typedef struct VertexData {
 
     static AP_Cache* g_ImageCache;
     if (!g_ImageCache) {
-        g_ImageCache = [[AP_Cache alloc] init];
+        // Images are relatively small, so use a big cache.
+        // The actual backing textures are cached separately.
+        g_ImageCache = [[AP_Cache alloc] initWithSize:50];
     }
     AP_CHECK(g_ImageCache, return nil);
 
@@ -475,9 +477,6 @@ AP_BAN_EVIL_INIT
 - (void) dealloc
 {
     NSLog(@"Deleted image: %@", _assetName);
-    if (_texture) {
-        [_texture keepAliveForTimeInterval:3.0];
-    }
 }
 
 - (void) renderGLWithSize:(CGSize)size transform:(CGAffineTransform)transform alpha:(CGFloat)alpha

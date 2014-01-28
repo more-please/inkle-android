@@ -20,7 +20,7 @@
 {
     static AP_Cache* g_TextureCache;
     if (!g_TextureCache) {
-        g_TextureCache = [[AP_Cache alloc] init];
+        g_TextureCache = [[AP_Cache alloc] initWithSize:5];
     }
     AP_CHECK(g_TextureCache, return nil);
 
