@@ -25,4 +25,7 @@
 
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
 
+// Android-specific addition
+@property(nonatomic,strong) NSString* documentsDir;
+
 @end
