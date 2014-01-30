@@ -552,8 +552,10 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 - (void) layoutIfNeeded
 {
     AP_View* view = self;
-    while (view->_superview && view->_superview->_needsLayout) {
-        view = view->_superview;
+    AP_View* superview = view->_superview;
+    while (superview && superview->_needsLayout) {
+        view = superview;
+        superview = view->_superview;
     }
     if (view->_needsLayout) {
         [view layoutSelfAndChildren];
