@@ -235,6 +235,8 @@ AP_BAN_EVIL_INIT
         _numAlpha = other->_numAlpha;
         _xTile = other->_xTile;
         _yTile = other->_yTile;
+
+        _resizingMode = other->_resizingMode;
     }
     return self;
 }
@@ -259,6 +261,8 @@ AP_BAN_EVIL_INIT
     _indexBuffer = nil;
 
     _xTile = _yTile = 1;
+
+    _resizingMode = UIImageResizingModeTile;
 }
 
 - (void) addRaw:(RawQuad)raw solid:(BOOL)solid
@@ -380,7 +384,9 @@ AP_BAN_EVIL_INIT
     insets.right = (_size.width / _scale) - leftCapWidth - 1;
     insets.top = topCapHeight;
     insets.bottom = (_size.height / _scale) - topCapHeight - 1;
-    return [self resizableImageWithCapInsets:insets];
+    AP_Image* result = [self resizableImageWithCapInsets:insets];
+    result->_resizingMode = UIImageResizingModeStretch;
+    return result;
 }
 
 - (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets
@@ -574,9 +580,15 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         xTile = (displaySize.width > 0) ? floorf(0.3 + displaySize.width / naturalSize.width) : 0;
         yTile = (displaySize.height > 0) ? floorf(0.3 + displaySize.height / naturalSize.height) : 0;
     }
+    if (_resizingMode == UIImageResizingModeStretch) {
+        xTile = MIN(1, xTile);
+        yTile = MIN(1, yTile);
+    }
 
     if (xTile != _xTile || yTile != _yTile) {
-        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d", _assetName, _xTile, _yTile, xTile, yTile);
+//        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d", _assetName, _xTile, _yTile, xTile, yTile);
+        // TODO - this changes a lot for story chunks. It would be good to cache
+        // the GL data for each tile layout rather than just resetting it.
         _xTile = xTile;
         _yTile = yTile;
         _indexBuffer = 0;

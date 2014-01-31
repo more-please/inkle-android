@@ -4,6 +4,13 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <UIKit/UIKit.h>
 
+#ifdef ANDROID
+typedef enum UIImageResizingMode {
+    UIImageResizingModeTile,
+    UIImageResizingModeStretch,
+} UIImageResizingMode;
+#endif
+
 @interface AP_Image : NSObject
 
 @property (nonatomic,readonly) NSString* assetName;
@@ -11,6 +18,7 @@
 @property (nonatomic,readonly) CGSize pixelSize; // Added by Iain
 @property (nonatomic,readonly) UIEdgeInsets insets;
 @property (nonatomic,readonly) CGFloat scale;
+@property (nonatomic,readonly) UIImageResizingMode resizingMode;
 
 + (AP_Image*) imageNamed:(NSString*)assetName;
 
