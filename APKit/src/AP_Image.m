@@ -132,6 +132,8 @@ typedef struct VertexData {
     AP_GLBuffer* _indexBuffer;
     int _numSolid;
     int _numAlpha;
+    int _xTile; // Number of times to tile the center section horizontally
+    int _yTile; // Number of times to tile the center section vertically
 }
 
 + (AP_Image*) imageNamed:(NSString *)name
@@ -231,6 +233,8 @@ AP_BAN_EVIL_INIT
         _indexBuffer = other->_indexBuffer;
         _numSolid = other->_numSolid;
         _numAlpha = other->_numAlpha;
+        _xTile = other->_xTile;
+        _yTile = other->_yTile;
     }
     return self;
 }
@@ -253,6 +257,8 @@ AP_BAN_EVIL_INIT
 
     _arrayBuffer = nil;
     _indexBuffer = nil;
+
+    _xTile = _yTile = 1;
 }
 
 - (void) addRaw:(RawQuad)raw solid:(BOOL)solid
@@ -290,12 +296,7 @@ AP_BAN_EVIL_INIT
     // and "stretch" (variable depending on the view bounds).
 
     // Calculate the total amount of edge space and stretch space.
-    UIEdgeInsets edge = {
-        _insets.top * _scale,
-        _insets.left * _scale,
-        _insets.bottom * _scale,
-        _insets.right * _scale,
-    };
+    UIEdgeInsets edge = _insets;
     CGSize stretch = {
         _size.width - (edge.left + edge.right),
         _size.height - (edge.top + edge.bottom),
@@ -398,19 +399,34 @@ AP_BAN_EVIL_INIT
         _size = other->_size;
         _scale = other->_scale;
 
-        _insets = insets;
+        // Lame hack: the insets are in pixel space, but we don't know whether
+        // this image is 2x or 4x bigger than normal. So, start the insets 4x
+        // bigger, and repeatedly divide them by 2 until they fit.
+        insets.left *= 4;
+        insets.right *= 4;
+        insets.top *= 4;
+        insets.bottom *= 4;
+
+        while ((insets.left + insets.right > _size.width) || (insets.top + insets.bottom > _size.height)) {
+            insets.left /= 2;
+            insets.right /= 2;
+            insets.top /= 2;
+            insets.bottom /= 2;
+        }
 
         // Make sure there's at least a 1-pixel space in the middle.
-        if (_insets.left + _insets.right + 1 > _size.width / _scale) {
-            CGFloat scale = (_insets.left + _insets.right + 1) / (_size.width / _scale);
-            _insets.left /= scale;
-            _insets.right /= scale;
+        if (insets.left + insets.right + 1 > _size.width) {
+            CGFloat scale = (insets.left + insets.right + 1) / _size.width;
+            insets.left /= scale;
+            insets.right /= scale;
         }
-        if (_insets.top + _insets.bottom + 1 > _size.height / _scale) {
-            CGFloat scale = (_insets.bottom + _insets.bottom + 1) / (_size.height / _scale);
-            _insets.top /= scale;
-            _insets.bottom /= scale;
+        if (insets.top + insets.bottom + 1 > _size.height) {
+            CGFloat scale = (insets.bottom + insets.bottom + 1) / _size.height;
+            insets.top /= scale;
+            insets.bottom /= scale;
         }
+
+        _insets = insets;
 
         int numAlpha = other->_alphaQuads.length / sizeof(StretchyQuad);
         const StretchyQuad* alphaQuads = (const StretchyQuad*) other->_alphaQuads.bytes;
@@ -509,80 +525,157 @@ AP_BAN_EVIL_INIT
     NSLog(@"Deleted image: %@", _assetName);
 }
 
+static int xTilesInQuad(const StretchyQuad* q, int xTile) {
+    return (q->stretch.size.width > 0) ? xTile : 1;
+}
+
+static int yTilesInQuad(const StretchyQuad* q, int yTile) {
+    return (q->stretch.size.height > 0) ? yTile : 1;
+}
+
+static int countTilesInQuad(const StretchyQuad* q, int xTile, int yTile) {
+    return xTilesInQuad(q, xTile) * yTilesInQuad(q, yTile);
+}
+
+static int countTilesInQuads(NSData* data, int xTile, int yTile) {
+    const StretchyQuad* q = (const StretchyQuad*)data.bytes;
+    size_t count = data.length / sizeof(StretchyQuad);
+    int result = 0;
+    for (int i = 0; i < count; i++) {
+        result += countTilesInQuad(q+i, xTile, yTile);
+    }
+    return result;
+}
+
 - (void) renderGLWithSize:(CGSize)size transform:(CGAffineTransform)transform alpha:(CGFloat)alpha
 {
     if (alpha <= 0) {
         return;
     }
 
-    if (!_indexBuffer || !_arrayBuffer) {
-        // Upload the quads as GL triangles.
+    CGSize edgeSize = {
+        _insets.left + _insets.right,
+        _insets.top + _insets.bottom,
+    };
 
-        _numSolid = _solidQuads.length / sizeof(StretchyQuad);
-        _numAlpha = _alphaQuads.length / sizeof(StretchyQuad);
+    // Calculate how many times we need to tile the centre section.
+    CGSize naturalSize = {
+        _size.width - edgeSize.width,
+        _size.height - edgeSize.height,
+    };
+    CGSize displaySize = {
+        size.width * _scale - edgeSize.width,
+        size.height * _scale - edgeSize.height,
+    };
+
+    int xTile = 1;
+    int yTile = 1;
+    if (edgeSize.width > 0 || edgeSize.height > 0) {
+        xTile = (displaySize.width > 0) ? roundf(displaySize.width / naturalSize.width) : 0;
+        yTile = (displaySize.height > 0) ? roundf(displaySize.height / naturalSize.height) : 0;
+    }
+
+    if (xTile != _xTile || yTile != _yTile) {
+        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d", _assetName, _xTile, _yTile, xTile, yTile);
+        _xTile = xTile;
+        _yTile = yTile;
+        _indexBuffer = 0;
+        _arrayBuffer = 0;
+    }
+
+    CGSize edgeScale = {
+        (xTile > 0) ? 1 : (_scale * size.width / edgeSize.width),
+        (yTile > 0) ? 1 : (_scale * size.height / edgeSize.height)
+    };
+    CGSize stretchSize = {
+        (_size.width - edgeSize.width) * xTile,
+        (_size.height - edgeSize.height) * yTile,
+    };
+    CGSize stretchScale = {
+        (xTile > 0) ? (displaySize.width / stretchSize.width) : 0,
+        (yTile > 0) ? (displaySize.height / stretchSize.height) : 0,
+    };
+
+    if (!_indexBuffer || !_arrayBuffer) {
+        // Calculate how many quads we have. This depends on the tiling.
+        _numSolid = countTilesInQuads(_solidQuads, _xTile, _yTile);
+        _numAlpha = countTilesInQuads(_alphaQuads, _xTile, _yTile);
         int numQuads = _numSolid + _numAlpha;
+
         NSMutableData* data = [_alphaQuads mutableCopy];
         [data appendData:_solidQuads];
         const StretchyQuad* quads = (const StretchyQuad*)(data.bytes);
+        const StretchyQuad* maxQuad = quads + data.length / sizeof(StretchyQuad);
 
-        AP_CHECK(numQuads * sizeof(StretchyQuad) == data.length, abort());
-
+        // Upload the quads as GL triangles.
         // For each quad, we need 4 vertices (24 bytes each) and 6 indices (2 bytes each).
         NSMutableData* vertexData = [NSMutableData dataWithLength:(4 * numQuads * 24)];
         NSMutableData* indexData = [NSMutableData dataWithLength:(6 * numQuads * 2)];
         VertexData* vPtr = (VertexData*) vertexData.bytes;
         GLushort* iPtr = (GLushort*) indexData.bytes;
 
-        for (int i = 0; i < numQuads; ++i) {
-            const StretchyQuad* q = quads + i;
-            for (int y = 0; y <= 1; y++) {
-                for (int x = 0; x <= 1; x++) {
-                    vPtr->xEdge = q->edge.origin.x + x * q->edge.size.width;
-                    vPtr->yEdge = q->edge.origin.y + y * q->edge.size.height;
-                    vPtr->xStretch = q->stretch.origin.x + x * q->stretch.size.width;
-                    vPtr->yStretch = q->stretch.origin.y + y * q->stretch.size.height;
-                    vPtr->xTex = q->tex.origin.x + x * q->tex.size.width;
-                    vPtr->yTex = q->tex.origin.y + y * q->tex.size.height;
-                    ++vPtr;
+        int count = 0;
+        for (const StretchyQuad* q = quads; q < maxQuad; ++q) {
+            // Maybe tile the quad
+            int hMax = xTilesInQuad(q, _xTile);
+            int vMax = yTilesInQuad(q, _yTile);
+            for (int h = 0; h < hMax; ++h) {
+                for (int v = 0; v < vMax; ++v) {
+                    // Okay, we finally have a single quad for GL!
+                    CGFloat hOrigin = h * stretchSize.width / hMax;
+                    CGFloat vOrigin = v * stretchSize.height / vMax;
+
+                    // Need to hack the "stretch" coordinates if we're on the bottom or right edge, ugh
+                    if (_xTile > 0 && q->stretch.origin.x > 0 && q->stretch.size.width == 0) {
+                        hOrigin = (_xTile - 1) * stretchSize.width / _xTile;
+                    }
+                    if (_yTile > 0 && q->stretch.origin.y > 0 && q->stretch.size.height == 0) {
+                        vOrigin = (_yTile - 1) * stretchSize.height / _yTile;
+                    }
+
+                    // Generate four vertices for the corners.
+                    for (int y = 0; y <= 1; y++) {
+                        for (int x = 0; x <= 1; x++) {
+                            vPtr->xEdge = q->edge.origin.x + x * q->edge.size.width;
+                            vPtr->yEdge = q->edge.origin.y + y * q->edge.size.height;
+                            vPtr->xStretch = hOrigin + q->stretch.origin.x + x * q->stretch.size.width;
+                            vPtr->yStretch = vOrigin + q->stretch.origin.y + y * q->stretch.size.height;
+                            vPtr->xTex = q->tex.origin.x + x * q->tex.size.width;
+                            vPtr->yTex = q->tex.origin.y + y * q->tex.size.height;
+                            ++vPtr;
+                        }
+                    }
+
+                    // Generate six indices, describing two triangles.
+                    GLushort index = (count++) * 4;
+                    GLushort bottomLeft = index;
+                    GLushort bottomRight = index + 1;
+                    GLushort topLeft = index + 2;
+                    GLushort topRight = index + 3;
+                    *iPtr++ = bottomRight;
+                    *iPtr++ = bottomLeft;
+                    *iPtr++ = topLeft;
+                    *iPtr++ = topLeft;
+                    *iPtr++ = topRight;
+                    *iPtr++ = bottomRight;
                 }
             }
-            GLushort index = i * 4;
-            GLushort bottomLeft = index;
-            GLushort bottomRight = index + 1;
-            GLushort topLeft = index + 2;
-            GLushort topRight = index + 3;
-            *iPtr++ = bottomRight;
-            *iPtr++ = bottomLeft;
-            *iPtr++ = topLeft;
-            *iPtr++ = topLeft;
-            *iPtr++ = topRight;
-            *iPtr++ = bottomRight;
         }
 
-        // Speculative: is "data" being collected by ARC?
-        [data self];
-
+        // If my calculations are correct, we should just reach the end of each buffer.
+        AP_CHECK(count == numQuads, abort());
         AP_CHECK((const char*)vPtr == (const char*)vertexData.bytes + vertexData.length, abort());
         AP_CHECK((const char*)iPtr == (const char*)indexData.bytes + indexData.length, abort());
 
+        // Pass the data to GL! Woohoo, we're done.
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
+
+        // Speculative: is "data" being collected by ARC?
+        [data self];
     }
 
-    CGSize edgeSize = {
-        _insets.left + _insets.right,
-        _insets.top + _insets.bottom,
-    };
-    CGSize stretchSize = {
-        _size.width / _scale - edgeSize.width,
-        _size.height / _scale - edgeSize.height,
-    };
-    CGSize stretchScale = {
-        (size.width - edgeSize.width) / stretchSize.width,
-        (size.height - edgeSize.height) / stretchSize.height,
-    };
-
-    transform = CGAffineTransformScale(transform, 1 / _scale, 1 / _scale);
+    transform = CGAffineTransformScale(transform, edgeScale.width / _scale, edgeScale.height / _scale);
 
     GLKMatrix3 matrix = GLKMatrix3Make(
         transform.a, transform.b, 0,
