@@ -81,11 +81,20 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     }
 }
 
-- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event {}
-- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event {}
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+}
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     if (_touches.count >= 1) {
         [_touches minusSet:touches];
         if ([_touches count] == 0) {
@@ -97,6 +106,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     if (_touches.count >= 1) {
         [_touches minusSet:touches];
         if ([_touches count] == 0) {
@@ -149,6 +160,18 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     _state = UIGestureRecognizerStatePossible;
 }
 
+- (void) checkForStaleTouches:(AP_Event*)event
+{
+    NSSet* allTouches = event.allTouches;
+    for (AP_Touch* t in _touches) {
+        if (![allTouches containsObject:t]) {
+            NSLog(@"Stale touch in gesture recognizer %@, resetting", self);
+            [self reset];
+            return;
+        }
+    }
+}
+
 @end
 
 @implementation AP_TapGestureRecognizer {
@@ -157,6 +180,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     // Only count the initial touch(es)
     if (self.touches.count == 0) {
         for (AP_Touch* t in touches) {
@@ -168,6 +193,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     CGPoint p = [self locationInView:self.view];
     if (distance(p, _origin) > kMaxTapDistance) {
         [self reset];
@@ -176,6 +203,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     CGPoint p = [self locationInView:self.view];
     if (distance(p, _origin) > kMaxTapDistance) {
         [self reset];
@@ -210,6 +239,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     if (self.touches.count >= 2) {
         // Adding more touches to an existing gesture,
         // make sure we don't change the scale.
@@ -245,6 +276,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     if (self.touches.count >= 2) {
         for (AP_Touch* t in self.touches) {
             if (t.phase == UITouchPhaseMoved) {
@@ -257,6 +290,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     float oldScale = self.scale;
     [super touchesEnded:touches withEvent:event];
     if (self.touches.count == 1) {
@@ -267,6 +302,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     float oldScale = self.scale;
     [super touchesCancelled:touches withEvent:event];
     if (self.touches.count == 1) {
@@ -351,6 +388,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     CGPoint currentTranslation = [self translationInView:nil];
     for (AP_Touch* t in touches) {
         [self addTouch:t withValue:[[AP_Pan_Value alloc] init]];
@@ -361,6 +400,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     for (AP_Touch* t in self.touches) {
         if (t.phase == UITouchPhaseMoved) {
             [self maybeStartedOrChanged];
@@ -371,6 +412,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     CGPoint currentTranslation = [self translationInView:nil];
     [super touchesEnded:touches withEvent:event];
     [self zapTranslation:currentTranslation];
@@ -378,6 +421,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
+    [self checkForStaleTouches:event];
+
     CGPoint currentTranslation = [self translationInView:nil];
     [super touchesEnded:touches withEvent:event];
     [self zapTranslation:currentTranslation];
