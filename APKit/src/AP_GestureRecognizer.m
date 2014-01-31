@@ -170,7 +170,6 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 {
     CGPoint p = [self locationInView:self.view];
     if (distance(p, _origin) > kMaxTapDistance) {
-        [self fireWithState:UIGestureRecognizerStateFailed];
         [self reset];
     }
 }
@@ -179,7 +178,6 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 {
     CGPoint p = [self locationInView:self.view];
     if (distance(p, _origin) > kMaxTapDistance) {
-        [self fireWithState:UIGestureRecognizerStateFailed];
         [self reset];
         return;
     }
