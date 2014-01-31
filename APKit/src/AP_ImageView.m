@@ -30,11 +30,15 @@
     if (alpha > 1) {
         alpha = 1;
     }
-    if (_image) {
+    AP_Image* image = _image;
+    if (_highlighted && _highlightedImage) {
+        image = _highlightedImage;
+    }
+    if (image) {
         CGRect bounds = self.inFlightBounds;
 
         CGPoint center = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
-        CGSize size = _image.size;
+        CGSize size = image.size;
 
         CGFloat xGap = (size.width - bounds.size.width) / 2;
         CGFloat yGap = (size.height - bounds.size.height) / 2;
@@ -118,7 +122,7 @@
             center.x - size.width/2,
             center.y - size.height/2);
 
-//        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", _image.assetName, pos.x, pos.y, size.width, size.height, alpha);
+//        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", image.assetName, pos.x, pos.y, size.width, size.height, alpha);
 
         if (self.clipsToBounds) {
             CGRect r = [self convertInFlightRect:bounds toView:nil];
@@ -132,7 +136,7 @@
             glScissor(x, y, w, h);
         }
 
-        [_image renderGLWithSize:size transform:t alpha:alpha];
+        [image renderGLWithSize:size transform:t alpha:alpha];
 
         if (self.clipsToBounds) {
             glDisable(GL_SCISSOR_TEST);

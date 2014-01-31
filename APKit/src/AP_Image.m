@@ -9,6 +9,7 @@
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
+#import "AP_Utils.h"
 #import "AP_Window.h"
 #import "NSObject+AP_KeepAlive.h"
 
@@ -16,6 +17,7 @@
 @property GLint transform;
 @property GLint stretch;
 @property GLint alpha;
+@property GLint tint;
 @property GLint edgePos;
 @property GLint stretchPos;
 @property GLint texCoord;
@@ -32,6 +34,7 @@ AP_BAN_EVIL_INIT
         _transform = [self uniform:@"transform"];
         _stretch = [self uniform:@"stretch"];
         _alpha = [self uniform:@"alpha"];
+        _tint = [self uniform:@"tint"];
         _edgePos = [self attr:@"edgePos"];
         _stretchPos = [self attr:@"stretchPos"];
         _texCoord = [self attr:@"texCoord"];
@@ -64,25 +67,28 @@ static const char* kVertex = MULTILINE(
 static const char* kAlphaFragment = MULTILINE(
     precision highp float;
     uniform float alpha;
+    uniform vec4 tint;
     varying vec2 solidTexCoord;
     varying vec2 alphaTexCoord;
     uniform sampler2D texture;
     void main() {
         vec4 pixel = texture2D(texture, solidTexCoord, -1.0);
-        vec4 pixelAlpha = texture2D(texture, alphaTexCoord);
-        gl_FragColor = vec4(pixel.rgb, pixelAlpha.g * alpha);
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        float pixelAlpha = texture2D(texture, alphaTexCoord).g;
+        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
     }
 );
 
 static const char* kSolidFragment = MULTILINE(
     precision highp float;
     uniform float alpha;
+    uniform vec4 tint;
     varying vec2 solidTexCoord;
     uniform sampler2D texture;
     void main() {
         vec4 pixel = texture2D(texture, solidTexCoord, -1.0);
-        pixel.a *= alpha;
-        gl_FragColor = pixel;
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
     }
 );
 
@@ -119,6 +125,7 @@ typedef struct VertexData {
     CGSize _size;
     NSMutableData* _solidQuads;
     NSMutableData* _alphaQuads;
+    GLKVector4 _tint;
 
     // These are constructed lazily at render time.
     AP_GLBuffer* _arrayBuffer;
@@ -204,6 +211,29 @@ typedef struct VertexData {
 }
 
 AP_BAN_EVIL_INIT
+
+- (AP_Image*) initWithImage:(AP_Image*)other
+{
+    AP_CHECK(other, return nil);
+    self = [super init];
+    if (self) {
+        _assetName = other->_assetName;
+        _insets = other->_insets;
+        _scale = other->_scale;
+
+        _texture = other->_texture;
+        _size = other->_size;
+        _solidQuads = other->_solidQuads;
+        _alphaQuads = other->_alphaQuads;
+        _tint = other->_tint;
+
+        _arrayBuffer = other->_arrayBuffer;
+        _indexBuffer = other->_indexBuffer;
+        _numSolid = other->_numSolid;
+        _numAlpha = other->_numAlpha;
+    }
+    return self;
+}
 
 - (void) commonInit
 {
@@ -572,6 +602,7 @@ AP_BAN_EVIL_INIT
     glUniform1f(g_AlphaProg.alpha, alpha);
     glUniformMatrix3fv(g_AlphaProg.transform, 1, false, matrix.m);
     glUniform2f(g_AlphaProg.stretch, stretchScale.width, stretchScale.height);
+    glUniform4fv(g_AlphaProg.tint, 1, _tint.v);
 
     glEnableVertexAttribArray(g_AlphaProg.edgePos);
     glEnableVertexAttribArray(g_AlphaProg.stretchPos);
@@ -589,6 +620,7 @@ AP_BAN_EVIL_INIT
     glUniform1f(g_SolidProg.alpha, alpha);
     glUniformMatrix3fv(g_SolidProg.transform, 1, false, matrix.m);
     glUniform2f(g_SolidProg.stretch, stretchScale.width, stretchScale.height);
+    glUniform4fv(g_SolidProg.tint, 1, _tint.v);
 
     glEnableVertexAttribArray(g_SolidProg.edgePos);
     glEnableVertexAttribArray(g_SolidProg.stretchPos);
@@ -602,8 +634,9 @@ AP_BAN_EVIL_INIT
 
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor
 {
-    AP_NOT_IMPLEMENTED;
-    return self;
+    AP_Image* result = [[AP_Image alloc] initWithImage:self];
+    result->_tint = AP_ColorToVector(tintColor);
+    return result;
 }
 
 @end
