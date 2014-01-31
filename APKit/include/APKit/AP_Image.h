@@ -18,7 +18,7 @@ typedef enum UIImageResizingMode {
 @property (nonatomic,readonly) CGSize pixelSize; // Added by Iain
 @property (nonatomic,readonly) UIEdgeInsets insets;
 @property (nonatomic,readonly) CGFloat scale;
-@property (nonatomic,readonly) UIImageResizingMode resizingMode;
+@property (nonatomic) UIImageResizingMode resizingMode;
 
 + (AP_Image*) imageNamed:(NSString*)assetName;
 

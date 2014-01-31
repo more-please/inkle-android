@@ -136,6 +136,10 @@ static inline bool CGRectIsNull(CGRect rect) {
     return CGRectEqualToRect(rect, CGRectNull);
 }
 
+static inline bool CGRectIsEmpty(CGRect rect) {
+    return rect.size.width <= 0 || rect.size.height <= 0;
+}
+
 static inline bool CGRectContainsPoint(CGRect rect, CGPoint point) {
     return point.x >= rect.origin.x
         && point.x <= (rect.origin.x + rect.size.width)
