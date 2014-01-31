@@ -3,7 +3,7 @@
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
-const float kMaxTapDistance = 3;
+const float kMaxTapDistance = 10;
 
 static inline CGFloat distance(CGPoint a, CGPoint b) {
     CGPoint p = {a.x - b.x, a.y - b.y};
@@ -55,9 +55,13 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) fireWithState:(UIGestureRecognizerState)state
 {
+//    NSLog(@"Gesture recognizer: %@ view: %@ firing with state:%d", self, _view, state);
     _state = state;
     AP_CHECK(_state != UIGestureRecognizerStatePossible, return);
     if (_enabled) {
+        if (_cancelsTouchesInView) {
+            [_view touchesCancelled:_touches withEvent:nil];
+        }
         if (_numArgs == 2) {
             void (*func)(id, SEL) = (void*) _imp;
             func(_target, _action);
@@ -222,7 +226,73 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 @end
 
-@implementation AP_LongPressGestureRecognizer
+@implementation AP_LongPressGestureRecognizer {
+    CGPoint _origin;
+    NSTimer* _timer;
+}
+
+- (void) reset
+{
+    [super reset];
+    [_timer invalidate];
+    _timer = nil;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    // Only count the initial touch(es)
+    if (self.touches.count == 0) {
+        for (AP_Touch* t in touches) {
+            [self addTouch:t];
+        }
+        _origin = [self locationInView:self.view];
+        _timer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(timerFired:) userInfo:nil repeats:NO];
+    }
+}
+
+- (void) timerFired:(NSTimer*)timer
+{
+    if (timer == _timer) {
+        CGPoint p = [self locationInView:self.view];
+        if (distance(p, _origin) <= kMaxTapDistance) {
+            [self fireWithState:UIGestureRecognizerStateBegan];
+        } else {
+            [self reset];
+        }
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > kMaxTapDistance) {
+        [self reset];
+    }
+}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > kMaxTapDistance) {
+        [self reset];
+        return;
+    }
+    for (AP_Touch* t in self.touches) {
+        if (t.phase != UITouchPhaseEnded) {
+            [super touchesEnded:touches withEvent:event];
+            return;
+        }
+    }
+    [self fireWithState:UIGestureRecognizerStateEnded];
+    [self reset];
+}
+
 @end
 
 @interface AP_Pinch_Value : NSObject
