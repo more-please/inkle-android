@@ -571,8 +571,8 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     int xTile = 1;
     int yTile = 1;
     if (edgeSize.width > 0 || edgeSize.height > 0) {
-        xTile = (displaySize.width > 0) ? roundf(displaySize.width / naturalSize.width) : 0;
-        yTile = (displaySize.height > 0) ? roundf(displaySize.height / naturalSize.height) : 0;
+        xTile = (displaySize.width > 0) ? floorf(0.3 + displaySize.width / naturalSize.width) : 0;
+        yTile = (displaySize.height > 0) ? floorf(0.3 + displaySize.height / naturalSize.height) : 0;
     }
 
     if (xTile != _xTile || yTile != _yTile) {
