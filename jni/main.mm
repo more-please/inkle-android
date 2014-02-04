@@ -393,8 +393,16 @@ static void obbCallback() {
     AP_CHECK(vc, return);
 
     if (byForceIfNecessary || !vc.paused) {
+        eglMakeCurrent(_display, _surface, _surface, _context);
         [vc draw];
         eglSwapBuffers(_display, _surface);
+
+        EGLint err = eglGetError();
+        if (err != EGL_SUCCESS) {
+            NSLog(@"*** EGL error: %d", err);
+            // For now, just die. May want to try to recover in future.
+            abort();
+        }
     }
 }
 
