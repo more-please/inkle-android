@@ -105,9 +105,6 @@ static JavaMethod kPleaseFinish = {
         int success = CkInit(&config);
         AP_CHECK(success, return nil);
 
-        // Sounds seem a bit quiet...
-        CkMixer::getMaster()->setVolume(8);
-
         // Get SorceryActivity and its methods.
         _instance = _env->NewGlobalRef(_android->activity->clazz);
         AP_CHECK(_instance, return nil);
