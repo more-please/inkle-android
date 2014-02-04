@@ -1,3 +1,5 @@
+#import <APKit/APKit.h>
+
 #import <jni.h>
 #import <errno.h>
 
@@ -9,8 +11,7 @@
 #import <android/storage_manager.h>
 #import <android_native_app_glue.h>
 
-#import <APKit/APKit.h>
-
+#import <ck/ck.h>
 #import "SorceryAppDelegate.h"
 
 @interface Main : AP_Application
@@ -92,19 +93,23 @@ static JavaMethod kPleaseFinish = {
             "Sorcery",
             NULL
         };
-        jint result = (*_vm)->AttachCurrentThread(_vm, &_env, &args);
+        jint result = _vm->AttachCurrentThread(&_env, &args);
         AP_CHECK(result == JNI_OK, return nil);
         AP_CHECK(_env, return nil);
 
+        // Initialize Cricket Audio
+        CkConfig config(_env, _android->activity->clazz);
+        CkInit(&config);
+
         // Get SorceryActivity and its methods.
-        _instance = (*_env)->NewGlobalRef(_env, _android->activity->clazz);
+        _instance = _env->NewGlobalRef(_android->activity->clazz);
         AP_CHECK(_instance, return nil);
 
-        _class = (*_env)->GetObjectClass(_env, _instance);
+        _class = _env->GetObjectClass(_instance);
         AP_CHECK(_class, return nil);
 
         // Register our own methods.
-        result = (*_env)->RegisterNatives(_env, _class, g_NativeMethods, 1);
+        result = _env->RegisterNatives(_class, g_NativeMethods, 1);
         AP_CHECK(result == JNI_OK, return nil);
 
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
@@ -131,7 +136,7 @@ static JavaMethod kPleaseFinish = {
     if (_env) {
         NSLog(@"Detaching from JNI");
         [self javaVoidMethod:&kPleaseFinish];
-        (*_vm)->DetachCurrentThread(_vm);
+        _vm->DetachCurrentThread();
         _env = NULL;
     }
 }
@@ -145,7 +150,7 @@ static JavaMethod kPleaseFinish = {
 {
     if (!m->method) {
         NSLog(@"Initializing JNI method %s...", m->name);
-        m->method = (*_env)->GetMethodID(_env, _class, m->name, m->sig);
+        m->method = _env->GetMethodID(_class, m->name, m->sig);
         NSAssert(m->method, @"JNI method lookup failed!");
         NSLog(@"Initializing JNI method %s... Done.", m->name);
     }
@@ -154,22 +159,22 @@ static JavaMethod kPleaseFinish = {
 - (void) javaVoidMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
-    (*_env)->CallVoidMethod(_env, _instance, m->method);
+    _env->CallVoidMethod(_instance, m->method);
 }
 
 - (NSString*) javaStringMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
 
-    (*_env)->PushLocalFrame(_env, 1);
+    _env->PushLocalFrame(1);
 
-    jstring str = (jstring) (*_env)->CallObjectMethod(_env, _instance, m->method);
+    jstring str = (jstring) _env->CallObjectMethod(_instance, m->method);
     AP_CHECK(str, return nil);
-    const char* c = (*_env)->GetStringUTFChars(_env, str, NULL);
+    const char* c = _env->GetStringUTFChars(str, NULL);
     NSString* result = [NSString stringWithCString:c];
-    (*_env)->ReleaseStringUTFChars(_env, str, c);
+    _env->ReleaseStringUTFChars(str, c);
 
-    (*_env)->PopLocalFrame(_env, NULL);
+    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -177,18 +182,18 @@ static JavaMethod kPleaseFinish = {
 {
     [self maybeInitJavaMethod:m];
 
-    (*_env)->PushLocalFrame(_env, 1);
+    _env->PushLocalFrame(1);
 
-    jfloatArray arr = (jfloatArray) (*_env)->CallObjectMethod(_env, _instance, m->method);
+    jfloatArray arr = (jfloatArray) _env->CallObjectMethod(_instance, m->method);
     AP_CHECK(arr, return NO);
-    AP_CHECK((*_env)->GetArrayLength(_env, arr) == size, return NO);
-    jfloat* f = (*_env)->GetFloatArrayElements(_env, arr, NULL);
+    AP_CHECK(_env->GetArrayLength(arr) == size, return NO);
+    jfloat* f = _env->GetFloatArrayElements(arr, NULL);
     for (int i = 0; i < size; ++i) {
         ptr[i] = f[i];
     }
-    (*_env)->ReleaseFloatArrayElements(_env, arr, f, 0);
+    _env->ReleaseFloatArrayElements(arr, f, 0);
 
-    (*_env)->PopLocalFrame(_env, NULL);
+    _env->PopLocalFrame(NULL);
     return YES;
 }
 
@@ -465,11 +470,13 @@ static void obbCallback() {
     switch (cmd) {
         case APP_CMD_RESUME:
             _inForeground = YES;
+            CkResume();
             break;
 
         case APP_CMD_PAUSE:
         case APP_CMD_STOP:
             _inForeground = NO;
+            CkSuspend();
             break;
 
         case APP_CMD_SAVE_STATE:
@@ -562,6 +569,7 @@ void android_main(struct android_app* android) {
 
                 // Check if we are exiting.
                 if (android->destroyRequested != 0) {
+                    CkShutdown();
                     [g_Main teardownGL];
                     [g_Main teardownJava];
                     // Despite telling us we're shutting down, the system doesn't kill us, so...
@@ -574,6 +582,8 @@ void android_main(struct android_app* android) {
                 g_NeedToCheckObb = NO;
                 [g_Main handleObbCallback];
             }
+
+            CkUpdate();
 
             if (g_Main.active) {
                 // Apparently it can take a few frames for e.g. screen rotation
