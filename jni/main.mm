@@ -12,6 +12,8 @@
 #import <android_native_app_glue.h>
 
 #import <ck/ck.h>
+#import <ck/mixer.h>
+
 #import "SorceryAppDelegate.h"
 
 @interface Main : AP_Application
@@ -99,7 +101,12 @@ static JavaMethod kPleaseFinish = {
 
         // Initialize Cricket Audio
         CkConfig config(_env, _android->activity->clazz);
-        CkInit(&config);
+        config.enableOggVorbis = false;
+        int success = CkInit(&config);
+        AP_CHECK(success, return nil);
+
+        // Sounds seem a bit quiet...
+        CkMixer::getMaster()->setVolume(8);
 
         // Get SorceryActivity and its methods.
         _instance = _env->NewGlobalRef(_android->activity->clazz);

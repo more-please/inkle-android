@@ -17,6 +17,7 @@
 @property(nonatomic) NSInteger numberOfLoops;
 
 - (id) initWithContentsOfURL:(NSURL*)url error:(NSError**)outError;
+- (id) initWithContentsOfFile:(NSString*)path error:(NSError**)outError;
 
 - (BOOL) prepareToPlay;
 - (BOOL) play;

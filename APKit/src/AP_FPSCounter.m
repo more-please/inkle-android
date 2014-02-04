@@ -1,6 +1,10 @@
 #import "AP_FPSCounter.h"
 #import "AP_Utils.h"
 
+#ifdef ANDROID
+#import <ck/ck.h>
+#endif
+
 const int NUM_FRAME_TIMES = 16;
 
 @implementation AP_FPSCounter {
@@ -33,7 +37,11 @@ const int NUM_FRAME_TIMES = 16;
         if (_lastLogTime < t) {
             _lastLogTime = t;
         }
+#ifdef ANDROID
+        NSLog(@"FPS: %.1f, audio load: %.1f%%", self.fps, CkGetRenderLoad() * 100);
+#else
         NSLog(@"FPS: %.1f", self.fps);
+#endif
     }
 }
 
