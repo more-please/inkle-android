@@ -78,8 +78,20 @@ static AP_Bundle* g_Bundle;
 
 - (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
 {
-    NSLog(@"pathsForResourcesOfType:%@ inDirectory:%@", ext, dir);
-    return nil;
+    NSFileManager* fm = [NSFileManager defaultManager];
+    NSString* path = [_root stringByAppendingPathComponent:dir];
+    NSMutableArray* result = [NSMutableArray array];
+    NSError* error;
+    for (NSString* s in [fm contentsOfDirectoryAtPath:path error:&error]) {
+        if ([s hasSuffix:ext]) {
+            NSString* file = [path stringByAppendingPathComponent:s];
+            [result addObject:file];
+        }
+    }
+    if (error) {
+        NSLog(@"*** [NSBundle pathsForResourcesOfType:\"%@\" inDirectory:\"%@\"]: %@", ext, dir, error);
+    }
+    return result;
 }
 
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext
