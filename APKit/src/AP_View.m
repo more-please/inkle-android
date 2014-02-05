@@ -520,7 +520,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     id protectSelf = self;
     AP_CHECK(block, return);
     block(self);
-    for (AP_View* v in _subviews.copy) {
+    for (AP_View* v in _subviews) {
         [v visitWithBlock:block];
     }
     [protectSelf self];
@@ -534,7 +534,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (controller) {
         block(controller);
     }
-    for (AP_View* v in _subviews.copy) {
+    for (AP_View* v in _subviews) {
         [v visitControllersWithBlock:block];
     }
     [protectSelf self];
@@ -566,7 +566,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 {
     id protectSelf = self;
 
-    for (AP_View* view in _subviews.copy) {
+    for (AP_View* view in _subviews) {
         [view layoutSelfAndChildren];
     }
 
@@ -710,7 +710,6 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) updateGL
 {
-    [self layoutIfNeeded];
 }
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha

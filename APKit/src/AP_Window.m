@@ -235,6 +235,14 @@ static inline CGFloat aspect(CGSize size) {
         }];
     }
 
+    [_profiler step:@"layout"];
+    if (_rootViewController) {
+        AP_View* v = _rootViewController.view;
+        [v visitWithBlock:^(AP_View* view) {
+            [view layoutIfNeeded];
+        }];
+    }
+
     [_profiler step:@"render"];
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
