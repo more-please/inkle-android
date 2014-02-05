@@ -81,31 +81,34 @@ typedef struct VertexData {
         float* posPtr = _positions;
         unsigned char* glyphPtr = _glyphs;
 
-        float fontToScreen = (pointSize / data.header->emSize);
+        const int TEX_MARGIN = 4;
+        const float FONT_MARGIN = TEX_MARGIN * data.header->textureScale;
+        float emSize = data.header->emSize;
         float xPos = 0;
         for (int i = 0; i < length; ++i) {
             *posPtr++ = xPos;
             *glyphPtr++ = glyphs[i];
 
             const fontex_glyph_t* g = [data dataForGlyph:glyphs[i]];
-            float wTexels = 1 + ceil((g->x1 - g->x0) * data.header->textureScale);
-            float hTexels = 1 + ceil((g->y1 - g->y0) * data.header->textureScale);
-            float w = (wTexels / data.header->textureScale) * fontToScreen;
-            float h = (hTexels / data.header->textureScale) * fontToScreen;
+            float wTexels = 2 * TEX_MARGIN + ceil((g->x1 - g->x0) * data.header->textureScale);
+            float hTexels = 2 * TEX_MARGIN + ceil((g->y1 - g->y0) * data.header->textureScale);
+            float w = (wTexels * pointSize) / (data.header->textureScale * emSize);
+            float h = (hTexels * pointSize) / (data.header->textureScale * emSize);
             float wTex = wTexels / data.header->textureSize;
             float hTex = hTexels / data.header->textureSize;
             for (int y = 0; y <= 1; ++y) {
                 for (int x = 0; x <= 1; ++x) {
-                    vPtr->x = (g->x0 * fontToScreen) + x * w + xPos;
-                    vPtr->y = (g->y0 * fontToScreen) + y * h;
-                    vPtr->xTex = (g->xTex / (float)data.header->textureSize) + x * wTex;
-                    vPtr->yTex = (g->yTex / (float)data.header->textureSize) + y * hTex;
+                    vPtr->x = ((g->x0 - FONT_MARGIN) * pointSize) / emSize + x * w + xPos;
+                    vPtr->y = ((g->y0 - FONT_MARGIN) * pointSize) / emSize + y * h;
+                    vPtr->xTex = ((g->xTex - TEX_MARGIN) / (float)data.header->textureSize) + x * wTex;
+                    vPtr->yTex = ((g->yTex - TEX_MARGIN) / (float)data.header->textureSize) + y * hTex;
                     ++vPtr;
                 }
             }
-            xPos += fontToScreen * g->advance;
+            xPos += (g->advance * pointSize) / emSize;
             if ((i+1) < length) {
-                xPos += fontToScreen * [data kerningForGlyph1:glyphs[i] glyph2:glyphs[i+1]];
+                int16_t kerning = [data kerningForGlyph1:glyphs[i] glyph2:glyphs[i+1]];
+                xPos += (kerning * pointSize) / emSize;
             }
 
             GLushort index = i * 4;
@@ -129,9 +132,9 @@ typedef struct VertexData {
         _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
 
-        _ascender = fontToScreen * data.header->ascent;
-        _descender = fontToScreen * data.header->descent;
-        _lineHeight = fontToScreen * (data.header->ascent - data.header->descent + data.header->leading);
+        _ascender = (data.header->ascent * pointSize) / emSize;
+        _descender = (data.header->descent * pointSize) / emSize;
+        _lineHeight = ((data.header->ascent - data.header->descent + data.header->leading) * pointSize) / emSize;
         _origin = CGPointMake(0, 0);
 
         _textColor = GLKVector4Make(0, 0, 0, 1);
