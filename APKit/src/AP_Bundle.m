@@ -100,7 +100,7 @@ static AP_Bundle* g_Bundle;
     if (ext) {
         path = [path stringByAppendingPathExtension:ext];
     }
-    return path;
+    return [[NSFileManager defaultManager] fileExistsAtPath:path] ? path : nil;
 }
 
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath
