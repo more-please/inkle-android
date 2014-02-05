@@ -3,12 +3,14 @@
 #import <OpenGLES/ES2/gl.h>
 
 #import "AP_FPSCounter.h"
+#import "AP_Profiler.h"
 #import "AP_Touch.h"
 #import "AP_Utils.h"
 
 @implementation AP_Window {
     AP_ViewController* _rootViewController;
     AP_FPSCounter* _fps;
+    AP_Profiler* _profiler;
     double _clock;
     AP_View* _hitTestView;
     AP_GestureRecognizer* _hitTestGesture;
@@ -92,6 +94,8 @@ static inline CGFloat aspect(CGSize size) {
         _clock = AP_TimeInSeconds();
         _fps = [[AP_FPSCounter alloc] init];
         _fps.logInterval = 1;
+        _profiler = [[AP_Profiler alloc] init];
+        _profiler.reportInterval = 5;
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
 #ifdef ANDROID
@@ -180,11 +184,14 @@ static inline CGFloat aspect(CGSize size) {
     _clock = AP_TimeInSeconds();
     [AP_Animation setMasterClock:_clock];
     [_fps tick];
+    [_profiler maybeReport];
 
+    [_profiler step:@"animation"];
     for (AP_Animation* animation in [AP_Animation animations]) {
         [animation update];
     }
 
+    [_profiler step:@"resize"];
     UIScreen* screen = [UIScreen mainScreen];
     float scale = screen.scale;
     CGRect bounds = screen.bounds;
@@ -201,6 +208,7 @@ static inline CGFloat aspect(CGSize size) {
         }
     }
 
+    [_profiler step:@"clear"];
     glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
     glClearColor(1, 0, 0.5, 0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -219,6 +227,7 @@ static inline CGFloat aspect(CGSize size) {
                 -1.0, -1.0),
             2.0 / bounds.size.width, 2.0 / bounds.size.height);
 
+    [_profiler step:@"update"];
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v visitWithBlock:^(AP_View* view) {
@@ -226,10 +235,13 @@ static inline CGFloat aspect(CGSize size) {
         }];
     }
 
+    [_profiler step:@"render"];
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v renderSelfAndChildrenWithFrameToGL:frameToGL alpha:1];
     }
+
+    [_profiler step:@"other"];
 }
 
 //------------------------------------------------------------------------------------

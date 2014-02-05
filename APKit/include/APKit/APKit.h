@@ -37,6 +37,7 @@
 #import "AP_GLBuffer.h"
 #import "AP_GLTexture.h"
 #import "AP_PakReader.h"
+#import "AP_Profiler.h"
 
 #else
 
