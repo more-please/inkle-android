@@ -396,9 +396,11 @@ static void obbCallback() {
 
         EGLint err = eglGetError();
         if (err != EGL_SUCCESS) {
-            NSLog(@"*** EGL error: %d", err);
-            // For now, just die. May want to try to recover in future.
-            abort();
+            // Some errors are transient, bah. We can't try tearing down
+            // and rebuilding the surface because we might be in the background.
+            // Cleanly restarting the entire game might be good, but it's tricky.
+            // Just log the error to help diagnose visual glitches, I guess.
+            NSLog(@"*** EGL error: %x", err);
         }
     }
 }
