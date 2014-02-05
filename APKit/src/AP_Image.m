@@ -198,7 +198,13 @@ typedef struct VertexData {
     }];
 
     AP_CHECK([result isKindOfClass:[AP_Image class]], abort());
-    AP_CHECK(result.scale == scale, return nil);
+
+    if (result.scale != scale) {
+        // This can happen if the image was cached before the screen was rotated.
+        result = [[AP_Image alloc] initWithImage:result];
+        result->_scale = scale;
+    }
+
     return result;
 }
 
