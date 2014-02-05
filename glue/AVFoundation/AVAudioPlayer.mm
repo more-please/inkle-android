@@ -6,6 +6,7 @@
 #import "GlueCommon.h"
 
 @implementation AVAudioPlayer {
+    NSString* _name;
     CkSound* _sound;
 }
 
@@ -22,16 +23,19 @@
 {
     self = [super init];
     if (self) {
+        _name = [path lastPathComponent];
         _sound = CkSound::newStreamSound(path.cString, kCkPathType_FileSystem);
         if (!_sound || _sound->isFailed()) {
             return nil;
         }
     }
+    NSLog(@"Loaded sound: %@", _name);
     return self;
 }
 
 - (void) dealloc
 {
+    NSLog(@"Deleted sound: %@", _name);
     if (_sound) {
         _sound->destroy();
     }
@@ -87,6 +91,7 @@
 
 - (BOOL) play
 {
+    NSLog(@"Playing sound: %@, rate: %.3f, volume: %.3f", _name, _sound->getSpeed(), _sound->getVolume());
     _sound->play();
     _sound->setPaused(false);
     return YES;
@@ -100,6 +105,11 @@
 - (void) stop
 {
     _sound->stop();
+}
+
+- (NSString*) description
+{
+    return [NSString stringWithFormat:@"[AVAudioPlayer %@]", _name];
 }
 
 @end
