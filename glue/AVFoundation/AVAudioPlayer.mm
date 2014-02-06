@@ -8,6 +8,7 @@
 @implementation AVAudioPlayer {
     NSString* _name;
     CkSound* _sound;
+    NSTimer* _timer;
 }
 
 - (id) initWithContentsOfURL:(NSURL*)url error:(NSError**)outError
@@ -29,21 +30,14 @@
             return nil;
         }
     }
-    NSLog(@"Loaded sound: %@", _name);
     return self;
 }
 
 - (void) dealloc
 {
-    NSLog(@"Deleted sound: %@", _name);
     if (_sound) {
         _sound->destroy();
     }
-}
-
-- (BOOL) isPlaying
-{
-    return _sound->isPlaying();
 }
 
 - (void) setEnableRate:(BOOL)enableRate
@@ -89,21 +83,70 @@
     return YES;
 }
 
+- (BOOL) isPlaying
+{
+    return _timer != nil;
+}
+
 - (BOOL) play
 {
-    NSLog(@"Playing sound: %@, rate: %.3f, volume: %.3f", _name, _sound->getSpeed(), _sound->getVolume());
-    _sound->play();
-    _sound->setPaused(false);
+    if (!_timer) {
+//        NSLog(@"+++ %@", _name);
+        if (_sound->isReady()) {
+            _sound->play();
+            _timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(playingTimer:) userInfo:nil repeats:YES];
+        } else {
+            _timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(loadingTimer:) userInfo:nil repeats:YES];
+        }
+    }
     return YES;
+}
+
+- (void) loadingTimer:(NSTimer*)timer
+{
+    if (_sound->isFailed()) {
+        [_timer invalidate];
+        _timer = nil;
+        [_delegate audioPlayerDidFinishPlaying:self successfully:NO];
+    } else if (_sound->isReady()) {
+        [_timer invalidate];
+        _timer = nil;
+        [self play];
+    } else {
+        // Still loading...
+    }
+}
+
+- (void) playingTimer:(NSTimer*)timer
+{
+    if (_sound->isFailed()) {
+//        NSLog(@"xxx %@", _name);
+        [_timer invalidate];
+        _timer = nil;
+        [_delegate audioPlayerDidFinishPlaying:self successfully:NO];
+    } else if (_sound->isReady() && !_sound->isPlaying()) {
+//        NSLog(@"--- %@", _name);
+        [_timer invalidate];
+        _timer = nil;
+        [_delegate audioPlayerDidFinishPlaying:self successfully:YES];
+    } else {
+        // Still playing...
+    }
 }
 
 - (void) pause
 {
+//    NSLog(@"... %@", _name);
     _sound->setPaused(true);
 }
 
 - (void) stop
 {
+//    NSLog(@"||| %@", _name);
+    if (_timer) {
+        [_timer invalidate];
+        _timer = nil;
+    }
     _sound->stop();
 }
 

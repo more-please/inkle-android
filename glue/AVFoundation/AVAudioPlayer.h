@@ -2,12 +2,15 @@
 
 #import <Foundation/Foundation.h>
 
+@class AVAudioPlayer;
+
 @protocol AVAudioPlayerDelegate <NSObject>
+- (void) audioPlayerDidFinishPlaying:(AVAudioPlayer*)player successfully:(BOOL)flag;
 @end
 
 @interface AVAudioPlayer : NSObject
 
-@property(nonatomic,assign) id<AVAudioPlayerDelegate> delegate;
+@property(nonatomic,weak) id<AVAudioPlayerDelegate> delegate;
 @property(nonatomic,readonly,getter=isPlaying) BOOL playing;
 @property(nonatomic) NSTimeInterval currentTime;
 @property(nonatomic) BOOL enableRate;
