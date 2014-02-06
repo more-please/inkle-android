@@ -146,6 +146,8 @@ typedef struct VertexData {
 {
     // This is typically a 4x image for retina iPads (2048x1536 screen).
     // Adjust the scale proportionately to the size of the screen.
+    // GL has been set up as if for a non-retina screen, so we include
+    // a 2x factor for that.
     CGFloat scale = [AP_Window scaleForIPhone:4.0 iPad:2.0];
     AP_Image* result = [AP_Image imageNamed:name scale:scale];
     return result;
@@ -154,9 +156,7 @@ typedef struct VertexData {
 + (AP_Image*) imageWithContentsOfFileNamed2x:(NSString*)name
 {
     // This is a 2x image for retina iPhones or iPads.
-    // It shouldn't be scaled down unless we're on a non-retina iPhone.
-    CGFloat scale = [AP_Window scaleForIPhone:2.0 iPad:2.0];
-    AP_Image* result = [AP_Image imageNamed:name scale:scale];
+    AP_Image* result = [AP_Image imageNamed:name scale:2];
     return result;
 }
 
@@ -306,7 +306,12 @@ AP_BAN_EVIL_INIT
     // and "stretch" (variable depending on the view bounds).
 
     // Calculate the total amount of edge space and stretch space.
-    UIEdgeInsets edge = _insets;
+    UIEdgeInsets edge = {
+        _insets.top * _scale,
+        _insets.left * _scale,
+        _insets.bottom * _scale,
+        _insets.right * _scale,
+    };
     CGSize stretch = {
         _size.width - (edge.left + edge.right),
         _size.height - (edge.top + edge.bottom),
@@ -411,29 +416,14 @@ AP_BAN_EVIL_INIT
         _size = other->_size;
         _scale = other->_scale;
 
-        // Lame hack: the insets are in pixel space, but we don't know whether
-        // this image is 2x or 4x bigger than normal. So, start the insets 4x
-        // bigger, and repeatedly divide them by 2 until they fit.
-        insets.left *= 4;
-        insets.right *= 4;
-        insets.top *= 4;
-        insets.bottom *= 4;
-
-        while ((insets.left + insets.right > _size.width) || (insets.top + insets.bottom > _size.height)) {
-            insets.left /= 2;
-            insets.right /= 2;
-            insets.top /= 2;
-            insets.bottom /= 2;
-        }
-
         // Make sure there's at least a 1-pixel space in the middle.
-        if (insets.left + insets.right + 1 > _size.width) {
-            CGFloat scale = (insets.left + insets.right + 1) / _size.width;
+        if (insets.left + insets.right + 1 > (_size.width / _scale)) {
+            CGFloat scale = (insets.left + insets.right + 1) / (_size.width / _scale);
             insets.left /= scale;
             insets.right /= scale;
         }
         if (insets.top + insets.bottom + 1 > _size.height) {
-            CGFloat scale = (insets.bottom + insets.bottom + 1) / _size.height;
+            CGFloat scale = (insets.top + insets.bottom + 1) / (_size.height / _scale);
             insets.top /= scale;
             insets.bottom /= scale;
         }
@@ -566,8 +556,8 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     }
 
     CGSize edgeSize = {
-        _insets.left + _insets.right,
-        _insets.top + _insets.bottom,
+        (_insets.left + _insets.right) * _scale,
+        (_insets.top + _insets.bottom) * _scale,
     };
 
     // Calculate how many times we need to tile the centre section.
@@ -592,7 +582,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     }
 
     if (xTile != _xTile || yTile != _yTile) {
-//        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d", _assetName, _xTile, _yTile, xTile, yTile);
+        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d (scale: %.3f)", _assetName, _xTile, _yTile, xTile, yTile, _scale);
         // TODO - this changes a lot for story chunks. It would be good to cache
         // the GL data for each tile layout rather than just resetting it.
         _xTile = xTile;
