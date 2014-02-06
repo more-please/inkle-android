@@ -120,6 +120,17 @@ typedef struct VertexData {
     GLfloat xTex, yTex;
 } VertexData;
 
+// This holds the actual GL data. It can vary depending on the tiling.
+@interface AP_Image_CacheEntry : NSObject
+@property(nonatomic) int numSolid;
+@property(nonatomic) int numAlpha;
+@property(nonatomic,strong) AP_GLBuffer* arrayBuffer;
+@property(nonatomic,strong) AP_GLBuffer* indexBuffer;
+@end
+
+@implementation AP_Image_CacheEntry
+@end
+
 @implementation AP_Image {
     AP_GLTexture* _texture;
     CGSize _size;
@@ -127,13 +138,8 @@ typedef struct VertexData {
     NSMutableData* _alphaQuads;
     GLKVector4 _tint;
 
-    // These are constructed lazily at render time.
-    AP_GLBuffer* _arrayBuffer;
-    AP_GLBuffer* _indexBuffer;
-    int _numSolid;
-    int _numAlpha;
-    int _xTile; // Number of times to tile the center section horizontally
-    int _yTile; // Number of times to tile the center section vertically
+    // Cache of (xTile, yTile) -> AP_Image_CacheEntry
+    AP_Cache* _cache;
 }
 
 + (AP_Image*) imageNamed:(NSString *)name
@@ -235,12 +241,10 @@ AP_BAN_EVIL_INIT
         _alphaQuads = other->_alphaQuads;
         _tint = other->_tint;
 
-        _arrayBuffer = other->_arrayBuffer;
-        _indexBuffer = other->_indexBuffer;
-        _numSolid = other->_numSolid;
-        _numAlpha = other->_numAlpha;
-        _xTile = other->_xTile;
-        _yTile = other->_yTile;
+        // Share the other image's geometry cache!
+        // This is safe as long as we reset the cache pointer
+        // if any fields change that could affect the cache entries.
+        _cache = other->_cache;
 
         _resizingMode = other->_resizingMode;
     }
@@ -263,10 +267,7 @@ AP_BAN_EVIL_INIT
     _solidQuads = [NSMutableData data];
     _alphaQuads = [NSMutableData data];
 
-    _arrayBuffer = nil;
-    _indexBuffer = nil;
-
-    _xTile = _yTile = 1;
+    _cache = [[AP_Cache alloc] initWithSize:50];
 
     _resizingMode = UIImageResizingModeTile;
 }
@@ -581,16 +582,6 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         yTile = MIN(1, yTile);
     }
 
-    if (xTile != _xTile || yTile != _yTile) {
-        NSLog(@"Tiling changed for image %@ - was %dx%d, now %dx%d (scale: %.3f)", _assetName, _xTile, _yTile, xTile, yTile, _scale);
-        // TODO - this changes a lot for story chunks. It would be good to cache
-        // the GL data for each tile layout rather than just resetting it.
-        _xTile = xTile;
-        _yTile = yTile;
-        _indexBuffer = 0;
-        _arrayBuffer = 0;
-    }
-
     CGSize edgeScale = {
         (xTile > 0) ? 1 : (_scale * size.width / edgeSize.width),
         (yTile > 0) ? 1 : (_scale * size.height / edgeSize.height)
@@ -604,11 +595,12 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         (yTile > 0) ? (displaySize.height / stretchSize.height) : 0,
     };
 
-    if (!_indexBuffer || !_arrayBuffer) {
+    int cacheKey = (xTile * 1000) + yTile;
+    AP_Image_CacheEntry* e = [_cache get:@(cacheKey) withLoader:^{
         // Calculate how many quads we have. This depends on the tiling.
-        _numSolid = countTilesInQuads(_solidQuads, _xTile, _yTile);
-        _numAlpha = countTilesInQuads(_alphaQuads, _xTile, _yTile);
-        int numQuads = _numSolid + _numAlpha;
+        int numSolid = countTilesInQuads(_solidQuads, xTile, yTile);
+        int numAlpha = countTilesInQuads(_alphaQuads, xTile, yTile);
+        int numQuads = numSolid + numAlpha;
 
         NSMutableData* data = [_alphaQuads mutableCopy];
         [data appendData:_solidQuads];
@@ -625,8 +617,8 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         int count = 0;
         for (const StretchyQuad* q = quads; q < maxQuad; ++q) {
             // Maybe tile the quad
-            int hMax = xTilesInQuad(q, _xTile);
-            int vMax = yTilesInQuad(q, _yTile);
+            int hMax = xTilesInQuad(q, xTile);
+            int vMax = yTilesInQuad(q, yTile);
             for (int h = 0; h < hMax; ++h) {
                 for (int v = 0; v < vMax; ++v) {
                     // Okay, we finally have a single quad for GL!
@@ -634,11 +626,11 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
                     CGFloat vOrigin = v * stretchSize.height / vMax;
 
                     // Need to hack the "stretch" coordinates if we're on the bottom or right edge, ugh
-                    if (_xTile > 0 && q->stretch.origin.x > 0 && q->stretch.size.width == 0) {
-                        hOrigin = (_xTile - 1) * stretchSize.width / _xTile;
+                    if (xTile > 0 && q->stretch.origin.x > 0 && q->stretch.size.width == 0) {
+                        hOrigin = (xTile - 1) * stretchSize.width / xTile;
                     }
-                    if (_yTile > 0 && q->stretch.origin.y > 0 && q->stretch.size.height == 0) {
-                        vOrigin = (_yTile - 1) * stretchSize.height / _yTile;
+                    if (yTile > 0 && q->stretch.origin.y > 0 && q->stretch.size.height == 0) {
+                        vOrigin = (yTile - 1) * stretchSize.height / yTile;
                     }
 
                     // Generate four vertices for the corners.
@@ -676,12 +668,13 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         AP_CHECK((const char*)iPtr == (const char*)indexData.bytes + indexData.length, abort());
 
         // Pass the data to GL! Woohoo, we're done.
-        _arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
-        _indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
-
-        // Speculative: is "data" being collected by ARC?
-        [data self];
-    }
+        AP_Image_CacheEntry* result = [[AP_Image_CacheEntry alloc] init];
+        result.numSolid = numSolid;
+        result.numAlpha = numAlpha;
+        result.arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
+        result.indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
+        return result;
+    }];
 
     transform = CGAffineTransformScale(transform, edgeScale.width / _scale, edgeScale.height / _scale);
 
@@ -697,8 +690,8 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     glBindTexture(GL_TEXTURE_2D, _texture.name);
 
     [g_AlphaProg use];
-    [_arrayBuffer bind];
-    [_indexBuffer bind];
+    [e.arrayBuffer bind];
+    [e.indexBuffer bind];
 
     glUniform1f(g_AlphaProg.alpha, alpha);
     glUniformMatrix3fv(g_AlphaProg.transform, 1, false, matrix.m);
@@ -712,11 +705,11 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     glVertexAttribPointer(g_AlphaProg.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
     glVertexAttribPointer(g_AlphaProg.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
 
-    glDrawElements(GL_TRIANGLES, 6 * _numAlpha, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, 6 * e.numAlpha, GL_UNSIGNED_SHORT, 0);
 
     [g_SolidProg use];
-    [_arrayBuffer bind];
-    [_indexBuffer bind];
+    [e.arrayBuffer bind];
+    [e.indexBuffer bind];
 
     glUniform1f(g_SolidProg.alpha, alpha);
     glUniformMatrix3fv(g_SolidProg.transform, 1, false, matrix.m);
@@ -730,7 +723,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     glVertexAttribPointer(g_SolidProg.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
     glVertexAttribPointer(g_SolidProg.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
 
-    glDrawElements(GL_TRIANGLES, 6 * _numSolid, GL_UNSIGNED_SHORT, (void*)(12 * _numAlpha));
+    glDrawElements(GL_TRIANGLES, 6 * e.numSolid, GL_UNSIGNED_SHORT, (void*)(12 * e.numAlpha));
 }
 
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor

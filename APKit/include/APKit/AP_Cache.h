@@ -8,6 +8,6 @@
 
 - (instancetype) initWithSize:(int)size;
 
-- (id) get:(NSString*)name withLoader:(id(^)(void))block;
+- (id) get:(id)key withLoader:(id(^)(void))block;
 
 @end
