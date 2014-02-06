@@ -110,8 +110,11 @@ static AP_Bundle* g_Bundle;
 
 - (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
 {
-    NSLog(@"URLForResource:%@ withExtension:%@", name, ext);
-    return nil;
+    NSString* path = [self pathForResource:name ofType:ext];
+    if (!path) {
+        return nil;
+    }
+    return [[NSURL alloc] initFileURLWithPath:path];
 }
 
 - (NSDictionary*) infoDictionary
