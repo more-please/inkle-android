@@ -57,7 +57,46 @@ AP_BAN_EVIL_INIT;
 
 - (void) loadView
 {
-    self.view = [[AP_PageView alloc] init];
+    AP_View* view = [[AP_PageView alloc] init];
+    AP_TapGestureRecognizer* gesture = [[AP_TapGestureRecognizer alloc] initWithTarget:self action:@selector(pageTappedWithRecognizer:)];
+    [view addGestureRecognizer:gesture];
+
+    self.view = view;
+}
+
+- (void) pageTappedWithRecognizer:(AP_GestureRecognizer*)tap
+{
+    NSMutableArray* newPages = [_viewControllers mutableCopy];
+
+    AP_View* view = self.view;
+    CGPoint pos = [tap locationInView:view];
+    if (pos.x > view.bounds.size.width / 2) {
+        // Go to the next page(s)
+        AP_PageViewController* lastPage = [_viewControllers lastObject];
+        for (int i = 0; i < _viewControllers.count; i++) {
+            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:lastPage];
+            if (!newPage) {
+                break;
+            }
+            [newPages addObject:newPage];
+            [newPages removeObjectAtIndex:0];
+            lastPage = newPage;
+        }
+    } else {
+        // Go to the previous page(s)
+        AP_PageViewController* firstPage = [_viewControllers objectAtIndex:0];
+        for (int i = 0; i < _viewControllers.count; i++) {
+            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:firstPage];
+            if (!newPage) {
+                break;
+            }
+            [newPages insertObject:newPage atIndex:0];
+            [newPages removeLastObject];
+            firstPage = newPage;
+        }
+    }
+
+    [self setViewControllers:newPages direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
 }
 
 - (NSArray*) viewControllers
