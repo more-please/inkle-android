@@ -29,6 +29,8 @@
 
     _titleEdgeInsets = UIEdgeInsetsZero;
     _imageEdgeInsets = UIEdgeInsetsZero;
+    _showsTouchWhenHighlighted = NO;
+    _adjustsImageWhenHighlighted = YES;
 
     [self addSubview:_titleLabel];
     [self addSubview:_imageView];
@@ -181,11 +183,28 @@
     return result;
 }
 
+- (AP_Image*) maybeAdjustImage:(AP_Image*)image forState:(UIControlState)state
+{
+    // Apple docs don't explain the exact semantics of adjustsImageWhenHighlighted, sigh.
+    // I'm assuming that:
+    // - Image is only adjusted if not set specifically for this mode.
+    // - Both the foreground and background images are adjusted.
+
+    if (_adjustsImageWhenHighlighted && state == UIControlStateHighlighted) {
+        // Use a pale blue tint to make it look Android-y.
+        // Second-lightest blue from http://developer.android.com/design/style/color.html
+        UIColor* color = [UIColor colorWithRed:0.773 green:0.918 blue:0.973 alpha:0.5];
+        image = [image tintedImageUsingColor:color];
+    }
+    return image;
+}
+
 - (AP_Image*)imageForState:(UIControlState)state
 {
     AP_Image* result = [_image objectForKey:[NSNumber numberWithInt:state]];
     if (!result) {
         result = [_image objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+        result = [self maybeAdjustImage:result forState:state];
     }
     return result;
 }
@@ -195,6 +214,7 @@
     AP_Image* result = [_backgroundImage objectForKey:[NSNumber numberWithInt:state]];
     if (!result) {
         result = [_backgroundImage objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+        result = [self maybeAdjustImage:result forState:state];
     }
     return result;
 }
