@@ -89,6 +89,23 @@
     CGRect r;
     r.origin = _animatedFrameOrigin.dest;
     r.size = _animatedSize.dest;
+
+    // The docs say if there's a transform, this value is "undefined".
+    // But it is actually transformed, and some of our code relies on that!
+    CGAffineTransform t = _animatedTransform.dest;
+    if (!CGAffineTransformIsIdentity(t)) {
+        // Need to transform around the anchor, urgh
+        CGPoint anchor = _animatedAnchor.dest;
+        CGPoint offset = {
+            r.origin.x + anchor.x * r.size.width,
+            r.origin.y + anchor.y * r.size.height,
+        };
+        r.origin.x -= offset.x;
+        r.origin.y -= offset.y;
+        r = CGRectApplyAffineTransform(r, _animatedTransform.dest);
+        r.origin.x += offset.x;
+        r.origin.y += offset.y;
+    }
     return r;
 }
 
