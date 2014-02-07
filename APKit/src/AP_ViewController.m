@@ -5,7 +5,6 @@
 
 @implementation AP_ViewController {
     AP_View* _view;
-    __weak AP_ViewController* _parent;
     NSMutableArray* _childViewControllers;
 }
 
@@ -59,12 +58,12 @@
 
     [child willMoveToParentViewController:self];
 
-    AP_ViewController* p = child->_parent;
+    AP_ViewController* p = child->_parentViewController;
     if (p) {
         [p->_childViewControllers removeObject:child];
     }
     [_childViewControllers addObject:child];
-    child->_parent = self;
+    child->_parentViewController = self;
 
     [child didMoveToParentViewController:self];
 }
@@ -72,11 +71,11 @@
 - (void) removeFromParentViewController
 {
     id protectSelf = self;
-    AP_ViewController* p = _parent;
+    AP_ViewController* p = _parentViewController;
     if (p) {
         [self willMoveToParentViewController:self];
         [p->_childViewControllers removeObject:self];
-        _parent = nil;
+        _parentViewController = nil;
         [self didMoveToParentViewController:nil];
     }
     [protectSelf self];
@@ -95,7 +94,7 @@
     if (superview) {
         return superview;
     }
-    AP_ViewController* p = _parent;
+    AP_ViewController* p = _parentViewController;
     if (p) {
         return p;
     }

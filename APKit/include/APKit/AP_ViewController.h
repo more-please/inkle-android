@@ -31,7 +31,8 @@
 - (void) dismissModalViewControllerAnimated:(BOOL)animated;
 
 @property(nonatomic,readonly) UIInterfaceOrientation interfaceOrientation;
-@property(nonatomic,readonly) NSArray* childViewControllers;
+@property(nonatomic,readonly,strong) NSArray* childViewControllers;
+@property(nonatomic,readonly,weak) AP_ViewController* parentViewController;
 
 // These methods are delegated from the real UIViewController.
 
