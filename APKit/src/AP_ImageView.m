@@ -41,8 +41,8 @@
         CGPoint center = CGPointMake(bounds.origin.x + bounds.size.width/2, bounds.origin.y + bounds.size.height/2);
         CGSize size = image.size;
 
-        CGFloat xGap = (size.width - bounds.size.width) / 2;
-        CGFloat yGap = (size.height - bounds.size.height) / 2;
+        CGFloat xGap = (bounds.size.width - size.width) / 2;
+        CGFloat yGap = (bounds.size.height- size.height) / 2;
 
         switch (self.contentMode) {
             case UIViewContentModeScaleToFill:
