@@ -12,6 +12,9 @@
 
 @property (nonatomic,strong) UIWindow* window;
 
+// Android-specific addition
+- (BOOL) onBackPressed; // Return YES if the event was handled.
+
 @end
 
 @interface AP_Application : NSObject
