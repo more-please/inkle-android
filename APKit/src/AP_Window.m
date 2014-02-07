@@ -73,17 +73,31 @@ static inline CGFloat aspect(CGSize size) {
     return size.width / size.height;
 }
 
-+ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)iPadLandscape
 {
-    CGFloat portraitWidth = MIN(g_ScreenBounds.size.width, g_ScreenBounds.size.height);
-    CGFloat deviceRatio = (portraitWidth - iPhonePortrait.width) / (iPadPortrait.width - iPhonePortrait.width);
-    CGFloat result = AP_Lerp(iPhone, iPad, deviceRatio);
-    if (g_ScreenBounds.size.width > g_ScreenBounds.size.height) {
-        CGFloat delta = (landscape - iPad) / iPad;
-        CGFloat adjustedDelta = delta * aspect(g_ScreenBounds.size) / aspect(iPadLandscape);
-        CGFloat adjustedLandscape = iPad + adjustedDelta * iPad;
-        result *= (adjustedLandscape / iPad);
+    CGFloat iPhoneLandscape = (iPad == 0) ? (iPadLandscape + iPhone - iPad) : (iPadLandscape * iPhone / iPad);
+    BOOL isLandscape = (g_ScreenBounds.size.width > g_ScreenBounds.size.height);
+
+    // The game here is to figure out whether the landscape value is based on
+    // the screen's width or height. We assume if the value is smaller, it's
+    // based on the smaller screen edge.
+    CGFloat result;
+    if (iPadLandscape < iPad) {
+        // Landscape value is smaller -> this is a height metric.
+        if (isLandscape) {
+            result = [AP_Window heightForIPhone:iPhoneLandscape iPad:iPadLandscape];
+        } else {
+            result = [AP_Window heightForIPhone:iPhone iPad:iPad];
+        }
+    } else {
+        // Landscape value is higher -> this is a width metric.
+        if (isLandscape) {
+            result = [AP_Window widthForIPhone:iPhoneLandscape iPad:iPadLandscape];
+        } else {
+            result = [AP_Window widthForIPhone:iPhone iPad:iPad];
+        }
     }
+//    NSLog(@"Metric for iPhone:%.3f iPad:%.3f landscape:%.3f -> iPhoneLandscape:%.3f result:%.3f", iPhone, iPad, iPadLandscape, iPhoneLandscape, result);
     return result;
 }
 
