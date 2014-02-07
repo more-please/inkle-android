@@ -1,6 +1,7 @@
 #import "AP_PageViewController.h"
 
 #import "AP_Check.h"
+#import "AP_Window.h"
 
 @interface AP_PageView : AP_View
 @end
@@ -14,10 +15,8 @@
         CGRect pageRect = self.bounds;
         pageRect.size.width /= pages.count;
         for (AP_View* page in pages) {
-            CGRect r = pageRect;
-            r.size = [page sizeThatFits:r.size];
-            page.frame = r;
-            pageRect.origin.x += r.size.width;
+            page.frame = pageRect;
+            pageRect.origin.x += pageRect.size.width;
         }
     }
 }
@@ -38,8 +37,22 @@ AP_BAN_EVIL_INIT;
         NSNumber* spine = [options objectForKey:UIPageViewControllerOptionSpineLocationKey];
         _spineLocation = spine ? spine.intValue : UIPageViewControllerSpineLocationMin;
         _viewControllers = [NSMutableArray array];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(screenSizeChanged) name:AP_ScreenSizeChangedNotification object:nil];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) screenSizeChanged
+{
+    CGSize size = [UIScreen mainScreen].bounds.size;
+    UIInterfaceOrientation orientation = (size.width > size.height) ? UIInterfaceOrientationLandscapeLeft : UIInterfaceOrientationPortrait;
+    _spineLocation = [_delegate pageViewController:self spineLocationForInterfaceOrientation:orientation];
 }
 
 - (void) loadView

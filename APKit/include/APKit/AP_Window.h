@@ -6,6 +6,8 @@
 
 #import "AP_ViewController.h"
 
+extern NSString* const AP_ScreenSizeChangedNotification;
+
 // Plays the role of a UIWindow containing UIViews.
 // Actually implemented as a GL-based UIView.
 

@@ -7,6 +7,8 @@
 #import "AP_Touch.h"
 #import "AP_Utils.h"
 
+NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotification";
+
 @implementation AP_Window {
     AP_ViewController* _rootViewController;
     AP_FPSCounter* _fps;
@@ -217,6 +219,7 @@ static inline CGFloat aspect(CGSize size) {
     if (!CGRectEqualToRect(bounds, g_ScreenBounds)) {
         NSLog(@"Screen size changed: was %dx%d, now %dx%d", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, (int) bounds.size.width, (int) bounds.size.height);
         g_ScreenBounds = bounds;
+        [[NSNotificationCenter defaultCenter] postNotificationName:AP_ScreenSizeChangedNotification object:nil];
         if (_rootViewController) {
             _rootViewController.view.frame = bounds;
         }
