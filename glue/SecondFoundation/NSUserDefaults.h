@@ -4,6 +4,7 @@
 
 @interface NSUserDefaults : NSObject
 
++ (void) setDocumentsDir:(NSString*)dir;
 + (NSUserDefaults*) standardUserDefaults;
 
 - (id) objectForKey:(NSString*)defaultName;

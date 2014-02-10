@@ -3,10 +3,19 @@
 #import "GlueCommon.h"
 
 @implementation NSUserDefaults {
+    BOOL _dirty;
     NSMutableDictionary* _contents;
+    NSTimer* _timer;
+    NSString* _path;
 }
 
+static NSString* g_DocumentsDir = nil;
 static NSUserDefaults* g_Defaults = nil;
+
++ (void) setDocumentsDir:(NSString*)dir
+{
+    g_DocumentsDir = dir;
+}
 
 + (NSUserDefaults*) standardUserDefaults
 {
@@ -21,9 +30,43 @@ static NSUserDefaults* g_Defaults = nil;
     NSAssert(!g_Defaults, @"NSUserDefaults already instantiated");
     self = [super init];
     if (self) {
-        _contents = [NSMutableDictionary dictionary];
+        NSAssert(g_DocumentsDir, @"Documents dir wasn't set");
+        _path = [g_DocumentsDir stringByAppendingPathComponent:@"NSUserDefaults"];
+
+        NSDictionary* data;
+        if ([[NSFileManager defaultManager] fileExistsAtPath:_path]) {
+            data = [NSDictionary dictionaryWithContentsOfFile:_path];
+            if (!data) {
+                NSLog(@"Failed to load NSUserDefaults!");
+            }
+        }
+        _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
+
+        _timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
     }
     return self;
+}
+
+- (void) timerFired:(NSTimer*)timer
+{
+    [self synchronize];
+}
+
+- (BOOL) synchronize
+{
+    if (_dirty) {
+        _dirty = NO;
+        [self performSelectorInBackground:@selector(saveDictionary:) withObject:[_contents copy]];
+    }
+    return YES;
+}
+
+- (void) saveDictionary:(NSDictionary*)data
+{
+    BOOL success = [data writeToFile:_path atomically:YES];
+    if (!success) {
+        NSLog(@"Failed to save NSUserDefaults to path: %@", _path);
+    }
 }
 
 - (id) objectForKey:(NSString*)defaultName
@@ -34,6 +77,7 @@ static NSUserDefaults* g_Defaults = nil;
 - (void) setObject:(id)value forKey:(NSString*)defaultName
 {
     [_contents setObject:value forKey:defaultName];
+    _dirty = YES;
 }
 
 - (BOOL) boolForKey:(NSString*)defaultName
@@ -62,12 +106,6 @@ static NSUserDefaults* g_Defaults = nil;
 - (NSArray*) stringArrayForKey:(NSString*)defaultName
 {
     return [_contents objectForKey:defaultName];
-}
-
-- (BOOL) synchronize
-{
-    GLUE_NOT_IMPLEMENTED;
-    return NO;
 }
 
 - (NSDictionary*) dictionaryRepresentation

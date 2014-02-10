@@ -1,3 +1,4 @@
+#import <Foundation/Foundation.h>
 #import <APKit/APKit.h>
 
 #import <jni.h>
@@ -117,6 +118,7 @@ static JavaMethod kPleaseFinish = {
         AP_CHECK(result == JNI_OK, return nil);
 
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
+        [NSUserDefaults setDocumentsDir:self.documentsDir];
         NSLog(@"documentsDir: %@", self.documentsDir);
 
         // Mount the expansion file.
