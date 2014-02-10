@@ -12,7 +12,7 @@
 
 @interface AP_AlertView : AP_View
 
-- (id) initWithTitle:(NSString*)title message:(NSString*)message delegate:(id /*<UIAlertViewDelegate>*/)delegate cancelButtonTitle:(NSString*)cancelButtonTitle otherButtonTitles:(NSString*)otherButtonTitles, ...;
+- (id) initWithTitle:(NSString*)title message:(NSString*)message delegate:(id<AP_AlertViewDelegate>)delegate cancelButtonTitle:(NSString*)cancelButtonTitle otherButtonTitles:(NSString*)otherButtonTitles, ...;
 
 - (void) show;
 

@@ -273,6 +273,23 @@ static inline CGFloat aspect(CGSize size) {
 #pragma mark - Input
 //------------------------------------------------------------------------------------
 
+- (void) resetAllGestures
+{
+    if (_hitTestGesture) {
+        [_hitTestGesture reset];
+        _hitTestGesture = nil;
+    }
+    for (AP_View* v = _hitTestView; v; v = v.superview) {
+        for (AP_GestureRecognizer* g in v.gestureRecognizers) {
+            [g reset];
+        }
+    }
+    if (_hitTestView) {
+        [_hitTestView touchesCancelled:_activeTouches withEvent:nil];
+    }
+    _hitTestView = nil;
+}
+
 static BOOL isActive(AP_GestureRecognizer* g) {
     UIGestureRecognizerState state = g.state;
     return (state == UIGestureRecognizerStateBegan)

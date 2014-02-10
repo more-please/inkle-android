@@ -8,6 +8,7 @@
     NSMutableDictionary* _titleShadowColor;
     NSMutableDictionary* _image;
     NSMutableDictionary* _backgroundImage;
+    NSMutableDictionary* _backgroundColor;
     BOOL _needsStateRefresh;
 }
 
@@ -40,6 +41,7 @@
     _titleShadowColor = [NSMutableDictionary dictionary];
     _image = [NSMutableDictionary dictionary];
     _backgroundImage = [NSMutableDictionary dictionary];
+    _backgroundColor = [NSMutableDictionary dictionary];
 }
 
 - (id) init
@@ -150,6 +152,12 @@
     _needsStateRefresh = YES;
 }
 
+- (void) setBackgroundColor:(UIColor*)color forState:(UIControlState)state
+{
+    [_backgroundColor setObject:color forKey:[NSNumber numberWithInt:state]];
+    _needsStateRefresh = YES;
+}
+
 - (NSString*)titleForState:(UIControlState)state
 {
     NSString* result = [_title objectForKey:[NSNumber numberWithInt:state]];
@@ -179,6 +187,18 @@
     }
     if (!result) {
         result = [UIColor colorWithWhite:0 alpha:0.5];
+    }
+    return result;
+}
+
+- (UIColor*)backgroundColorForState:(UIControlState)state
+{
+    UIColor* result = [_backgroundColor objectForKey:[NSNumber numberWithInt:state]];
+    if (!result) {
+        result = [_backgroundColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    }
+    if (!result) {
+        result = [UIColor colorWithWhite:0 alpha:0];
     }
     return result;
 }
@@ -234,6 +254,7 @@
         [_titleLabel setTextColor:[self titleColorForState:state]];
         [_titleLabel setShadowColor: [self titleShadowColorForState:state]];
         [_imageView setImage:[self imageForState:state]];
+        [self setBackgroundColor:[self backgroundColorForState:state]];
 
         _needsStateRefresh = NO;
     }
@@ -244,13 +265,10 @@
     [self refreshStateIfNeeded];
 }
 
-- (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha
-{
-    [super renderSelfAndChildrenWithFrameToGL:frameToGL alpha:alpha];
-}
-
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
+    [super renderWithBoundsToGL:boundsToGL alpha:alpha];
+
     UIControlState state = self.highlighted ? UIControlStateHighlighted : UIControlStateNormal;
     AP_Image* image = [self backgroundImageForState:state];
     if (image) {

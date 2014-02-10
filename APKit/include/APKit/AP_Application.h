@@ -12,8 +12,10 @@
 
 @property (nonatomic,strong) UIWindow* window;
 
-// Android-specific addition
-- (BOOL) onBackPressed; // Return YES if the event was handled.
+// Android-specific additions
+- (void) addBackCloseBlock:(void(^)())backBlock;
+- (void) removeLastBackButtonBlock;
+- (BOOL) goBack; // Return YES if the event was handled.
 
 @end
 

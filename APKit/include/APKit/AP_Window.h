@@ -17,6 +17,8 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 
 @property AP_ViewController* rootViewController;
 
+- (void) resetAllGestures;
+
 + (CGRect) screenBounds;
 + (CGSize) screenSize;
 + (CGFloat) screenScale;

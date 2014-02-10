@@ -16,12 +16,14 @@
 - (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state;
 - (void) setImage:(AP_Image*)image forState:(UIControlState)state;
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state;
+- (void) setBackgroundColor:(UIColor*)color forState:(UIControlState)state;
 
 - (NSString*)titleForState:(UIControlState)state;
 - (UIColor*)titleColorForState:(UIControlState)state;
 - (UIColor*)titleShadowColorForState:(UIControlState)state;
 - (AP_Image*)imageForState:(UIControlState)state;
 - (AP_Image*)backgroundImageForState:(UIControlState)state;
+- (UIColor*)backgroundColorForState:(UIControlState)state;
 
 @property(nonatomic,readonly) AP_Label* titleLabel;
 @property(nonatomic,readonly) AP_ImageView *imageView;
