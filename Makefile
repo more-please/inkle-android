@@ -17,7 +17,7 @@ COMMON_SRCS = \
 	3rd-party/stb/stb_image.c \
 	3rd-party/stb/stb_truetype.c
 
-all: build/pak build/atlas build/superellipse build/fontex
+all: build/pak build/atlas build/superellipse build/fontex build/split build/tippex
 
 build/pak: tools/pak.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	$(CXX) tools/pak.cpp $(COMMON_SRCS) -o build/pak
@@ -31,8 +31,16 @@ build/superellipse: tools/superellipse.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 build/fontex: tools/fontex.cpp tools/fontex.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	$(CXX) tools/fontex.cpp $(COMMON_SRCS) -o build/fontex
 
+build/split: tools/split.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	$(CXX) tools/split.cpp $(COMMON_SRCS) -o build/split
+
+build/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	$(CXX) tools/tippex.cpp $(COMMON_SRCS) -o build/tippex
+
 clean:
 	rm build/atlas
 	rm build/pak
 	rm build/superellipse
 	rm build/fontex
+	rm build/split
+	rm build/tippex
