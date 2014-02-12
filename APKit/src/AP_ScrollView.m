@@ -107,7 +107,7 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
     // Measure the time step since the previous call
     static double previousTime = 0;
     double time = CACurrentMediaTime();
-    double timeStep = MIN(0.01, MAX(1, time - previousTime));
+    double timeStep = MAX(0.01, MIN(1, time - previousTime));
     previousTime = time;
 
     if (_inGesture) {
