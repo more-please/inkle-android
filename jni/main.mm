@@ -47,10 +47,19 @@ static JavaMethod kPleaseFinish = {
     "pleaseFinish", "()V", NULL
 };
 
+static volatile BOOL g_NeedToCheckObb;
+
+static void obbCallback(const char* filename, const int32_t state, void* data) {
+    g_NeedToCheckObb = YES;
+}
+
+const char* OBB_KEY = "first-beta-build-woohoo";
+
 @implementation Main {
     struct android_app* _android;
 
     AStorageManager* _storageManager;
+    NSString* _obbPath;
     NSString* _mountPath;
 
     JavaVM* _vm;
@@ -78,9 +87,6 @@ static JavaMethod kPleaseFinish = {
         _android = android;
         _vm = _android->activity->vm;
         AP_CHECK(_vm, return nil);
-
-        _storageManager = AStorageManager_new();
-        AP_CHECK(_storageManager, return nil);
 
         // Initialize JVM on this thread.
         JavaVMAttachArgs args = {
@@ -111,8 +117,21 @@ static JavaMethod kPleaseFinish = {
 
         _touches = [NSMutableDictionary dictionary];
 
-        _mountPath = [self javaStringMethod:&kGetMountedObbPath];
-        NSLog(@"OBB mounted at path: %@", _mountPath);
+        // Start mounting the OBB.
+
+        _storageManager = AStorageManager_new();
+        AP_CHECK(_storageManager, return nil);
+
+        _obbPath = [self javaStringMethod:&kGetExpansionFilePath];
+        AP_CHECK(_obbPath, return nil);
+
+        g_NeedToCheckObb = NO;
+        AStorageManager_mountObb(
+            _storageManager,
+            _obbPath.cString,
+            OBB_KEY,
+            obbCallback,
+            NULL);
     }
     return self;
 }
@@ -212,6 +231,10 @@ static JavaMethod kPleaseFinish = {
         // No display yet.
         return;
     }
+    if (!_mountPath) {
+        // No expansion file yet.
+        return;
+    }
     if (self.delegate) {
         // Already initialized
         return;
@@ -225,9 +248,8 @@ static JavaMethod kPleaseFinish = {
 
     // Check that both the current time and the timestamp
     // of the .obb file are before the beta expiry date.
-    NSString* path = [self javaStringMethod:&kGetExpansionFilePath];
     NSError* err;
-    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&err];
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:_obbPath error:&err];
     if (!attrs) {
         NSLog(@"Error checking OBB file attributes: %@", err);
         abort();
@@ -247,6 +269,19 @@ static JavaMethod kPleaseFinish = {
 
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
+}
+
+- (void) handleObbCallback
+{
+    if (AStorageManager_isObbMounted(_storageManager, [_obbPath cString])) {
+        AP_CHECK(!_mountPath, abort());
+        _mountPath = [self javaStringMethod:&kGetMountedObbPath];
+        NSLog(@"OBB mounted at path: %@", _mountPath);
+        [self maybeInitApp];
+    } else {
+        NSLog(@"OBB failed to mount!");
+        abort();
+    }
 }
 
 - (void) maybeInitGL
@@ -595,6 +630,11 @@ void android_main(struct android_app* android) {
                     exit(EXIT_SUCCESS);
                     return;
                 }
+            }
+
+            if (g_NeedToCheckObb) {
+                g_NeedToCheckObb = NO;
+                [g_Main handleObbCallback];
             }
 
             CkUpdate();
