@@ -16,6 +16,8 @@
 #import <ck/mixer.h>
 
 #import "SorceryAppDelegate.h"
+#import "ExpiredAppDelegate.h"
+
 
 @interface Main : AP_Application
 @property(nonatomic,readonly) BOOL active;
@@ -193,6 +195,17 @@ static JavaMethod kPleaseFinish = {
     return YES;
 }
 
+#define BETA_DAYS 7
+
+- (BOOL) isExpired:(NSDate*)date
+{
+    NSDate* buildDate = [NSDate dateWithTimeIntervalSince1970:SORCERY_BUILD_TIMESTAMP];
+    NSDate* expiryDate = [buildDate dateByAddingTimeInterval:(BETA_DAYS * 24 * 60 * 60)];
+    NSLog(@"Expiry date is: %@", expiryDate);
+    NSLog(@"Checking it against: %@", date);
+    return ([expiryDate compare:date] == NSOrderedAscending);
+}
+
 - (void) maybeInitApp
 {
     if (_display == EGL_NO_DISPLAY) {
@@ -204,19 +217,36 @@ static JavaMethod kPleaseFinish = {
         return;
     }
 
-    NSLog(@"Let's get started!");
-
     [AP_Bundle mainBundle].root = _mountPath;
 
     NSString* pakPath = [_mountPath stringByAppendingPathComponent:@"sorcery1_android.pak"];
     AP_PakReader* pak = [AP_PakReader readerWithMemoryMappedFile:pakPath];
     [AP_Bundle addPak:pak];
 
-    SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
-    self.delegate = sorcery;
+    // Check that both the current time and the timestamp
+    // of the .obb file are before the beta expiry date.
+    NSString* path = [self javaStringMethod:&kGetExpansionFilePath];
+    NSError* err;
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&err];
+    if (!attrs) {
+        NSLog(@"Error checking OBB file attributes: %@", err);
+        abort();
+    }
+    NSDate* now = [NSDate date];
+    NSDate* obbDate = [attrs valueForKey:NSFileCreationDate];
+    if ([self isExpired:now] || [self isExpired:obbDate]) {
+        NSLog(@"Expired!!");
+        // TODO: add a nice dialog box
+        // self.delegate = [[ExpiredAppDelegate alloc] init];
+        abort();
+    } else {
+        NSLog(@"Let's get started!");
+        SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
+        self.delegate = sorcery;
+    }
 
     NSDictionary* options = [NSDictionary dictionary];
-    [sorcery application:g_Main didFinishLaunchingWithOptions:options];
+    [self.delegate application:self didFinishLaunchingWithOptions:options];
 }
 
 - (void) maybeInitGL
