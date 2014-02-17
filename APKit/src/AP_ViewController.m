@@ -49,7 +49,7 @@
 
 - (void) loadView
 {
-    self.view = [[AP_View alloc] init];
+    self.view = [[AP_View alloc] initWithFrame:[UIScreen mainScreen].bounds];
 }
 
 - (void) addChildViewController:(AP_ViewController*)child

@@ -192,7 +192,7 @@ AP_BAN_EVIL_INIT;
         bodySize = [_body sizeThatFits:maxSize];
         alertFrame.size.width = MAX(alertFrame.size.width, bodySize.width);
         alertFrame.size.height += bodySize.height;
-        alertFrame.size.height += ySpace;
+        alertFrame.size.height += ySpace / 2;
     }
 
     alertFrame.size.height += ySpace;
@@ -226,7 +226,7 @@ AP_BAN_EVIL_INIT;
     if (_body) {
         _body.frame = CGRectMake(pos.x + xSpace, pos.y, alertFrame.size.width - 2 * xSpace, bodySize.height);
         pos.y += bodySize.height;
-        pos.y += ySpace;
+        pos.y += ySpace / 2;
     }
     for (AP_Button* button in _buttons) {
         button.frame = CGRectMake(pos.x, pos.y, buttonSize.width, buttonSize.height);

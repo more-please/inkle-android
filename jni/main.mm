@@ -143,6 +143,11 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     g_Main = nil;
 }
 
+- (void) quit
+{
+    [self javaVoidMethod:&kPleaseFinish];
+}
+
 - (void) teardownJava
 {
     if (_env) {
@@ -216,13 +221,18 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
 #define BETA_DAYS 7
 
-- (BOOL) isExpired:(NSDate*)date
+- (NSDate*) expiryDate
 {
     NSDate* buildDate = [NSDate dateWithTimeIntervalSince1970:SORCERY_BUILD_TIMESTAMP];
     NSDate* expiryDate = [buildDate dateByAddingTimeInterval:(BETA_DAYS * 24 * 60 * 60)];
-    NSLog(@"Expiry date is: %@", expiryDate);
-    NSLog(@"Checking it against: %@", date);
-    return ([expiryDate compare:date] == NSOrderedAscending);
+    return expiryDate;
+}
+
+- (BOOL) isExpired:(NSDate*)date
+{
+    NSDate* expiry = [self expiryDate];
+    NSLog(@"Checking expiry date: %@ against: %@", expiry, date);
+    return ([expiry compare:date] == NSOrderedAscending);
 }
 
 - (void) maybeInitApp
@@ -258,9 +268,7 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     NSDate* obbDate = [attrs valueForKey:NSFileCreationDate];
     if ([self isExpired:now] || [self isExpired:obbDate]) {
         NSLog(@"Expired!!");
-        // TODO: add a nice dialog box
-        // self.delegate = [[ExpiredAppDelegate alloc] init];
-        abort();
+        self.delegate = [[ExpiredAppDelegate alloc] init];
     } else {
         NSLog(@"Let's get started!");
         SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];

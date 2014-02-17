@@ -33,4 +33,6 @@
 // Android-specific addition
 @property(nonatomic,strong) NSString* documentsDir;
 
+- (void) quit;
+
 @end

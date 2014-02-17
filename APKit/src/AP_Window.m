@@ -229,6 +229,8 @@ static inline CGFloat aspect(CGSize size) {
     glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
     // - scale from screen size to (2, 2).
