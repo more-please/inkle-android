@@ -22,12 +22,6 @@
 @end
 
 static Main* g_Main;
-static void obbCallback();
-static volatile BOOL g_NeedToCheckObb;
-
-static JNINativeMethod g_NativeMethods[] = {
-    {"obbCallback", "()V", (void*)&obbCallback},
-};
 
 typedef struct JavaMethod {
     const char* name;
@@ -44,9 +38,6 @@ static JavaMethod kGetExpansionFilePath = {
 static JavaMethod kGetMountedObbPath = {
     "getMountedObbPath", "()Ljava/lang/String;", NULL
 };
-static JavaMethod kMountObb = {
-    "mountObb", "()Ljava/lang/String;", NULL
-};
 static JavaMethod kGetScreenInfo = {
     "getScreenInfo", "()[F", NULL
 };
@@ -58,7 +49,6 @@ static JavaMethod kPleaseFinish = {
     struct android_app* _android;
 
     AStorageManager* _storageManager;
-    NSString* _obbPath;
     NSString* _mountPath;
 
     JavaVM* _vm;
@@ -113,19 +103,14 @@ static JavaMethod kPleaseFinish = {
         _class = _env->GetObjectClass(_instance);
         AP_CHECK(_class, return nil);
 
-        // Register our own methods.
-        result = _env->RegisterNatives(_class, g_NativeMethods, 1);
-        AP_CHECK(result == JNI_OK, return nil);
-
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         [NSUserDefaults setDocumentsDir:self.documentsDir];
         NSLog(@"documentsDir: %@", self.documentsDir);
 
-        // Mount the expansion file.
-        _obbPath = [self javaStringMethod:&kMountObb];
-        NSLog(@"obbPath: %@", _obbPath);
-
         _touches = [NSMutableDictionary dictionary];
+
+        _mountPath = [self javaStringMethod:&kGetMountedObbPath];
+        NSLog(@"OBB mounted at path: %@", _mountPath);
     }
     return self;
 }
@@ -147,9 +132,14 @@ static JavaMethod kPleaseFinish = {
     }
 }
 
-- (BOOL) active
+- (BOOL) inForeground
 {
-    return _inForeground && _surface;
+    return _inForeground;
+}
+
+- (BOOL) canDraw
+{
+    return _surface != EGL_NO_SURFACE;
 }
 
 - (void) maybeInitJavaMethod:(JavaMethod*)m
@@ -209,10 +199,6 @@ static JavaMethod kPleaseFinish = {
         // No display yet.
         return;
     }
-    if (!_mountPath) {
-        // No expansion file yet.
-        return;
-    }
     if (self.delegate) {
         // Already initialized
         return;
@@ -231,26 +217,6 @@ static JavaMethod kPleaseFinish = {
 
     NSDictionary* options = [NSDictionary dictionary];
     [sorcery application:g_Main didFinishLaunchingWithOptions:options];
-}
-
-- (void) handleObbCallback
-{
-    if (AStorageManager_isObbMounted(_storageManager, [_obbPath cString])) {
-        AP_CHECK(!_mountPath, abort());
-        _mountPath = [self javaStringMethod:&kGetMountedObbPath];
-        NSLog(@"OBB mounted at path: %@", _mountPath);
-        [self maybeInitApp];
-    } else {
-        NSLog(@"OBB failed to mount!");
-        abort();
-    }
-}
-
-static void obbCallback() {
-    // This may occur in the wrong thread, so don't call
-    // handleObbCallback right away. Instead, set a flag
-    // and let the main loop handle it.
-    g_NeedToCheckObb = YES;
 }
 
 - (void) maybeInitGL
@@ -512,8 +478,8 @@ static void obbCallback() {
         case APP_CMD_INIT_WINDOW:
             // The window is being shown, get it ready.
             if (_android->window) {
-                [self maybeInitApp];
                 [self maybeInitSurface];
+                [self maybeInitApp];
             }
             break;
 
@@ -578,7 +544,7 @@ void android_main(struct android_app* android) {
 
                 // Read all pending events.
                 struct android_poll_source* source;
-                int timeout = g_Main.active ? 0 : -1;
+                int timeout = g_Main.inForeground ? 0 : -1;
                 int events;
                 int ident = ALooper_pollAll(timeout, NULL, &events, (void**)&source);
                 if (ident <= 0) {
@@ -601,14 +567,9 @@ void android_main(struct android_app* android) {
                 }
             }
 
-            if (g_NeedToCheckObb) {
-                g_NeedToCheckObb = NO;
-                [g_Main handleObbCallback];
-            }
-
             CkUpdate();
 
-            if (g_Main.active) {
+            if (g_Main.canDraw) {
                 // Apparently it can take a few frames for e.g. screen rotation
                 // to kick in, even after we get notified. What a crock.
                 // Let's just poll it every frame.
