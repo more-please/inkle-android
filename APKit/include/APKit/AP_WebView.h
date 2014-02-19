@@ -9,8 +9,16 @@
 @class AP_WebView;
 
 @protocol AP_WebViewDelegate <NSObject>
+@optional
+- (void)webViewDidStartLoad:(AP_WebView*)webView;
+- (void)webViewDidFinishLoad:(AP_WebView*)webView;
 @end
 
 @interface AP_WebView : AP_View
+
 @property(nonatomic,readonly,retain) AP_ScrollView* scrollView;
+@property(nonatomic,weak) id<AP_WebViewDelegate> delegate;
+
+- (void) loadHtmlFromFile:(NSString*)path;
+
 @end
