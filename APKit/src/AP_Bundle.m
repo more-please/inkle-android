@@ -47,21 +47,27 @@ static AP_Bundle* g_Bundle;
     if (ext) {
         fullName = [name stringByAppendingString:ext];
     }
+
+    // Try loading from the .pak file
     for (AP_PakReader* pak in g_Bundle->_paks) {
         NSData* data = [pak getFile:fullName];
         if (data) {
             return data;
         }
     }
+
+    // Try loading a loose file from the .obb
     NSString* path = [[AP_Bundle mainBundle] pathForResource:name ofType:ext];
-    if (!path) {
-        return nil;
-    }
+    if (path) {
 #ifdef ANDROID
-    return [NSData dataWithContentsOfMappedFile:path];
+        return [NSData dataWithContentsOfMappedFile:path];
 #else
-    return [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:nil];
+        return [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:nil];
 #endif
+    }
+
+    // Try loading an Android asset
+    return [[AP_Application sharedApplication] getResource:fullName];
 }
 
 #ifdef ANDROID

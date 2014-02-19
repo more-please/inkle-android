@@ -2,6 +2,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "AP_Application.h"
 #import "AP_PakReader.h"
 
 // Wrapper for NSBundle. Also allows resource to be loaded from external .pak files.

@@ -3,6 +3,7 @@
 #include <libxml/HTMLparser.h>
 #include <libxml/tree.h>
 
+#import "AP_Bundle.h"
 #import "AP_Check.h"
 
 @implementation AP_WebView
@@ -35,13 +36,14 @@ static void print_element_names(xmlNode * a_node)
     }
 }
 
-- (void) loadHtmlFromFile:(NSString*)path
+- (void) loadHtmlResource:(NSString*)name
 {
     if ([_delegate respondsToSelector:@selector(webViewDidStartLoad:)]) {
         [_delegate webViewDidStartLoad:self];
     }
 
-    xmlDoc* doc = htmlReadFile(path.cString, NULL, 0);
+    NSData* data = [AP_Bundle dataForResource:name ofType:nil];
+    xmlDoc* doc = htmlReadMemory((const char*)data.bytes, data.length, name.cString, NULL, 0);
     xmlNode* root = xmlDocGetRootElement(doc);
     print_element_names(root);
     xmlFreeDoc(doc);

@@ -9,6 +9,8 @@
 
 #import <android/log.h>
 #import <android/sensor.h>
+#import <android/asset_manager.h>
+#import <android/asset_manager_jni.h>
 #import <android/storage_manager.h>
 #import <android_native_app_glue.h>
 
@@ -46,6 +48,9 @@ static JavaMethod kGetScreenInfo = {
 static JavaMethod kPleaseFinish = {
     "pleaseFinish", "()V", NULL
 };
+static JavaMethod kGetAssets = {
+    "getAssets", "()Landroid/content/res/AssetManager;", NULL
+};
 
 static volatile BOOL g_NeedToCheckObb;
 
@@ -59,6 +64,7 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     struct android_app* _android;
 
     AStorageManager* _storageManager;
+    AAssetManager* _assetManager;
     NSString* _obbPath;
     NSString* _mountPath;
 
@@ -117,6 +123,10 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
         _touches = [NSMutableDictionary dictionary];
 
+        // Initialize non-OBB assets.
+
+        _assetManager = [self getAssets];
+
         // Start mounting the OBB.
 
         _storageManager = AStorageManager_new();
@@ -156,6 +166,40 @@ const char* OBB_KEY = "first-beta-build-woohoo";
         _vm->DetachCurrentThread();
         _env = NULL;
     }
+}
+
+- (NSData*) getResource:(NSString*)path
+{
+    AAsset* asset = AAssetManager_open(_assetManager, path.cString, AASSET_MODE_STREAMING);
+    if (!asset) {
+        NSLog(@"Failed to open asset: %@", path);
+        return nil;
+    }
+
+    off_t size = AAsset_getLength(asset);
+    NSMutableData* result = [NSMutableData dataWithLength:size];
+    char* ptr = (char*) result.bytes;
+    int remaining = size;
+    while (remaining > 0) {
+        int bytes = AAsset_read(asset, ptr, remaining);
+        ptr += bytes;
+        remaining -= bytes;
+        if (bytes == 0) {
+            // EOF
+            break;
+        }
+        if (bytes < 0) {
+            NSLog(@"I/O error reading asset: %@", path);
+            break;
+        }
+    }
+    if (remaining != 0) {
+        NSLog(@"Failed to read asset: %@", path);
+        result = nil;
+    }
+
+    AAsset_close(asset);
+    return result;
 }
 
 - (BOOL) inForeground
@@ -217,6 +261,24 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
     _env->PopLocalFrame(NULL);
     return YES;
+}
+
+- (AAssetManager*) getAssets
+{
+    [self maybeInitJavaMethod:&kGetAssets];
+
+    _env->PushLocalFrame(1);
+
+    jobject obj = _env->CallObjectMethod(_instance, kGetAssets.method);
+    obj = _env->NewGlobalRef(obj);
+    AAssetManager* result = AAssetManager_fromJava(_env, obj);
+    if (!result) {
+        NSLog(@"Failed to open AssetManager!");
+        abort();
+    }
+
+    _env->PopLocalFrame(NULL);
+    return result;
 }
 
 #define BETA_DAYS 7

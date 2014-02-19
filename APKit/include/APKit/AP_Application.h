@@ -34,5 +34,6 @@
 @property(nonatomic,strong) NSString* documentsDir;
 
 - (void) quit;
+- (NSData*) getResource:(NSString*)path;
 
 @end
