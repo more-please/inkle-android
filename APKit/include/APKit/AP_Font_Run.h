@@ -21,6 +21,9 @@
 @property(nonatomic) CGPoint origin;
 @property(nonatomic) UIColor* textColor; // default is nil (text draws black)
 @property(nonatomic,strong) AP_Image* image;
+@property(nonatomic,strong) NSString* url;
+
+@property(nonatomic,readonly) CGRect frame;
 
 - (AP_Font_Run*) initWithData:(AP_Font_Data*)data pointSize:(CGFloat)pointSize glyphs:(unsigned char*)glyphs length:(size_t)length;
 

@@ -152,6 +152,15 @@ typedef struct VertexData {
     }
 }
 
+- (CGRect) frame
+{
+    CGRect r;
+    r.origin = _origin;
+    r.size = self.size;
+    r.origin.y -= r.size.height;
+    return r;
+}
+
 - (size_t) numChars
 {
     return _end - _start;

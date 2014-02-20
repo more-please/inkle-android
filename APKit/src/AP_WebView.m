@@ -105,6 +105,16 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         UIColor* color = [UIColor colorWithRed:0.2 green:0.71 blue:0.9 alpha:1];
         attrs = [attrs mutableCopy];
         [attrs setValue:color forKey:kINKAttributedStringColorAttribute];
+
+        NSString* href = nil;
+        for (xmlAttr* a = n->properties; a; a = a->next) {
+            if (strcmp((const char*) a->name, "href") == 0) {
+                href = [NSString stringWithUTF8String:(const char*)a->children->content];
+            }
+        }
+        if (href) {
+            [attrs setValue:href forKey:kINKAttributedStringUrlAttribute];
+        }
     }
 
     // Hack -- just so happens there's only one <span> in credits.css

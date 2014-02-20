@@ -48,6 +48,9 @@ static JavaMethod kGetScreenInfo = {
 static JavaMethod kPleaseFinish = {
     "pleaseFinish", "()V", NULL
 };
+static JavaMethod kOpenURL = {
+    "openURL", "(Ljava/lang/String;)V", NULL
+};
 static JavaMethod kGetAssets = {
     "getAssets", "()Landroid/content/res/AssetManager;", NULL
 };
@@ -228,6 +231,18 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     _env->CallVoidMethod(_instance, m->method);
 }
 
+- (void) javaVoidMethod:(JavaMethod*)m withString:(NSString*)s
+{
+    [self maybeInitJavaMethod:m];
+
+    _env->PushLocalFrame(1);
+    jstring jstr = _env->NewStringUTF(s.cString);
+    _env->CallVoidMethod(_instance, m->method, jstr);
+
+    _env->PopLocalFrame(NULL);
+
+}
+
 - (NSString*) javaStringMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
@@ -295,6 +310,14 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     NSDate* expiry = [self expiryDate];
     NSLog(@"Checking expiry date: %@ against: %@", expiry, date);
     return ([expiry compare:date] == NSOrderedAscending);
+}
+
+- (BOOL) openURL:(NSURL*)url
+{
+    NSString* s = url.absoluteString;
+    NSLog(@"Opening URL: %@", s);
+    [self javaVoidMethod:&kOpenURL withString:s];
+    return YES;
 }
 
 - (void) maybeInitApp

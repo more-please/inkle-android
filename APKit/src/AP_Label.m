@@ -5,10 +5,12 @@
 #import "INKAttributedStringParagraphStyle.h"
 #import "NSAttributedString+Attributes.h"
 
+#import "AP_Application.h"
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
+#import "AP_Touch.h"
 #import "AP_Utils.h"
 
 @implementation AP_Label {
@@ -29,6 +31,11 @@
     NSMutableArray* _currentLineRuns;
     INKAttributedStringParagraphStyle* _currentStyle;
     CGSize _formattedSize;
+
+    NSMutableArray* _urlRuns;
+
+    AP_Font_Run* _hitTestRun;
+    BOOL _hitTestInside;
 }
 
 - (void) labelCommonInit
@@ -41,6 +48,8 @@
     _textColor = [UIColor blackColor];
     _shadowColor = [UIColor clearColor];
     _shadowOffset = CGSizeMake(0, -1);
+
+    _urlRuns = [NSMutableArray array];
 
     _numberOfLines = 1;
 }
@@ -61,6 +70,91 @@
         [self labelCommonInit];
     }
     return self;
+}
+
+- (BOOL) isUserInteractionEnabled
+{
+    if (_urlRuns.count > 0) {
+        return YES;
+    } else {
+        return [super isUserInteractionEnabled];
+    }
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (!_hitTestRun) {
+        for (AP_Touch* t in touches) {
+            CGPoint p = [t locationInView:self];
+            for (AP_Font_Run* run in _urlRuns) {
+                CGRect r = run.frame;
+                if (CGRectContainsPoint(r, p)) {
+                    _hitTestRun = run;
+                    _hitTestInside = YES;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!_hitTestRun) {
+        // Try again with a larger hit rect.
+        for (AP_Touch* t in touches) {
+            CGPoint p = [t locationInView:self];
+            for (AP_Font_Run* run in _urlRuns) {
+                CGRect r = run.frame;
+                CGRectInset(r, -6, -12);
+                if (CGRectContainsPoint(run.frame, p)) {
+                    _hitTestRun = run;
+                    _hitTestInside = YES;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_hitTestRun) {
+        CGRect r = _hitTestRun.frame;
+        CGRectInset(r, -6, -12);
+
+        _hitTestInside = YES;
+        for (AP_Touch* t in event.allTouches) {
+            CGPoint p = [t locationInView:self];
+            if (!CGRectContainsPoint(r, p)) {
+                _hitTestInside = NO;
+            }
+        }
+    }
+}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    if (_hitTestRun) {
+        CGRect r = _hitTestRun.frame;
+        CGRectInset(r, -6, -12);
+
+        _hitTestInside = YES;
+        for (AP_Touch* t in event.allTouches) {
+            CGPoint p = [t locationInView:self];
+            if (!CGRectContainsPoint(r, p)) {
+                _hitTestInside = NO;
+            }
+        }
+
+        if (_hitTestInside) {
+            NSURL* url = [NSURL URLWithString:_hitTestRun.url];
+            [[AP_Application sharedApplication] openURL:url];
+        }
+    }
+    _hitTestRun = nil;
+}
+
+- (void) touchesCancelled:(NSSet *)touches withEvent:(AP_Event *)event
+{
+    _hitTestRun = nil;
 }
 
 - (NSAttributedString*) attributedText
@@ -253,6 +347,7 @@
         if (!_currentStyle) {
             _currentStyle = defaultStyle;
         }
+        NSString* url = [attrs objectForKey:kINKAttributedStringUrlAttribute];
 
         // Parse the characters.
         NSString* chars = [str substringWithRange:range];
@@ -269,6 +364,7 @@
             while (run.numChars > 0) {
                 AP_Font_Run* nextLine;
                 run = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
+                run.url = url;
                 if (run.numChars > 0) {
                     if (_atStartOfParagraph) {
                         _cursor.y += _currentStyle.paragraphSpacingBefore;
@@ -306,6 +402,13 @@
     }];
 
     [self finishCurrentLine];
+
+    _urlRuns = [NSMutableArray array];
+    for (AP_Font_Run* run in _formattedRuns) {
+        if (run.url) {
+            [_urlRuns addObject:run];
+        }
+    }
 }
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
@@ -334,8 +437,12 @@
 
     // Render text
     for (AP_Font_Run* run in _formattedRuns) {
-        AP_CHECK(run, continue);
-        [run renderWithBoundsToGL:boundsToGL alpha:alpha];
+        if (_hitTestInside && run == _hitTestRun) {
+            GLKVector4 rgba = { 0.75, 0.75, 1, alpha };
+            [run renderWithBoundsToGL:boundsToGL color:rgba];
+        } else {
+            [run renderWithBoundsToGL:boundsToGL alpha:alpha];
+        }
     }
 }
 
