@@ -13,7 +13,9 @@
 #import "AP_Label.h"
 #import "AP_Window.h"
 
-@implementation AP_WebView
+@implementation AP_WebView {
+    AP_Label* _label;
+}
 
 AP_BAN_EVIL_INIT;
 
@@ -23,8 +25,17 @@ AP_BAN_EVIL_INIT;
     if (self) {
         LIBXML_TEST_VERSION;
 
+        self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
         _scrollView = [[AP_ScrollView alloc] initWithFrame:self.bounds];
+        _scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
         [self addSubview:_scrollView];
+
+        _label = [[AP_Label alloc] initWithFrame:self.bounds];
+        _label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
+        [_scrollView addSubview:_label];
     }
     return self;
 }
@@ -243,24 +254,28 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
     xmlFreeDoc(doc);
 
-    AP_Label* label = [[AP_Label alloc] initWithFrame:self.bounds];
-    label.attributedText = text;
-    label.centerVertically = NO;
-    label.numberOfLines = 0;
-
-    CGSize viewSize = _scrollView.frame.size;
-    CGSize textSize = [label sizeThatFits:viewSize];
-    textSize.width = viewSize.width;
-
-    CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
-
-    [_scrollView addSubview:label];
-
-    _scrollView.contentSize = CGSizeMake(textSize.width, textSize.height + 4 * margin);
-    label.frame = CGRectMake(0, margin, textSize.width, textSize.height);
+    _label.attributedText = text;
+    _label.centerVertically = NO;
+    _label.numberOfLines = 0;
 
     if ([_delegate respondsToSelector:@selector(webViewDidFinishLoad:)]) {
         [_delegate webViewDidFinishLoad:self];
+    }
+}
+
+- (void) layoutSubviews
+{
+    [super layoutSubviews];
+
+    if (_label) {
+        CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
+
+        CGSize viewSize = _scrollView.frame.size;
+        CGSize textSize = [_label sizeThatFits:viewSize];
+        textSize.width = viewSize.width;
+
+        _scrollView.contentSize = CGSizeMake(textSize.width, textSize.height + 4 * margin);
+        _label.frame = CGRectMake(0, margin, textSize.width, textSize.height);
     }
 }
 
