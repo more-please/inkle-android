@@ -101,4 +101,6 @@
     return nil;
 }
 
+- (void) updateGL {}
+
 @end

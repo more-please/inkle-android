@@ -249,6 +249,9 @@ static inline CGFloat aspect(CGSize size) {
     [_profiler step:@"update"];
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
+        [v visitControllersWithBlock:^(AP_ViewController* c) {
+            [c updateGL];
+        }];
         [v visitWithBlock:^(AP_View* view) {
             [view updateGL];
         }];
