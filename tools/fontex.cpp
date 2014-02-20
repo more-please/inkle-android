@@ -191,15 +191,15 @@ private:
 
     // Return the amount by which we overflow the texture at this scale.
     long tryLayout(float scale) {
-        long x = 1;
-        long y = 1;
+        long x = gap;
+        long y = gap;
         long hMax = 0;
         for (vector<Glyph>::iterator i = _glyphs.begin(); i != _glyphs.end(); ++i) {
             Glyph& g = *i;
             long w = 1 + ceil(scale * g.width());
             long h = 1 + ceil(scale * g.height());
-            if (x + w + 1 > textureSize) {
-                x = 1;
+            if (x + w + gap > textureSize) {
+                x = gap;
                 y += hMax + gap;
                 hMax = 0;
             }
@@ -209,8 +209,8 @@ private:
             x += w + gap;
         }
         Glyph& g = _glyphs[_glyphs.size() - 1];
-        x = g.xTex + 1 + ceil(scale * g.width());
-        y = g.yTex + hMax;
+        x = g.xTex + gap + ceil(scale * g.width());
+        y = g.yTex + gap + hMax;
 //         fprintf(stderr, "Final glyph has coordinates: (%d,%d), (%d,%d)\n", g.xTex0, g.yTex0, g.xTex1, g.yTex1);
         long result = (x + textureSize * y) - (textureSize * textureSize);
 //         fprintf(stderr, "Slop at scale %f is %ld\n", scale * 1e6, result);
