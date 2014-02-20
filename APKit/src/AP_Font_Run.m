@@ -6,6 +6,7 @@
 #import "AP_Font_Data.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
+#import "AP_Image.h"
 #import "AP_Utils.h"
 
 @implementation AP_Font_Run {
@@ -144,7 +145,11 @@ typedef struct VertexData {
 
 - (CGSize) size
 {
-    return CGSizeMake(_positions[_end] - _positions[_start], _lineHeight);
+    if (_image) {
+        return _image.size;
+    } else {
+        return CGSizeMake(_positions[_end] - _positions[_start], _lineHeight);
+    }
 }
 
 - (size_t) numChars
@@ -243,7 +248,12 @@ typedef struct VertexData {
         texCoord = [prog attr:@"texCoord"];
     }
 
-    if (_end > _start && rgba.a > 0) {
+    if (rgba.a < 0.01) {
+        // Not visible
+    } else if (_image) {
+        boundsToGL = CGAffineTransformTranslate(boundsToGL, _origin.x, _origin.y);
+        [_image renderGLWithSize:_image.size transform:boundsToGL alpha:rgba.a];
+    } else if (_end > _start) {
         boundsToGL = CGAffineTransformTranslate(boundsToGL, _origin.x - _positions[_start], _origin.y);
         GLKMatrix3 matrix = GLKMatrix3Make(
             boundsToGL.a, boundsToGL.b, 0,

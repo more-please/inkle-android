@@ -9,6 +9,7 @@
 
 #import "AP_Bundle.h"
 #import "AP_Check.h"
+#import "AP_Image.h"
 #import "AP_Label.h"
 #import "AP_Window.h"
 
@@ -74,6 +75,35 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             attributes:attrs];
     }
 
+    if (isTag(n, "strong")) {
+        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [UIFont fontWithName:@"Baskerville-Bold" size:font.pointSize];
+        attrs = [attrs mutableCopy];
+        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+    }
+
+    if (isTag(n, "em")) {
+        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [UIFont fontWithName:@"Baskerville-Italic" size:font.pointSize];
+        attrs = [attrs mutableCopy];
+        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+    }
+
+    if (isTag(n, "a")) {
+        // Hyperlinks in Holo blue: http://developer.android.com/design/style/color.html
+        UIColor* color = [UIColor colorWithRed:0.2 green:0.71 blue:0.9 alpha:1];
+        attrs = [attrs mutableCopy];
+        [attrs setValue:color forKey:kINKAttributedStringColorAttribute];
+    }
+
+    // Hack -- just so happens there's only one <span> in credits.css
+    if (isTag(n, "span")) {
+        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [UIFont fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
+        attrs = [attrs mutableCopy];
+        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+    }
+
     NSMutableAttributedString* buffer = [NSMutableAttributedString new];
     for (n = n->children; n; n = n->next) {
         NSAttributedString* s = [self parseText:n attrs:attrs];
@@ -87,6 +117,9 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 {
     NSMutableAttributedString* buffer = [NSMutableAttributedString new];
 
+    NSString* font = @"Baskerville";
+    CGFloat size = 16;
+
     if (isTags(n, "p", "h1", "h2", "h3", NULL)) {
 
         CGFloat margin = [AP_Window iPhone:32 iPad:150 iPadLandscape:200];
@@ -96,15 +129,16 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         style.firstLineHeadIndent = margin;
         style.headIndent = margin;
         style.tailIndent = -margin;
+        style.paragraphSpacing = 5;
 
-        NSString* font = @"Baskerville";
-        CGFloat size;
         if (isTags(n, "h1", "h2", NULL)) {
-            style.paragraphSpacingBefore = [AP_Window scaleForIPhone:30 iPad:60];
+            font = @"Baskerville-Bold";
+            style.paragraphSpacingBefore = [AP_Window scaleForIPhone:45 iPad:90];
             style.paragraphSpacing = [AP_Window scaleForIPhone:30 iPad:60];
             size = [AP_Window scaleForIPhone:24 iPad:32];
         } else if (isTag(n, "h3")) {
-            style.paragraphSpacingBefore = [AP_Window scaleForIPhone:20 iPad:30];
+            // TODO: fancy letter-spacing
+            style.paragraphSpacingBefore = [AP_Window scaleForIPhone:30 iPad:45];
             size = 19;
         } else {
             style.paragraphSpacingBefore = 10;
@@ -125,6 +159,50 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         NSAttributedString* end = [[NSAttributedString alloc] initWithString:@"\n" attributes:attrs];
         [buffer appendAttributedString:end];
 
+    } else if (isTag(n, "img")) {
+        NSString* src = nil;
+        int width = 0;
+        for (xmlAttr* a = n->properties; a; a = a->next) {
+            if (strcmp((const char*) a->name, "src") == 0) {
+                src = [NSString stringWithUTF8String:(const char*)a->children->content];
+            }
+            if (strcmp((const char*) a->name, "width") == 0) {
+                width = atoi((const char*)a->children->content);
+            }
+        }
+
+        AP_Image* image = nil;
+        if (src) {
+            image = [AP_Image imageWithContentsOfFileNamedAuto:src];
+        }
+        if (image) {
+            if (width) {
+                image = [image imageWithWidth:width];
+            }
+
+            UIFont* f = [UIFont fontWithName:font size:size];
+            INKAttributedStringParagraphStyle* style = [INKAttributedStringParagraphStyle style];
+            style.alignment = kCTTextAlignmentCenter;
+            style.paragraphSpacing = 20;
+            style.paragraphSpacingBefore = 20;
+
+            [buffer appendAttributedString:[[NSAttributedString alloc]
+                initWithString:@"*"
+                attributes:@{
+                    kINKAttributedStringFontAttribute:f,
+                    kINKAttributedStringParagraphStyleAttribute:style,
+                    kINKAttributedStringImageAttribute:image,
+                }
+            ]];
+
+            [buffer appendAttributedString:[[NSAttributedString alloc]
+                initWithString:@"\n"
+                attributes:@{
+                    kINKAttributedStringFontAttribute:f,
+                    kINKAttributedStringParagraphStyleAttribute:style,
+                }
+            ]];
+        }
     } else {
         for (n = n->children; n; n = n->next) {
             NSAttributedString* s = [self parseBody:n attrs:attrs];
@@ -167,16 +245,19 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
     AP_Label* label = [[AP_Label alloc] initWithFrame:self.bounds];
     label.attributedText = text;
+    label.centerVertically = NO;
+    label.numberOfLines = 0;
 
     CGSize viewSize = _scrollView.frame.size;
     CGSize textSize = [label sizeThatFits:viewSize];
     textSize.width = viewSize.width;
-    textSize.height += [AP_Window scaleForIPhone:300 iPad:500];
+
+    CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
 
     [_scrollView addSubview:label];
 
-    _scrollView.contentSize = textSize;
-    label.frame = CGRectMake(0, 0, textSize.width, textSize.height);
+    _scrollView.contentSize = CGSizeMake(textSize.width, textSize.height + 4 * margin);
+    label.frame = CGRectMake(0, margin, textSize.width, textSize.height);
 
     if ([_delegate respondsToSelector:@selector(webViewDidFinishLoad:)]) {
         [_delegate webViewDidFinishLoad:self];

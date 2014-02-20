@@ -258,6 +258,7 @@
         NSString* chars = [str substringWithRange:range];
         AP_Font_Run* run = [[AP_Font fontWithUIFont:font] runForString:chars];
         run.textColor = color;
+        run.image = [attrs objectForKey:kINKAttributedStringImageAttribute];
 
         // Split at paragraph breaks, handle each paragraph separately.
         while (run.numChars > 0) {

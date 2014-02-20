@@ -251,6 +251,13 @@ AP_BAN_EVIL_INIT
     return self;
 }
 
+- (AP_Image*) imageWithWidth:(CGFloat)width
+{
+    AP_Image* other = [[AP_Image alloc] initWithImage:self];
+    other->_scale *= self.size.width / width;
+    return other;
+}
+
 - (void) commonInit
 {
     static BOOL initialized = NO;
