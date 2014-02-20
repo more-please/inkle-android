@@ -25,6 +25,7 @@ static const Range kRanges[] = {
     { 10, 10 }, // Newline
     { 32, 126 }, // Basic ASCII
     { 192, 255 }, // Accented letters
+    { 0x00a9, 0x00a9 }, // (c)
     { 0x2018, 0x2019 }, // Single quotes
     { 0x201c, 0x201d }, // Double quotes
     { 0x2013, 0x2014 }, // en-dash, em-dash
