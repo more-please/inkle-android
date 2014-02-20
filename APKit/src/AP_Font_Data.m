@@ -44,8 +44,7 @@ typedef struct LigatureLHS {
 
     AP_Font_Data* result = [g_FontDataCache objectForKey:name];
     if (!result) {
-        NSString* fontName = [NSString stringWithFormat:@"fonts/%@.font", name];
-        NSData* data = [AP_Bundle dataForResource:fontName ofType:nil];
+        NSData* data = [AP_Bundle dataForResource:name ofType:@".font"];
         result = [[AP_Font_Data alloc] initWithName:name data:data];
         AP_CHECK(result, return nil);
         [g_FontDataCache setObject:result forKey:name];
@@ -124,7 +123,7 @@ static LigatureRHS g_ZeroLigature;
         _spaceGlyph = [self glyphForChar:' '];
         _newlineGlyph = [self glyphForChar:'\n'];
 
-        NSString* textureName = [NSString stringWithFormat:@"fonts/%@.png", _name];
+        NSString* textureName = [NSString stringWithFormat:@"%@.png", _name];
         _texture = [AP_GLTexture textureNamed:textureName];
         AP_CHECK(_texture, return nil);
     }
