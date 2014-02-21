@@ -15,6 +15,7 @@
     NSMutableArray* _buttons;
     AP_View* _alert;
     AP_Control* _vignette;
+    AP_Control* _backstop; // Catch gestures during opening animation.
 }
 
 AP_BAN_EVIL_INIT;
@@ -30,6 +31,10 @@ AP_BAN_EVIL_INIT;
     if (self) {
         self.autoresizingMask = -1;
         _delegate = delegate;
+
+        _backstop = [[AP_Control alloc] initWithFrame:self.bounds];
+        _backstop.backgroundColor = [UIColor clearColor];
+        [self addSubview:_backstop];
 
         _vignette = [[AP_Control alloc] initWithFrame:self.bounds];
         _vignette.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
@@ -52,7 +57,7 @@ AP_BAN_EVIL_INIT;
             _header.font = bold;
             _header.text = title;
             _header.textAlignment = NSTextAlignmentCenter;
-            [self addSubview:_header];
+            [_alert addSubview:_header];
         }
         
         if (message) {
@@ -60,7 +65,7 @@ AP_BAN_EVIL_INIT;
             _body.font = plain;
             _body.text = message;
             _body.textAlignment = NSTextAlignmentCenter;
-            [self addSubview:_body];
+            [_alert addSubview:_body];
         }
         
         NSMutableArray* buttonNames = [NSMutableArray array];
@@ -96,7 +101,7 @@ AP_BAN_EVIL_INIT;
             [button setBackgroundColor:darkBlue forState:UIControlStateHighlighted];
 
             [_buttons addObject:button];
-            [self addSubview:button];
+            [_alert addSubview:button];
         }
 
         [self layoutIfNeeded];
@@ -121,14 +126,15 @@ AP_BAN_EVIL_INIT;
     AP_Window* window = (AP_Window*)root;
     [window resetAllGestures];
 
-    self.alpha = 0;
-    self.transform = CGAffineTransformMakeScale(0.25, 0.25);
-    _vignette.transform = CGAffineTransformMakeScale(4, 4);
+    _vignette.alpha = 0;
+    _alert.alpha = 0;
+    _alert.transform = CGAffineTransformMakeScale(0.25, 0.25);
     [window.rootViewController.view addSubview:self];
+
     [AP_View animateWithDuration:0.25 animations:^{
-        self.alpha = 1;
-        self.transform = CGAffineTransformIdentity;
-        _vignette.transform = CGAffineTransformIdentity;
+        _vignette.alpha = 1;
+        _alert.alpha = 1;
+        _alert.transform = CGAffineTransformIdentity;
     }];
 
     [[AP_Application sharedApplication].delegate addBackCloseBlock:^() {
@@ -138,6 +144,8 @@ AP_BAN_EVIL_INIT;
 
 - (void) hide
 {
+    [[AP_Application sharedApplication].delegate removeLastBackButtonBlock];
+
     [AP_View animateWithDuration:0.25 animations:^{
         self.transform = CGAffineTransformMakeScale(0.25, 0.25);
         _vignette.transform = CGAffineTransformMakeScale(4, 4);
@@ -150,8 +158,6 @@ AP_BAN_EVIL_INIT;
 - (void) buttonPressed:(AP_View*)button
 {
     [self hide];
-    [[AP_Application sharedApplication].delegate removeLastBackButtonBlock];
-
     int i = (button == _vignette) ? 0 : [_buttons indexOfObjectIdenticalTo:button];
     [_delegate alertView:self clickedButtonAtIndex:i];
 }
@@ -215,9 +221,7 @@ AP_BAN_EVIL_INIT;
     alertFrame.origin.y = (screenRect.size.height - alertFrame.size.height) * 0.4;
     _alert.frame = alertFrame;
 
-    CGPoint pos = alertFrame.origin;
-    pos.y += ySpace;
-
+    CGPoint pos = { 0, ySpace };
     if (_header) {
         _header.frame = CGRectMake(pos.x + xSpace, pos.y, alertFrame.size.width - 2 * xSpace, headerSize.height);
         pos.y += headerSize.height;
