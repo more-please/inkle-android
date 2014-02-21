@@ -358,7 +358,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 {
     id protectSelf = self;
 
-    AP_CHECK(!_superview, return);
+    AP_CHECK(!_superview, abort());
 
     AP_Window* oldWindow = self.window;
     if (!oldWindow && window) {
@@ -406,21 +406,38 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view aboveSubview:(AP_View*)siblingSubview
 {
-    NSInteger i = [_subviews indexOfObject:siblingSubview];
-    AP_CHECK(i != NSNotFound, return);
-    [self insertSubview:view atIndex:(i+1)];
+    AP_CHECK([_subviews containsObject:siblingSubview], abort());
+    if ([_subviews containsObject:view]) {
+        // Already have this view, just need to move it.
+        [_subviews removeObject:view];
+        NSInteger i = [_subviews indexOfObject:siblingSubview];
+        [_subviews insertObject:view atIndex:i+1];
+        [self zOrderChanged];
+    } else {
+        NSInteger i = [_subviews indexOfObject:siblingSubview];
+        [self insertSubview:view atIndex:(i+1)];
+    }
 }
 
 - (void) insertSubview:(AP_View *)view belowSubview:(AP_View*)siblingSubview
 {
-    NSInteger i = [_subviews indexOfObject:siblingSubview];
-    AP_CHECK(i != NSNotFound, return);
-    [self insertSubview:view atIndex:i];
+    AP_CHECK([_subviews containsObject:siblingSubview], abort());
+    if ([_subviews containsObject:view]) {
+        // Already have this view, just need to move it.
+        [_subviews removeObject:view];
+        NSInteger i = [_subviews indexOfObject:siblingSubview];
+        [_subviews insertObject:view atIndex:i];
+        [self zOrderChanged];
+    } else {
+        NSInteger i = [_subviews indexOfObject:siblingSubview];
+        [self insertSubview:view atIndex:i];
+    }
 }
 
 - (void) insertSubview:(AP_View *)view atIndex:(NSInteger)index
 {
-    AP_CHECK(view, return);
+    AP_CHECK(view, abort());
+    AP_CHECK(view->_superview != self, abort());
 
     AP_Window* oldWindow = view.window;
     AP_Window* newWindow = self.window;
@@ -447,8 +464,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         view->_superview = nil;
     }
 
-    AP_CHECK(index >= 0, return);
-    AP_CHECK(index <= _subviews.count, return);
+    AP_CHECK(index >= 0, abort());
+    AP_CHECK(index <= _subviews.count, abort());
     [_subviews insertObject:view atIndex:index];
     [self zOrderChanged];
 
@@ -512,8 +529,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) bringSubviewToFront:(AP_View*)view
 {
-    AP_CHECK(view, return);
-    AP_CHECK(view->_superview == self, return);
+    AP_CHECK(view, abort());
+    AP_CHECK(view->_superview == self, abort());
     if ([_subviews lastObject] != view) {
         [_subviews removeObject:view];
         [_subviews addObject:view];
@@ -523,8 +540,8 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) sendSubviewToBack:(AP_View*)view
 {
-    AP_CHECK(view, return);
-    AP_CHECK(view->_superview == self, return);
+    AP_CHECK(view, abort());
+    AP_CHECK(view->_superview == self, abort());
     if ([_subviews objectAtIndex:0] != view) {
         [_subviews removeObject:view];
         [_subviews insertObject:view atIndex:0];
