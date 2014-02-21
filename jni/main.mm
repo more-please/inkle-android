@@ -696,14 +696,6 @@ void android_main(struct android_app* android) {
             // If animating, we loop until all events are read, then continue
             // to draw the next frame of animation.
 
-            NSDate* now = [NSDate date];
-            // Run Objective-C timers.
-            // TODO: maybe factor limitDate into our polling timeout.
-            NSDate* nextTimer;
-            do {
-                nextTimer = [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
-            } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
-
             while (1) {
                 // Read all pending events.
                 struct android_poll_source* source;
@@ -738,6 +730,13 @@ void android_main(struct android_app* android) {
             CkUpdate();
 
             if (g_Main.canDraw) {
+                // Run Objective-C timers.
+                NSDate* now = [NSDate date];
+                NSDate* nextTimer;
+                do {
+                    nextTimer = [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
+                } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
+
                 // Apparently it can take a few frames for e.g. screen rotation
                 // to kick in, even after we get notified. What a crock.
                 // Let's just poll it every frame.
