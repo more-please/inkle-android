@@ -84,11 +84,17 @@
     return r;
 }
 
-- (CGRect) frame
+- (CGRect) frameWithoutTransform
 {
     CGRect r;
     r.origin = _animatedFrameOrigin.dest;
     r.size = _animatedSize.dest;
+    return r;
+}
+
+- (CGRect) frame
+{
+    CGRect r = [self frameWithoutTransform];
 
     // The docs say if there's a transform, this value is "undefined".
     // But it is actually transformed, and some of our code relies on that!
@@ -636,62 +642,77 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
                 continue;
             }
 
-            CGRect r = view.frame;
+            CGSize delta = CGSizeMake(
+                newBounds.size.width - oldBounds.size.width,
+                newBounds.size.height - oldBounds.size.height);
+
+            CGRect r = view.frameWithoutTransform;
 
             CGFloat leftMargin = CGRectGetMinX(r) - CGRectGetMinX(oldBounds);
             CGFloat rightMargin = CGRectGetMaxX(oldBounds) - CGRectGetMaxX(r);
             CGFloat topMargin = CGRectGetMinY(r) - CGRectGetMinY(oldBounds);
             CGFloat bottomMargin = CGRectGetMaxY(oldBounds) - CGRectGetMaxY(r);
             
-            CGFloat widthFactor = 0;
-            CGFloat heightFactor = 0;
+            CGFloat flexibleWidth = 0;
+            CGFloat widthCount = 0;
             if (mask & UIViewAutoresizingFlexibleLeftMargin) {
-                widthFactor += leftMargin;
+                flexibleWidth += leftMargin;
+                widthCount += 1;
             }
             if (mask & UIViewAutoresizingFlexibleRightMargin) {
-                widthFactor += rightMargin;
-            }
-            if (mask & UIViewAutoresizingFlexibleTopMargin) {
-                heightFactor += topMargin;
-            }
-            if (mask & UIViewAutoresizingFlexibleBottomMargin) {
-                heightFactor += bottomMargin;
+                flexibleWidth += rightMargin;
+                widthCount += 1;
             }
             if (mask & UIViewAutoresizingFlexibleWidth) {
-                widthFactor += r.size.width;
-            }
-            if (mask & UIViewAutoresizingFlexibleHeight) {
-                heightFactor += r.size.height;
+                flexibleWidth += r.size.width;
+                widthCount += 1;
             }
 
-            CGSize delta = CGSizeMake(
-                newBounds.size.width - oldBounds.size.width,
-                newBounds.size.height - oldBounds.size.height);
-
-            if (fabs(widthFactor) > 1e-6) {
+            if (fabs(flexibleWidth) > 1e-6) {
                 if (mask & UIViewAutoresizingFlexibleLeftMargin) {
-                    r.origin.x += delta.width * (leftMargin / widthFactor);
+                    r.origin.x += delta.width * (leftMargin / flexibleWidth);
                 }
                 if (mask & UIViewAutoresizingFlexibleWidth) {
-                    r.size.width += delta.width * (r.size.width / widthFactor);
+                    r.size.width += delta.width * (r.size.width / flexibleWidth);
                 }
-            } else if (mask & UIViewAutoresizingFlexibleWidth) {
-                r.size.width += delta.width;
-            } else if (mask & UIViewAutoresizingFlexibleLeftMargin) {
-                r.origin.x += delta.width;
+            } else {
+                if (mask & UIViewAutoresizingFlexibleLeftMargin) {
+                    r.origin.x += delta.width / widthCount;
+                }
+                if (mask & UIViewAutoresizingFlexibleWidth) {
+                    r.size.width += delta.width / widthCount;
+                }
             }
             
-            if (fabs(heightFactor) > 1e-6) {
+            CGFloat flexibleHeight = 0;
+            CGFloat heightCount = 0;
+            if (mask & UIViewAutoresizingFlexibleTopMargin) {
+                flexibleHeight += topMargin;
+                heightCount += 1;
+            }
+            if (mask & UIViewAutoresizingFlexibleBottomMargin) {
+                flexibleHeight += bottomMargin;
+                heightCount += 1;
+            }
+            if (mask & UIViewAutoresizingFlexibleHeight) {
+                flexibleHeight += r.size.height;
+                heightCount += 1;
+            }
+
+            if (fabs(flexibleHeight) > 1e-6) {
                 if (mask & UIViewAutoresizingFlexibleTopMargin) {
-                    r.origin.y += delta.height * (topMargin / heightFactor);
+                    r.origin.y += delta.height * (topMargin / flexibleHeight);
                 }
                 if (mask & UIViewAutoresizingFlexibleHeight) {
-                    r.size.height += delta.height * (r.size.height / heightFactor);
+                    r.size.height += delta.height * (r.size.height / flexibleHeight);
                 }
-            } else if (mask & UIViewAutoresizingFlexibleHeight) {
-                r.size.height += delta.height;
-            } else if (mask & UIViewAutoresizingFlexibleTopMargin) {
-                r.origin.y += delta.height;
+            } else {
+                if (mask & UIViewAutoresizingFlexibleTopMargin) {
+                    r.origin.y += delta.height / heightCount;
+                }
+                if (mask & UIViewAutoresizingFlexibleHeight) {
+                    r.size.height += delta.height / heightCount;
+                }
             }
 
             r.origin.x += newBounds.origin.x - oldBounds.origin.x;
@@ -711,12 +732,12 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (CGSize) sizeThatFits:(CGSize)size
 {
-    return self.frame.size;
+    return self.frameWithoutTransform.size;
 }
 
 - (void) sizeToFit
 {
-    CGRect r = self.frame;
+    CGRect r = self.frameWithoutTransform;
     r.size = [self sizeThatFits:r.size];
     self.frame = r;
 }
