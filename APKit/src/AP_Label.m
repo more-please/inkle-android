@@ -241,7 +241,7 @@
 
 - (void) setShadowOffset:(CGSize)offset
 {
-    AP_NOT_IMPLEMENTED;
+    _shadowOffset = offset;
 }
 
 - (void) setLineBreakMode:(NSLineBreakMode)mode
