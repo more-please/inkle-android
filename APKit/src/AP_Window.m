@@ -361,6 +361,11 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
+        if (!t.android) {
+            NSLog(@"Touches out of sync!");
+            [self resetTouches];
+            return;
+        }
         t.android.phase = UITouchPhaseCancelled;
         [touches addObject:t.android];
     }
@@ -387,6 +392,11 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
+        if (!t.android) {
+            NSLog(@"Touches out of sync!");
+            [self resetTouches];
+            return;
+        }
         t.android.phase = UITouchPhaseEnded;
         [touches addObject:t.android];
     }
@@ -417,6 +427,11 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 
     NSMutableSet* touches = [NSMutableSet set];
     for (UITouch* t in ts) {
+        if (!t.android) {
+            NSLog(@"Touches out of sync!");
+            [self resetTouches];
+            return;
+        }
         t.android.windowPos = [t locationInView:self.view];
         t.android.phase = UITouchPhaseMoved;
         [touches addObject:t.android];
