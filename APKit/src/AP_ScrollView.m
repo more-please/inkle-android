@@ -78,6 +78,15 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     self.contentOffset = offset;
 }
 
+- (void) layoutSubviews
+{
+    [super layoutSubviews];
+
+    CGSize size = self.frame.size;
+    _gesture.preventHorizontalMovement = (_contentSize.width <= size.width);
+    _gesture.preventVerticalMovement = (_contentSize.height <= size.height);
+}
+
 - (void) pan
 {
     if (_gesture.state == UIGestureRecognizerStateBegan) {

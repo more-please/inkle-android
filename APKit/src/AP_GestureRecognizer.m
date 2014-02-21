@@ -507,6 +507,12 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         delta.x += (t.windowPos.x - v.initialPos.x) / touches.count;
         delta.y += (t.windowPos.y - v.initialPos.y) / touches.count;
     }
+    if (_preventHorizontalMovement) {
+        delta.x = 0;
+    }
+    if (_preventVerticalMovement) {
+        delta.y = 0;
+    }
     return delta;
 }
 

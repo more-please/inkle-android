@@ -57,4 +57,8 @@
 
 @interface AP_PanGestureRecognizer : AP_GestureRecognizer
 - (CGPoint) translationInView:(AP_View*)view;
+
+// Iain's additions, used to make AP_ScrollView behave approximately right...
+@property(nonatomic) BOOL preventHorizontalMovement;
+@property(nonatomic) BOOL preventVerticalMovement;
 @end
