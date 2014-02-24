@@ -469,7 +469,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     jstring jKey = _env->NewStringUTF(key.cString);
     jstring jValue = _env->NewStringUTF(valueStr.cString);
 
-    _env->CallVoidMethod(_instance, kParseNewObject.method, obj, jKey, jValue);
+    _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
 
     _env->PopLocalFrame(NULL);
 }
