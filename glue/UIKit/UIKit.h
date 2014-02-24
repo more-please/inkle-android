@@ -4,6 +4,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreText/CoreText.h>
 
+#import "UIApplication.h"
 #import "UIColor.h"
 #import "UIDevice.h"
 #import "UIFont.h"

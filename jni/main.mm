@@ -54,6 +54,9 @@ static JavaMethod kOpenURL = {
 static JavaMethod kGetAssets = {
     "getAssets", "()Landroid/content/res/AssetManager;", NULL
 };
+static JavaMethod kFindClass = {
+    "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", NULL
+};
 
 static volatile BOOL g_NeedToCheckObb;
 
@@ -276,6 +279,29 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
     _env->PopLocalFrame(NULL);
     return YES;
+}
+
+- (JNIEnv*) jniEnv
+{
+    return _env;
+}
+
+- (jobject) jniContext
+{
+    return _instance;
+}
+
+- (jclass) jniFindClass:(NSString*)name
+{
+    [self maybeInitJavaMethod:&kFindClass];
+
+    _env->PushLocalFrame(1);
+    jstring str = _env->NewStringUTF(name.cString);
+    jclass result = (jclass) _env->CallObjectMethod(_instance, kFindClass.method, str);
+    result = (jclass) _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
 }
 
 - (AAssetManager*) getAssets

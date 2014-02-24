@@ -2,6 +2,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <jni.h>
+
 #import "AP_View.h"
 
 @class AP_Application;
@@ -19,7 +21,11 @@
 
 @end
 
+#ifdef ANDROID
+@interface AP_Application : UIApplication
+#else
 @interface AP_Application : NSObject
+#endif
 
 + (AP_Application*) sharedApplication;
 
@@ -29,11 +35,5 @@
 - (BOOL) canOpenURL:(NSURL*)url;
 
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
-
-// Android-specific addition
-@property(nonatomic,strong) NSString* documentsDir;
-
-- (void) quit;
-- (NSData*) getResource:(NSString*)path;
 
 @end
