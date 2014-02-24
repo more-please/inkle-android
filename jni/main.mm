@@ -20,6 +20,7 @@
 #import "SorceryAppDelegate.h"
 #import "ExpiredAppDelegate.h"
 
+#import "INK_SBJson.h"
 
 @interface Main : AP_Application
 @property(nonatomic,readonly) BOOL active;
@@ -56,6 +57,21 @@ static JavaMethod kGetAssets = {
 };
 static JavaMethod kFindClass = {
     "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", NULL
+};
+static JavaMethod kParseInit = {
+    "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseCallFunction = {
+    "parseCallFunction", "(Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseNewObject = {
+    "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
+};
+static JavaMethod kParseAddKey = {
+    "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseSave = {
+    "parseSave", "(Lcom/parse/ParseObject;)V", NULL
 };
 
 static volatile BOOL g_NeedToCheckObb;
@@ -302,6 +318,73 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
     _env->PopLocalFrame(NULL);
     return result;
+}
+
+- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
+{
+    [self maybeInitJavaMethod:&kParseInit];
+
+    _env->PushLocalFrame(2);
+    jstring jApplicationId = _env->NewStringUTF(applicationId.cString);
+    jstring jClientKey = _env->NewStringUTF(clientKey.cString);
+
+    _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
+{
+    [self maybeInitJavaMethod:&kParseCallFunction];
+
+    _env->PushLocalFrame(1);
+    jstring jFunction = _env->NewStringUTF(function.cString);
+
+    _env->CallVoidMethod(_instance, kParseCallFunction.method, jFunction);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (jobject) parseNewObject:(NSString*)className
+{
+    [self maybeInitJavaMethod:&kParseNewObject];
+
+    _env->PushLocalFrame(2);
+    jstring jName = _env->NewStringUTF(className.cString);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
+    result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
+{
+    INK_SBJsonWriter* json = [[INK_SBJsonWriter alloc] init];
+    NSError* error;
+    NSString* valueStr = [json stringWithObject:value error:&error];
+    if (error) {
+        NSLog(@"JSON writer error: %@", error);
+        return;
+    }
+    NSLog(@"Adding parse key:%@ value:%@", key, valueStr);
+
+    [self maybeInitJavaMethod:&kParseAddKey];
+
+    _env->PushLocalFrame(2);
+    jstring jKey = _env->NewStringUTF(key.cString);
+    jstring jValue = _env->NewStringUTF(valueStr.cString);
+
+    _env->CallVoidMethod(_instance, kParseNewObject.method, obj, jKey, jValue);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
+{
+    [self maybeInitJavaMethod:&kParseSave];
+    _env->CallVoidMethod(_instance, kParseSave.method);
 }
 
 - (AAssetManager*) getAssets

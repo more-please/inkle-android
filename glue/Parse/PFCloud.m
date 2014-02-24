@@ -1,29 +1,15 @@
 #import "PFCloud.h"
 
+#import <UIKit/UIApplication.h>
+
 #import "GlueCommon.h"
 
 @implementation PFCloud
 
-+ (id)callFunction:(NSString *)function withParameters:(NSDictionary *)parameters
++ (void)callFunctionInBackground:(NSString*)function withParameters:(NSDictionary*)parameters block:(PFIdResultBlock)block
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-}
-
-+ (id)callFunction:(NSString *)function withParameters:(NSDictionary *)parameters error:(NSError **)error
-{
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-}
-
-+ (void)callFunctionInBackground:(NSString *)function withParameters:(NSDictionary *)parameters block:(PFIdResultBlock)block
-{
-    GLUE_NOT_IMPLEMENTED;
-}
-
-+ (void)callFunctionInBackground:(NSString *)function withParameters:(NSDictionary *)parameters target:(id)target selector:(SEL)selector
-{
-    GLUE_NOT_IMPLEMENTED;
+    NSAssert(parameters.count == 0, @"Can't call Parse function with parameters!");
+    [[UIApplication sharedApplication] parseCallFunction:function block:block];
 }
 
 @end

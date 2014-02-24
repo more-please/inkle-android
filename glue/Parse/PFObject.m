@@ -1,13 +1,44 @@
 #import "PFObject.h"
 
+#import <UIKit/UIApplication.h>
+
 #import "GlueCommon.h"
 
-@implementation PFObject
+@implementation PFObject {
+    jobject _obj;
+}
+
+- (id) initWithObj:(jobject)obj
+{
+    if (!obj) {
+        return nil;
+    }
+    self = [super init];
+    if (self) {
+        _obj = obj;
+    }
+    return self;
+}
 
 + (instancetype) objectWithClassName:(NSString*)className
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    jobject obj = [[UIApplication sharedApplication] parseNewObject:className];
+    return [[PFObject alloc] initWithObj:obj];
+}
+
+- (void) setObject:(id)object forKey:(NSString*)key
+{
+    [[UIApplication sharedApplication] parseObject:_obj addKey:key value:object];
+}
+
+- (void) saveInBackground
+{
+    [self saveInBackgroundWithBlock:nil];
+}
+
+- (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block
+{
+    [[UIApplication sharedApplication] parseObject:_obj saveWithBlock:block];
 }
 
 - (id) objectForKey:(NSString*)key
@@ -17,21 +48,6 @@
 }
 
 - (void) addUniqueObject:(id)object forKey:(NSString*)key
-{
-    GLUE_NOT_IMPLEMENTED;
-}
-
-- (void) setObject:(id)object forKey:(NSString*)key
-{
-    GLUE_NOT_IMPLEMENTED;
-}
-
-- (void) saveInBackground
-{
-    GLUE_NOT_IMPLEMENTED;
-}
-
-- (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block
 {
     GLUE_NOT_IMPLEMENTED;
 }

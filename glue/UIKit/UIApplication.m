@@ -50,4 +50,30 @@ static UIApplication* g_Application;
     return NULL;
 }
 
+- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (jobject) parseNewObject:(NSString*)className
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
+- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 @end
