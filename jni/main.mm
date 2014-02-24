@@ -22,11 +22,22 @@
 
 #import "INK_SBJson.h"
 
+@interface ParseResult : NSObject
+@property(nonatomic) int handle;
+@property(nonatomic,strong) NSString* string;
+@property(nonatomic) BOOL boolean;
+@end
+
+@implementation ParseResult
+@end
+
 @interface Main : AP_Application
 @property(nonatomic,readonly) BOOL active;
+@property(nonatomic,readonly,strong) NSRunLoop* runLoop;
 @end
 
 static Main* g_Main;
+static NSRunLoop* g_RunLoop;
 
 typedef struct JavaMethod {
     const char* name;
@@ -62,7 +73,7 @@ static JavaMethod kParseInit = {
     "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kParseCallFunction = {
-    "parseCallFunction", "(Ljava/lang/String;)V", NULL
+    "parseCallFunction", "(ILjava/lang/String;)V", NULL
 };
 static JavaMethod kParseNewObject = {
     "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
@@ -71,7 +82,15 @@ static JavaMethod kParseAddKey = {
     "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kParseSave = {
-    "parseSave", "(Lcom/parse/ParseObject;)V", NULL
+    "parseSave", "(ILcom/parse/ParseObject;)V", NULL
+};
+
+static void parseCallResult(JNIEnv*, jobject, jint, jstring);
+static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
+
+static JNINativeMethod kNatives[] = {
+    { "parseCallResult", "(ILjava/lang/String;)V", (void *)&parseCallResult},
+    { "parseSaveResult", "(IZ)V", (void *)&parseSaveResult},
 };
 
 static volatile BOOL g_NeedToCheckObb;
@@ -103,6 +122,9 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     BOOL _inForeground;
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
+
+    NSMutableDictionary* _parseCallBlocks; // Map of int -> PFStringResultBlock
+    NSMutableDictionary* _parseSaveBlocks; // Map of int -> PFBooleanResultBlock
 }
 
 - (id) initWithAndroidApp:(struct android_app*)android
@@ -111,6 +133,7 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     if (self) {
         AP_CHECK(!g_Main, return nil);
         g_Main = self;
+        g_RunLoop = [NSRunLoop currentRunLoop];
 
         _android = android;
         _vm = _android->activity->vm;
@@ -139,6 +162,8 @@ const char* OBB_KEY = "first-beta-build-woohoo";
         _class = _env->GetObjectClass(_instance);
         AP_CHECK(_class, return nil);
 
+        _env->RegisterNatives(_class, kNatives, sizeof(kNatives) / sizeof(kNatives[0]));
+
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         [NSUserDefaults setDocumentsDir:self.documentsDir];
         NSLog(@"documentsDir: %@", self.documentsDir);
@@ -164,6 +189,9 @@ const char* OBB_KEY = "first-beta-build-woohoo";
             OBB_KEY,
             obbCallback,
             NULL);
+
+        _parseCallBlocks = [NSMutableDictionary dictionary];
+        _parseSaveBlocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -186,6 +214,7 @@ const char* OBB_KEY = "first-beta-build-woohoo";
         NSLog(@"Detaching from JNI");
         [self javaVoidMethod:&kPleaseFinish];
         _vm->DetachCurrentThread();
+        _vm = NULL;
         _env = NULL;
     }
 }
@@ -333,16 +362,80 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     _env->PopLocalFrame(NULL);
 }
 
-- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
+- (void) parseCallFunction:(NSString*)function block:(PFStringResultBlock)block
 {
+    static int handle = 0;
+    ++handle;
+    if (block) {
+        [_parseCallBlocks setObject:block forKey:@(handle)];
+    }
+
     [self maybeInitJavaMethod:&kParseCallFunction];
 
     _env->PushLocalFrame(1);
     jstring jFunction = _env->NewStringUTF(function.cString);
 
-    _env->CallVoidMethod(_instance, kParseCallFunction.method, jFunction);
+    _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction);
 
     _env->PopLocalFrame(NULL);
+}
+
+static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    ParseResult* result = [[ParseResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(parseCallResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseCallResult:(ParseResult*)result
+{
+    NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
+    PFStringResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
+    if (block) {
+        block(result.string, nil);
+    }
+    [_parseCallBlocks removeObjectForKey:@(result.handle)];
+}
+
+- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
+{
+    static int handle = 0;
+    ++handle;
+    if (block) {
+        [_parseSaveBlocks setObject:block forKey:@(handle)];
+    }
+
+    [self maybeInitJavaMethod:&kParseSave];
+    _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
+}
+
+static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
+    ParseResult* result = [[ParseResult alloc] init];
+    result.handle = i;
+    result.boolean = b;
+
+    NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
+    [g_Main performSelectorOnMainThread:@selector(parseSaveResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseSaveResult:(ParseResult*)result
+{
+    NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
+    PFBooleanResultBlock block = [_parseSaveBlocks objectForKey:@(result.handle)];
+    if (block) {
+        block(result.boolean, nil);
+    }
+    [_parseSaveBlocks removeObjectForKey:@(result.handle)];
 }
 
 - (jobject) parseNewObject:(NSString*)className
@@ -379,12 +472,6 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     _env->CallVoidMethod(_instance, kParseNewObject.method, obj, jKey, jValue);
 
     _env->PopLocalFrame(NULL);
-}
-
-- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
-{
-    [self maybeInitJavaMethod:&kParseSave];
-    _env->CallVoidMethod(_instance, kParseSave.method);
 }
 
 - (AAssetManager*) getAssets
@@ -843,8 +930,11 @@ void android_main(struct android_app* android) {
                 NSDate* now = [NSDate date];
                 NSDate* nextTimer;
                 do {
-                    nextTimer = [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
+                    nextTimer = [g_RunLoop limitDateForMode:NSDefaultRunLoopMode];
                 } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
+
+                // Run callbacks.
+                [g_RunLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:nil];
 
                 // Apparently it can take a few frames for e.g. screen rotation
                 // to kick in, even after we get notified. What a crock.

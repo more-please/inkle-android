@@ -22,7 +22,7 @@
 // Wrappers for Parse.
 // TODO: split these off from SorceryActivity.
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
-- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block;
+- (void) parseCallFunction:(NSString*)function block:(PFStringResultBlock)block;
 - (jobject) parseNewObject:(NSString*)className;
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
