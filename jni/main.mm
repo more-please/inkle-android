@@ -389,7 +389,7 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         env->ReleaseStringUTFChars(s, c);
     }
 
-    NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
+    // NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
     [g_Main performSelectorOnMainThread:@selector(parseCallResult:)
         withObject:result
         waitUntilDone:NO];
@@ -397,7 +397,7 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
 - (void) parseCallResult:(ParseResult*)result
 {
-    NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
+    // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
     PFStringResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
     if (block) {
         block(result.string, nil);
@@ -422,7 +422,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     result.handle = i;
     result.boolean = b;
 
-    NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
+    // NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
     [g_Main performSelectorOnMainThread:@selector(parseSaveResult:)
         withObject:result
         waitUntilDone:NO];
@@ -430,7 +430,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseSaveResult:(ParseResult*)result
 {
-    NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
+    // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
     PFBooleanResultBlock block = [_parseSaveBlocks objectForKey:@(result.handle)];
     if (block) {
         block(result.boolean, nil);
@@ -461,7 +461,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         NSLog(@"JSON writer error: %@", error);
         return;
     }
-    NSLog(@"Adding parse key:%@ value:%@", key, valueStr);
+    // NSLog(@"Adding parse key:%@ value:%@", key, valueStr);
 
     [self maybeInitJavaMethod:&kParseAddKey];
 
