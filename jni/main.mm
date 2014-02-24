@@ -454,14 +454,22 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
 {
-    INK_SBJsonWriter* json = [[INK_SBJsonWriter alloc] init];
-    NSError* error;
-    NSString* valueStr = [json stringWithObject:value error:&error];
-    if (error) {
-        NSLog(@"JSON writer error: %@", error);
-        return;
+
+    NSString* valueStr;
+    if ([value isKindOfClass:[NSString class]]) {
+        // If it's a string, send it directly
+        valueStr = (NSString*)value;
+    } else {
+        // Otherwise, encode as JSON.
+        INK_SBJsonWriter* json = [[INK_SBJsonWriter alloc] init];
+        NSError* error;
+        valueStr = [json stringWithObject:value error:&error];
+        if (error) {
+            NSLog(@"JSON writer error: %@", error);
+            return;
+        }
     }
-    // NSLog(@"Adding parse key:%@ value:%@", key, valueStr);
+    NSLog(@"Setting parse key:%@ value:%@", key, valueStr);
 
     [self maybeInitJavaMethod:&kParseAddKey];
 
