@@ -66,8 +66,12 @@ static AP_Bundle* g_Bundle;
 #endif
     }
 
+#ifdef ANDROID
     // Try loading an Android asset
     return [[AP_Application sharedApplication] getResource:fullName];
+#else
+    return nil;
+#endif
 }
 
 #ifdef ANDROID

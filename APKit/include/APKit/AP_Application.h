@@ -2,8 +2,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <jni.h>
-
 #import "AP_View.h"
 
 @class AP_Application;
