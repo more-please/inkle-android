@@ -10,8 +10,9 @@
 
 @property UIActivityIndicatorViewStyle activityIndicatorViewStyle; // default is UIActivityIndicatorViewStyleWhite
 
+@property(nonatomic,readonly) BOOL isAnimating;
+
 - (void) startAnimating;
 - (void) stopAnimating;
-- (BOOL) isAnimating;
 
 @end
