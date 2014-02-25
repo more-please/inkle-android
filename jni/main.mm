@@ -96,6 +96,7 @@ static JNINativeMethod kNatives[] = {
 static volatile BOOL g_NeedToCheckObb;
 
 static void obbCallback(const char* filename, const int32_t state, void* data) {
+    NSLog(@"obbCallback: %s %d", filename, state);
     g_NeedToCheckObb = YES;
 }
 
