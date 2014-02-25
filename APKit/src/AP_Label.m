@@ -31,6 +31,7 @@
     NSMutableArray* _currentLineRuns;
     INKAttributedStringParagraphStyle* _currentStyle;
     CGSize _formattedSize;
+    int _formattedLineCount;
 
     NSMutableArray* _urlRuns;
 
@@ -165,6 +166,11 @@
 - (CGSize) sizeThatFits:(CGSize)size
 {
     [self textLayoutWithWidth:size.width];
+    while (_numberOfLines > 0 && _formattedLineCount > _numberOfLines && _formattedSize.width > 0) {
+        size.width = MAX(size.width, _formattedSize.width) * 1.2;
+        NSLog(@"Label has %d lines, %d needed. Trying again with width: %.1f Text: %@", _formattedLineCount, _numberOfLines, size.width, _text.string);
+        [self textLayoutWithWidth:size.width];
+    }
     return _formattedSize;
 }
 
@@ -304,6 +310,7 @@
         _atStartOfLine = YES;
 
         _formattedSize.height = _cursor.y;
+        ++_formattedLineCount;
     }
 }
 
@@ -331,6 +338,7 @@
     _atStartOfParagraph = _atStartOfLine = YES;
     _cursor = CGPointZero;
     _formattedSize = CGSizeZero;
+    _formattedLineCount = 0;
 
     [_text enumerateAttributesInRange:NSMakeRange(0, [_text length]) options:0 usingBlock:^(NSDictionary* attrs, NSRange range, BOOL* stop) {
 

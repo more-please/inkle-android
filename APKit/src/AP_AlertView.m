@@ -65,6 +65,7 @@ AP_BAN_EVIL_INIT;
             _body.font = plain;
             _body.text = message;
             _body.textAlignment = NSTextAlignmentCenter;
+            _body.numberOfLines = 0;
             [_alert addSubview:_body];
         }
         

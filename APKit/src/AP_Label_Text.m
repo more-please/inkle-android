@@ -19,6 +19,7 @@
 - (CGSize) sizeWithFont:(UIFont*)font constrainedToSize:(CGSize)size
 {
     AP_Label* label = [[AP_Label alloc] init];
+    label.numberOfLines = 0;
     label.text = _text;
     label.font = font;
     return [label sizeThatFits:size];
