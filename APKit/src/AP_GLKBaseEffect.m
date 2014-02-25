@@ -86,11 +86,12 @@
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture2d0.name);
     glUniform1i(texture, 0);
+    GLKVector4 c = {1, 1, 1, 1};
     if (_useConstantColor) {
-        glUniform4fv(color, 1, &_constantColor.v[0]);
-    } else {
-        glUniform4f(color, 1, 1, 1, 1);
+        c = _constantColor;
     }
+    c.a *= _alpha;
+    glUniform4fv(color, 1, &c.v[0]);
 
     GLKMatrix4 modelViewProjection = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
     glUniformMatrix4fv(modelViewProjectionMatrix, 1, NO, modelViewProjection.m);

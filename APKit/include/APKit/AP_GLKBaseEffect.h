@@ -25,4 +25,12 @@ enum {
 
 - (void) prepareToDraw; // Bind programs and textures
 
+// Android alpha hack: instead of rendering GLKViews to an offscreen
+// buffer and alpha-blending that to the screen, we just render GL
+// content directly to the screen. We therefore need to draw *every*
+// GL element with the alpha of the containing view. (This won't look
+// quite right for layered content, but in practice it isn't a big
+// problem.)
+@property (nonatomic) GLfloat alpha;
+
 @end

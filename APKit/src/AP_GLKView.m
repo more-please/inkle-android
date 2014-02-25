@@ -40,7 +40,7 @@
 
     // Draw!
     AP_CHECK(_delegate, return);
-    [_delegate glkView:self drawInRect:self.bounds];
+    [_delegate glkView:self drawWithAlpha:alpha];
 
     // Restore the normal viewport.
     glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);

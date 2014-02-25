@@ -14,7 +14,7 @@
     // Nothing
 }
 
-- (void) glkView:(AP_GLKView *)view drawInRect:(CGRect)rect
+- (void) glkView:(AP_GLKView *)view drawWithAlpha:(CGFloat)alpha
 {
     // Nothing
 }
