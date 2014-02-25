@@ -66,6 +66,14 @@ static inline CGFloat side(CGSize size) {
 
 + (CGFloat) scaleForIPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
 {
+    if (iPhone > iPad) {
+        // To make the lerp consistent, ensure we're scaling *up* from iPhone to iPad.
+        if (iPad > 0) {
+            return 1.0 / [AP_Window scaleForIPhone:1.0/iPhone iPad:1.0/iPad];
+        } else {
+            return iPhone - [AP_Window scaleForIPhone:iPad iPad:iPhone];
+        }
+    }
     CGFloat sizeRatio = (side(g_ScreenBounds.size) - side(iPhonePortrait)) / (side(iPadPortrait) - side(iPhonePortrait));
     CGFloat result = AP_Lerp(iPhone, iPad, sizeRatio);
     return result;
