@@ -363,8 +363,14 @@
             // Word-wrap as necessary.
             while (run.numChars > 0) {
                 AP_Font_Run* nextLine;
-                run = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
+                AP_Font_Run* line = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
+                if (line.numChars == 0 && _atStartOfLine) {
+                    // Just split at the first place we can.
+                    line = [run splitAtWordBreakLeaving:&nextLine];
+                }
+                run = line;
                 run.url = url;
+
                 if (run.numChars > 0) {
                     if (_atStartOfParagraph) {
                         _cursor.y += _currentStyle.paragraphSpacingBefore;
@@ -377,7 +383,6 @@
                     [_currentLineRuns addObject:run];
                 } else if (_atStartOfLine) {
                     AP_LogError("Can't fit anything into the current line!");
-                    // TODO: just split at the first place we can.
                     break;
                 }
 

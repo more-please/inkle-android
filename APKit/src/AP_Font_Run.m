@@ -194,6 +194,18 @@ typedef struct VertexData {
     return self;
 }
 
+- (AP_Font_Run*) splitAtWordBreakLeaving: (AP_Font_Run**)leftover
+{
+    for (int i = _start; i < _end; ++i) {
+        if ([_fontData isWordBreak:_glyphs[i]]) {
+            *leftover = [[AP_Font_Run alloc] initWithRun:self start:(i + 1) end:_end];
+            return [[AP_Font_Run alloc] initWithRun:self start:_start end:i];
+        }
+    }
+    *leftover = nil;
+    return self;
+}
+
 - (UIColor*) textColor
 {
     return AP_VectorToColor(_textColor);

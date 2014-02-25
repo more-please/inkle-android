@@ -29,6 +29,7 @@
 
 - (AP_Font_Run*) splitAtWidth:(CGFloat)width leaving:(AP_Font_Run**)leftover;
 - (AP_Font_Run*) splitAtLineBreakLeaving:(AP_Font_Run**)leftover;
+- (AP_Font_Run*) splitAtWordBreakLeaving:(AP_Font_Run**)leftover;
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL color:(GLKVector4)rgba;
