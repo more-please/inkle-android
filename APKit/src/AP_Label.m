@@ -370,6 +370,13 @@
 
             // Word-wrap as necessary.
             while (run.numChars > 0) {
+                if (_atStartOfParagraph) {
+                    _cursor.y += _currentStyle.paragraphSpacingBefore;
+                    _cursor.x += _currentStyle.firstLineHeadIndent;
+                } else if (_atStartOfLine) {
+                    _cursor.x += _currentStyle.headIndent;
+                }
+
                 AP_Font_Run* nextLine;
                 AP_Font_Run* line = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
                 if (line.numChars == 0 && _atStartOfLine) {
@@ -380,12 +387,6 @@
                 run.url = url;
 
                 if (run.numChars > 0) {
-                    if (_atStartOfParagraph) {
-                        _cursor.y += _currentStyle.paragraphSpacingBefore;
-                        _cursor.x += _currentStyle.firstLineHeadIndent;
-                    } else if (_atStartOfLine) {
-                        _cursor.x += _currentStyle.headIndent;
-                    }
                     run.origin = _cursor;
                     _cursor.x += run.size.width;
                     [_currentLineRuns addObject:run];
