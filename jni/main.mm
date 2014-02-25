@@ -501,7 +501,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return result;
 }
 
-#define BETA_DAYS 7
+#define BETA_DAYS 28
 
 - (NSDate*) expiryDate
 {
