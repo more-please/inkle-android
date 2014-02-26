@@ -311,6 +311,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 
 - (void) dispatchGestureWithBlock:(void(^)(AP_GestureRecognizer*))block
 {
+    if (_hitTestView && _hitTestView.window != self) {
+        NSLog(@"*** lost the hit test view! ***");
+    }
+
     for (AP_View* v = _hitTestView; v; v = v.superview) {
         for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             if (g == _hitTestGesture) {

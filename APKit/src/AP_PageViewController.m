@@ -73,6 +73,9 @@
     if (newPage) {
         [self addSubview:newPage];
         [self.viewDelegate addChildViewController:newPage.viewDelegate];
+
+        // Make sure individual pages never capture gestures.
+        newPage.userInteractionEnabled = NO;
     }
 }
 
@@ -269,10 +272,6 @@ AP_BAN_EVIL_INIT;
     CGFloat pos = view.position;
     CGFloat idealVelocity = (pos + _velocity > 0) ? (1 - pos) : (-1 - pos);
     idealVelocity *= kMinSpeed;
-
-    if (fabs(_velocity) > 0.01) {
-        NSLog(@"gesture = %d, pos = %.3f, velocity = %.3f, ideal = %.3f", _inGesture, pos, _velocity, idealVelocity);
-    }
 
     // Get our absolute speed, relative to the ideal velocity.
     CGFloat speed = fabs(_velocity - idealVelocity);
