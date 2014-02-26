@@ -3,8 +3,6 @@
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
-const float kMaxTapDistance = 10;
-
 static inline CGFloat distance(CGPoint a, CGPoint b) {
     CGPoint p = {a.x - b.x, a.y - b.y};
     return sqrtf(p.x * p.x + p.y * p.y);
@@ -31,6 +29,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     AP_CHECK(target, return nil);
     self = [super init];
     if (self) {
+        _maxTapDistance = 10;
+
         _target = target;
         _action = action;
         _imp = [target methodForSelector:action];
@@ -200,7 +200,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > kMaxTapDistance) {
+    if (distance(p, _origin) > self.maxTapDistance) {
         [self reset];
     }
 }
@@ -210,7 +210,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > kMaxTapDistance) {
+    if (distance(p, _origin) > self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -256,7 +256,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 {
     if (timer == _timer) {
         CGPoint p = [self locationInView:self.view];
-        if (distance(p, _origin) <= kMaxTapDistance) {
+        if (distance(p, _origin) <= self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         } else {
             [self reset];
@@ -269,7 +269,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > kMaxTapDistance) {
+    if (distance(p, _origin) > self.maxTapDistance) {
         [self reset];
     }
 }
@@ -279,7 +279,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > kMaxTapDistance) {
+    if (distance(p, _origin) > self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -448,7 +448,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 - (void) maybeStartedOrChanged
 {
     if (self.state == UIGestureRecognizerStatePossible) {
-        if (distance(CGPointZero, [self translationInView:nil]) > kMaxTapDistance) {
+        if (distance(CGPointZero, [self translationInView:nil]) > self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         }
     } else {

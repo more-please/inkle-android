@@ -81,8 +81,10 @@
 
 - (void) setPosition:(CGFloat)p
 {
-    _position = p;
-    [self setNeedsLayout];
+    if (_position != p) {
+        _position = p;
+        [self setNeedsLayout];
+    }
 }
 
 // Logistic function centered around (0,0)
@@ -136,6 +138,7 @@ static CGFloat logistic(CGFloat x) {
 
 @implementation AP_PageViewController {
     BOOL _inGesture;
+    int _pagesTurnedInGesture;
     CGFloat _previousTranslation;
     CGFloat _nextTranslation;
     CGFloat _velocity;
@@ -177,6 +180,7 @@ AP_BAN_EVIL_INIT;
     view.spineLocation = _spineLocation;
 
     AP_PanGestureRecognizer* gesture = [[AP_PanGestureRecognizer alloc] initWithTarget:self action:@selector(pagePannedWithRecognizer:)];
+    gesture.maxTapDistance = 0; // Be as responsive as possible.
     gesture.preventVerticalMovement = YES;
     [view addGestureRecognizer:gesture];
 
@@ -188,6 +192,7 @@ AP_BAN_EVIL_INIT;
     UIGestureRecognizerState state = pan.state;
     if (state == UIGestureRecognizerStateBegan) {
         _inGesture = YES;
+        _pagesTurnedInGesture = 0;
         _previousTranslation = [pan translationInView:nil].x;
         _nextTranslation = _previousTranslation;
     } else if (state == UIGestureRecognizerStateChanged) {
@@ -211,44 +216,69 @@ AP_BAN_EVIL_INIT;
         CGFloat delta = _nextTranslation - _previousTranslation;
         _previousTranslation = _nextTranslation;
 
-        delta /= view.midPage.bounds.size.width;
+        delta /= view.bounds.size.width;
+        if (_spineLocation == UIPageViewControllerSpineLocationMid) {
+            delta *= 2;
+        }
         delta *= 2;
-        _velocity = delta;
-        NSLog(@"prev = %1.f, next = %.1f, delta = %.1f, v = %.3f",
-            _previousTranslation, _nextTranslation, delta, _velocity);
+        _velocity = delta / timeStep;
     }
 
-    // Get the current velocity per second (not per frame!)
-    float vCurrent = fabs(_velocity / timeStep);
-    if (vCurrent > 0) {
-        view.position += _velocity;
-        NSLog(@"Position is now: %.3f", view.position);
-
-        if (view.position < -1) {
+    view.position += (_velocity * timeStep);
+    if (view.position < -1) {
+        if (!view.rightPage) {
+            // No more pages!
+            view.position = -1;
+            _velocity = 0;
+        } else {
             AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:view.rightPage.viewDelegate];
-            if (view.rightPage && newPage) {
-                [view addOnRight:newPage.view];
-            } else {
-                view.position = -1;
-            }
-        } else if (view.position > 1) {
-            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:view.leftPage.viewDelegate];
-            if (view.leftPage && newPage) {
-                [view addOnLeft:newPage.view];
-            } else {
+            [view addOnRight:newPage.view];
+            _pagesTurnedInGesture++;
+            if (_pagesTurnedInGesture > 0) {
+                // Hard stop on this page.
                 view.position = 1;
+                _velocity = 0;
             }
         }
-
-        // Velocity decay
-        static const float kMinSpeed = 0.001;
-        static const float kDeceleration = 5;
-        float decay = exp(-kDeceleration * timeStep);
-        float vNext = (vCurrent + kMinSpeed) * decay - kMinSpeed;
-        if (vNext < 0) {
-            vNext = 0;
+    } else if (view.position > 1) {
+        if (!view.leftPage) {
+            // No more pages!
+            view.position = 1;
+            _velocity = 0;
+        } else {
+            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:view.leftPage.viewDelegate];
+            [view addOnLeft:newPage.view];
+            _pagesTurnedInGesture--;
+            if (_pagesTurnedInGesture < 0) {
+                // Hard stop on this page.
+                view.position = -1;
+                _velocity = 0;
+            }
         }
-        _velocity *= vNext / vCurrent;
+    }
+
+    static const float kDeceleration = 5;
+    static const float kMinSpeed = 5;
+
+    // What velocity would we need to snap to the current page?
+    CGFloat pos = view.position;
+    CGFloat idealVelocity = (pos + _velocity > 0) ? (1 - pos) : (-1 - pos);
+    idealVelocity *= kMinSpeed;
+
+    if (fabs(_velocity) > 0.01) {
+        NSLog(@"gesture = %d, pos = %.3f, velocity = %.3f, ideal = %.3f", _inGesture, pos, _velocity, idealVelocity);
+    }
+
+    // Get our absolute speed, relative to the ideal velocity.
+    CGFloat speed = fabs(_velocity - idealVelocity);
+    if (speed > 0) {
+        // Velocity decay
+        float decay = exp(-kDeceleration * timeStep);
+        float newSpeed = (speed + kMinSpeed) * decay - kMinSpeed;
+        if (newSpeed < 1e-6) {
+            newSpeed = 0;
+        }
+        _velocity = idealVelocity + (_velocity - idealVelocity) * newSpeed / speed;
     }
 }
 
@@ -256,8 +286,18 @@ AP_BAN_EVIL_INIT;
 {
     AP_PageView* view = (AP_PageView*) self.view;
     if (view.spineLocation == UIPageViewControllerSpineLocationMid) {
-        // Two pages visible
-        if (view.position < 0) {
+        // Two pages visible (but the left or right pages might be nil)
+        if (!view.leftPage) {
+            return [NSArray arrayWithObjects:
+                view.midPage.viewDelegate,
+                view.rightPage.viewDelegate,
+                nil];
+        } else if (!view.rightPage) {
+            return [NSArray arrayWithObjects:
+                view.leftPage.viewDelegate,
+                view.midPage.viewDelegate,
+                nil];
+        } else if (view.position < 0) {
             return [NSArray arrayWithObjects:
                 view.midPage.viewDelegate,
                 view.rightPage.viewDelegate,
@@ -270,7 +310,7 @@ AP_BAN_EVIL_INIT;
         }
     } else {
         // Only the right-hand page is visible
-        if (view.position < 0) {
+        if (view.position < 0 && view.rightPage) {
             return [NSArray arrayWithObjects:
                 view.rightPage.viewDelegate,
                 nil];

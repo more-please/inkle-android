@@ -14,6 +14,9 @@
 
 @interface AP_GestureRecognizer : NSObject
 
+// Android addition -- it's sometimes useful to tweak this.
+@property(nonatomic) CGFloat maxTapDistance; // Default is 10
+
 @property(nonatomic,weak) id<AP_GestureRecognizerDelegate> delegate;
 @property(nonatomic,getter=isEnabled) BOOL enabled;
 @property(nonatomic,readonly) UIGestureRecognizerState state;
