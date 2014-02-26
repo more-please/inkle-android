@@ -179,7 +179,7 @@ AP_BAN_EVIL_INIT;
         view.position = _positionBeforeGesture + delta;
         if (view.position < -1) {
             AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:view.rightPage.viewDelegate];
-            if (newPage) {
+            if (view.rightPage && newPage) {
                 [view addOnRight:newPage.view];
                 _positionBeforeGesture += 2;
             } else {
@@ -187,7 +187,7 @@ AP_BAN_EVIL_INIT;
             }
         } else if (view.position > 1) {
             AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:view.leftPage.viewDelegate];
-            if (newPage) {
+            if (view.leftPage && newPage) {
                 [view addOnLeft:newPage.view];
                 _positionBeforeGesture -= 2;
             } else {
@@ -200,16 +200,30 @@ AP_BAN_EVIL_INIT;
 - (NSArray*) viewControllers
 {
     AP_PageView* view = (AP_PageView*) self.view;
-    if (view.position < 0) {
-        return [NSArray arrayWithObjects:
-            view.midPage.viewDelegate,
-            view.rightPage.viewDelegate,
-            nil];
+    if (view.spineLocation == UIPageViewControllerSpineLocationMid) {
+        // Two pages visible
+        if (view.position < 0) {
+            return [NSArray arrayWithObjects:
+                view.midPage.viewDelegate,
+                view.rightPage.viewDelegate,
+                nil];
+        } else {
+            return [NSArray arrayWithObjects:
+                view.leftPage.viewDelegate,
+                view.midPage.viewDelegate,
+                nil];
+        }
     } else {
-        return [NSArray arrayWithObjects:
-            view.leftPage.viewDelegate,
-            view.midPage.viewDelegate,
-            nil];
+        // Only the right-hand page is visible
+        if (view.position < 0) {
+            return [NSArray arrayWithObjects:
+                view.rightPage.viewDelegate,
+                nil];
+        } else {
+            return [NSArray arrayWithObjects:
+                view.midPage.viewDelegate,
+                nil];
+        }
     }
 }
 
