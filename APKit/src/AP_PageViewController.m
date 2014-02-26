@@ -85,6 +85,11 @@
     [self setNeedsLayout];
 }
 
+// Logistic function centered around (0,0)
+static CGFloat logistic(CGFloat x) {
+    return 1.0f / (1.0f + expf(-x)) - 0.5f;
+}
+
 - (void) layoutSubviews
 {
     CGRect r = self.bounds;
@@ -107,8 +112,22 @@
     }
 
     CGRect mid = left;
-    mid.origin.x = AP_Lerp(left.origin.x, right.origin.x, (_position + 1) / 2);
+
+    // Apply a logistic function to make the page move faster in the middle.
+    const CGFloat steepness = 2;
+    CGFloat offset = logistic(_position * steepness) / logistic(steepness);
+    offset = AP_CLAMP(offset, -1, 1);
+
+    mid.origin.x = AP_Lerp(left.origin.x, right.origin.x, 0.5f + 0.5f * offset);
     
+    // Pop the middle page out a little when it's close to the center.
+    CGFloat pop = 1.0f - offset * offset; // 0 at the endpoints, 1 in the center.
+    CGFloat scale = 1.0f + 0.05f * pop;
+    _midPage.transform = CGAffineTransformMakeScale(scale, scale);
+
+    _leftPage.transform = CGAffineTransformIdentity;
+    _rightPage.transform = CGAffineTransformIdentity;
+
     _leftPage.frame = left;
     _midPage.frame = mid;
     _rightPage.frame = right;
