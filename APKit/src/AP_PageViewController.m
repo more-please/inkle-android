@@ -32,7 +32,6 @@
     }
 
     _position = 1;
-    [self setNeedsLayout];
 }
 
 - (void) addOnLeft:(AP_View*)left
@@ -48,7 +47,6 @@
     }
 
     _position -= 2;
-    [self setNeedsLayout];
 }
 
 - (void) addOnRight:(AP_View*)right
@@ -64,7 +62,6 @@
     }
 
     _position += 2;
-    [self setNeedsLayout];
 }
 
 - (void) replaceOldPage:(AP_View*)oldPage withNewPage:(AP_View*)newPage
@@ -83,13 +80,36 @@
 {
     if (_position != p) {
         _position = p;
-        [self setNeedsLayout];
+        [self updateTransforms];
     }
 }
 
-// Logistic function centered around (0,0)
 static CGFloat logistic(CGFloat x) {
-    return 1.0f / (1.0f + expf(-x)) - 0.5f;
+    return 1.0f / (1.0f + expf(-x)) - 0.5;
+}
+
+- (void) updateTransforms
+{
+    // Apply a logistic function to make the page move faster in the middle.
+    const CGFloat steepness = 2;
+    CGFloat offset = logistic(_position * steepness) / logistic(steepness);
+    offset = AP_CLAMP(offset, -1, 1);
+
+    // Pop the middle page out a little when it's close to the center.
+    CGFloat pop = 1.0f - offset * offset; // 0 at the endpoints, 1 in the center.
+    CGFloat scale = 1.0f + 0.1f * pop;
+
+    offset = (offset + 1) / 2;
+    if (_spineLocation == UIPageViewControllerSpineLocationMid) {
+        offset = offset / 2;
+    }
+    _midPage.transform = CGAffineTransformScale(
+        CGAffineTransformMakeTranslation(self.bounds.size.width * offset, 0),
+        scale, scale);
+
+    // Make sure we don't transform the other pages.
+    _leftPage.transform = CGAffineTransformIdentity;
+    _rightPage.transform = CGAffineTransformIdentity;
 }
 
 - (void) layoutSubviews
@@ -113,26 +133,11 @@ static CGFloat logistic(CGFloat x) {
             break;
     }
 
-    CGRect mid = left;
-
-    // Apply a logistic function to make the page move faster in the middle.
-    const CGFloat steepness = 2;
-    CGFloat offset = logistic(_position * steepness) / logistic(steepness);
-    offset = AP_CLAMP(offset, -1, 1);
-
-    mid.origin.x = AP_Lerp(left.origin.x, right.origin.x, 0.5f + 0.5f * offset);
-    
-    // Pop the middle page out a little when it's close to the center.
-    CGFloat pop = 1.0f - offset * offset; // 0 at the endpoints, 1 in the center.
-    CGFloat scale = 1.0f + 0.05f * pop;
-    _midPage.transform = CGAffineTransformMakeScale(scale, scale);
-
-    _leftPage.transform = CGAffineTransformIdentity;
-    _rightPage.transform = CGAffineTransformIdentity;
-
     _leftPage.frame = left;
-    _midPage.frame = mid;
+    _midPage.frame = left;
     _rightPage.frame = right;
+
+    [self updateTransforms];
 }
 @end
 
