@@ -1,29 +1,122 @@
 #import "AP_PageViewController.h"
 
 #import "AP_Check.h"
+#import "AP_Utils.h"
 #import "AP_Window.h"
 
 @interface AP_PageView : AP_View
+// -1 if the middle page is over the left page.
+// +1 if the middle page is over the right page.
+@property (nonatomic) CGFloat position;
+@property (nonatomic) UIPageViewControllerSpineLocation spineLocation;
+
+@property (nonatomic,readonly) AP_View* leftPage;
+@property (nonatomic,readonly) AP_View* midPage;
+@property (nonatomic,readonly) AP_View* rightPage;
 @end
 
 @implementation AP_PageView
+
+- (void) setLeft:(AP_View*)left mid:(AP_View*)mid right:(AP_View*)right
+{
+    [self replaceOldPage:_leftPage withNewPage:left];
+    [self replaceOldPage:_rightPage withNewPage:right];
+    [self replaceOldPage:_midPage withNewPage:mid];
+
+    _leftPage = left;
+    _midPage = mid;
+    _rightPage = right;
+
+    if (_midPage) {
+        [self bringSubviewToFront:_midPage];
+    }
+
+    _position = 1;
+    [self setNeedsLayout];
+}
+
+- (void) addOnLeft:(AP_View*)left
+{
+    [self replaceOldPage:_rightPage withNewPage:left];
+
+    _rightPage = _midPage;
+    _midPage = _leftPage;
+    _leftPage = left;
+
+    if (_midPage) {
+        [self bringSubviewToFront:_midPage];
+    }
+
+    _position -= 2;
+    [self setNeedsLayout];
+}
+
+- (void) addOnRight:(AP_View*)right
+{
+    [self replaceOldPage:_leftPage withNewPage:right];
+
+    _leftPage = _midPage;
+    _midPage = _rightPage;
+    _rightPage = right;
+
+    if (_midPage) {
+        [self bringSubviewToFront:_midPage];
+    }
+
+    _position += 2;
+    [self setNeedsLayout];
+}
+
+- (void) replaceOldPage:(AP_View*)oldPage withNewPage:(AP_View*)newPage
+{
+    if (oldPage) {
+        [oldPage removeFromSuperview];
+        [oldPage.viewDelegate removeFromParentViewController];
+    }
+    if (newPage) {
+        [self addSubview:newPage];
+        [self.viewDelegate addChildViewController:newPage.viewDelegate];
+    }
+}
+
+- (void) setPosition:(CGFloat)p
+{
+    _position = p;
+    [self setNeedsLayout];
+}
+
 - (void) layoutSubviews
 {
-    NSArray* pages = self.subviews;
-    if (pages.count > 0) {
-        // Fill our frame by tiling the views horizontally.
-        CGRect pageRect = self.bounds;
-        pageRect.size.width /= pages.count;
-        for (AP_View* page in pages) {
-            page.frame = pageRect;
-            pageRect.origin.x += pageRect.size.width;
-        }
+    CGRect r = self.bounds;
+    CGRect left = r, right = r;
+    switch (_spineLocation) {
+        case UIPageViewControllerSpineLocationMin:
+            left.origin.x -= r.size.width;
+            break;
+
+        case UIPageViewControllerSpineLocationMax:
+            right.origin.x += r.size.width;
+            break;
+
+        case UIPageViewControllerSpineLocationMid:
+        default:
+            left.size.width /= 2;
+            right.size.width /= 2;
+            right.origin.x += right.size.width;
+            break;
     }
+
+    CGRect mid = left;
+    mid.origin.x = AP_Lerp(left.origin.x, right.origin.x, (_position + 1) / 2);
+    
+    _leftPage.frame = left;
+    _midPage.frame = mid;
+    _rightPage.frame = right;
 }
 @end
 
 @implementation AP_PageViewController {
-    NSMutableArray* _viewControllers;
+    CGFloat _positionBeforeGesture;
 }
 
 AP_BAN_EVIL_INIT;
@@ -36,7 +129,6 @@ AP_BAN_EVIL_INIT;
         // ignore orientation, assume horizontal
         NSNumber* spine = [options objectForKey:UIPageViewControllerOptionSpineLocationKey];
         _spineLocation = spine ? spine.intValue : UIPageViewControllerSpineLocationMin;
-        _viewControllers = [NSMutableArray array];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(screenSizeChanged) name:AP_ScreenSizeChangedNotification object:nil];
     }
@@ -53,75 +145,84 @@ AP_BAN_EVIL_INIT;
     CGSize size = [UIScreen mainScreen].bounds.size;
     UIInterfaceOrientation orientation = (size.width > size.height) ? UIInterfaceOrientationLandscapeLeft : UIInterfaceOrientationPortrait;
     _spineLocation = [_delegate pageViewController:self spineLocationForInterfaceOrientation:orientation];
+    AP_PageView* view = (AP_PageView*) self.view;
+    view.spineLocation = _spineLocation;
 }
 
 - (void) loadView
 {
-    AP_View* view = [[AP_PageView alloc] init];
-    AP_TapGestureRecognizer* gesture = [[AP_TapGestureRecognizer alloc] initWithTarget:self action:@selector(pageTappedWithRecognizer:)];
+    AP_PageView* view = [[AP_PageView alloc] init];
+    view.spineLocation = _spineLocation;
+
+    AP_PanGestureRecognizer* gesture = [[AP_PanGestureRecognizer alloc] initWithTarget:self action:@selector(pagePannedWithRecognizer:)];
+    gesture.preventVerticalMovement = YES;
     [view addGestureRecognizer:gesture];
 
     self.view = view;
 }
 
-- (void) pageTappedWithRecognizer:(AP_GestureRecognizer*)tap
+- (void) pagePannedWithRecognizer:(AP_PanGestureRecognizer*)pan
 {
-    NSMutableArray* newPages = [_viewControllers mutableCopy];
+    AP_PageView* view = (AP_PageView*) self.view;
+    UIGestureRecognizerState state = pan.state;
 
-    AP_View* view = self.view;
-    CGPoint pos = [tap locationInView:view];
-    if (pos.x > view.bounds.size.width / 2) {
-        // Go to the next page(s)
-        AP_PageViewController* lastPage = [_viewControllers lastObject];
-        for (int i = 0; i < _viewControllers.count; i++) {
-            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:lastPage];
-            if (!newPage) {
-                break;
-            }
-            [newPages addObject:newPage];
-            [newPages removeObjectAtIndex:0];
-            lastPage = newPage;
+    if (state == UIGestureRecognizerStateBegan) {
+        _positionBeforeGesture = view.position;
+    }
+    
+    if (state == UIGestureRecognizerStateBegan || state == UIGestureRecognizerStateChanged) {
+        CGFloat delta = [pan translationInView:view].x / view.bounds.size.width;
+        if (_spineLocation == UIPageViewControllerSpineLocationMid) {
+            delta *= 2;
         }
-    } else {
-        // Go to the previous page(s)
-        AP_PageViewController* firstPage = [_viewControllers objectAtIndex:0];
-        for (int i = 0; i < _viewControllers.count; i++) {
-            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:firstPage];
-            if (!newPage) {
-                break;
+
+        view.position = _positionBeforeGesture + delta;
+        if (view.position < -1) {
+            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:view.rightPage.viewDelegate];
+            if (newPage) {
+                [view addOnRight:newPage.view];
+                _positionBeforeGesture += 2;
+            } else {
+                view.position = -1;
             }
-            [newPages insertObject:newPage atIndex:0];
-            [newPages removeLastObject];
-            firstPage = newPage;
+        } else if (view.position > 1) {
+            AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:view.leftPage.viewDelegate];
+            if (newPage) {
+                [view addOnLeft:newPage.view];
+                _positionBeforeGesture -= 2;
+            } else {
+                view.position = 1;
+            }
         }
     }
-
-    [self setViewControllers:newPages direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
 }
 
 - (NSArray*) viewControllers
 {
-    return _viewControllers;
+    AP_PageView* view = (AP_PageView*) self.view;
+    if (view.position < 0) {
+        return [NSArray arrayWithObjects:
+            view.midPage.viewDelegate,
+            view.rightPage.viewDelegate,
+            nil];
+    } else {
+        return [NSArray arrayWithObjects:
+            view.leftPage.viewDelegate,
+            view.midPage.viewDelegate,
+            nil];
+    }
 }
 
 - (void) setViewControllers:(NSArray*)viewControllers direction:(UIPageViewControllerNavigationDirection)direction animated:(BOOL)animated completion:(void (^)(BOOL))completion
 {
     // Ignore animated / completion
 
-    // Remove current view controllers
-    for (AP_ViewController* vc in _viewControllers) {
-        if (vc.isViewLoaded) {
-            [vc.view removeFromSuperview];
-        }
-        [vc removeFromParentViewController];
-    }
+    AP_ViewController* mid = [viewControllers lastObject];
+    AP_ViewController* right = [_dataSource pageViewController:self viewControllerAfterViewController:mid];
+    AP_ViewController* left = [_dataSource pageViewController:self viewControllerBeforeViewController:mid];
 
-    // Add new ones
-    _viewControllers = [viewControllers mutableCopy];
-    for (AP_ViewController* vc in _viewControllers) {
-        [self addChildViewController:vc];
-        [self.view addSubview:vc.view];
-    }
+    AP_PageView* view = (AP_PageView*) self.view;
+    [view setLeft:left.view mid:mid.view right:right.view];
 }
 
 @end
