@@ -135,7 +135,10 @@ static CGFloat logistic(CGFloat x) {
 @end
 
 @implementation AP_PageViewController {
-    CGFloat _positionBeforeGesture;
+    BOOL _inGesture;
+    CGFloat _previousTranslation;
+    CGFloat _nextTranslation;
+    CGFloat _velocity;
 }
 
 AP_BAN_EVIL_INIT;
@@ -182,25 +185,49 @@ AP_BAN_EVIL_INIT;
 
 - (void) pagePannedWithRecognizer:(AP_PanGestureRecognizer*)pan
 {
-    AP_PageView* view = (AP_PageView*) self.view;
     UIGestureRecognizerState state = pan.state;
-
     if (state == UIGestureRecognizerStateBegan) {
-        _positionBeforeGesture = view.position;
+        _inGesture = YES;
+        _previousTranslation = [pan translationInView:nil].x;
+        _nextTranslation = _previousTranslation;
+    } else if (state == UIGestureRecognizerStateChanged) {
+        _nextTranslation = [pan translationInView:nil].x;
+    } else {
+        _inGesture = NO;
     }
-    
-    if (state == UIGestureRecognizerStateBegan || state == UIGestureRecognizerStateChanged) {
-        CGFloat delta = [pan translationInView:view].x / view.bounds.size.width;
-        if (_spineLocation == UIPageViewControllerSpineLocationMid) {
-            delta *= 2;
-        }
+}
 
-        view.position = _positionBeforeGesture + delta;
+- (void) updateGL
+{
+    // Measure the time step since the previous call
+    static double previousTime = 0;
+    double time = CACurrentMediaTime();
+    double timeStep = MAX(0.01, MIN(1, time - previousTime));
+    previousTime = time;
+
+    AP_PageView* view = (AP_PageView*) self.view;
+
+    if (_inGesture) {
+        CGFloat delta = _nextTranslation - _previousTranslation;
+        _previousTranslation = _nextTranslation;
+
+        delta /= view.midPage.bounds.size.width;
+        delta *= 2;
+        _velocity = delta;
+        NSLog(@"prev = %1.f, next = %.1f, delta = %.1f, v = %.3f",
+            _previousTranslation, _nextTranslation, delta, _velocity);
+    }
+
+    // Get the current velocity per second (not per frame!)
+    float vCurrent = fabs(_velocity / timeStep);
+    if (vCurrent > 0) {
+        view.position += _velocity;
+        NSLog(@"Position is now: %.3f", view.position);
+
         if (view.position < -1) {
             AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerAfterViewController:view.rightPage.viewDelegate];
             if (view.rightPage && newPage) {
                 [view addOnRight:newPage.view];
-                _positionBeforeGesture += 2;
             } else {
                 view.position = -1;
             }
@@ -208,11 +235,20 @@ AP_BAN_EVIL_INIT;
             AP_PageViewController* newPage = [_dataSource pageViewController:self viewControllerBeforeViewController:view.leftPage.viewDelegate];
             if (view.leftPage && newPage) {
                 [view addOnLeft:newPage.view];
-                _positionBeforeGesture -= 2;
             } else {
                 view.position = 1;
             }
         }
+
+        // Velocity decay
+        static const float kMinSpeed = 0.001;
+        static const float kDeceleration = 5;
+        float decay = exp(-kDeceleration * timeStep);
+        float vNext = (vCurrent + kMinSpeed) * decay - kMinSpeed;
+        if (vNext < 0) {
+            vNext = 0;
+        }
+        _velocity *= vNext / vCurrent;
     }
 }
 
