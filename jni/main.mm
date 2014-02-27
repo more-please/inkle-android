@@ -401,7 +401,8 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
     PFStringResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
     if (block) {
-        block(result.string, nil);
+        NSError* error = result.string ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        block(result.string, error);
     }
     [_parseCallBlocks removeObjectForKey:@(result.handle)];
 }
@@ -434,6 +435,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
     PFBooleanResultBlock block = [_parseSaveBlocks objectForKey:@(result.handle)];
     if (block) {
+        NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
         block(result.boolean, nil);
     }
     [_parseSaveBlocks removeObjectForKey:@(result.handle)];
