@@ -48,6 +48,9 @@ typedef struct JavaMethod {
 static JavaMethod kGetDocumentsDir = {
     "getDocumentsDir", "()Ljava/lang/String;", NULL
 };
+static JavaMethod kGetPublicDocumentsDir = {
+    "getPublicDocumentsDir", "()Ljava/lang/String;", NULL
+};
 static JavaMethod kGetExpansionFilePath = {
     "getExpansionFilePath", "()Ljava/lang/String;", NULL
 };
@@ -166,8 +169,8 @@ const char* OBB_KEY = "first-beta-build-woohoo";
         _env->RegisterNatives(_class, kNatives, sizeof(kNatives) / sizeof(kNatives[0]));
 
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
+        self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
         [NSUserDefaults setDocumentsDir:self.documentsDir];
-        NSLog(@"documentsDir: %@", self.documentsDir);
 
         _touches = [NSMutableDictionary dictionary];
 
@@ -472,8 +475,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             return;
         }
     }
-    NSLog(@"Setting parse key:%@ value:%@", key, valueStr);
-
     [self maybeInitJavaMethod:&kParseAddKey];
 
     _env->PushLocalFrame(2);
@@ -515,7 +516,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 - (BOOL) isExpired:(NSDate*)date
 {
     NSDate* expiry = [self expiryDate];
-    NSLog(@"Checking expiry date: %@ against: %@", expiry, date);
     return ([expiry compare:date] == NSOrderedAscending);
 }
 

@@ -17,6 +17,8 @@
 - (NSString*) stringForKey:(NSString*)defaultName;
 - (NSArray*) stringArrayForKey:(NSString*)defaultName;
 
+- (void) removeObjectForKey:(NSString*)key;
+
 - (BOOL) synchronize;
 
 - (NSDictionary*) dictionaryRepresentation;

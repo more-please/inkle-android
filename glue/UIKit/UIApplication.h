@@ -11,6 +11,7 @@
 
 // Android-specific additions
 @property(nonatomic,strong) NSString* documentsDir;
+@property(nonatomic,strong) NSString* publicDocumentsDir;
 
 - (void) quit;
 - (NSData*) getResource:(NSString*)path;

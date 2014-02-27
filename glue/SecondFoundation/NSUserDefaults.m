@@ -80,6 +80,12 @@ static NSUserDefaults* g_Defaults = nil;
     _dirty = YES;
 }
 
+- (void) removeObjectForKey:(NSString*)key
+{
+    [_contents removeObjectForKey:key];
+    _dirty = YES;
+}
+
 - (BOOL) boolForKey:(NSString*)defaultName
 {
     NSNumber* number = [_contents objectForKey:defaultName];
