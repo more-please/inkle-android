@@ -39,6 +39,10 @@ const int NUM_FRAME_TIMES = 16;
         }
 #ifdef ANDROID
         NSLog(@"FPS: %.1f, audio load: %.1f%%", self.fps, CkGetRenderLoad() * 100);
+        if (CkGetClipFlag()) {
+            NSLog(@"*** Audio clipped ***");
+            CkResetClipFlag();
+        }
 #else
         NSLog(@"FPS: %.1f", self.fps);
 #endif

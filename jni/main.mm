@@ -155,7 +155,9 @@ const char* OBB_KEY = "first-beta-build-woohoo";
 
         // Initialize Cricket Audio
         CkConfig config(_env, _android->activity->clazz);
-        config.enableOggVorbis = false;
+        config.audioUpdateMs = 50; // Default of 5 gives buzzy audio on some devices
+        config.streamFileUpdateMs = 200; // For safety, double the default of 100
+        config.streamBufferMs = 1000; // For safety, double the default of 500
         int success = CkInit(&config);
         AP_CHECK(success, return nil);
 
