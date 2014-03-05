@@ -23,6 +23,9 @@
 
 @property(nonatomic,strong) NSString* root;
 
+// Like pathsForResources, but returns the bundle-relative resource name.
+- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
+
 - (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
 - (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath;

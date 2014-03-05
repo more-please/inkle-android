@@ -11,21 +11,12 @@
     NSTimer* _timer;
 }
 
-- (id) initWithContentsOfURL:(NSURL*)url error:(NSError**)outError
-{
-    if (!url.isFileURL) {
-        NSLog(@"Not a file URL: %@", url);
-        return nil;
-    }
-    return [self initWithContentsOfFile:url.path error:outError];
-}
-
-- (id) initWithContentsOfFile:(NSString*)path error:(NSError**)outError
+- (id) initWithResource:(NSString*)path
 {
     self = [super init];
     if (self) {
         _name = [path lastPathComponent];
-        _sound = CkSound::newStreamSound(path.cString, kCkPathType_FileSystem);
+        _sound = CkSound::newStreamSound(path.cString, kCkPathType_Asset);
         if (!_sound || _sound->isFailed()) {
             return nil;
         }

@@ -86,6 +86,13 @@ static AP_Bundle* g_Bundle;
 }
 #endif
 
+#ifdef ANDROID
+- (NSArray*) namesForResourcesOfType:(NSString *)ext inDirectory:(NSString *)dir
+{
+    return [[AP_Application sharedApplication] namesForResourcesOfType:ext inDirectory:dir];
+}
+#endif
+
 - (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
 {
     NSFileManager* fm = [NSFileManager defaultManager];

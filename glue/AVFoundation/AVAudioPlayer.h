@@ -19,8 +19,7 @@
 @property(nonatomic) float volume;
 @property(nonatomic) NSInteger numberOfLoops;
 
-- (id) initWithContentsOfURL:(NSURL*)url error:(NSError**)outError;
-- (id) initWithContentsOfFile:(NSString*)path error:(NSError**)outError;
+- (id) initWithResource:(NSString*)resource;
 
 - (BOOL) prepareToPlay;
 - (BOOL) play;

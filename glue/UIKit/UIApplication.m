@@ -50,6 +50,12 @@ static UIApplication* g_Application;
     return NULL;
 }
 
+- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
+{
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+}
+
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
 {
     GLUE_NOT_IMPLEMENTED;

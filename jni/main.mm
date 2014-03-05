@@ -355,6 +355,23 @@ const char* OBB_KEY = "first-beta-build-woohoo";
     return result;
 }
 
+- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
+{
+    NSMutableArray* result = [NSMutableArray array];
+    AAssetDir* d = AAssetManager_openDir(_assetManager, dir.cString);
+    const char* c = AAssetDir_getNextFileName(d);
+    for ( ; c; c = AAssetDir_getNextFileName(d)) {
+        NSString* s = [NSString stringWithCString:c];
+        if ([s hasSuffix:ext]) {
+            s = [dir stringByAppendingPathComponent:s];
+            NSLog(@"Found resource: %@", s);
+            [result addObject:s];
+        }
+    }
+    AAssetDir_close(d);
+    return result;
+}
+
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
 {
     [self maybeInitJavaMethod:&kParseInit];

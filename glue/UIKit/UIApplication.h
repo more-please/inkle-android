@@ -20,6 +20,8 @@
 - (jobject) jniContext;
 - (jclass) jniFindClass:(NSString*)name;
 
+- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
+
 // Wrappers for Parse.
 // TODO: split these off from SorceryActivity.
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
