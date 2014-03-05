@@ -31,24 +31,6 @@
     }
 }
 
-- (void) setEnableRate:(BOOL)enableRate
-{
-    _enableRate = enableRate;
-    if (!enableRate) {
-        _sound->setSpeed(1);
-    }
-}
-
-- (float) rate
-{
-    return _sound->getSpeed();
-}
-
-- (void) setRate:(float)rate
-{
-    _sound->setSpeed(rate);
-}
-
 - (float) pan
 {
     return _sound->getPan();

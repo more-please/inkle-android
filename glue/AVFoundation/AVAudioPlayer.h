@@ -13,8 +13,6 @@
 @property(nonatomic,weak) id<AVAudioPlayerDelegate> delegate;
 @property(nonatomic,readonly,getter=isPlaying) BOOL playing;
 @property(nonatomic) NSTimeInterval currentTime;
-@property(nonatomic) BOOL enableRate;
-@property(nonatomic) float rate;
 @property(nonatomic) float pan;
 @property(nonatomic) float volume;
 @property(nonatomic) NSInteger numberOfLoops;
