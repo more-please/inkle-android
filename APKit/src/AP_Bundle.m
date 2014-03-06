@@ -44,8 +44,6 @@ static AP_Bundle* g_Bundle;
 
 + (NSData*) dataForResource:(NSString *)name ofType:(NSString *)ext
 {
-    NSLog(@"*** dataForResource:%@ ofType:%@", name, ext);
-
     NSString* fullName = name;
     if (ext) {
         if (![ext hasPrefix:@"."]) {

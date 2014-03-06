@@ -339,7 +339,6 @@ static JNINativeMethod kNatives[] = {
         NSString* s = [NSString stringWithCString:c];
         if ([s hasSuffix:ext]) {
             s = [dir stringByAppendingPathComponent:s];
-            NSLog(@"Found resource: %@", s);
             [result addObject:s];
         }
     }
