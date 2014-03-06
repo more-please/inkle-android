@@ -6,8 +6,8 @@
 
 // As initWithContentsOfFile:, but passing in the file data directly.
 // This is useful for reading embedded resources.
-- (instancetype) initWithData:(NSData*)data;
+- (instancetype) initWithPlistData:(NSData*)data;
 
-+ (instancetype) dictionaryWithData:(NSData*)data;
++ (instancetype) dictionaryWithPlistData:(NSData*)data;
 
 @end

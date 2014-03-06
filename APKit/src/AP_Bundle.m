@@ -1,6 +1,7 @@
 #import "AP_Bundle.h"
 
 #import "AP_Check.h"
+#import "NSDictionary+AP_InitWithData.h"
 
 @implementation AP_Bundle {
     NSMutableArray* _paks;
@@ -94,8 +95,7 @@ static AP_Bundle* g_Bundle;
     if (!_info) {
         NSLog(@"Loading info dictionary...");
         NSData* data = [AP_Bundle dataForResource:@"Info" ofType:@"plist"];
-        NSString* s = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        _info = (NSDictionary*) [s propertyList];
+        _info = [NSDictionary dictionaryWithPlistData:data];
         AP_CHECK(_info, return nil);
         NSLog(@"Loading info dictionary... Done.");
     }
