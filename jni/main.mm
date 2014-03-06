@@ -54,9 +54,6 @@ static JavaMethod kGetPublicDocumentsDir = {
 static JavaMethod kGetExpansionFilePath = {
     "getExpansionFilePath", "()Ljava/lang/String;", NULL
 };
-static JavaMethod kGetMountedObbPath = {
-    "getMountedObbPath", "()Ljava/lang/String;", NULL
-};
 static JavaMethod kGetScreenInfo = {
     "getScreenInfo", "()[F", NULL
 };
@@ -96,22 +93,11 @@ static JNINativeMethod kNatives[] = {
     { "parseSaveResult", "(IZ)V", (void *)&parseSaveResult},
 };
 
-static volatile BOOL g_NeedToCheckObb;
-
-static void obbCallback(const char* filename, const int32_t state, void* data) {
-    NSLog(@"obbCallback: %s %d", filename, state);
-    g_NeedToCheckObb = YES;
-}
-
-const char* OBB_KEY = "first-beta-build-woohoo";
-
 @implementation Main {
     struct android_app* _android;
 
-    AStorageManager* _storageManager;
     AAssetManager* _assetManager;
     NSString* _obbPath;
-    NSString* _mountPath;
 
     JavaVM* _vm;
     JNIEnv* _env;
@@ -179,24 +165,11 @@ const char* OBB_KEY = "first-beta-build-woohoo";
         _touches = [NSMutableDictionary dictionary];
 
         // Initialize non-OBB assets.
-
         _assetManager = [self getAssets];
 
-        // Start mounting the OBB.
-
-        _storageManager = AStorageManager_new();
-        AP_CHECK(_storageManager, return nil);
-
+        // Locate the OBB.
         _obbPath = [self javaStringMethod:&kGetExpansionFilePath];
         AP_CHECK(_obbPath, return nil);
-
-        g_NeedToCheckObb = NO;
-        AStorageManager_mountObb(
-            _storageManager,
-            _obbPath.cString,
-            OBB_KEY,
-            obbCallback,
-            NULL);
 
         _parseCallBlocks = [NSMutableDictionary dictionary];
         _parseSaveBlocks = [NSMutableDictionary dictionary];
@@ -554,20 +527,10 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         // No display yet.
         return;
     }
-    if (!_mountPath) {
-        // No expansion file yet.
-        return;
-    }
     if (self.delegate) {
         // Already initialized
         return;
     }
-
-    [AP_Bundle mainBundle].root = _mountPath;
-
-    NSString* pakPath = [_mountPath stringByAppendingPathComponent:@"sorcery1_android.pak"];
-    AP_PakReader* pak = [AP_PakReader readerWithMemoryMappedFile:pakPath];
-    [AP_Bundle addPak:pak];
 
     // Check that both the current time and the timestamp
     // of the .obb file are before the beta expiry date.
@@ -588,21 +551,12 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         self.delegate = sorcery;
     }
 
+    // Mount the OBB as a .pak file.
+    AP_PakReader* pak = [AP_PakReader readerWithMemoryMappedFile:_obbPath];
+    [AP_Bundle addPak:pak];
+
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
-}
-
-- (void) handleObbCallback
-{
-    if (AStorageManager_isObbMounted(_storageManager, [_obbPath cString])) {
-        AP_CHECK(!_mountPath, abort());
-        _mountPath = [self javaStringMethod:&kGetMountedObbPath];
-        NSLog(@"OBB mounted at path: %@", _mountPath);
-        [self maybeInitApp];
-    } else {
-        NSLog(@"OBB failed to mount!");
-        abort();
-    }
 }
 
 - (void) maybeInitGL
@@ -729,10 +683,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     if (_surface == EGL_NO_SURFACE) {
         // No display yet.
-        return;
-    }
-    if (!_mountPath) {
-        // No expansion file yet.
         return;
     }
     if (!self.delegate) {
@@ -948,11 +898,6 @@ void android_main(struct android_app* android) {
                     exit(EXIT_SUCCESS);
                     return;
                 }
-            }
-
-            if (g_NeedToCheckObb) {
-                g_NeedToCheckObb = NO;
-                [g_Main handleObbCallback];
             }
 
             CkUpdate();

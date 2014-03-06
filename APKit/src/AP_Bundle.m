@@ -43,8 +43,13 @@ static AP_Bundle* g_Bundle;
 
 + (NSData*) dataForResource:(NSString *)name ofType:(NSString *)ext
 {
+    NSLog(@"*** dataForResource:%@ ofType:%@", name, ext);
+
     NSString* fullName = name;
     if (ext) {
+        if (![ext hasPrefix:@"."]) {
+            ext = [@"." stringByAppendingString:ext];
+        }
         fullName = [name stringByAppendingString:ext];
     }
 
@@ -60,6 +65,7 @@ static AP_Bundle* g_Bundle;
     // Try loading an Android asset
     return [[AP_Application sharedApplication] getResource:fullName];
 #else
+    NSLog(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;
 #endif
 }
