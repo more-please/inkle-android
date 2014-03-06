@@ -207,7 +207,8 @@ const Pixel& Image::pixel(int x, int y) const {
 
 enum TextureFormat {
     FORMAT_IOS,
-    FORMAT_ANDROID
+    FORMAT_ANDROID,
+    FORMAT_PNG
 };
 
 // A texture output file, ATLAS_SIZE pixels in each dimension.
@@ -255,7 +256,13 @@ public:
         uint16_t width, height;
     };
 
-    void writePackage(PackageWriter& writer, const char* filename, TextureFormat format) {
+    void sys(const string& cmd) {
+        cerr << cmd << endl;
+        int status = system(cmd.c_str());
+        assert(status == EXIT_SUCCESS);
+    }
+
+    void write(const string& outdir, const string& filename, TextureFormat format) {
         assert(sizeof(Header) == 8);
         assert(sizeof(Quad) == 12);
 
@@ -268,7 +275,7 @@ public:
         string tempFile = tempDir + "/" + filename;
 
         string pngFile = tempFile + ".png";
-        cerr << "Writing atlas to temp file: " << pngFile << endl;
+        cerr << "stbi_write_png " << pngFile << endl;
         stbi_write_png(pngFile.c_str(), ATLAS_SIZE, ATLAS_SIZE, 4, &data[0], ATLAS_SIZE * 4);
 
         string binDir = ANDROID_DIR + "/3rd-party/bin";
@@ -276,30 +283,24 @@ public:
         if (format == FORMAT_ANDROID) {
             // KTX format (Android)
             texFile = tempFile + ".ktx";
-            cmd = "cd " + binDir + " && ./etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx";
+            sys("cd " + binDir + " && ./etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx");
+            sys("rm " + tempFile);
         } else if (format == FORMAT_IOS) {
             // PVR format (iOS)
             texFile = tempFile + ".pvr";
             string texturetool = binDir + "/texturetool";
-            cmd = texturetool + " -e PVRTC --channel-weighting-perceptual --bits-per-pixel-4 -f PVR -m -s -o " + texFile + " " + pngFile;
+            sys(texturetool + " -e PVRTC --channel-weighting-perceptual --bits-per-pixel-4 -f PVR -m -s -o " + texFile + " " + pngFile);
+            sys("rm " + tempFile);
+        } else if (format == FORMAT_PNG) {
+            texFile = pngFile;
         } else {
             cerr << "Unknown texture format!" << endl;
             exit(EXIT_FAILURE);
         }
 
-        cerr << cmd << endl;
-        int status = system(cmd.c_str());
-        assert(status == EXIT_SUCCESS);
-
-        writer.addFile(filename, texFile.c_str());
-
-        cerr << "Cleaning up temp dir " << tempDir << endl;
-        status = system(string("rm " + pngFile).c_str());
-        assert(status == EXIT_SUCCESS);
-        status = system(string("rm " + texFile).c_str());
-        assert(status == EXIT_SUCCESS);
-        status = system(string("rmdir " + tempDir).c_str());
-        assert(status == EXIT_SUCCESS);
+        sys("mkdir -p " + outdir);
+        sys("mv " + texFile + " " + outdir);
+        sys("rmdir " + tempDir);
 
         // Write images.
         for (int i = 0; i < images.size(); ++i) {
@@ -343,10 +344,15 @@ public:
             header.numSolid = numSolid;
 
             // Add the texture filename.
-            imageData.insert(imageData.end(), filename, filename + strlen(filename) + 1);
+            const char* c = filename.c_str();
+            imageData.insert(imageData.end(), c, c + strlen(c) + 1);
             
-            // And we're done!
-            writer.addData((image.name + ".img").c_str(), imageData.size(), &imageData[0]);
+            // And we're done! Write it to disk.
+            string path = outdir + "/" + image.name + ".img";
+            FILE* f = fopen(path.c_str(), "wb");
+            size_t written = fwrite(&imageData[0], 1, imageData.size(), f);
+            assert(written == imageData.size());
+            fclose(f);
         }
     }
 
@@ -537,12 +543,12 @@ public:
         cerr << endl;
     }
 
-    void writeAtlases(PackageWriter& writer, TextureFormat format) {
+    void writeAtlases(const string& outdir, TextureFormat format) {
         for (int i = 0; i < atlases.size(); ++i) {
-            string filename = "img_atlas_" + to_string(i) + ".tex";
+            string filename = "img_atlas_" + to_string(i);
             cerr << "Writing " << filename << endl;
 //            atlases[i].writePng(filename + ".png");
-            atlases[i].writePackage(writer, filename.c_str(), format);
+            atlases[i].write(outdir, filename, format);
         }
     }
 
@@ -556,8 +562,8 @@ void usage() {
     cerr << "Packs multiple images into a set of .img files and textures." << endl;
     cerr << "The output is written to a .pak file." << endl;
     cerr << "All specified files and directories are added." << endl << endl;
-    cerr << "Usage: atlas -o outfile -t ios|android [-i glob] [-x glob] paths..." << endl;
-    cerr << "  -o, --outfile: output file (required)" << endl;
+    cerr << "Usage: atlas -d outdir -t ios|android|png [-i glob] [-x glob] paths..." << endl;
+    cerr << "  -d, --outdir: output directory (required)" << endl;
     cerr << "  -t, --texture: 'ios' or 'android' (required)" << endl;
     cerr << "  -i, --include: glob for files to include (optional)" << endl;
     cerr << "  -x, --exclude: glob for files to exclude (optional)" << endl;
@@ -579,7 +585,7 @@ int main(int argc, const char* argv[]) {
 
     bool verbose = false;
     string formatStr;
-    string outfile;
+    string outdir;
     vector<string> paths;
     vector<string> includes;
     vector<string> excludes;
@@ -600,11 +606,11 @@ int main(int argc, const char* argv[]) {
                 cerr << "Missing argument for " << arg << endl << endl;
                 usage();
             }            
-            if (arg == "-o" || arg == "--outfile") {
-                if (!outfile.empty()) {
+            if (arg == "-d" || arg == "--outdir") {
+                if (!outdir.empty()) {
                     usage();
                 }
-                outfile = param;
+                outdir = param;
             } else if (arg == "-i" || arg == "--include") {
                 includes.push_back(param);
             } else if (arg == "-x" || arg == "--exclude") {
@@ -620,8 +626,8 @@ int main(int argc, const char* argv[]) {
         }
     }
 
-    if (outfile.empty()) {
-        cerr << "No output file specified! (use -o or --outfile)" << endl << endl;
+    if (outdir.empty()) {
+        cerr << "No output file specified! (use -d or --outdir)" << endl << endl;
         usage();
     }
     
@@ -630,8 +636,10 @@ int main(int argc, const char* argv[]) {
         format = FORMAT_IOS;
     } else if (formatStr == "android") {
         format = FORMAT_ANDROID;
+    } else if (formatStr == "png") {
+        format = FORMAT_PNG;
     } else {
-        cerr << "No texture format specified! (use '-t ios' or '-t android')" << endl << endl;
+        cerr << "No texture format specified! (use -t ios, -t android or -t png)" << endl << endl;
         usage();
     }
     
@@ -640,7 +648,7 @@ int main(int argc, const char* argv[]) {
         usage();
     }
 
-    excludes.push_back(outfile);
+    excludes.push_back(outdir);
 
     FileScanner scanner(includes, excludes);
     scanner.verbose = verbose;
@@ -661,7 +669,5 @@ int main(int argc, const char* argv[]) {
         slicer.dump();
     }
 
-    PackageWriter writer(outfile.c_str());
-    slicer.writeAtlases(writer, format);
-    writer.commit();
+    slicer.writeAtlases(outdir, format);
 }
