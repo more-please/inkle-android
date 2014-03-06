@@ -532,16 +532,48 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         return;
     }
 
+    NSDate* now = [NSDate date];
+    NSDate* obbDate = [NSDate date];
+    AP_PakReader* pak;
+
+    AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery1.ogg", AASSET_MODE_BUFFER);
+    if (pakAsset) {
+        NSLog(@"Mapping OBB...");
+        if (AAsset_isAllocated(pakAsset)) {
+            NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
+            NSLog(@"This is wasting a lot of memory.");
+        }
+
+        void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
+        NSAssert(ptr, @"AAsset_getBuffer failed!");
+
+        off_t size = AAsset_getLength(pakAsset);
+        NSAssert(size, @"AAsset_getLength failed!");
+
+        NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
+        NSAssert(data, @"dataWithBytesNoCopy failed!");
+
+        pak = [AP_PakReader readerWithData:data];
+
+    } else {
+        NSLog(@"Loading OBB %@", _obbPath);
+
+        NSError* err;
+        NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:_obbPath error:&err];
+        if (!attrs) {
+            NSLog(@"Error checking OBB file attributes: %@", err);
+            abort();
+        }
+        obbDate = [attrs valueForKey:NSFileCreationDate];
+
+        pak = [AP_PakReader readerWithMemoryMappedFile:_obbPath];
+    }
+
+    // Looks kosher, let's use it!
+    [AP_Bundle addPak:pak];
+
     // Check that both the current time and the timestamp
     // of the .obb file are before the beta expiry date.
-    NSError* err;
-    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:_obbPath error:&err];
-    if (!attrs) {
-        NSLog(@"Error checking OBB file attributes: %@", err);
-        abort();
-    }
-    NSDate* now = [NSDate date];
-    NSDate* obbDate = [attrs valueForKey:NSFileCreationDate];
     if ([self isExpired:now] || [self isExpired:obbDate]) {
         NSLog(@"Expired!!");
         self.delegate = [[ExpiredAppDelegate alloc] init];
@@ -550,10 +582,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
         self.delegate = sorcery;
     }
-
-    // Mount the OBB as a .pak file.
-    AP_PakReader* pak = [AP_PakReader readerWithMemoryMappedFile:_obbPath];
-    [AP_Bundle addPak:pak];
 
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
