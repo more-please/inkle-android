@@ -284,13 +284,13 @@ public:
             // KTX format (Android)
             texFile = tempFile + ".ktx";
             sys("cd " + binDir + " && ./etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx");
-            sys("rm " + tempFile);
+            sys("rm " + pngFile);
         } else if (format == FORMAT_IOS) {
             // PVR format (iOS)
             texFile = tempFile + ".pvr";
             string texturetool = binDir + "/texturetool";
             sys(texturetool + " -e PVRTC --channel-weighting-perceptual --bits-per-pixel-4 -f PVR -m -s -o " + texFile + " " + pngFile);
-            sys("rm " + tempFile);
+            sys("rm " + pngFile);
         } else if (format == FORMAT_PNG) {
             texFile = pngFile;
         } else {
@@ -581,7 +581,7 @@ int main(int argc, const char* argv[]) {
             break;
         }
     }
-    ANDROID_DIR = ANDROID_DIR + "/..";
+    ANDROID_DIR = ANDROID_DIR + "/../..";
 
     bool verbose = false;
     string formatStr;

@@ -56,16 +56,6 @@ static AP_Bundle* g_Bundle;
         }
     }
 
-    // Try loading a loose file from the .obb
-    NSString* path = [[AP_Bundle mainBundle] pathForResource:name ofType:ext];
-    if (path) {
-#ifdef ANDROID
-        return [NSData dataWithContentsOfMappedFile:path];
-#else
-        return [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:nil];
-#endif
-    }
-
 #ifdef ANDROID
     // Try loading an Android asset
     return [[AP_Application sharedApplication] getResource:fullName];
@@ -93,53 +83,13 @@ static AP_Bundle* g_Bundle;
 }
 #endif
 
-- (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
-{
-    NSFileManager* fm = [NSFileManager defaultManager];
-    NSString* path = [_root stringByAppendingPathComponent:dir];
-    NSMutableArray* result = [NSMutableArray array];
-    NSError* error;
-    for (NSString* s in [fm contentsOfDirectoryAtPath:path error:&error]) {
-        if ([s hasSuffix:ext]) {
-            NSString* file = [path stringByAppendingPathComponent:s];
-            [result addObject:file];
-        }
-    }
-    if (error) {
-        NSLog(@"*** [NSBundle pathsForResourcesOfType:\"%@\" inDirectory:\"%@\"]: %@", ext, dir, error);
-    }
-    return result;
-}
-
-- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext
-{
-    NSString* path = [self.root stringByAppendingPathComponent:name];
-    if (ext) {
-        path = [path stringByAppendingPathExtension:ext];
-    }
-    return [[NSFileManager defaultManager] fileExistsAtPath:path] ? path : nil;
-}
-
-- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath
-{
-    return [self pathForResource:[subpath stringByAppendingPathComponent:name] ofType:ext];
-}
-
-- (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
-{
-    NSString* path = [self pathForResource:name ofType:ext];
-    if (!path) {
-        return nil;
-    }
-    return [[NSURL alloc] initFileURLWithPath:path];
-}
-
 - (NSDictionary*) infoDictionary
 {
     if (!_info) {
         NSLog(@"Loading info dictionary...");
-        NSString* path = [self pathForResource:@"Info" ofType:@"plist"];
-        _info = [[NSDictionary alloc] initWithContentsOfFile:path];
+        NSData* data = [AP_Bundle dataForResource:@"Info" ofType:@"plist"];
+        NSString* s = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        _info = (NSDictionary*) [s propertyList];
         AP_CHECK(_info, return nil);
         NSLog(@"Loading info dictionary... Done.");
     }

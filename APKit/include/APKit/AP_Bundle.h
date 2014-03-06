@@ -15,21 +15,18 @@
 // Add the given .pak file to the end of the resource search path.
 + (void) addPak:(AP_PakReader*)pak;
 
-#ifdef ANDROID
 + (AP_Bundle*) mainBundle;
-#else
-+ (NSBundle*) mainBundle;
-#endif
 
 @property(nonatomic,strong) NSString* root;
 
 // Like pathsForResources, but returns the bundle-relative resource name.
 - (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
 
-- (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
-- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
-- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath;
-- (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
+//- (NSArray*) pathsForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
+//- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext;
+//- (NSString*) pathForResource:(NSString*)name ofType:(NSString*)ext inDirectory:(NSString*)subpath;
+//- (NSURL*) URLForResource:(NSString*)name withExtension:(NSString*)ext;
+
 - (NSDictionary*) infoDictionary;
 - (id) objectForInfoDictionaryKey:(NSString*)key;
 

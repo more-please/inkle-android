@@ -40,6 +40,8 @@
 #import "AP_PakReader.h"
 #import "AP_Profiler.h"
 
+#import "NSDictionary+AP_InitWithData.h"
+
 #else
 
 // Don't replace UI -- just map all the AP_* classes to their UI* equivalents.
