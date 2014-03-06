@@ -344,9 +344,10 @@ public:
             header.numSolid = numSolid;
 
             // Add the texture filename.
-            const char* c = filename.c_str();
+            string basename = texFile.substr(1 + texFile.find_last_of("/"));
+            const char* c = basename.c_str();
             imageData.insert(imageData.end(), c, c + strlen(c) + 1);
-            
+
             // And we're done! Write it to disk.
             string path = outdir + "/" + image.name + ".img";
             FILE* f = fopen(path.c_str(), "wb");
