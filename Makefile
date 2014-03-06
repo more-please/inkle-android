@@ -1,6 +1,8 @@
 # Note: on OS 10.9, this only works with Xcode 5. However, Apportable needs Xcode 4!
 # Until they fix Apportable you'll need to switch back and forth via xcode-select.
 
+# Is this the world's worst makefile? Oh, come on, who needs separate compilation...
+
 CXX = clang++ -x c++ -O4 -I./3rd-party/stb
 
 COMMON_HEADERS = \
@@ -17,30 +19,31 @@ COMMON_SRCS = \
 	3rd-party/stb/stb_image.c \
 	3rd-party/stb/stb_truetype.c
 
-all: build/pak build/atlas build/superellipse build/fontex build/split build/tippex
+all: build/bin/pak build/bin/atlas build/bin/superellipse build/bin/fontex build/bin/split build/bin/tippex
 
-build/pak: tools/pak.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/pak.cpp $(COMMON_SRCS) -o build/pak
+build/bin/pak: tools/pak.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/pak.cpp $(COMMON_SRCS) -o build/bin/pak
 
-build/atlas: tools/atlas.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/atlas.cpp $(COMMON_SRCS) -o build/atlas
+build/bin/atlas: tools/atlas.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/atlas.cpp $(COMMON_SRCS) -o build/bin/atlas
 
-build/superellipse: tools/superellipse.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/superellipse.cpp $(COMMON_SRCS) -o build/superellipse
+build/bin/superellipse: tools/superellipse.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/superellipse.cpp $(COMMON_SRCS) -o build/bin/superellipse
 
-build/fontex: tools/fontex.cpp tools/fontex.h $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/fontex.cpp $(COMMON_SRCS) -o build/fontex
+build/bin/fontex: tools/fontex.cpp tools/fontex.h $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/fontex.cpp $(COMMON_SRCS) -o build/bin/fontex
 
-build/split: tools/split.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/split.cpp $(COMMON_SRCS) -o build/split
+build/bin/split: tools/split.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/split.cpp $(COMMON_SRCS) -o build/bin/split
 
-build/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
-	$(CXX) tools/tippex.cpp $(COMMON_SRCS) -o build/tippex
+build/bin/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/tippex.cpp $(COMMON_SRCS) -o build/bin/tippex
 
 clean:
-	rm build/atlas
-	rm build/pak
-	rm build/superellipse
-	rm build/fontex
-	rm build/split
-	rm build/tippex
+	rm build/bin/*
