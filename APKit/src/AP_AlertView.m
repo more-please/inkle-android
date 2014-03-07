@@ -185,8 +185,8 @@ AP_BAN_EVIL_INIT;
 
     // Measure how much space everything needs
 
-    const CGFloat xSpace = [AP_Window iPhone:20 iPad:25 iPadLandscape:35];
-    const CGFloat ySpace = [AP_Window iPhone:15 iPad:25 iPadLandscape:20];
+    const CGFloat xSpace = [AP_Window scaleForIPhone:20 iPad:25];
+    const CGFloat ySpace = [AP_Window scaleForIPhone:15 iPad:20];
 
     CGRect alertFrame = CGRectZero;
     if (_header) {
