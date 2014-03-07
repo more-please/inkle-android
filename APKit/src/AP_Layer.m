@@ -31,7 +31,9 @@ AP_BAN_EVIL_INIT
 
 - (void) setAnchorPoint:(CGPoint)p
 {
+    CGPoint oldCenter = _view.center;
     _view.animatedAnchor.dest = p;
+    _view.center = oldCenter;
 }
 
 - (CGPoint) position
