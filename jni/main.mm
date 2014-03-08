@@ -497,21 +497,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return result;
 }
 
-#define BETA_DAYS 28
-
-- (NSDate*) expiryDate
-{
-    NSDate* buildDate = [NSDate dateWithTimeIntervalSince1970:SORCERY_BUILD_TIMESTAMP];
-    NSDate* expiryDate = [buildDate dateByAddingTimeInterval:(BETA_DAYS * 24 * 60 * 60)];
-    return expiryDate;
-}
-
-- (BOOL) isExpired:(NSDate*)date
-{
-    NSDate* expiry = [self expiryDate];
-    return ([expiry compare:date] == NSOrderedAscending);
-}
-
 - (BOOL) openURL:(NSURL*)url
 {
     NSString* s = url.absoluteString;
@@ -531,8 +516,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         return;
     }
 
-    NSDate* now = [NSDate date];
-    NSDate* obbDate = [NSDate date];
     AP_PakReader* pak;
 
     AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery1.ogg", AASSET_MODE_BUFFER);
@@ -555,32 +538,15 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         pak = [AP_PakReader readerWithData:data];
 
     } else {
-        NSLog(@"Loading OBB %@", _obbPath);
-
-        NSError* err;
-        NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:_obbPath error:&err];
-        if (!attrs) {
-            NSLog(@"Error checking OBB file attributes: %@", err);
-            abort();
-        }
-        obbDate = [attrs valueForKey:NSFileCreationDate];
-
         pak = [AP_PakReader readerWithMemoryMappedFile:_obbPath];
     }
 
     // Looks kosher, let's use it!
     [AP_Bundle addPak:pak];
 
-    // Check that both the current time and the timestamp
-    // of the .obb file are before the beta expiry date.
-    if ([self isExpired:now] || [self isExpired:obbDate]) {
-        NSLog(@"Expired!!");
-        self.delegate = [[ExpiredAppDelegate alloc] init];
-    } else {
-        NSLog(@"Let's get started!");
-        SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
-        self.delegate = sorcery;
-    }
+    NSLog(@"Let's get started!");
+    SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
+    self.delegate = sorcery;
 
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
