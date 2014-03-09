@@ -2,21 +2,23 @@
 
 #import "GlueCommon.h"
 
-@implementation GAIDictionaryBuilder
+@implementation GAIDictionaryBuilder {
+    jobject _obj;
+}
 
 + (GAIDictionaryBuilder *)createEventWithCategory:(NSString *)category
                                            action:(NSString *)action
                                             label:(NSString *)label
                                             value:(NSNumber *)value
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    GAIDictionaryBuilder* builder = [[GAIDictionaryBuilder alloc] init];
+    builder->_obj = [[UIApplication sharedApplication] gaiEventWithCategory:category action:action label:label value:value];
+    return builder;
 }
 
-- (NSMutableDictionary *)build
+- (jobject) build
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    return _obj;
 }
 
 @end

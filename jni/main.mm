@@ -84,6 +84,21 @@ static JavaMethod kParseAddKey = {
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
 };
+static JavaMethod kGaiTrackerWithTrackingId = {
+    "gaiTrackerWithTrackingId", "(Ljava/lang/String;)Lcom/google/analytics/tracking/android/Tracker;", NULL
+};
+static JavaMethod kBoxLong = {
+    "boxLong", "(J)Ljava/lang/Long;", NULL
+};
+static JavaMethod kGaiEvent = {
+    "gaiEvent", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Ljava/util/Map;", NULL
+};
+static JavaMethod kGaiTrackerSet = {
+    "gaiTrackerSet", "(Lcom/google/analytics/tracking/android/Tracker;Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kGaiTrackerSend = {
+    "gaiTrackerSend", "(Lcom/google/analytics/tracking/android/Tracker;Ljava/util/Map;)V", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -115,6 +130,8 @@ static JNINativeMethod kNatives[] = {
 
     NSMutableDictionary* _parseCallBlocks; // Map of int -> PFStringResultBlock
     NSMutableDictionary* _parseSaveBlocks; // Map of int -> PFBooleanResultBlock
+
+    jobject _gaiDefaultTracker;
 }
 
 - (id) initWithAndroidApp:(struct android_app*)android
@@ -475,6 +492,75 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     jstring jValue = _env->NewStringUTF(valueStr.cString);
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId
+{
+    [self maybeInitJavaMethod:&kGaiTrackerWithTrackingId];
+
+    _env->PushLocalFrame(2);
+    jstring jName = _env->NewStringUTF(trackingId.cString);
+
+    jobject result = _env->CallObjectMethod(_instance, kGaiTrackerWithTrackingId.method, jName);
+    result = _env->NewGlobalRef(result);
+    if (!_gaiDefaultTracker) {
+        _gaiDefaultTracker = result;
+    }
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (jobject) gaiDefaultTracker
+{
+    return _gaiDefaultTracker;
+}
+
+- (jobject) gaiEventWithCategory:(NSString *)category
+                          action:(NSString *)action
+                           label:(NSString *)label
+                           value:(NSNumber *)value
+{
+    [self maybeInitJavaMethod:&kBoxLong];
+    [self maybeInitJavaMethod:&kGaiEvent];
+    _env->PushLocalFrame(8);
+
+    jstring jCategory = _env->NewStringUTF(category.cString);
+    jstring jAction = _env->NewStringUTF(label.cString);
+    jstring jLabel = _env->NewStringUTF(action.cString);
+    jobject jValue = NULL;
+    if (value) {
+        jValue = _env->CallObjectMethod(_instance, kBoxLong.method, (jlong) value.longLongValue);
+    }
+
+    jobject result = _env->CallObjectMethod(_instance, kGaiEvent.method, jCategory, jAction, jLabel, jValue);
+    result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value
+{
+    [self maybeInitJavaMethod:&kGaiTrackerSet];
+    _env->PushLocalFrame(8);
+
+    jstring jParam = _env->NewStringUTF(param.cString);
+    jstring jValue = _env->NewStringUTF(value.cString);
+    _env->CallVoidMethod(_instance, kGaiTrackerSet.method, tracker, jParam, jValue);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (void) gaiTracker:(jobject)tracker send:(jobject)params
+{
+    [self maybeInitJavaMethod:&kGaiTrackerSend];
+    _env->PushLocalFrame(8);
+
+    _env->CallVoidMethod(_instance, kGaiTrackerSend.method, tracker, params);
+    _env->DeleteGlobalRef(params);
 
     _env->PopLocalFrame(NULL);
 }

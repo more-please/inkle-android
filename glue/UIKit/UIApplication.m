@@ -82,4 +82,35 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
+- (jobject) gaiDefaultTracker
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
+- (jobject) gaiEventWithCategory:(NSString *)category
+                          action:(NSString *)action
+                           label:(NSString *)label
+                           value:(NSNumber *)value
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
+- (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) gaiTracker:(jobject)tracker send:(jobject)params
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 @end

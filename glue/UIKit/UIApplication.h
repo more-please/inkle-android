@@ -30,4 +30,17 @@
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
 
+// Wrappers for Google Analytics
+// TODO: again, would be nice to decouple these from SorceryActivity...
+- (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId;
+- (jobject) gaiDefaultTracker;
+
+- (jobject) gaiEventWithCategory:(NSString *)category
+                          action:(NSString *)action
+                           label:(NSString *)label
+                           value:(NSNumber *)value;
+
+- (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value;
+- (void) gaiTracker:(jobject)tracker send:(jobject)params;
+
 @end

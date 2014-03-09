@@ -8,6 +8,7 @@
 
 + (GAI*) sharedInstance;
 
-@property(nonatomic,assign) id<GAITracker> defaultTracker;
+- (id<GAITracker>)trackerWithTrackingId:(NSString *)trackingId;
+- (id<GAITracker>)defaultTracker;
 
 @end

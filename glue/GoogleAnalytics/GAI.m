@@ -1,36 +1,27 @@
 #import "GAI.h"
 
+#import <UIKit/UIKit.h>
+
+#import "GAITracker.h"
 #import "GlueCommon.h"
 
 @implementation GAI
 
-+ (GAI *)sharedInstance
++ (GAI*) sharedInstance
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-}
-
-- (id<GAITracker>)trackerWithName:(NSString *)name
-                       trackingId:(NSString *)trackingId
-{
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    return [[GAI alloc] init];
 }
 
 - (id<GAITracker>)trackerWithTrackingId:(NSString *)trackingId
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    jobject obj = [[UIApplication sharedApplication] gaiTrackerWithTrackingId:trackingId];
+    return [[AP_GAITracker alloc] initWithObj:obj];
 }
 
-- (void)removeTrackerByName:(NSString *)name
+- (id<GAITracker>) defaultTracker
 {
-    GLUE_NOT_IMPLEMENTED;
-}
-
-- (void)dispatch
-{
-    GLUE_NOT_IMPLEMENTED;
+    jobject obj = [[UIApplication sharedApplication] gaiDefaultTracker];
+    return [[AP_GAITracker alloc] initWithObj:obj];
 }
 
 @end

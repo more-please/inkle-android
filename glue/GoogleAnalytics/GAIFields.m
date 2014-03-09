@@ -1,3 +1,3 @@
 #import "GAIFields.h"
 
-NSString* const kGAIScreenName = @"kGAIScreenName";
+NSString* const kGAIScreenName = @"&cd"; // Value taken from Javadoc
