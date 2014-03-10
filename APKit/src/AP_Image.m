@@ -44,10 +44,7 @@ AP_BAN_EVIL_INIT
 
 @end
 
-#define MULTILINE(...) #__VA_ARGS__
-
-static const char* kVertex = MULTILINE(
-    precision highp float;
+static const char* kVertex = AP_SHADER(
     uniform mat3 transform;
     uniform vec2 stretch;
     attribute vec2 edgePos;
@@ -64,8 +61,7 @@ static const char* kVertex = MULTILINE(
     }
 );
 
-static const char* kAlphaFragment = MULTILINE(
-    precision highp float;
+static const char* kAlphaFragment = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
     varying vec2 solidTexCoord;
@@ -79,8 +75,7 @@ static const char* kAlphaFragment = MULTILINE(
     }
 );
 
-static const char* kSolidFragment = MULTILINE(
-    precision highp float;
+static const char* kSolidFragment = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
     varying vec2 solidTexCoord;

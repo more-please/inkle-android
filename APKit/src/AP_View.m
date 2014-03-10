@@ -761,16 +761,13 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 #pragma mark - Rendering
 //------------------------------------------------------------------------------------
 
-#define MULTILINE(...) #__VA_ARGS__
-
 - (void) updateGL
 {
 }
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
-    static const char* kVertex = MULTILINE(
-        precision highp float;
+    static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
         attribute vec2 pos;
         void main() {
@@ -779,8 +776,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         }
     );
 
-    static const char* kFragment = MULTILINE(
-        precision highp float;
+    static const char* kFragment = AP_SHADER(
         uniform vec4 color;
         void main() {
             gl_FragColor = color;

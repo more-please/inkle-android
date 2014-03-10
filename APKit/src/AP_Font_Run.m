@@ -216,8 +216,6 @@ typedef struct VertexData {
     _textColor = AP_ColorToVector(color);
 }
 
-#define MULTILINE(...) #__VA_ARGS__
-
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
     GLKVector4 rgba = _textColor;
@@ -227,8 +225,7 @@ typedef struct VertexData {
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL color:(GLKVector4)rgba
 {
-    static const char* kVertex = MULTILINE(
-        precision highp float;
+    static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
         attribute vec2 pos;
         attribute vec2 texCoord;
@@ -240,8 +237,7 @@ typedef struct VertexData {
         }
     );
 
-    static const char* kFragment = MULTILINE(
-        precision highp float;
+    static const char* kFragment = AP_SHADER(
         uniform vec4 color;
         varying vec2 _texCoord;
         uniform sampler2D texture;

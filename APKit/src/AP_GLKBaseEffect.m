@@ -39,12 +39,9 @@
     return self;
 }
 
-#define MULTILINE(...) #__VA_ARGS__
-
 - (void) prepareToDraw
 {
-    static const char* kVertex = MULTILINE(
-        precision highp float;
+    static const char* kVertex = AP_SHADER(
         uniform mat4 modelViewProjectionMatrix;
         attribute vec4 position;
         attribute vec2 texCoord0;
@@ -55,8 +52,7 @@
         }
     );
 
-    static const char* kFragment = MULTILINE(
-        precision highp float;
+    static const char* kFragment = AP_SHADER(
         uniform vec4 color;
         uniform sampler2D texture;
         varying vec2 fragTexCoord;
