@@ -237,6 +237,7 @@ static inline CGFloat aspect(CGSize size) {
     glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
