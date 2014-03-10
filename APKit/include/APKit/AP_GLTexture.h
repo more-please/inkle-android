@@ -13,6 +13,8 @@
 @property (readonly) int width;
 @property (readonly) int height;
 
+- (instancetype) initLimitSize:(BOOL)limitSize;
+
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data;
 - (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize;
 
@@ -20,9 +22,10 @@
 
 // Load a texture resource (via AP_Bundle).
 // The results are cached, so the same object may be returned in subsequent calls.
-+ (AP_GLTexture*) textureNamed:(NSString*)name;
+// If limitSize is YES, we'll avoid loading mipmaps more than twice the screen size.
++ (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize;
 
-+ (AP_GLTexture*) textureWithData:(NSData*)data;
-+ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path;
++ (AP_GLTexture*) textureWithData:(NSData*)data limitSize:(BOOL)limitSize;
++ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path limitSize:(BOOL)limitSize;
 
 @end

@@ -124,7 +124,7 @@ static LigatureRHS g_ZeroLigature;
         _newlineGlyph = [self glyphForChar:'\n'];
 
         NSString* textureName = [NSString stringWithFormat:@"%@.png", _name];
-        _texture = [AP_GLTexture textureNamed:textureName];
+        _texture = [AP_GLTexture textureNamed:textureName limitSize:NO];
         AP_CHECK(_texture, return nil);
     }
     return self;
