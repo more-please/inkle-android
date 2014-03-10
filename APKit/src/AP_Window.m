@@ -208,7 +208,7 @@ static inline CGFloat aspect(CGSize size) {
     _clock = AP_TimeInSeconds();
     [AP_Animation setMasterClock:_clock];
     [_fps tick];
-    [_profiler maybeReport];
+//    [_profiler maybeReport];
 
     [_profiler step:@"animation"];
     for (AP_Animation* animation in [AP_Animation animations]) {
@@ -256,6 +256,8 @@ static inline CGFloat aspect(CGSize size) {
             2.0 / bounds.size.width, 2.0 / bounds.size.height);
 
     [_profiler step:@"update"];
+    BOOL needsDisplay = NO;
+    BOOL* needsDisplayPtr = &needsDisplay;
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v visitControllersWithBlock:^(AP_ViewController* c) {
@@ -263,7 +265,17 @@ static inline CGFloat aspect(CGSize size) {
         }];
         [v visitWithBlock:^(AP_View* view) {
             [view updateGL];
+            if (view.needsDisplay) {
+                *needsDisplayPtr = YES;
+                view.needsDisplay = NO;
+            }
         }];
+    }
+
+    if (needsDisplay) {
+        self.idleFrameCount = 0;
+    } else {
+        self.idleFrameCount += 1;
     }
 
     [_profiler step:@"layout"];

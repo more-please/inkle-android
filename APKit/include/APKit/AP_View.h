@@ -34,10 +34,11 @@
 - (CGSize) sizeThatFits:(CGSize)size;
 - (void) sizeToFit;
 
-- (void) setNeedsDisplay;
 - (void) setNeedsLayout;
 - (void) layoutIfNeeded;
 - (void) layoutSubviews;
+
+@property (nonatomic) BOOL needsDisplay;
 
 // Should really be on AP_Responder. Maybe have AP_View subclass UIResponder?
 - (BOOL) resignFirstResponder;

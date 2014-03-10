@@ -929,9 +929,4 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     [gestureRecognizer wasAddedToView:self];
 }
 
-- (void) setNeedsDisplay
-{
-    AP_NOT_IMPLEMENTED;
-}
-
 @end

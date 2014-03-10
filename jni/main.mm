@@ -34,6 +34,7 @@
 @interface Main : AP_Application
 @property(nonatomic,readonly) BOOL active;
 @property(nonatomic,readonly,strong) NSRunLoop* runLoop;
+@property(nonatomic,readonly) int idleCount;
 @end
 
 static Main* g_Main;
@@ -772,6 +773,15 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     UIViewController* vc = self.delegate.window.rootViewController;
     AP_CHECK(vc, return);
 
+    int maxIdleCount = byForceIfNecessary ? 0 : 8;
+
+    ++_idleCount;
+    if (_idleCount < vc.idleFrameCount && _idleCount < maxIdleCount) {
+//        NSLog(@"Idling (update count %d, max %d)", _idleCount, maxIdleCount);
+        return;
+    }
+    _idleCount = 0;
+
     if (byForceIfNecessary || !vc.paused) {
         eglMakeCurrent(_display, _surface, _surface, _context);
         [vc draw];
@@ -953,15 +963,27 @@ void android_main(struct android_app* android) {
             // If animating, we loop until all events are read, then continue
             // to draw the next frame of animation.
 
+            int timeout;
+            if (!g_Main.inForeground) {
+                timeout = -1;
+            } else if (g_Main.canDraw && g_Main.idleCount < 4) {
+                timeout = 0;
+            } else {
+                timeout = 30;
+            }
+
+            BOOL gotInput = NO;
             while (1) {
                 // Read all pending events.
                 struct android_poll_source* source;
-                int timeout = g_Main.inForeground ? 0 : -1;
                 int events;
                 int ident = ALooper_pollAll(timeout, NULL, &events, (void**)&source);
                 if (ident <= 0) {
                     break;
                 }
+
+                gotInput = YES;
+                timeout = 0; // Get all subsequent events as quickly as possible.
 
                 // Process this event.
                 if (source != NULL) {
@@ -996,7 +1018,7 @@ void android_main(struct android_app* android) {
                 // to kick in, even after we get notified. What a crock.
                 // Let's just poll it every frame.
                 [g_Main updateScreenSize];
-                [g_Main updateGL:NO];
+                [g_Main updateGL:gotInput];
             }
         }
     }

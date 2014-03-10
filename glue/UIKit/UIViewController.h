@@ -20,4 +20,7 @@
 - (void) touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void) resetTouches;
 
+// Android addition, so we can throttle down when we're not drawing
+@property(nonatomic) int idleFrameCount;
+
 @end
