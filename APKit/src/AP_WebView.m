@@ -159,6 +159,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             size = [AP_Window scaleForIPhone:24 iPad:32];
         } else if (isTag(n, "h3")) {
             // TODO: fancy letter-spacing
+            font = @"Baskerville-Italic";
             style.paragraphSpacingBefore = [AP_Window scaleForIPhone:30 iPad:45];
             size = 19;
         } else {
