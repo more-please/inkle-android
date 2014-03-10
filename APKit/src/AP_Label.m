@@ -168,7 +168,6 @@
     [self textLayoutWithWidth:size.width];
     while (_numberOfLines > 0 && _formattedLineCount > _numberOfLines && _formattedSize.width > 0) {
         size.width = MAX(size.width, _formattedSize.width) * 1.2;
-        NSLog(@"Label has %d lines, %d needed. Trying again with width: %.1f Text: %@", _formattedLineCount, _numberOfLines, size.width, _text.string);
         [self textLayoutWithWidth:size.width];
     }
     return _formattedSize;
