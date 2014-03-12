@@ -82,7 +82,7 @@
         if (limitSize) {
             CGSize s = [AP_Window screenSize];
             CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-            _maxTextureSize = MIN(systemMaxTextureSize, screenSize * 2);
+            _maxTextureSize = MIN(systemMaxTextureSize, screenSize * 1.99);
         } else {
             _maxTextureSize = systemMaxTextureSize;
         }
