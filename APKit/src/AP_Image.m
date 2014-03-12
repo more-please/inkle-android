@@ -87,6 +87,35 @@ static const char* kSolidFragment = AP_SHADER(
     }
 );
 
+// HACKY WORKAROUND for Vivante GPU bug -- it can't seem to do two texture
+// lookups with a bias. We bias towards the larger mipmap to sharpen the
+// image, and we need to do two lookups when there's an alpha channel.
+static const char* kVivanteAlphaFragment = AP_SHADER(
+    uniform float alpha;
+    uniform vec4 tint;
+    varying vec2 solidTexCoord;
+    varying vec2 alphaTexCoord;
+    uniform sampler2D texture;
+    void main() {
+        vec4 pixel = texture2D(texture, solidTexCoord);
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        float pixelAlpha = texture2D(texture, alphaTexCoord).g;
+        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
+    }
+);
+static const char* kVivanteSolidFragment = AP_SHADER(
+    uniform float alpha;
+    uniform vec4 tint;
+    varying vec2 solidTexCoord;
+    uniform sampler2D texture;
+    void main() {
+        vec4 pixel = texture2D(texture, solidTexCoord);
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
+    }
+);
+// END OF HACK
+
 static AP_Image_Program* g_SolidProg;
 static AP_Image_Program* g_AlphaProg;
 
@@ -258,8 +287,18 @@ AP_BAN_EVIL_INIT
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
-        g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
+
+        // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
+        NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
+        if ([vendor hasPrefix:@"Vivante"]) {
+            NSLog(@"Hmm, GL_VENDOR is %@", vendor);
+            NSLog(@"Due to a bug in Vivante's GPU the graphics may look slightly blurry, sorry.");
+            g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteSolidFragment];
+            g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteAlphaFragment];
+        } else {
+            g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
+            g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
+        }
     }
     AP_CHECK(g_SolidProg, abort());
     AP_CHECK(g_AlphaProg, abort());
