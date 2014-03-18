@@ -127,6 +127,12 @@ static inline CGFloat aspect(CGSize size) {
         g_ScreenBounds = screen.bounds;
         g_ScreenScale = screen.scale;
         NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, g_ScreenScale);
+
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self
+            selector:@selector(didReceiveMemoryWarning)
+            name:UIApplicationDidReceiveMemoryWarningNotification
+            object:nil];
 #endif
     }
     return self;
@@ -183,6 +189,7 @@ static inline CGFloat aspect(CGSize size) {
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [EAGLContext setCurrentContext:nil];
 }
 #endif
@@ -487,6 +494,16 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     _activeTouches = [NSMutableSet set];
 }
 
+- (void) didReceiveMemoryWarning
+{
+    if (_rootViewController) {
+        AP_View* v = _rootViewController.view;
+        [v visitControllersWithBlock:^(AP_ViewController* c) {
+            [c didReceiveMemoryWarning];
+        }];
+    }
+}
+
 #ifndef ANDROID
 
 //------------------------------------------------------------------------------------
@@ -507,13 +524,6 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 {
     if (_rootViewController) {
         _rootViewController.view.frame = self.bounds;
-    }
-}
-
-- (void) didReceiveMemoryWarning
-{
-    if (_rootViewController) {
-        [_rootViewController didReceiveMemoryWarning];
     }
 }
 

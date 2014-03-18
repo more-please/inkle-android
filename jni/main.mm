@@ -879,6 +879,13 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return NO;
 }
 
+- (void) lowMemory
+{
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:UIApplicationDidReceiveMemoryWarningNotification
+        object:nil];
+}
+
 - (void) handleAppCmd:(int32_t)cmd
 {
     switch (cmd) {
@@ -891,6 +898,11 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         case APP_CMD_STOP:
             _inForeground = NO;
             CkSuspend();
+            break;
+
+        case APP_CMD_LOW_MEMORY:
+            NSLog(@"*** Low memory warning, freeing some non-essential resources ***");
+            [self lowMemory];
             break;
 
         case APP_CMD_SAVE_STATE:
@@ -915,6 +927,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             break;
 
         case APP_CMD_TERM_WINDOW:
+            [self lowMemory];
             [self teardownSurface];
             break;
 

@@ -22,8 +22,23 @@
     if (self) {
         _size = size;
         _dict = [NSMutableDictionary dictionary];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(didReceiveMemoryWarning:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) didReceiveMemoryWarning:(NSNotification*)notification
+{
+    [_dict removeAllObjects];
 }
 
 - (AP_Cache*) init
