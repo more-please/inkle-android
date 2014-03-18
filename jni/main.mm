@@ -129,6 +129,7 @@ static JNINativeMethod kNatives[] = {
     EGLSurface _surface; // This can change across suspend/resume
 
     BOOL _inForeground;
+    NSDate* _autoQuitTime;
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
 
@@ -187,7 +188,7 @@ static JNINativeMethod kNatives[] = {
 
         // Check whether we're running on a low-end device.
         if ([self javaBoolMethod:&kIsCrappyDevice]) {
-            NSLog(@"*** Running on a low-end device. Graphics quality will be reduced.");
+            NSLog(@"*** Running on a low-end device.");
             self.isCrappyDevice = YES;
         }
 
@@ -209,6 +210,16 @@ static JNINativeMethod kNatives[] = {
     [self teardownGL];
     [self teardownJava];
     g_Main = nil;
+}
+
+- (void) maybeAutoQuit
+{
+    NSDate* now = [NSDate date];
+    if (_autoQuitTime && [now laterDate:_autoQuitTime] == now) {
+        NSLog(@"*** Sorcery! is idle in the background. Auto-quitting to save memory.");
+        _autoQuitTime = nil;
+        [self quit];
+    }
 }
 
 - (void) quit
@@ -908,12 +919,16 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     switch (cmd) {
         case APP_CMD_RESUME:
             _inForeground = YES;
+            _autoQuitTime = nil;
             CkResume();
             break;
 
         case APP_CMD_PAUSE:
         case APP_CMD_STOP:
             _inForeground = NO;
+            if (self.isCrappyDevice) {
+                _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:30];
+            }
             CkSuspend();
             break;
 
@@ -995,7 +1010,12 @@ void android_main(struct android_app* android) {
 
             int timeout;
             if (!g_Main.inForeground) {
-                timeout = -1;
+                if (g_Main.isCrappyDevice) {
+                    timeout = 10 * 1000;
+                    [g_Main maybeAutoQuit];
+                } else {
+                    timeout = -1;
+                }
             } else if (g_Main.canDraw && g_Main.idleCount < 4) {
                 timeout = 0;
             } else {
