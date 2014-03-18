@@ -823,6 +823,11 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             // Just log the error to help diagnose visual glitches, I guess.
             NSLog(@"*** EGL error: %x", err);
         }
+
+        GLenum err2 = glGetError();
+        if (err2 != GL_NO_ERROR) {
+            NSLog(@"*** GL error: %x", err2);
+        }
     }
 }
 
