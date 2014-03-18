@@ -207,7 +207,7 @@ typedef struct VertexData {
     static AP_Cache* g_ImageCache;
     if (!g_ImageCache) {
         // Images are small, but they cause textures to be retained! Use a small cache.
-        g_ImageCache = [[AP_Cache alloc] initWithSize:5];
+        g_ImageCache = [[AP_Cache alloc] init];
     }
     AP_CHECK(g_ImageCache, return nil);
 
@@ -307,7 +307,7 @@ AP_BAN_EVIL_INIT
     _solidQuads = [NSMutableData data];
     _alphaQuads = [NSMutableData data];
 
-    _cache = [[AP_Cache alloc] initWithSize:50];
+    _cache = [[AP_Cache alloc] init];
 
     _resizingMode = UIImageResizingModeTile;
 }

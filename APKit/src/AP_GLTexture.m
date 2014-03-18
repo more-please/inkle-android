@@ -24,7 +24,7 @@ static int s_totalMemoryUsage = 0;
 {
     static AP_Cache* g_TextureCache;
     if (!g_TextureCache) {
-        g_TextureCache = [[AP_Cache alloc] initWithSize:5];
+        g_TextureCache = [[AP_Cache alloc] init];
     }
     AP_CHECK(g_TextureCache, return nil);
 
