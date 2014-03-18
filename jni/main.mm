@@ -100,6 +100,9 @@ static JavaMethod kGaiTrackerSet = {
 static JavaMethod kGaiTrackerSend = {
     "gaiTrackerSend", "(Lcom/google/analytics/tracking/android/Tracker;Ljava/util/Map;)V", NULL
 };
+static JavaMethod kIsCrappyDevice = {
+    "isCrappyDevice", "()Z", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -181,6 +184,12 @@ static JNINativeMethod kNatives[] = {
         [NSUserDefaults setDocumentsDir:self.documentsDir];
 
         _touches = [NSMutableDictionary dictionary];
+
+        // Check whether we're running on a low-end device.
+        if ([self javaBoolMethod:&kIsCrappyDevice]) {
+            NSLog(@"*** Running on a low-end device. Graphics quality will be reduced.");
+            self.isCrappyDevice = YES;
+        }
 
         // Initialize non-OBB assets.
         _assetManager = [self getAssets];
@@ -287,6 +296,14 @@ static JNINativeMethod kNatives[] = {
     _env->CallVoidMethod(_instance, m->method, jstr);
 
     _env->PopLocalFrame(NULL);
+
+}
+
+- (BOOL) javaBoolMethod:(JavaMethod*)m
+{
+    [self maybeInitJavaMethod:m];
+    jboolean result = _env->CallBooleanMethod(_instance, m->method);
+    return result;
 
 }
 

@@ -91,7 +91,10 @@ static int s_totalMemoryUsage = 0;
         if (limitSize) {
             CGSize s = [AP_Window screenSize];
             CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-            _maxTextureSize = MIN(systemMaxTextureSize, screenSize * 1.99);
+            CGFloat screenMaxTextureSize = [UIApplication sharedApplication].isCrappyDevice
+                ? screenSize * 1.59  // Use 1024 texture for screens up to 1280 pixels in size
+                : screenSize * 1.99; // Use 1024 texture for screens up to 1024 pixels in size
+            _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
         } else {
             _maxTextureSize = systemMaxTextureSize;
         }
