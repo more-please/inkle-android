@@ -6,6 +6,14 @@
     GLuint _name;
     GLenum _target;
     GLenum _usage;
+    int _memoryUsage;
+}
+
+static int s_totalMemoryUsage = 0;
+
++ (int) totalMemoryUsage
+{
+    return s_totalMemoryUsage;
 }
 
 - (AP_GLBuffer*) init
@@ -25,6 +33,7 @@
 
 - (void) dealloc
 {
+    s_totalMemoryUsage -= _memoryUsage;
     glDeleteBuffers(1, &_name);
 }
 
@@ -50,6 +59,10 @@
     glBindBuffer(_target, _name);
     glBufferData(_target, size, data, _usage);
     AP_CHECK_GL("glBufferData failed", return);
+
+    s_totalMemoryUsage -= _memoryUsage;
+    _memoryUsage = size;
+    s_totalMemoryUsage += _memoryUsage;
 }
 
 + (AP_GLBuffer*) bufferWithTarget:(GLenum)target usage:(GLenum)usage data:(NSData *)data

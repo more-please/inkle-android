@@ -18,6 +18,8 @@
     int _maxTextureSize;
 }
 
+static int s_totalMemoryUsage = 0;
+
 + (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize
 {
     static AP_Cache* g_TextureCache;
@@ -31,7 +33,9 @@
         AP_GLTexture* result = [AP_GLTexture textureWithData:data limitSize:limitSize];
         if (result) {
             result->_assetName = name;
-            NSLog(@"Loaded texture: %@", name);
+            int bytes = result->_memoryUsage;
+            s_totalMemoryUsage += bytes;
+            NSLog(@"Loaded %@ (%d bytes)", name, bytes);
         } else {
             NSLog(@"Failed to load texture: %@", name);
         }
@@ -61,6 +65,16 @@
         NSLog(@"Texture is in unknown format!");
         return nil;
     }
+}
+
+- (int) memoryUsage
+{
+    return 0;
+}
+
++ (int) totalMemoryUsage
+{
+    return s_totalMemoryUsage;
 }
 
 - (AP_GLTexture*) init
@@ -96,8 +110,9 @@
 
 - (void) dealloc
 {
-    NSLog(@"Deleting texture: %@", _assetName);
+    NSLog(@"Deleted %@ (%d bytes)", _assetName, _memoryUsage);
     glDeleteTextures(1, &_name);
+    s_totalMemoryUsage -= _memoryUsage;
 }
 
 - (GLuint) name { return _name; }
@@ -128,6 +143,24 @@
 
     if (level >= _minLevel) {
         glTexImage2D(GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, format, type, data);
+
+        switch (format) {
+            case GL_LUMINANCE:
+                _memoryUsage += width * height;
+                break;
+            case GL_LUMINANCE_ALPHA:
+                _memoryUsage += 2 * width * height;
+                break;
+            case GL_RGB:
+                _memoryUsage += 3 * width * height;
+                break;
+            case GL_RGBA:
+                _memoryUsage += 4 * width * height;
+                break;
+            default:
+                NSLog(@"Unknown texture format: %d", format);
+                break;
+        }
     }
 }
 
@@ -138,6 +171,7 @@
 
     if (level >= _minLevel) {
         glCompressedTexImage2D(GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, dataSize, data);
+        _memoryUsage += dataSize;
     }
 }
 

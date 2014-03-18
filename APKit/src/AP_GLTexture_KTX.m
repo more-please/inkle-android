@@ -119,6 +119,7 @@ AP_BAN_EVIL_INIT;
         if (read32(header->numberOfMipmapLevels) == 0) {
             glGenerateMipmap(self.name);
             AP_CHECK_GL("Failed to generate mipmaps", return nil);
+            self.memoryUsage = (4 * self.memoryUsage) / 3;
         }
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

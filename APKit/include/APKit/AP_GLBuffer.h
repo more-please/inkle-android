@@ -14,4 +14,7 @@
 + (AP_GLBuffer*) bufferWithTarget:(GLenum)target usage:(GLenum)usage data:(NSData*)data;
 + (AP_GLBuffer*) bufferWithTarget:(GLenum)target usage:(GLenum)usage data:(const void*)data size:(size_t)size;
 
+// Estimated total memory usage for all buffers.
++ (int) totalMemoryUsage;
+
 @end

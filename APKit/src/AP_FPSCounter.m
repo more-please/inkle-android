@@ -1,6 +1,9 @@
 #import "AP_FPSCounter.h"
 #import "AP_Utils.h"
 
+#import "AP_GLBuffer.h"
+#import "AP_GLTexture.h"
+
 #ifdef ANDROID
 #import <ck/ck.h>
 #endif
@@ -38,13 +41,20 @@ const int NUM_FRAME_TIMES = 16;
             _lastLogTime = t;
         }
 #ifdef ANDROID
-        NSLog(@"FPS: %.1f, audio load: %.1f%%", self.fps, CkGetRenderLoad() * 100);
+        NSLog(@"FPS: %.1f, audio load: %.1f%%, textures: %.1fMB, geometry: %.1fMB",
+            self.fps,
+            CkGetRenderLoad() * 100,
+            [AP_GLTexture totalMemoryUsage] / (1024.0 * 1024.0),
+            [AP_GLBuffer totalMemoryUsage] / (1024.0 * 1024.0));
         if (CkGetClipFlag()) {
             NSLog(@"*** Audio clipped ***");
             CkResetClipFlag();
         }
 #else
-        NSLog(@"FPS: %.1f", self.fps);
+        NSLog(@"FPS: %.1f, textures: %.1fMB, geometry: %.1fMB",
+            self.fps,
+            [AP_GLTexture totalMemoryUsage] / (1024.0 * 1024.0),
+            [AP_GLBuffer totalMemoryUsage] / (1024.0 * 1024.0));
 #endif
     }
 }

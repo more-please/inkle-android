@@ -8,10 +8,11 @@
 
 @interface AP_GLTexture : NSObject
 
-@property (readonly) NSString* assetName;
-@property (readonly) GLuint name;
-@property (readonly) int width;
-@property (readonly) int height;
+@property (nonatomic,readonly) NSString* assetName;
+@property (nonatomic,readonly) GLuint name;
+@property (nonatomic,readonly) int width;
+@property (nonatomic,readonly) int height;
+@property (nonatomic) int memoryUsage;
 
 - (instancetype) initLimitSize:(BOOL)limitSize;
 
@@ -27,5 +28,8 @@
 
 + (AP_GLTexture*) textureWithData:(NSData*)data limitSize:(BOOL)limitSize;
 + (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path limitSize:(BOOL)limitSize;
+
+// Estimated total memory usage for all textures.
++ (int) totalMemoryUsage;
 
 @end
