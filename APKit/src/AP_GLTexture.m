@@ -67,11 +67,6 @@ static int s_totalMemoryUsage = 0;
     }
 }
 
-- (int) memoryUsage
-{
-    return 0;
-}
-
 + (int) totalMemoryUsage
 {
     return s_totalMemoryUsage;
