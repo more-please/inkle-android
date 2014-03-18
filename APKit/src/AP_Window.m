@@ -3,6 +3,8 @@
 #import <OpenGLES/ES2/gl.h>
 
 #import "AP_FPSCounter.h"
+#import "AP_GLBuffer.h"
+#import "AP_GLTexture.h"
 #import "AP_Profiler.h"
 #import "AP_Touch.h"
 #import "AP_Utils.h"
@@ -212,6 +214,9 @@ static inline CGFloat aspect(CGSize size) {
 
 - (void) draw
 {
+    [AP_GLTexture processDeleteQueue];
+    [AP_GLBuffer processDeleteQueue];
+
     _clock = AP_TimeInSeconds();
     [AP_Animation setMasterClock:_clock];
     [_fps tick];

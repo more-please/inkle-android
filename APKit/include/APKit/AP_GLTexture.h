@@ -32,4 +32,6 @@
 // Estimated total memory usage for all textures.
 + (int) totalMemoryUsage;
 
++ (void) processDeleteQueue;
+
 @end

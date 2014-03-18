@@ -19,6 +19,26 @@
 }
 
 static int s_totalMemoryUsage = 0;
+static NSMutableArray* s_deleteQueue = nil;
+
++ (void) processDeleteQueue
+{
+    for (NSNumber* n in s_deleteQueue) {
+        GLuint name = n.intValue;
+        glDeleteTextures(1, &name);
+    }
+    s_deleteQueue = nil;
+}
+
+- (void) dealloc
+{
+    NSLog(@"Deleted %@ (%d bytes)", _assetName, _memoryUsage);
+    s_totalMemoryUsage -= _memoryUsage;
+    if (!s_deleteQueue) {
+        s_deleteQueue = [[NSMutableArray alloc] init];
+    }
+    [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
+}
 
 + (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize
 {
@@ -104,13 +124,6 @@ static int s_totalMemoryUsage = 0;
         _width = _height = 0;
     }
     return self;
-}
-
-- (void) dealloc
-{
-    NSLog(@"Deleted %@ (%d bytes)", _assetName, _memoryUsage);
-    glDeleteTextures(1, &_name);
-    s_totalMemoryUsage -= _memoryUsage;
 }
 
 - (GLuint) name { return _name; }

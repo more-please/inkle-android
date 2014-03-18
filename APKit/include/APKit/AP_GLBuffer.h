@@ -17,4 +17,6 @@
 // Estimated total memory usage for all buffers.
 + (int) totalMemoryUsage;
 
++ (void) processDeleteQueue;
+
 @end

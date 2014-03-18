@@ -10,6 +10,25 @@
 }
 
 static int s_totalMemoryUsage = 0;
+static NSMutableArray* s_deleteQueue = nil;
+
++ (void) processDeleteQueue
+{
+    for (NSNumber* n in s_deleteQueue) {
+        GLuint name = n.intValue;
+        glDeleteBuffers(1, &name);
+    }
+    s_deleteQueue = nil;
+}
+
+- (void) dealloc
+{
+    s_totalMemoryUsage -= _memoryUsage;
+    if (!s_deleteQueue) {
+        s_deleteQueue = [[NSMutableArray alloc] init];
+    }
+    [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
+}
 
 + (int) totalMemoryUsage
 {
@@ -29,12 +48,6 @@ static int s_totalMemoryUsage = 0;
         _usage = GL_STATIC_DRAW;
     }
     return self;
-}
-
-- (void) dealloc
-{
-    s_totalMemoryUsage -= _memoryUsage;
-    glDeleteBuffers(1, &_name);
 }
 
 - (GLuint) name
