@@ -206,9 +206,8 @@ typedef struct VertexData {
 
     static AP_Cache* g_ImageCache;
     if (!g_ImageCache) {
-        // Images are relatively small, so use a big cache.
-        // The actual backing textures are cached separately.
-        g_ImageCache = [[AP_Cache alloc] initWithSize:50];
+        // Images are small, but they cause textures to be retained! Use a small cache.
+        g_ImageCache = [[AP_Cache alloc] initWithSize:5];
     }
     AP_CHECK(g_ImageCache, return nil);
 
