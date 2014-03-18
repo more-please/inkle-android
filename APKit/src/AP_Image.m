@@ -486,7 +486,7 @@ AP_BAN_EVIL_INIT
         // Speculative: is "other" being collected by ARC?
         [other self];
     }
-    NSLog(@"Added insets to image: %@", _assetName);
+//    NSLog(@"Added insets to image: %@", _assetName);
     return self;
 }
 
@@ -513,7 +513,7 @@ AP_BAN_EVIL_INIT
 
         [self addRaw:q solid:YES];
     }
-    NSLog(@"Loaded image: %@", name);
+//    NSLog(@"Loaded image: %@", name);
     return self;
 }
 
@@ -559,13 +559,13 @@ AP_BAN_EVIL_INIT
             [self addRaw:quads[i] solid:YES];
         }
     }
-    NSLog(@"Loaded image: %@", name);
+//    NSLog(@"Loaded image: %@", name);
     return self;
 }
 
 - (void) dealloc
 {
-    NSLog(@"Deleted image: %@", _assetName);
+//    NSLog(@"Deleted image: %@", _assetName);
 }
 
 static int xTilesInQuad(const StretchyQuad* q, int xTile) {

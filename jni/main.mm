@@ -265,10 +265,10 @@ static JNINativeMethod kNatives[] = {
 - (void) maybeInitJavaMethod:(JavaMethod*)m
 {
     if (!m->method) {
-        NSLog(@"Initializing JNI method %s...", m->name);
+//        NSLog(@"Initializing JNI method %s...", m->name);
         m->method = _env->GetMethodID(_class, m->name, m->sig);
         NSAssert(m->method, @"JNI method lookup failed!");
-        NSLog(@"Initializing JNI method %s... Done.", m->name);
+//        NSLog(@"Initializing JNI method %s... Done.", m->name);
     }
 }
 
