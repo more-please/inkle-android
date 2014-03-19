@@ -4,12 +4,13 @@
 #import <GLKit/GLKit.h>
 
 #import "AP_Bundle.h"
-#import "AP_Cache.h"
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
+#import "AP_StrongCache.h"
 #import "AP_Utils.h"
+#import "AP_WeakCache.h"
 #import "AP_Window.h"
 #import "NSObject+AP_KeepAlive.h"
 
@@ -163,7 +164,7 @@ typedef struct VertexData {
     GLKVector4 _tint;
 
     // Cache of (xTile, yTile) -> AP_Image_CacheEntry
-    AP_Cache* _cache;
+    AP_StrongCache* _cache;
 }
 
 + (AP_Image*) imageNamed:(NSString *)name
@@ -204,10 +205,9 @@ typedef struct VertexData {
 
     NSString* tex = [img stringByDeletingPathExtension];
 
-    static AP_Cache* g_ImageCache;
+    static AP_WeakCache* g_ImageCache;
     if (!g_ImageCache) {
-        // Images are small, but they cause textures to be retained! Use a small cache.
-        g_ImageCache = [[AP_Cache alloc] init];
+        g_ImageCache = [[AP_WeakCache alloc] init];
     }
     AP_CHECK(g_ImageCache, return nil);
 
@@ -307,7 +307,7 @@ AP_BAN_EVIL_INIT
     _solidQuads = [NSMutableData data];
     _alphaQuads = [NSMutableData data];
 
-    _cache = [[AP_Cache alloc] init];
+    _cache = [[AP_StrongCache alloc] initWithSize:20];
 
     _resizingMode = UIImageResizingModeTile;
 }

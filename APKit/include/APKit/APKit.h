@@ -26,10 +26,12 @@
 #import "AP_NavigationController.h"
 #import "AP_PageViewController.h"
 #import "AP_ScrollView.h"
+#import "AP_StrongCache.h"
 #import "AP_TextField.h"
 #import "AP_Touch.h"
 #import "AP_View.h"
 #import "AP_ViewController.h"
+#import "AP_WeakCache.h"
 #import "AP_WebView.h"
 #import "AP_Window.h"
 

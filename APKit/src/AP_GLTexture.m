@@ -3,11 +3,11 @@
 #import <math.h>
 
 #import "AP_Bundle.h"
-#import "AP_Cache.h"
 #import "AP_Check.h"
 #import "AP_GLTexture_KTX.h"
 #import "AP_GLTexture_PNG.h"
 #import "AP_GLTexture_PVR.h"
+#import "AP_WeakCache.h"
 #import "AP_Window.h"
 
 @implementation AP_GLTexture {
@@ -42,9 +42,9 @@ static NSMutableArray* s_deleteQueue = nil;
 
 + (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize
 {
-    static AP_Cache* g_TextureCache;
+    static AP_WeakCache* g_TextureCache;
     if (!g_TextureCache) {
-        g_TextureCache = [[AP_Cache alloc] init];
+        g_TextureCache = [[AP_WeakCache alloc] init];
     }
     AP_CHECK(g_TextureCache, return nil);
 

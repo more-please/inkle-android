@@ -3,7 +3,6 @@
 #import "fontex.h"
 
 #import "AP_Bundle.h"
-#import "AP_Cache.h"
 #import "AP_Check.h"
 #import "AP_Font_Data.h"
 #import "AP_GLTexture.h"
