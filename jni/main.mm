@@ -165,9 +165,9 @@ static JNINativeMethod kNatives[] = {
         CkConfig config(_env, _android->activity->clazz);
         config.useJavaAudio = true; // OpenSLES is totally broken.
         // Nice big audio buffers, to prevent any glitches.
-        config.audioUpdateMs = 10;
-        config.streamBufferMs = 3000;
-        config.streamFileUpdateMs = 100;
+        config.audioUpdateMs = 20;
+        config.streamBufferMs = 4000;
+        config.streamFileUpdateMs = 400;
         int success = CkInit(&config);
         AP_CHECK(success, return nil);
 
