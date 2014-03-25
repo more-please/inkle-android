@@ -103,6 +103,9 @@ static JavaMethod kGaiTrackerSend = {
 static JavaMethod kIsCrappyDevice = {
     "isCrappyDevice", "()Z", NULL
 };
+static JavaMethod kHideStatusBar = {
+    "hideStatusBar", "()V", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -895,6 +898,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             switch(action) {
                 case AMOTION_EVENT_ACTION_DOWN:
                 case AMOTION_EVENT_ACTION_POINTER_DOWN:
+                    [self javaVoidMethod:&kHideStatusBar];
                     [vc touchesBegan:set withEvent:nil];
                     break;
                 case AMOTION_EVENT_ACTION_UP:
