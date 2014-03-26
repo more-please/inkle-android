@@ -636,7 +636,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     AP_PakReader* pak;
 
-    AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery1.ogg", AASSET_MODE_BUFFER);
+    AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
     if (pakAsset) {
         NSLog(@"Mapping OBB...");
         if (AAsset_isAllocated(pakAsset)) {
