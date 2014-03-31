@@ -284,11 +284,13 @@ static inline CGFloat aspect(CGSize size) {
         }];
     }
 
+#ifdef ANDROID
     if (needsDisplay) {
         self.idleFrameCount = 0;
     } else {
         self.idleFrameCount += 1;
     }
+#endif
 
     [_profiler step:@"layout"];
     if (_rootViewController) {

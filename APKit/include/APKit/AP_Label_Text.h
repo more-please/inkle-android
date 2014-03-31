@@ -12,7 +12,7 @@
 - (CGSize) sizeWithFont:(UIFont*)font;
 
 // NSString methods
-- (CGFloat) floatValue;
+- (float) floatValue;
 - (NSUInteger)length;
 - (unichar)characterAtIndex:(NSUInteger)index;
 - (void)getCharacters:(unichar *)buffer range:(NSRange)aRange;

@@ -108,6 +108,8 @@ static NSMutableArray* s_deleteQueue = nil;
         if (systemMaxTextureSize == 0) {
             glGetIntegerv(GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
         }
+        _maxTextureSize = systemMaxTextureSize;
+#ifdef ANDROID
         if (limitSize) {
             CGSize s = [AP_Window screenSize];
             CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
@@ -115,10 +117,8 @@ static NSMutableArray* s_deleteQueue = nil;
                 ? screenSize * 1.59  // Use 1024 texture for screens up to 1280 pixels in size
                 : screenSize * 1.99; // Use 1024 texture for screens up to 1024 pixels in size
             _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
-        } else {
-            _maxTextureSize = systemMaxTextureSize;
         }
-
+#endif
         glGenTextures(1, &_name);
         AP_CHECK(_name, return nil);
         _width = _height = 0;
