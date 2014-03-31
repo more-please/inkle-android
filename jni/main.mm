@@ -20,8 +20,6 @@
 #import "SorceryAppDelegate.h"
 #import "ExpiredAppDelegate.h"
 
-#import "INK_SBJson.h"
-
 @interface ParseResult : NSObject
 @property(nonatomic) int handle;
 @property(nonatomic,strong) NSString* string;
@@ -502,20 +500,19 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
 {
-
     NSString* valueStr;
     if ([value isKindOfClass:[NSString class]]) {
         // If it's a string, send it directly
         valueStr = (NSString*)value;
     } else {
         // Otherwise, encode as JSON.
-        INK_SBJsonWriter* json = [[INK_SBJsonWriter alloc] init];
         NSError* error;
-        valueStr = [json stringWithObject:value error:&error];
+        NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
         if (error) {
             NSLog(@"JSON writer error: %@", error);
             return;
         }
+        valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
     }
     [self maybeInitJavaMethod:&kParseAddKey];
 
