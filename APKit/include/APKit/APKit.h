@@ -43,6 +43,7 @@
 #import "AP_Profiler.h"
 
 #import "NSDictionary+AP_InitWithData.h"
+#import "NSObject+AP_PerformBlock.h"
 
 #else
 
