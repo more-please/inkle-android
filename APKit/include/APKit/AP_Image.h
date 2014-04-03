@@ -30,7 +30,7 @@ typedef enum UIImageResizingMode {
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor;
 
 // Hack to let Joe make flipped and scaled images...
-@property(readonly) AP_Image* CGImage; // returns self, not a real CGImageRef
+@property(nonatomic,readonly) AP_Image* CGImage; // returns self, not a real CGImageRef
 + (AP_Image*) imageWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 - (id) initWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 

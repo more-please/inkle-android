@@ -162,6 +162,7 @@ typedef struct VertexData {
     NSMutableData* _solidQuads;
     NSMutableData* _alphaQuads;
     GLKVector4 _tint;
+    CGAffineTransform _imageTransform;
 
     // Cache of (xTile, yTile) -> AP_Image_CacheEntry
     AP_StrongCache* _cache;
@@ -189,6 +190,16 @@ typedef struct VertexData {
     // This is a 2x image for retina iPhones or iPads.
     AP_Image* result = [AP_Image imageNamed:name scale:2];
     return result;
+}
+
+- (AP_Image*) CGImage
+{
+    return self;
+}
+
++ (AP_Image*) imageWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation
+{
+    return [[AP_Image alloc] initWithCGImage:cgImage scale:scale orientation:orientation];
 }
 
 + (AP_Image*) imageNamed:(NSString*)name scale:(CGFloat)scale
@@ -263,6 +274,7 @@ AP_BAN_EVIL_INIT
         _solidQuads = other->_solidQuads;
         _alphaQuads = other->_alphaQuads;
         _tint = other->_tint;
+        _imageTransform = other->_imageTransform;
 
         // Share the other image's geometry cache!
         // This is safe as long as we reset the cache pointer
@@ -310,6 +322,7 @@ AP_BAN_EVIL_INIT
     _cache = [[AP_StrongCache alloc] initWithSize:20];
 
     _resizingMode = UIImageResizingModeTile;
+    _imageTransform = CGAffineTransformIdentity;
 }
 
 - (void) addRaw:(RawQuad)raw solid:(BOOL)solid
@@ -563,6 +576,51 @@ AP_BAN_EVIL_INIT
     return self;
 }
 
+- (instancetype) initWithCGImage:(AP_Image*)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation
+{
+    self = [self initWithImage:cgImage];
+    if (self) {
+        CGAffineTransform t;
+        switch (orientation) {
+            case UIImageOrientationUp:
+                t = CGAffineTransformIdentity;
+                break;
+            case UIImageOrientationDown:
+                t = CGAffineTransformMake(-1, 0, 0, -1, 0, 0);
+                break;
+            case UIImageOrientationLeft:
+                t = CGAffineTransformMake(0, 1, -1, 0, 0, 0);
+                break;
+            case UIImageOrientationRight:
+                t = CGAffineTransformMake(0, -1, 1, 0, 0, 0);
+                break;
+            case UIImageOrientationUpMirrored:
+                t = CGAffineTransformMake(-1, 0, 0, 1, 0, 0);
+                break;
+            case UIImageOrientationDownMirrored:
+                t = CGAffineTransformMake(1, 0, 0, -1, 0, 0);
+                break;
+            case UIImageOrientationLeftMirrored:
+                t = CGAffineTransformMake(0, -1, -1, 0, 0, 0);
+                break;
+            case UIImageOrientationRightMirrored:
+                t = CGAffineTransformMake(0, 1, 1, 0, 0, 0);
+                break;
+            default:
+                NSLog(@"Unknown CGImage orientation: %d", orientation);
+                t = CGAffineTransformIdentity;
+                break;
+        }
+        _imageTransform = CGAffineTransformConcat(_imageTransform, t);
+
+        if (scale != _scale) {
+            _scale = scale;
+            _cache = [[AP_StrongCache alloc] initWithSize:20];
+        }
+    }
+    return self;
+}
+
 - (void) dealloc
 {
 //    NSLog(@"Deleted image: %@", _assetName);
@@ -716,6 +774,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         return result;
     }];
 
+    transform = CGAffineTransformConcat(transform, _imageTransform);
     transform = CGAffineTransformScale(transform, edgeScale.width / _scale, edgeScale.height / _scale);
 
     GLKMatrix3 matrix = GLKMatrix3Make(
