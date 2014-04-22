@@ -15,6 +15,7 @@
 
     NSArray* _zSortedSubviews;
     int _zSortIndex;
+    int _iterating;
 }
 
 - (AP_View*) init
@@ -412,6 +413,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view aboveSubview:(AP_View*)siblingSubview
 {
+    AP_CHECK(!_iterating, abort());
     AP_CHECK([_subviews containsObject:siblingSubview], abort());
     if ([_subviews containsObject:view]) {
         // Already have this view, just need to move it.
@@ -427,6 +429,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view belowSubview:(AP_View*)siblingSubview
 {
+    AP_CHECK(!_iterating, abort());
     AP_CHECK([_subviews containsObject:siblingSubview], abort());
     if ([_subviews containsObject:view]) {
         // Already have this view, just need to move it.
@@ -442,6 +445,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view atIndex:(NSInteger)index
 {
+    AP_CHECK(!_iterating, abort());
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview != self, abort());
 
@@ -498,6 +502,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (!_superview) {
         return;
     }
+    AP_CHECK(!_superview->_iterating, abort());
 
     id protectSelf = self;
 
@@ -535,6 +540,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) bringSubviewToFront:(AP_View*)view
 {
+    AP_CHECK(!_iterating, abort());
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview == self, abort());
     if ([_subviews lastObject] != view) {
@@ -546,6 +552,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) sendSubviewToBack:(AP_View*)view
 {
+    AP_CHECK(!_iterating, abort());
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview == self, abort());
     if ([_subviews objectAtIndex:0] != view) {
@@ -560,9 +567,13 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     id protectSelf = self;
     AP_CHECK(block, return);
     block(self);
+
+    ++_iterating;
     for (AP_View* v in _subviews) {
         [v visitWithBlock:block];
     }
+    --_iterating;
+
     [protectSelf self];
 }
 
@@ -574,9 +585,13 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     if (controller) {
         block(controller);
     }
+
+    ++_iterating;
     for (AP_View* v in _subviews) {
         [v visitControllersWithBlock:block];
     }
+    --_iterating;
+
     [protectSelf self];
 }
 
@@ -606,9 +621,11 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 {
     id protectSelf = self;
 
+    ++_iterating;
     for (AP_View* view in _subviews) {
         [view layoutSelfAndChildren];
     }
+    --_iterating;
 
     AP_ViewController* controller = _viewDelegate;
     if (controller) {
@@ -636,6 +653,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         [controller viewWillLayoutSubviews];
     }
     if (_autoresizesSubviews) {
+        ++_iterating;
         for (AP_View* view in _subviews) {
             UIViewAutoresizing mask = view->_autoresizingMask;
             if (mask == UIViewAutoresizingNone) {
@@ -720,6 +738,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
             view.frame = r;
         }
+        --_iterating;
     }
 
     [self layoutSubviews];
@@ -914,9 +933,11 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         _zSortedSubviews = [_subviews sortedArrayUsingSelector:@selector(zCompare:)];
     }
 
+    ++_iterating;
     for (AP_View* view in _zSortedSubviews) {
         [view renderSelfAndChildrenWithFrameToGL:boundsToGL alpha:alpha];
     }
+    --_iterating;
 }
 
 //------------------------------------------------------------------------------------
