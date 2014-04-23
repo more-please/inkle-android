@@ -45,10 +45,6 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 - (void) setContentOffset:(CGPoint)offset;
 {
-    CGSize size = self.frame.size;
-    offset.x = MAX(0, MIN(_contentSize.width - size.width, offset.x));
-    offset.y = MAX(0, MIN(_contentSize.height - size.height, offset.y));
-
     AP_AnimatedPoint* origin = self.animatedBoundsOrigin;
     if (!CGPointEqualToPoint(offset, origin.dest)) {
         origin.dest = offset;
@@ -138,6 +134,11 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
         CGPoint p = self.contentOffset;
         p.x += _velocity.x;
         p.y += _velocity.y;
+
+        CGSize size = self.frame.size;
+        p.x = MAX(0, MIN(_contentSize.width - size.width, p.x));
+        p.y = MAX(0, MIN(_contentSize.height - size.height, p.y));
+
         self.contentOffset = p;
 
         // Velocity decay
