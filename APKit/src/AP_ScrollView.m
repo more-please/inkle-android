@@ -128,28 +128,41 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
         }
     }
 
-    // Get the current velocity per second (not per frame!)
-    float vCurrent = magnitude(_velocity.x / timeStep, _velocity.y / timeStep);
-    if (vCurrent > 0) {
-        CGPoint p = self.contentOffset;
-        p.x += _velocity.x;
-        p.y += _velocity.y;
+    CGPoint pos = self.contentOffset;
+    CGSize size = self.frame.size;
 
-        CGSize size = self.frame.size;
-        p.x = MAX(0, MIN(_contentSize.width - size.width, p.x));
-        p.y = MAX(0, MIN(_contentSize.height - size.height, p.y));
+    if (_velocity.x != 0 || _velocity.y != 0) {
+        pos.x += _velocity.x;
+        pos.y += _velocity.y;
 
-        self.contentOffset = p;
+        pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
+        pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
 
+        self.contentOffset = pos;
+    }
+
+    static const float kMinSpeed = 5;
+
+    // What velocity would we need to snap to the current page at the minimum speed?
+    CGPoint idealVelocity = CGPointZero;
+    if (_pagingEnabled) {
+        CGPoint idealPage = { roundf(pos.x / size.width), roundf(pos.y / size.height) };
+        CGPoint idealPos = { idealPage.x * size.width, idealPage.y * size.height };
+        idealVelocity.x = (idealPos.x - pos.x) / size.width * kMinSpeed;
+        idealVelocity.y = (idealPos.y - pos.y) / size.height * kMinSpeed;
+    }
+
+    // Get our absolute speed, relative to the ideal velocity.
+    float speed = magnitude(_velocity.x - idealVelocity.x, _velocity.y - idealVelocity.y);
+    if (speed > 0) {
         // Velocity decay
-        static const float kMinSpeed = 5;
         float decay = exp(-_decelerationRate * timeStep);
-        float vNext = (vCurrent + kMinSpeed) * decay - kMinSpeed;
-        if (vNext < 0) {
-            vNext = 0;
+        float newSpeed = (speed + kMinSpeed) * decay - kMinSpeed;
+        if (newSpeed < 1e-6) {
+            newSpeed = 0;
         }
-        _velocity.x *= vNext / vCurrent;
-        _velocity.y *= vNext / vCurrent;
+        _velocity.x = idealVelocity.x + (_velocity.x - idealVelocity.x) * newSpeed / speed;
+        _velocity.y = idealVelocity.y + (_velocity.y - idealVelocity.y) * newSpeed / speed;
 
         if (_velocity.x == 0 && _velocity.y == 0) {
             if ([_delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)]) {
