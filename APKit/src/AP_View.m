@@ -300,7 +300,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
             return nil;
         }
     }
-    if ([self pointInside:point withEvent:event]) {
+    if (_allowSubviewHitTestOutsideBounds || [self pointInside:point withEvent:event]) {
         for (AP_View* view in [_subviews reverseObjectEnumerator]) {
             CGPoint p = [view convertInFlightPoint:point fromView:self];
             AP_View* v = [view hitTest:p withEvent:event];
@@ -308,7 +308,9 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
                 return v;
             }
         }
-        return self;
+        if ([self pointInside:point withEvent:event]) {
+            return self;
+        }
     }
     return nil;
 }

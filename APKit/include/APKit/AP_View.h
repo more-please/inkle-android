@@ -117,6 +117,9 @@
 
 @property(nonatomic,getter=isUserInteractionEnabled) BOOL userInteractionEnabled; // default is YES.
 
+// Iain addition: allow hit test to return subviews outside my bounds.
+@property(nonatomic) BOOL allowSubviewHitTestOutsideBounds;
+
 // ----------------------------------------------------------------------
 // Internal stuff
 
