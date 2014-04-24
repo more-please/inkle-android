@@ -21,6 +21,16 @@ NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotific
     NSMutableSet* _activeTouches;
 }
 
+- (BOOL) isHitTestView:(AP_View *)view
+{
+    return view == _hitTestView;
+}
+
+- (BOOL) isGestureView:(AP_View *)view
+{
+    return view == _hitTestGesture.view;
+}
+
 static CGRect g_ScreenBounds = {0, 0, 320, 480};
 static CGFloat g_ScreenScale = 1.0;
 

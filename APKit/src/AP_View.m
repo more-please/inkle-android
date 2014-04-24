@@ -824,6 +824,14 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         // Highlight all views in red, for debugging...
         backgroundColor = GLKVector4Make(1, 0, 0, 0.1);
     }
+    if ([self.window isHitTestView:self]) {
+        backgroundColor.r = 1;
+        backgroundColor.a = MAX(0.25, backgroundColor.a);
+    }
+    if ([self.window isGestureView:self]) {
+        backgroundColor.b = 1;
+        backgroundColor.a = MAX(0.25, backgroundColor.a);
+    }
     backgroundColor.a *= alpha;
     if (backgroundColor.a > 0) {
         AP_CHECK(prog, return);
