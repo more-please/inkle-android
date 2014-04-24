@@ -751,7 +751,17 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (CGSize) sizeThatFits:(CGSize)size
 {
-    return self.frameWithoutTransform.size;
+    if (_subviews.count == 0) {
+        return size;
+    } else {
+        CGRect r = CGRectNull;
+        ++_iterating;
+        for (AP_View* view in _subviews) {
+            r = CGRectUnion(r, view.frameWithoutTransform);
+        }
+        --_iterating;
+        return r.size;
+    }
 }
 
 - (void) sizeToFit
