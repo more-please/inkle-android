@@ -611,7 +611,16 @@ AP_BAN_EVIL_INIT
                 t = CGAffineTransformIdentity;
                 break;
         }
-        _imageTransform = CGAffineTransformConcat(_imageTransform, t);
+
+        // Move to origin, apply new transform, move back, apply original transform.
+        CGFloat x = (_size.width / _scale) / 2;
+        CGFloat y = (_size.height / _scale) / 2;
+        _imageTransform = CGAffineTransformConcat(
+            _imageTransform,
+            CGAffineTransformTranslate(
+                CGAffineTransformConcat(t,
+                    CGAffineTransformMakeTranslation(-x, -y)),
+                x, y));
 
         if (scale != _scale) {
             _scale = scale;
@@ -774,7 +783,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         return result;
     }];
 
-    transform = CGAffineTransformConcat(transform, _imageTransform);
+    transform = CGAffineTransformConcat(_imageTransform, transform);
     transform = CGAffineTransformScale(transform, edgeScale.width / _scale, edgeScale.height / _scale);
 
     GLKMatrix3 matrix = GLKMatrix3Make(
