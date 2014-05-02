@@ -3,8 +3,11 @@
 #import "AP_Check.h"
 #import "NSDictionary+AP_InitWithData.h"
 
+#ifdef ANDROID
+#import <PAK/PAK.h>
+#endif
+
 @implementation AP_Bundle {
-    NSMutableArray* _paks;
     NSDictionary* _info;
 }
 
@@ -13,33 +16,16 @@ static AP_Bundle* g_Bundle;
 + (void)initialize
 {
     static BOOL initialized = NO;
-    if (!initialized)
-    {
+    if (!initialized) {
         initialized = YES;
         g_Bundle = [[AP_Bundle alloc] init];
     }
-}
-
-- (AP_Bundle*) init
-{
-    AP_CHECK(!g_Bundle, return nil);
-
-    self = [super init];
-    if (self) {
-        _paks = [NSMutableArray array];
-    }
-    return self;
 }
 
 - (void) dealloc
 {
     AP_CHECK(g_Bundle == self, return);
     g_Bundle = nil;
-}
-
-+ (void) addPak:(AP_PakReader *)pak
-{
-    [g_Bundle->_paks addObject:pak];
 }
 
 + (NSData*) dataForResource:(NSString *)name ofType:(NSString *)ext
@@ -51,22 +37,14 @@ static AP_Bundle* g_Bundle;
         }
         fullName = [name stringByAppendingString:ext];
     }
-
-    // Try loading from the .pak file
-    for (AP_PakReader* pak in g_Bundle->_paks) {
-        NSData* data = [pak getFile:fullName];
-        if (data) {
-            return data;
-        }
-    }
-
 #ifdef ANDROID
-    // Try loading an Android asset
-    return [[AP_Application sharedApplication] getResource:fullName];
-#else
+    PAK_Item* item = [PAK_Search item:fullName];
+    if (item) {
+        return item.data;
+    }
+#endif
     NSLog(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;
-#endif
 }
 
 #ifdef ANDROID
@@ -84,7 +62,13 @@ static AP_Bundle* g_Bundle;
 #ifdef ANDROID
 - (NSArray*) namesForResourcesOfType:(NSString *)ext inDirectory:(NSString *)dir
 {
-    return [[AP_Application sharedApplication] namesForResourcesOfType:ext inDirectory:dir];
+    NSMutableArray* results = [NSMutableArray array];
+    for (NSString* name in [PAK_Search names]) {
+        if ([name hasPrefix:dir] && [name hasSuffix:ext]) {
+            [results addObject:name];
+        }
+    }
+    return [NSArray arrayWithArray:results];
 }
 #endif
 

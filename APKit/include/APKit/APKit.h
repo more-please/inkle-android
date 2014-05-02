@@ -39,7 +39,6 @@
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
-#import "AP_PakReader.h"
 #import "AP_Profiler.h"
 
 #import "NSDictionary+AP_InitWithData.h"

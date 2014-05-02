@@ -26,12 +26,6 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
-- (NSData*) getResource:(NSString*)path
-{
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-}
-
 - (JNIEnv*) jniEnv
 {
     GLUE_NOT_IMPLEMENTED;
@@ -48,12 +42,6 @@ static UIApplication* g_Application;
 {
     GLUE_NOT_IMPLEMENTED;
     return NULL;
-}
-
-- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
-{
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
 }
 
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey

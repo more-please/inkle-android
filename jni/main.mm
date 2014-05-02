@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <APKit/APKit.h>
+#import <PAK/PAK.h>
 
 #import <jni.h>
 #import <errno.h>
@@ -29,7 +30,7 @@
 @implementation ParseResult
 @end
 
-@interface Main : AP_Application
+@interface Main : AP_Application <PAK_Reader>
 @property(nonatomic,readonly) BOOL active;
 @property(nonatomic,readonly,strong) NSRunLoop* runLoop;
 @property(nonatomic,readonly) int idleCount;
@@ -239,7 +240,21 @@ static JNINativeMethod kNatives[] = {
     }
 }
 
-- (NSData*) getResource:(NSString*)path
+- (NSArray*) pakNames
+{
+    NSMutableArray* result = [NSMutableArray array];
+    AAssetDir* d = AAssetManager_openDir(_assetManager, "");
+    const char* c = AAssetDir_getNextFileName(d);
+    for ( ; c; c = AAssetDir_getNextFileName(d)) {
+        NSString* s = [NSString stringWithCString:c];
+        [result addObject:s];
+    }
+    AAssetDir_close(d);
+    return result;
+}
+
+
+- (PAK_Item*) pakItem:(NSString*)path
 {
     AAsset* asset = AAssetManager_open(_assetManager, path.cString, AASSET_MODE_STREAMING);
     if (!asset) {
@@ -248,8 +263,8 @@ static JNINativeMethod kNatives[] = {
     }
 
     off_t size = AAsset_getLength(asset);
-    NSMutableData* result = [NSMutableData dataWithLength:size];
-    char* ptr = (char*) result.bytes;
+    NSMutableData* data = [NSMutableData dataWithLength:size];
+    char* ptr = (char*) data.bytes;
     int remaining = size;
     while (remaining > 0) {
         int bytes = AAsset_read(asset, ptr, remaining);
@@ -266,11 +281,15 @@ static JNINativeMethod kNatives[] = {
     }
     if (remaining != 0) {
         NSLog(@"Failed to read asset: %@", path);
-        result = nil;
+        data = nil;
     }
-
     AAsset_close(asset);
-    return result;
+
+    if (data) {
+        return [[PAK_Item alloc] initWithPath:path isAsset:YES offset:0 length:data.length data:data];
+    } else {
+        return nil;
+    }
 }
 
 - (BOOL) inForeground
@@ -374,22 +393,6 @@ static JNINativeMethod kNatives[] = {
     result = (jclass) _env->NewGlobalRef(result);
 
     _env->PopLocalFrame(NULL);
-    return result;
-}
-
-- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir
-{
-    NSMutableArray* result = [NSMutableArray array];
-    AAssetDir* d = AAssetManager_openDir(_assetManager, dir.cString);
-    const char* c = AAssetDir_getNextFileName(d);
-    for ( ; c; c = AAssetDir_getNextFileName(d)) {
-        NSString* s = [NSString stringWithCString:c];
-        if ([s hasSuffix:ext]) {
-            s = [dir stringByAppendingPathComponent:s];
-            [result addObject:s];
-        }
-    }
-    AAssetDir_close(d);
     return result;
 }
 
@@ -631,7 +634,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         return;
     }
 
-    AP_PakReader* pak;
+    PAK* pak;
 
     AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
     if (pakAsset) {
@@ -650,14 +653,19 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
         NSAssert(data, @"dataWithBytesNoCopy failed!");
 
-        pak = [AP_PakReader readerWithData:data];
+        pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
 
     } else {
-        pak = [AP_PakReader readerWithMemoryMappedFile:_obbPath];
+        pak = [PAK pakWithMemoryMappedFile:_obbPath];
     }
 
-    // Looks kosher, let's use it!
-    [AP_Bundle addPak:pak];
+    NSAssert(pak, @"Can't find .pak file");
+    [PAK_Search add:pak];
+
+    // TODO: could potentially look for a patch file too
+
+    // Add ourselves as a backup resource bundle (APK assets)
+    [PAK_Search add:self];
 
     NSLog(@"Let's get started!");
     SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];

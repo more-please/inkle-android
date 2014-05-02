@@ -2,6 +2,7 @@
 
 #import <ck/ck.h>
 #import <ck/sound.h>
+#import <PAK/PAK.h>
 
 #import "GlueCommon.h"
 
@@ -16,7 +17,17 @@
     self = [super init];
     if (self) {
         _name = [path lastPathComponent];
-        _sound = CkSound::newStreamSound(path.cString, kCkPathType_Asset);
+        PAK_Item* item = [PAK_Search item:path];
+        if (!item) {
+            NSLog(@"Couldn't find asset for sound: %@", path);
+            return nil;
+        }
+        _sound = CkSound::newStreamSound(
+            item.path.cString,
+            item.isAsset ? kCkPathType_Asset : kCkPathType_FileSystem,
+            item.offset,
+            item.length,
+            path.pathExtension.cString);
         if (!_sound || _sound->isFailed()) {
             return nil;
         }
