@@ -164,7 +164,7 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
         _velocity.x = idealVelocity.x + (_velocity.x - idealVelocity.x) * newSpeed / speed;
         _velocity.y = idealVelocity.y + (_velocity.y - idealVelocity.y) * newSpeed / speed;
 
-        if (_velocity.x == 0 && _velocity.y == 0) {
+        if (_velocity.x == 0 && _velocity.y == 0 && !_inGesture) {
             if ([_delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)]) {
                 [_delegate scrollViewDidEndDecelerating:self];
             }
