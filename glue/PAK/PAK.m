@@ -31,9 +31,7 @@
 
 + (PAK*) pakWithAsset:(NSString*)name data:(NSData*)data
 {
-    PAK* result = [[PAK alloc] initWithPath:name data:data];
-    result->_isAsset = YES;
-    return result;
+    return [[PAK alloc] initWithPath:name data:data isAsset:YES];
 }
 
 + (PAK*) pakWithMemoryMappedFile:(NSString*)filename
@@ -46,7 +44,7 @@
             uint8_t* ptr = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
             if (ptr != MAP_FAILED) {
                 NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-                result = [[PAK alloc] initWithPath:filename data:data];
+                result = [[PAK alloc] initWithPath:filename data:data isAsset:NO];
                 result->_isMemoryMapped = YES;
             }
         }
@@ -60,13 +58,14 @@
     return result;
 }
 
-- (instancetype) initWithPath:(NSString*)path data:(NSData*)data
+- (instancetype) initWithPath:(NSString*)path data:(NSData*)data isAsset:(BOOL)isAsset
 {
     self = [super init];
     if (self) {
         _path = path;
         _data = data;
         _isMemoryMapped = NO;
+        _isAsset = isAsset;
 
         NSAssert(_data.length >= 16, @".pak file is too small");
         NSAssert(memcmp(_data.bytes, "AP_Pack!", 8) == 0, @"Bad .pak file signature");
