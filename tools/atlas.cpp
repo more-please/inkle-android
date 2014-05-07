@@ -21,7 +21,7 @@ const int ATLAS_SIZE = 2048;
 
 // The atlas is divided into rows.
 const int ROW_HEIGHT = 64;
-const int ATLAS_ROWS = ATLAS_SIZE / ROW_HEIGHT;
+// const int ATLAS_ROWS = ATLAS_SIZE / ROW_HEIGHT;
 
 // Width of tile border, to prevent cross-contamination. We need 2^N to support mipmap level N.
 const int BORDER_SIZE = 4;
@@ -44,7 +44,7 @@ const int MIN_SOLID_WIDTH = 4 * BORDER_SIZE;
 // Number of rows in an atlas.
 
 // Maximum total width of all strips in an atlas, including 4 borders per row to allow for splits.
-const int ATLAS_MAX_TOTAL_WIDTH = ATLAS_ROWS * (ATLAS_SIZE - 4 * BORDER_SIZE);
+// const int ATLAS_MAX_TOTAL_WIDTH = ATLAS_ROWS * (ATLAS_SIZE - 4 * BORDER_SIZE);
 
 string ANDROID_DIR = ".";
 
@@ -214,11 +214,15 @@ enum TextureFormat {
 // A texture output file, ATLAS_SIZE pixels in each dimension.
 class Atlas {
 public:
-    Atlas() : totalWidth(0), rowsDirty(false) {}
+    explicit Atlas(int rows)
+        : totalWidth(0)
+        , maxWidth(rows * (ATLAS_SIZE - 4 * BORDER_SIZE))
+        , maxRows(rows)
+        , rowsDirty(false) {}
 
     bool maybeAdd(shared_ptr<Image> image) {
         int imageWidth = image->solidWidth + 2 * image->alphaWidth;
-        if (totalWidth + imageWidth <= ATLAS_MAX_TOTAL_WIDTH) {
+        if (totalWidth + imageWidth <= maxWidth) {
             images.push_back(image);
             totalWidth += imageWidth;
             rowsDirty = true;
@@ -276,7 +280,7 @@ public:
 
         string pngFile = tempFile + ".png";
         cerr << "stbi_write_png " << pngFile << endl;
-        stbi_write_png(pngFile.c_str(), ATLAS_SIZE, ATLAS_SIZE, 4, &data[0], ATLAS_SIZE * 4);
+        stbi_write_png(pngFile.c_str(), ATLAS_SIZE, maxRows * ROW_HEIGHT, 4, &data[0], ATLAS_SIZE * 4);
 
         string binDir = ANDROID_DIR + "/3rd-party/bin";
         string texFile, cmd;
@@ -359,6 +363,8 @@ public:
 
     vector<shared_ptr<Image> > images;
     int totalWidth;
+    int maxWidth;
+    int maxRows;
     bool rowsDirty;
     vector<Row> rows;
     vector<unsigned char> data;
@@ -371,7 +377,7 @@ private:
         rowsDirty = false;
 
         rows.clear();
-        rows.resize(ATLAS_ROWS);
+        rows.resize(maxRows);
 
         // Keep it simple: process images in order, split across atlas row boundaries as needed.
         int row = 0;
@@ -387,7 +393,7 @@ private:
                 while (strip.fullWidth() > spaceInRow) {
                     pair<Strip, Strip> p = strip.split(spaceInRow - 2 * BORDER_SIZE);
                     if (!p.first.isEmpty()) {
-                        assert(row < ATLAS_ROWS);
+                        assert(row < maxRows);
                         rows[row].push_back(p.first);
                     }
                     ++row;
@@ -395,7 +401,7 @@ private:
                     strip = p.second;
                 }
                 if (!strip.isEmpty()) {
-                    assert(row < ATLAS_ROWS);
+                    assert(row < maxRows);
                     rows[row].push_back(strip);
                     assert(strip.fullWidth() <= spaceInRow);
                     spaceInRow -= strip.fullWidth();
@@ -420,13 +426,13 @@ private:
                     if (!p.first.isEmpty()) {
                         rows[row].push_back(p.first);
                     }
-                    assert(row < ATLAS_ROWS);
+                    assert(row < maxRows);
                     ++row;
                     spaceInRow = ATLAS_SIZE;
                     strip = p.second;
                 }
                 if (!strip.isEmpty()) {
-                    assert(row < ATLAS_ROWS);
+                    assert(row < maxRows);
                     rows[row].push_back(strip);
                     assert(strip.fullWidth() <= spaceInRow);
                     spaceInRow -= strip.fullWidth();
@@ -439,7 +445,7 @@ private:
         }
 
         // Render the atlas.
-        data.resize(ATLAS_SIZE * ATLAS_SIZE * 4);
+        data.resize(ATLAS_SIZE * maxRows * ROW_HEIGHT * 4);
         for (int i = 0; i < rows.size(); ++i) {
             const Row& row = rows[i];
             int yTop = i * ROW_HEIGHT;
@@ -480,8 +486,8 @@ ostream& operator<<(ostream& o, const Strip& strip) {
 }
 
 ostream& operator<<(ostream& o, const Atlas& atlas) {
-    double percentFull = 100 * double(atlas.totalWidth) / ATLAS_MAX_TOTAL_WIDTH;
-    o << "Atlas(" << atlas.images.size() << " images, " << percentFull << "% full)" << endl;
+    double percentFull = 100 * double(atlas.totalWidth) / atlas.maxWidth;
+    o << "Atlas(" << atlas.images.size() << " images, " << atlas.maxRows << " rows, " << percentFull << "% full)" << endl;
     return o;
 }
 
@@ -509,20 +515,28 @@ public:
 
     void addImage(const string& base, const string& name) {
         shared_ptr<Image> image(new Image(base, name));
+
+		// Pack tiny images into 1-row atlases if possible.
         for (int i = 0; i < atlases.size(); ++i) {
-            if (atlases[i].maybeAdd(image)) {
+            if (atlases[i].maxRows == 1 && atlases[i].maybeAdd(image)) {
                 goodPixels += image->width * image->height;
                 return;
             }
         }
-        atlases.push_back(Atlas());
-        if (atlases.back().maybeAdd(image)) {
-            goodPixels += image->width * image->height;
-        } else {
-            cerr << "*** " << *image << " is too big for any atlas, skipping" << endl;
-            badPixels += image->width * image->height;
-            atlases.erase(atlases.end() - 1);
+
+		// Otherwise, pack each image into its own power-of-two atlas.
+        for (int rows = 1; rows <= ATLAS_SIZE / ROW_HEIGHT; rows *= 2) {
+            atlases.push_back(Atlas(rows));
+            if (atlases.back().maybeAdd(image)) {
+                goodPixels += image->width * image->height;
+                return;
+            }
+            atlases.pop_back();
         }
+
+        cerr << "*** " << *image << " is too big for any atlas, skipping" << endl;
+        badPixels += image->width * image->height;
+        atlases.erase(atlases.end() - 1);
     }
 
     void dump() {
