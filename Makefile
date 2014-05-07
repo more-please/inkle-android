@@ -3,7 +3,7 @@
 
 # Is this the world's worst makefile? Oh, come on, who needs separate compilation...
 
-CXX = clang++ -x c++ -O4 -I./3rd-party/stb
+CXX = clang++ -x c++ -O3 -I./3rd-party/stb
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
