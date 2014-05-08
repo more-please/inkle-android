@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include <iostream>
 #include <vector>
@@ -15,14 +16,20 @@ using namespace std;
 void usage() {
     cerr << "Packs multiple files into a single .pak archive." << endl;
     cerr << "All specified files and directories are added." << endl << endl;
-    cerr << "Usage: pak -o outfile [-i glob] [-x glob] paths..." << endl;
+    cerr << "Usage: pak -o outfile [-i glob] [-x glob] [-c ext] paths..." << endl;
     cerr << "  -o, --outfile: output file (required)" << endl;
     cerr << "  -i, --include: glob for files to include (optional)" << endl;
     cerr << "  -x, --exclude: glob for files to exclude (optional)" << endl;
     cerr << "  -v, --verbose: list skipped files as well as added files" << endl;
+    cerr << "  -c, --compress: compress files ending with the given extension(s)" << endl;
     cerr << "  -h, --help: show this help text" << endl << endl;
     flush(cerr);
     exit(1);
+}
+
+bool stringEndsWith(const string& s, const string& ext) {
+    return (s.length() >= ext.length())
+        && (0 == s.compare(s.length() - ext.length(), ext.length(), ext));
 }
 
 int main(int argc, const char* argv[]) {
@@ -31,6 +38,7 @@ int main(int argc, const char* argv[]) {
     vector<string> paths;
     vector<string> includes;
     vector<string> excludes;
+    vector<string> compress;
 
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
@@ -57,6 +65,8 @@ int main(int argc, const char* argv[]) {
                 includes.push_back(param);
             } else if (arg == "-x" || arg == "--exclude") {
                 excludes.push_back(param);
+            } else if (arg == "-c" || arg == "--compress") {
+                compress.push_back(param);
             } else {
                 cerr << "Unknown flag: " << arg << endl << endl;
                 usage();
@@ -89,7 +99,17 @@ int main(int argc, const char* argv[]) {
     for (set<FileScanner::base_name>::iterator i = files.begin(); i != files.end(); ++i) {
         const string& base = i->first;
         const string& name = i->second;
-        writer.addFile(name.c_str(), base.empty() ? name.c_str() : (base + "/" + name).c_str());
+        bool shouldCompress = false;
+        for (vector<string>::iterator i = compress.begin(); i != compress.end(); ++i) {
+            if (stringEndsWith(name, *i)) {
+                cerr << "-- compressing " << name << endl;
+                shouldCompress = true;
+            }
+        }
+        writer.addFile(
+            name.c_str(),
+            base.empty() ? name.c_str() : (base + "/" + name).c_str(),
+            shouldCompress);
     }
     writer.commit();
 }

@@ -32,8 +32,8 @@ public:
     PackageWriter(const char* filename);
     ~PackageWriter();
 
-    void addData(const char* name, size_t size, const void* data);
-    void addFile(const char* name, const char* fullpath);
+    void addData(const char* name, size_t size, const void* data, bool compress);
+    void addFile(const char* name, const char* fullpath, bool compress);
     void commit();
 
 private:

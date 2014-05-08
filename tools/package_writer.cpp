@@ -63,7 +63,7 @@ PackageWriter::~PackageWriter() {
     }
 }
 
-void PackageWriter::addData(const char *name, size_t size, const void *data) {
+void PackageWriter::addData(const char *name, size_t size, const void *data, bool compress) {
     assert(_file);
 
     FileInfo info;
@@ -76,27 +76,22 @@ void PackageWriter::addData(const char *name, size_t size, const void *data) {
     padTo16();
 }
 
-void PackageWriter::addFile(const char* name, const char* path) {
-    FileInfo info;
-    info.name = name;
-    info.dataOffset = _offset;
-    info.dataSize = 0;
-
+void PackageWriter::addFile(const char* name, const char* path, bool compress) {
     FILE* f = fopen(path, "rb");
     assert(f);
 
-    const size_t BUFFER_SIZE = 1024;
-    char buffer[BUFFER_SIZE];
-    while (!feof(f) && !ferror(f)) {
-        size_t bytesRead = fread(buffer, 1, BUFFER_SIZE, f);
-        write(bytesRead, buffer);
-        info.dataSize += bytesRead;
-    }
+    fseek(f, 0, SEEK_END);
+    int size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    char* buffer = (char*) malloc(size);
+    size_t bytesRead = fread(buffer, 1, size, f);
+    assert(bytesRead == size);
     assert(!ferror(f));
     fclose(f);
 
-    padTo16();
-    _info.push_back(info);
+    addData(name, size, buffer, compress);
+    free(buffer);
 }
 
 void PackageWriter::write(size_t size, const void *data) {
