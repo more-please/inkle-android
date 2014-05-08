@@ -1,6 +1,8 @@
 #include "package_writer.h"
 
 #include <assert.h>
+#include <stdio.h>
+#include <zlib.h>
 
 using namespace std;
 
@@ -30,6 +32,7 @@ void PackageWriter::commit() {
     //   4 bytes: name size
     //   4 bytes: data offset
     //   4 bytes: data size
+    //   4 bytes: compressed size
 
     size_t directoryOffset = _offset;
     for (vector<FileInfo>::iterator i = _info.begin(); i != _info.end(); ++i) {
@@ -38,6 +41,7 @@ void PackageWriter::commit() {
         write4(info.name.size());
         write4(info.dataOffset);
         write4(info.dataSize);
+        write4(info.uncompressedSize);
     }
 
     // Rewind and write the file header:
@@ -70,10 +74,46 @@ void PackageWriter::addData(const char *name, size_t size, const void *data, boo
     info.name = name;
     info.dataOffset = _offset;
     info.dataSize = size;
-    _info.push_back(info);
+    info.uncompressedSize = size;
 
-    write(size, data);
+	if (compress) {
+		z_stream z;
+		memset(&z, 0, sizeof(z));
+		int zerr = deflateInit(&z, Z_BEST_COMPRESSION);
+		assert(zerr == Z_OK);
+
+		char* buffer = (char*) malloc(size);
+		z.next_in = (unsigned char*) data;
+		z.avail_in = size;
+		z.next_out = (unsigned char*) buffer;
+		z.avail_out = size;
+
+		zerr = deflate(&z, Z_FINISH);
+		assert(zerr == Z_STREAM_END);
+
+		info.dataSize = z.total_out;
+
+		zerr = deflateEnd(&z);
+		assert(zerr == Z_OK);
+
+		write(info.dataSize, buffer);
+		free(buffer);
+	} else {
+	    write(size, data);
+	}
+
+	double before = info.uncompressedSize / 1024.0;
+	double after = info.dataSize / 1024.0;
+	double ratio = 100 * after / before;
+	if (after < before) {
+		fprintf(stderr, "%40s %5.0fKB   -> %5.0fKB  (%4.1f%%)\n",
+			name, before, after, ratio);
+	} else {
+		fprintf(stderr, "%40s %5.0fKB\n", name, before);
+	}
+
     padTo16();
+    _info.push_back(info);
 }
 
 void PackageWriter::addFile(const char* name, const char* path, bool compress) {

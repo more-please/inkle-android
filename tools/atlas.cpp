@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "file_scanner.h"
-#include "package_writer.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 

@@ -4,13 +4,15 @@
 
 // A single resource.
 @interface PAK_Item : NSObject
+@property(nonatomic,readonly,strong) NSString* name; // Name of the resource.
 @property(nonatomic,readonly,strong) NSString* path; // Name of the containing file.
 @property(nonatomic,readonly) BOOL isAsset; // If YES, the 'file' is an APK asset.
+@property(nonatomic,readonly) BOOL isCompressed;
 @property(nonatomic,readonly) int offset; // Offset of this resource within the file.
-@property(nonatomic,readonly) int length; // Length of this resource.
-@property(nonatomic,readonly,strong) NSData* data; // Contents of this resource.
+@property(nonatomic,readonly) int length; // Uncompressed length of this resource.
+@property(nonatomic,readonly,strong) NSData* data; // Uncompressed contents of this resource.
 
-- (instancetype) initWithPath:(NSString*)path isAsset:(BOOL)isAsset offset:(int)offset length:(int)length data:(NSData*)data;
+- (instancetype) initWithName:(NSString*)name path:(NSString*)path isAsset:(BOOL)isAsset offset:(int)offset length:(int)uncompressedLength data:(NSData*)maybeCompressedData;
 @end
 
 // Interface for a bundle containing multiple named assets.

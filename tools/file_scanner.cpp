@@ -113,6 +113,6 @@ void FileScanner::addFile(const string& base, const string& name) {
             return;
         }
     }
-    cerr << "+ " << name << endl;
+//     cerr << "+ " << name << endl;
     _files.insert(make_pair(base, name));
 }

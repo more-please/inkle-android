@@ -15,14 +15,18 @@
 // (data blobs, padded to 16 bytes each)
 // (packed filenames, followed by 16-byte padding)
 // ...
-// Directory, with 16 bytes per data blob:
+// Directory, with 20 bytes per data blob:
 //   4 bytes: name offset
 //   4 bytes: name size
 //   4 bytes: data offset
 //   4 bytes: data size
+//   4 bytes: uncompressed data size
+//
+// If 'uncompressed data size' is different from 'data size', the data
+// is compressed with zlib.
 //
 // The directory always extends to the end of the file, so the number
-// of blobs is (total size - directory offset) / 16. The directory is
+// of blobs is (total size - directory offset) / 20. The directory is
 // an an abitrary order. (TODO: might be nice to sort the filenames.)
 //
 // All sizes and offsets are little-endian.
@@ -51,6 +55,7 @@ private:
         size_t nameOffset;
         size_t dataOffset;
         size_t dataSize;
+        size_t uncompressedSize;
     };
     std::vector<FileInfo> _info;
 };

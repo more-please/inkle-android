@@ -286,7 +286,7 @@ static JNINativeMethod kNatives[] = {
     AAsset_close(asset);
 
     if (data) {
-        return [[PAK_Item alloc] initWithPath:path isAsset:YES offset:0 length:data.length data:data];
+        return [[PAK_Item alloc] initWithName:path path:path isAsset:YES offset:0 length:data.length data:data];
     } else {
         return nil;
     }

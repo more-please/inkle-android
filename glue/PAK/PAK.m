@@ -2,22 +2,68 @@
 
 #import <fcntl.h>
 #import <sys/mman.h>
+#import <zlib.h>
 
 // ---------------------------------------------------------------------------------------
 
-@implementation PAK_Item
+@implementation PAK_Item {
+    NSData* _originalData;
+    __weak NSData* _uncompressedData;
+}
 
-- (instancetype) initWithPath:(NSString*)path isAsset:(BOOL)isAsset offset:(int)offset length:(int)length data:(NSData*)data
+- (instancetype) initWithName:(NSString*)name path:(NSString*)path isAsset:(BOOL)isAsset offset:(int)offset length:(int)length data:(NSData*)data
 {
 	self = [super init];
 	if (self) {
+        _name = name;
 		_path = path;
 		_isAsset = isAsset;
+        _isCompressed = (length != data.length);
 		_offset = offset;
 		_length = length;
-		_data = data;
+		_originalData = data;
 	}
 	return self;
+}
+
+- (NSData*) data
+{
+    if (!_isCompressed) {
+        return _originalData;
+    }
+    NSData* result = _uncompressedData;
+    if (!result) {
+//        NSLog(@"Decompressing %@ (%d -> %d)", _name, _originalData.length, _length);
+        result = [NSMutableData dataWithLength:_length];
+
+        z_stream z;
+        memset(&z, 0, sizeof(z));
+        z.next_in = (unsigned char*)_originalData.bytes;
+        z.avail_in = _originalData.length;
+        z.next_out = (unsigned char*)result.bytes;
+        z.avail_out = result.length;
+
+        int zerr = inflateInit(&z);
+        if (zerr != Z_OK) {
+            NSLog(@"*** inflateInit failed! Error code: %d (%s)", zerr, z.msg);
+            return nil;
+        }
+
+        zerr = inflate(&z, Z_FINISH);
+        if (zerr != Z_STREAM_END) {
+            NSLog(@"*** inflate failed! Error code: %d (%s)", zerr, z.msg);
+            return nil;
+        }
+
+        zerr = inflateEnd(&z);
+        if (zerr != Z_OK) {
+            NSLog(@"*** inflateEnd failed! Error code: %d (%s)", zerr, z.msg);
+            return nil;
+        }
+
+        _uncompressedData = result;
+    }
+    return result;
 }
 
 @end
@@ -74,16 +120,14 @@
         uint32_t dirOffset = [self wordAtOffset:12];
 
         NSAssert(data.length == totalSize, @".pak file is %d bytes, expected %d", data.length, totalSize);
-        NSAssert((totalSize & 15) == 0, @".pak file size (%d) isn't 16-byte aligned", totalSize);
         NSAssert((dirOffset & 15) == 0, @".pak directory isn't 16-byte aligned");
         NSAssert(totalSize >= dirOffset, @".pak directory location is out of bounds");
 
-        uint32_t dirSize = (totalSize - dirOffset) / 16;
+        uint32_t dirSize = (totalSize - dirOffset) / 20;
         NSMutableDictionary* items = [NSMutableDictionary dictionaryWithCapacity:dirSize];
-        for (uint32_t pos = dirOffset; pos < totalSize; pos += 16) {
-            NSString* name = [[NSString alloc] initWithData:[self blob:pos].data encoding:NSUTF8StringEncoding];
-            PAK_Item* item = [self blob:(pos + 8)];
-            items[name] = item;
+        for (uint32_t pos = dirOffset; pos < totalSize; pos += 20) {
+            PAK_Item* item = [self blob:pos];
+            items[item.name] = item;
         }
         _items = [NSDictionary dictionaryWithDictionary:items];
     }
@@ -99,11 +143,21 @@
 }
 
 - (PAK_Item*) blob:(uint32_t)blobOffset {
-    uint32_t offset = [self wordAtOffset:(blobOffset)];
-    uint32_t length = [self wordAtOffset:(blobOffset + 4)];
-	char* base = (char*)[_data bytes];
-	NSData* data = [NSData dataWithBytesNoCopy:(base + offset) length:length freeWhenDone:NO];
-    return [[PAK_Item alloc] initWithPath:_path isAsset:_isAsset offset:offset length:length data:data];
+    NSString* name = [self string:blobOffset];
+    uint32_t offset = [self wordAtOffset:(blobOffset + 8)];
+    uint32_t fileSize = [self wordAtOffset:(blobOffset + 12)];
+    uint32_t uncompressedSize = [self wordAtOffset:(blobOffset + 16)];
+    char* base = (char*)[_data bytes];
+    NSData* data = [NSData dataWithBytesNoCopy:(base + offset) length:fileSize freeWhenDone:NO];
+    return [[PAK_Item alloc] initWithName:name path:_path isAsset:_isAsset offset:offset length:uncompressedSize data:data];
+}
+
+- (NSString*) string:(uint32_t)strOffset {
+    uint32_t offset = [self wordAtOffset:(strOffset)];
+    uint32_t length = [self wordAtOffset:(strOffset + 4)];
+    char* base = (char*)[_data bytes];
+    NSData* data = [NSData dataWithBytesNoCopy:(base + offset) length:length freeWhenDone:NO];
+    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
 - (uint32_t) wordAtOffset:(uint32_t)offset {

@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <zlib.h>
 
 #include <iostream>
 #include <vector>
@@ -102,7 +101,6 @@ int main(int argc, const char* argv[]) {
         bool shouldCompress = false;
         for (vector<string>::iterator i = compress.begin(); i != compress.end(); ++i) {
             if (stringEndsWith(name, *i)) {
-                cerr << "-- compressing " << name << endl;
                 shouldCompress = true;
             }
         }
