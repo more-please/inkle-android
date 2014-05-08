@@ -242,14 +242,31 @@ static JNINativeMethod kNatives[] = {
 
 - (NSArray*) pakNames
 {
+    // There's no API for iterating over asset directories.
+    // We'll just have to hard-code the directory names, bah!
+    const char* dirNames[] = {
+        "",
+        "AudioLoops",
+        "AudioShuffles",
+        "CommonAudioLoops",
+        "CommonAudioShuffles",
+        NULL
+    };
     NSMutableArray* result = [NSMutableArray array];
-    AAssetDir* d = AAssetManager_openDir(_assetManager, "");
-    const char* c = AAssetDir_getNextFileName(d);
-    for ( ; c; c = AAssetDir_getNextFileName(d)) {
-        NSString* s = [NSString stringWithCString:c];
-        [result addObject:s];
+    for (int i = 0; dirNames[i]; ++i) {
+        AAssetDir* d = AAssetManager_openDir(_assetManager, dirNames[i]);
+        if (!d) {
+            continue;
+        }
+        NSString* dirName = [NSString stringWithCString:dirNames[i]];
+        const char* c = AAssetDir_getNextFileName(d);
+        for ( ; c; c = AAssetDir_getNextFileName(d)) {
+            NSString* s = [NSString stringWithCString:c];
+            s = [dirName stringByAppendingPathComponent:s];
+            [result addObject:s];
+        }
+        AAssetDir_close(d);
     }
-    AAssetDir_close(d);
     return result;
 }
 
