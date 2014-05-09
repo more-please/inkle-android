@@ -273,7 +273,7 @@ static JNINativeMethod kNatives[] = {
 
 - (PAK_Item*) pakItem:(NSString*)path
 {
-    AAsset* asset = AAssetManager_open(_assetManager, path.cString, AASSET_MODE_STREAMING);
+    AAsset* asset = AAssetManager_open(_assetManager, path.UTF8String, AASSET_MODE_STREAMING);
     if (!asset) {
         NSLog(@"Failed to open asset: %@", path);
         return nil;
@@ -340,7 +340,7 @@ static JNINativeMethod kNatives[] = {
     [self maybeInitJavaMethod:m];
 
     _env->PushLocalFrame(1);
-    jstring jstr = _env->NewStringUTF(s.cString);
+    jstring jstr = _env->NewStringUTF(s.UTF8String);
     _env->CallVoidMethod(_instance, m->method, jstr);
 
     _env->PopLocalFrame(NULL);
@@ -405,7 +405,7 @@ static JNINativeMethod kNatives[] = {
     [self maybeInitJavaMethod:&kFindClass];
 
     _env->PushLocalFrame(1);
-    jstring str = _env->NewStringUTF(name.cString);
+    jstring str = _env->NewStringUTF(name.UTF8String);
     jclass result = (jclass) _env->CallObjectMethod(_instance, kFindClass.method, str);
     result = (jclass) _env->NewGlobalRef(result);
 
@@ -418,8 +418,8 @@ static JNINativeMethod kNatives[] = {
     [self maybeInitJavaMethod:&kParseInit];
 
     _env->PushLocalFrame(2);
-    jstring jApplicationId = _env->NewStringUTF(applicationId.cString);
-    jstring jClientKey = _env->NewStringUTF(clientKey.cString);
+    jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
+    jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
 
@@ -437,7 +437,7 @@ static JNINativeMethod kNatives[] = {
     [self maybeInitJavaMethod:&kParseCallFunction];
 
     _env->PushLocalFrame(1);
-    jstring jFunction = _env->NewStringUTF(function.cString);
+    jstring jFunction = _env->NewStringUTF(function.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction);
 
@@ -509,7 +509,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     [self maybeInitJavaMethod:&kParseNewObject];
 
     _env->PushLocalFrame(2);
-    jstring jName = _env->NewStringUTF(className.cString);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
     result = _env->NewGlobalRef(result);
@@ -537,8 +537,8 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     [self maybeInitJavaMethod:&kParseAddKey];
 
     _env->PushLocalFrame(2);
-    jstring jKey = _env->NewStringUTF(key.cString);
-    jstring jValue = _env->NewStringUTF(valueStr.cString);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+    jstring jValue = _env->NewStringUTF(valueStr.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
 
@@ -550,7 +550,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     [self maybeInitJavaMethod:&kGaiTrackerWithTrackingId];
 
     _env->PushLocalFrame(2);
-    jstring jName = _env->NewStringUTF(trackingId.cString);
+    jstring jName = _env->NewStringUTF(trackingId.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kGaiTrackerWithTrackingId.method, jName);
     result = _env->NewGlobalRef(result);
@@ -576,9 +576,9 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     [self maybeInitJavaMethod:&kGaiEvent];
     _env->PushLocalFrame(8);
 
-    jstring jCategory = _env->NewStringUTF(category.cString);
-    jstring jAction = _env->NewStringUTF(label.cString);
-    jstring jLabel = _env->NewStringUTF(action.cString);
+    jstring jCategory = _env->NewStringUTF(category.UTF8String);
+    jstring jAction = _env->NewStringUTF(label.UTF8String);
+    jstring jLabel = _env->NewStringUTF(action.UTF8String);
     jobject jValue = NULL;
     if (value) {
         jValue = _env->CallObjectMethod(_instance, kBoxLong.method, (jlong) value.longLongValue);
@@ -596,8 +596,8 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     [self maybeInitJavaMethod:&kGaiTrackerSet];
     _env->PushLocalFrame(8);
 
-    jstring jParam = _env->NewStringUTF(param.cString);
-    jstring jValue = _env->NewStringUTF(value.cString);
+    jstring jParam = _env->NewStringUTF(param.UTF8String);
+    jstring jValue = _env->NewStringUTF(value.UTF8String);
     _env->CallVoidMethod(_instance, kGaiTrackerSet.method, tracker, jParam, jValue);
 
     _env->PopLocalFrame(NULL);
