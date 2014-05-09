@@ -753,6 +753,12 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (CGSize) sizeThatFits:(CGSize)size
 {
+#if 1
+    return self.frameWithoutTransform.size;
+#else
+    // It seems like the logic ought to be as follows, especially
+    // to make the dice game work, but that breaks other stuff
+    // like the "Review map" button... Bah!
     if (_subviews.count == 0) {
         return size;
     } else {
@@ -764,6 +770,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         --_iterating;
         return r.size;
     }
+#endif
 }
 
 - (void) sizeToFit
