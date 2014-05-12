@@ -124,37 +124,67 @@
 
 - (void) setTitle:(NSString*)title forState:(UIControlState)state
 {
-    [_title setObject:title forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (title) {
+        [_title setObject:title forKey:key];
+    } else {
+        [_title removeObjectForKey:key];
+    }
     [self setNeedsLayout];
 }
 
 - (void) setTitleColor:(UIColor*)color forState:(UIControlState)state
 {
-    [_titleColor setObject:color forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (color) {
+        [_titleColor setObject:color forKey:key];
+    } else {
+        [_titleColor removeObjectForKey:key];
+    }
     _needsStateRefresh = YES;
 }
 
 - (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state
 {
-    [_titleShadowColor setObject:color forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (color) {
+        [_titleShadowColor setObject:color forKey:key];
+    } else {
+        [_titleShadowColor removeObjectForKey:key];
+    }
     _needsStateRefresh = YES;
 }
 
 - (void) setImage:(AP_Image*)image forState:(UIControlState)state
 {
-    [_image setObject:image forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (image) {
+        [_image setObject:image forKey:key];
+    } else {
+        [_image removeObjectForKey:key];
+    }
     [self setNeedsLayout];
 }
 
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state
 {
-    [_backgroundImage setObject:image forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (image) {
+        [_backgroundImage setObject:image forKey:key];
+    } else {
+        [_backgroundImage removeObjectForKey:key];
+    }
     _needsStateRefresh = YES;
 }
 
 - (void) setBackgroundColor:(UIColor*)color forState:(UIControlState)state
 {
-    [_backgroundColor setObject:color forKey:[NSNumber numberWithInt:state]];
+    id key = [NSNumber numberWithInt:state];
+    if (color) {
+        [_backgroundColor setObject:color forKey:key];
+    } else {
+        [_backgroundColor removeObjectForKey:key];
+    }
     _needsStateRefresh = YES;
 }
 
