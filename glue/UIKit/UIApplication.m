@@ -117,4 +117,15 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (BOOL) isPartInstalled:(int)part
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NO;
+}
+
+- (void) openPart:(int)part
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 @end

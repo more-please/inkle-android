@@ -114,6 +114,12 @@ static JavaMethod kIsCrappyDevice = {
 static JavaMethod kHideStatusBar = {
     "hideStatusBar", "()V", NULL
 };
+static JavaMethod kIsPartInstalled = {
+    "isPartInstalled", "(I)Z", NULL
+};
+static JavaMethod kOpenPart = {
+    "openPart", "(I)V", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -365,7 +371,6 @@ static JNINativeMethod kNatives[] = {
     [self maybeInitJavaMethod:m];
     jboolean result = _env->CallBooleanMethod(_instance, m->method);
     return result;
-
 }
 
 - (NSString*) javaStringMethod:(JavaMethod*)m
@@ -737,6 +742,19 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     NSLog(@"Opening URL: %@", s);
     [self javaVoidMethod:&kOpenURL withString:s];
     return YES;
+}
+
+- (BOOL) isPartInstalled:(int)part
+{
+    [self maybeInitJavaMethod:&kIsPartInstalled];
+    jboolean result = _env->CallBooleanMethod(_instance, kIsPartInstalled.method, part);
+    return result;
+}
+
+- (void) openPart:(int)part
+{
+    [self maybeInitJavaMethod:&kOpenPart];
+    _env->CallVoidMethod(_instance, kOpenPart.method, part);
 }
 
 - (void) maybeInitApp
