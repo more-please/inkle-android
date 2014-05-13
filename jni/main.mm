@@ -84,6 +84,15 @@ static JavaMethod kParseAddKey = {
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
 };
+static JavaMethod kParseNewQuery = {
+    "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
+};
+static JavaMethod kParseWhereEqualTo = {
+    "parseWhereEqualTo", "(Lcom/parse/ParseQuery;Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseFind = {
+    "parseFind", "(ILcom/parse/ParseQuery;)V", NULL
+};
 static JavaMethod kGaiTrackerWithTrackingId = {
     "gaiTrackerWithTrackingId", "(Ljava/lang/String;)Lcom/google/analytics/tracking/android/Tracker;", NULL
 };
@@ -108,10 +117,12 @@ static JavaMethod kHideStatusBar = {
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
+static void parseFindResult(JNIEnv*, jobject, jint, jstring);
 
 static JNINativeMethod kNatives[] = {
     { "parseCallResult", "(ILjava/lang/String;)V", (void *)&parseCallResult},
     { "parseSaveResult", "(IZ)V", (void *)&parseSaveResult},
+    { "parseFindResult", "(ILjava/lang/String;)V", (void *)&parseFindResult},
 };
 
 @implementation Main {
@@ -137,6 +148,7 @@ static JNINativeMethod kNatives[] = {
 
     NSMutableDictionary* _parseCallBlocks; // Map of int -> PFStringResultBlock
     NSMutableDictionary* _parseSaveBlocks; // Map of int -> PFBooleanResultBlock
+    NSMutableDictionary* _parseFindBlocks; // Map of int -> PFArrayResultBlock
 
     jobject _gaiDefaultTracker;
 }
@@ -203,6 +215,7 @@ static JNINativeMethod kNatives[] = {
 
         _parseCallBlocks = [NSMutableDictionary dictionary];
         _parseSaveBlocks = [NSMutableDictionary dictionary];
+        _parseFindBlocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -543,6 +556,92 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
 
     _env->PopLocalFrame(NULL);
+}
+
+- (jobject) parseNewQuery:(NSString*)className
+{
+    [self maybeInitJavaMethod:&kParseNewQuery];
+
+    _env->PushLocalFrame(2);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewQuery.method, jName);
+    result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)value
+{
+    NSString* valueStr;
+    if ([value isKindOfClass:[NSString class]]) {
+        // If it's a string, send it directly
+        valueStr = (NSString*)value;
+    } else {
+        // Otherwise, encode as JSON.
+        NSError* error;
+        NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
+        if (error) {
+            NSLog(@"JSON writer error: %@", error);
+            return;
+        }
+        valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
+    }
+    [self maybeInitJavaMethod:&kParseWhereEqualTo];
+
+    _env->PushLocalFrame(2);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+    jstring jValue = _env->NewStringUTF(valueStr.UTF8String);
+
+    _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
+{
+    static int handle = 0;
+    ++handle;
+    if (block) {
+        [_parseFindBlocks setObject:block forKey:@(handle)];
+    }
+
+    [self maybeInitJavaMethod:&kParseFind];
+    _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
+}
+
+static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    ParseResult* result = [[ParseResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    // NSLog(@"Posting parseFindResult handle:%d string:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(parseFindResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseFindResult:(ParseResult*)result
+{
+    // NSLog(@"parseFindResult handle:%d string:%@", result.handle, result.string);
+    PFArrayResultBlock block = [_parseFindBlocks objectForKey:@(result.handle)];
+    if (block) {
+        NSError* error = nil;
+        id json = nil;
+        if (result.string) {
+            NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
+            json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+        } else {
+            error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        }
+        block(json, error);
+    }
+    [_parseFindBlocks removeObjectForKey:@(result.handle)];
 }
 
 - (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId

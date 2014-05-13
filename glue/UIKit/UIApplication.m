@@ -70,6 +70,22 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (jobject) parseNewQuery:(NSString*)className
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
+- (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)vaue
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId
 {
     GLUE_NOT_IMPLEMENTED;
