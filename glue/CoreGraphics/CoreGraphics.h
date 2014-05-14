@@ -272,3 +272,10 @@ static inline CGRect CGRectApplyAffineTransform(CGRect rect, CGAffineTransform t
     rect.size.height = MAX(MAX(p1.y, p2.y), MAX(p3.y, p4.y)) - rect.origin.y;
     return rect;
 }
+
+static inline bool CGRectIntersectsRect(CGRect rect1, CGRect rect2) {
+    return (CGRectGetMinX(rect1) < CGRectGetMaxX(rect2))
+        && (CGRectGetMinX(rect2) < CGRectGetMaxX(rect1))
+        && (CGRectGetMinY(rect1) < CGRectGetMaxY(rect2))
+        && (CGRectGetMinY(rect2) < CGRectGetMaxY(rect1));
+}
