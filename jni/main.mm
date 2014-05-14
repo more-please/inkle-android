@@ -183,7 +183,6 @@ static JNINativeMethod kNatives[] = {
 
         // Initialize Cricket Audio
         CkConfig config(_env, _android->activity->clazz);
-        config.useJavaAudio = true; // OpenSLES is totally broken.
         // Nice big audio buffers, to prevent any glitches.
         config.audioUpdateMs = 20;
         config.streamBufferMs = 4000;
