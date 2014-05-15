@@ -469,6 +469,8 @@ AP_BAN_EVIL_INIT
         _texture = other->_texture;
         _size = other->_size;
         _scale = other->_scale;
+        _tint = other->_tint;
+        _imageTransform = other->_imageTransform;
 
         // Make sure there's at least a 1-pixel space in the middle.
         if (insets.left + insets.right + 1 > (_size.width / _scale)) {
