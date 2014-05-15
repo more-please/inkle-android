@@ -621,8 +621,8 @@ AP_BAN_EVIL_INIT
             _imageTransform,
             CGAffineTransformTranslate(
                 CGAffineTransformConcat(t,
-                    CGAffineTransformMakeTranslation(-x, -y)),
-                x, y));
+                    CGAffineTransformMakeTranslation(x, y)),
+                -x, -y));
 
         if (scale != _scale) {
             _scale = scale;
