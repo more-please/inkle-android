@@ -823,7 +823,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 - (CGSize) sizeThatFits:(CGSize)size
 {
 #if 1
-    return self.frame.size;
+    return self.bounds.size;
 #else
     // It seems like the logic ought to be as follows, especially
     // to make the dice game work, but that breaks other stuff
@@ -844,9 +844,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) sizeToFit
 {
-    CGRect r = self.frame;
+    CGRect r = self.bounds;
     r.size = [self sizeThatFits:r.size];
-    self.frame = r;
+    self.bounds = r;
 }
 
 //------------------------------------------------------------------------------------
