@@ -1014,15 +1014,15 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     boundsToGL = CGAffineTransformConcat(boundsToGL, originToFrameCenter);
     boundsToGL = CGAffineTransformConcat(boundsToGL, frameToGL);
 
-//    // Skip drawing if we're entirely off-screen.
-//    CGRect glBounds;
-//    glBounds.origin = boundsOrigin;
-//    glBounds.size = size;
-//    glBounds = CGRectApplyAffineTransform(glBounds, boundsToGL);
-//    CGRect glScreen = { -1, -1, 2, 2 };
-//    if (!CGRectIntersectsRect(glBounds, glScreen)) {
-//        return;
-//    }
+    // Skip drawing if we're entirely off-screen.
+    CGRect glBounds;
+    glBounds.origin = boundsOrigin;
+    glBounds.size = size;
+    glBounds = CGRectApplyAffineTransform(glBounds, boundsToGL);
+    CGRect glScreen = { -1, -1, 2, 2 };
+    if (!CGRectIntersectsRect(glBounds, glScreen)) {
+        return;
+    }
 
     [self renderWithBoundsToGL:boundsToGL alpha:alpha];
 
