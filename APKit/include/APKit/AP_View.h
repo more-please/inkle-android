@@ -83,8 +83,8 @@
 
 // Animated properties.
 @property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedBoundsOrigin;
-@property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedFrameOrigin;
-@property(nonatomic,readonly,strong) AP_AnimatedSize* animatedSize;
+@property(nonatomic,readonly,strong) AP_AnimatedSize* animatedBoundsSize;
+@property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedFrameCenter;
 @property(nonatomic,readonly,strong) AP_AnimatedPoint* animatedAnchor;
 @property(nonatomic,readonly,strong) AP_AnimatedTransform* animatedTransform;
 @property(nonatomic,readonly,strong) AP_AnimatedVector4* animatedBackgroundColor;

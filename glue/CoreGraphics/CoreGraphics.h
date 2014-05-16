@@ -242,35 +242,36 @@ static inline bool CGAffineTransformIsIdentity(CGAffineTransform t) {
 static inline CGPoint CGPointApplyAffineTransform(CGPoint point, CGAffineTransform t)
 {
     CGPoint p;
-    p.x = (CGFloat)((double)t.a * point.x + (double)t.c * point.y + t.tx);
-    p.y = (CGFloat)((double)t.b * point.x + (double)t.d * point.y + t.ty);
+    p.x = t.a * point.x + t.c * point.y + t.tx;
+    p.y = t.b * point.x + t.d * point.y + t.ty;
     return p;
 }
 
 static inline CGSize CGSizeApplyAffineTransform(CGSize size, CGAffineTransform t)
 {
     CGSize s;
-    s.width = (CGFloat)((double)t.a * size.width + (double)t.c * size.height);
-    s.height = (CGFloat)((double)t.b * size.width + (double)t.d * size.height);
+    s.width = t.a * size.width + t.c * size.height;
+    s.height = t.b * size.width + t.d * size.height;
     return s;
 }
 
 static inline CGRect CGRectApplyAffineTransform(CGRect rect, CGAffineTransform t)
 {
     // Docs say this returns the smallest rectangle around the transformed corners.
-    CGPoint p1 = { rect.origin.x, rect.origin.y };
+    CGPoint p1 = { rect.origin.x,                   rect.origin.y };
     CGPoint p2 = { rect.origin.x + rect.size.width, rect.origin.y };
-    CGPoint p3 = { rect.origin.x, rect.origin.y + rect.size.height };
+    CGPoint p3 = { rect.origin.x,                   rect.origin.y + rect.size.height };
     CGPoint p4 = { rect.origin.x + rect.size.width, rect.origin.y + rect.size.height };
     p1 = CGPointApplyAffineTransform(p1, t);
     p2 = CGPointApplyAffineTransform(p2, t);
     p3 = CGPointApplyAffineTransform(p3, t);
     p4 = CGPointApplyAffineTransform(p4, t);
-    rect.origin.x = MIN(MIN(p1.x, p2.x), MIN(p3.x, p4.x));
-    rect.origin.y = MIN(MIN(p1.y, p2.y), MIN(p3.y, p4.y));
-    rect.size.width = MAX(MAX(p1.x, p2.x), MAX(p3.x, p4.x)) - rect.origin.x;
-    rect.size.height = MAX(MAX(p1.y, p2.y), MAX(p3.y, p4.y)) - rect.origin.y;
-    return rect;
+    CGRect r;
+    r.origin.x = MIN(MIN(p1.x, p2.x), MIN(p3.x, p4.x));
+    r.origin.y = MIN(MIN(p1.y, p2.y), MIN(p3.y, p4.y));
+    r.size.width = MAX(MAX(p1.x, p2.x), MAX(p3.x, p4.x)) - r.origin.x;
+    r.size.height = MAX(MAX(p1.y, p2.y), MAX(p3.y, p4.y)) - r.origin.y;
+    return r;
 }
 
 static inline bool CGRectIntersectsRect(CGRect rect1, CGRect rect2) {

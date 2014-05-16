@@ -7,6 +7,13 @@
 #import "AP_Utils.h"
 #import "NSObject+AP_KeepAlive.h"
 
+#ifdef ANDROID
+static inline CGPoint CGRectGetCenter(CGRect rect)
+{
+    return CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
+}
+#endif
+
 @implementation AP_View {
     AP_Window* _window;
     BOOL _needsLayout;
@@ -33,8 +40,8 @@
         _animatedProperties = [NSMutableArray array];
 
         _animatedBoundsOrigin = [[AP_AnimatedPoint alloc] initWithName:@"boundsOrigin" view:self];
-        _animatedFrameOrigin = [[AP_AnimatedPoint alloc] initWithName:@"frameOrigin" view:self];
-        _animatedSize = [[AP_AnimatedSize alloc] initWithName:@"size" view:self];
+        _animatedFrameCenter = [[AP_AnimatedPoint alloc] initWithName:@"frameCenter" view:self];
+        _animatedBoundsSize = [[AP_AnimatedSize alloc] initWithName:@"boundsSize" view:self];
         _animatedAnchor = [[AP_AnimatedPoint alloc] initWithName:@"anchor" view:self];
         _animatedAlpha = [[AP_AnimatedFloat alloc] initWithName:@"alpha" view:self];
         _animatedTransform = [[AP_AnimatedTransform alloc] initWithName:@"transform" view:self];
@@ -42,8 +49,8 @@
         AP_CHECK(_animatedProperties.count == 7, return nil);
 
         [_animatedBoundsOrigin setAll:CGPointZero];
-        [_animatedFrameOrigin setAll:frame.origin];
-        [_animatedSize setAll:frame.size];
+        [_animatedFrameCenter setAll:CGRectGetCenter(frame)];
+        [_animatedBoundsSize setAll:frame.size];
         [_animatedAnchor setAll:CGPointMake(0.5, 0.5)];
         [_animatedAlpha setAll:1];
         [_animatedTransform setAll:CGAffineTransformIdentity];
@@ -73,7 +80,7 @@
 {
     CGRect r;
     r.origin = _animatedBoundsOrigin.dest;
-    r.size = _animatedSize.dest;
+    r.size = _animatedBoundsSize.dest;
     return r;
 }
 
@@ -81,49 +88,34 @@
 {
     CGRect r;
     r.origin = _animatedBoundsOrigin.inFlight;
-    r.size = _animatedSize.inFlight;
-    return r;
-}
-
-- (CGRect) frameWithoutTransform
-{
-    CGRect r;
-    r.origin = _animatedFrameOrigin.dest;
-    r.size = _animatedSize.dest;
+    r.size = _animatedBoundsSize.inFlight;
     return r;
 }
 
 - (CGRect) frame
 {
-    CGRect r = [self frameWithoutTransform];
+    CGPoint anchor = _animatedAnchor.dest;
+    CGSize size = _animatedBoundsSize.dest;
+    CGPoint center = _animatedFrameCenter.dest;
 
-    // The docs say if there's a transform, this value is "undefined".
-    // But it is actually transformed, and some of our code relies on that!
-    CGAffineTransform t = _animatedTransform.dest;
-    if (!CGAffineTransformIsIdentity(t)) {
-        // Need to transform around the anchor, urgh
-        CGPoint anchor = _animatedAnchor.dest;
-        CGPoint offset = {
-            r.origin.x + anchor.x * r.size.width,
-            r.origin.y + anchor.y * r.size.height,
-        };
-        r.origin.x -= offset.x;
-        r.origin.y -= offset.y;
-        r = CGRectApplyAffineTransform(r, _animatedTransform.dest);
-        r.origin.x += offset.x;
-        r.origin.y += offset.y;
-    }
+    CGRect r = {
+        -anchor.x * size.width,
+        -anchor.y * size.height,
+        size.width,
+        size.height
+    };
+
+    r = CGRectApplyAffineTransform(r, _animatedTransform.dest);
+
+    r.origin.x += center.x;
+    r.origin.y += center.y;
+
     return r;
 }
 
 - (CGPoint) center
 {
-    CGPoint anchor = _animatedAnchor.dest;
-    CGPoint origin = _animatedFrameOrigin.dest;
-    CGSize size = _animatedSize.dest;
-    return CGPointMake(
-        origin.x + size.width * anchor.x,
-        origin.y + size.height * anchor.y);
+    return _animatedFrameCenter.dest;
 }
 
 - (CGAffineTransform) transform
@@ -145,25 +137,46 @@
 {
     CGRect oldBounds = self.bounds;
     _animatedBoundsOrigin.dest = bounds.origin;
-    _animatedSize.dest = bounds.size;
+    _animatedBoundsSize.dest = bounds.size;
     [self maybeAutolayout:oldBounds];
 }
 
-- (void) setFrame:(CGRect)frame
+- (void) setFrame:(CGRect)newFrame
 {
+    CGRect oldFrame = self.frame;
     CGRect oldBounds = self.bounds;
-    _animatedFrameOrigin.dest = frame.origin;
-    _animatedSize.dest = frame.size;
+
+    // Changing the frame's size generally doesn't make sense if there's
+    // a transform. But we'll assume that if the frame is scaled, we
+    // should apply the same scale to the bounds. This will do the right
+    // thing if the transform is just a scale, which is usually the case.
+
+    CGSize newBoundsSize = newFrame.size;
+
+    if (oldFrame.size.width > 0) {
+        newBoundsSize.width *= oldBounds.size.width / oldFrame.size.width;
+    }
+    if (oldFrame.size.height > 0) {
+        newBoundsSize.height *= oldBounds.size.height / oldFrame.size.height;
+    }
+    _animatedBoundsSize.dest = newBoundsSize;
+
+    // Move the anchor, assuming that the relative position within the frame
+    // is the same as its relative position within the bounds -- again, only
+    // true if the transform is a simple scale.
+
+    CGPoint anchor = _animatedAnchor.dest;
+    _animatedFrameCenter.dest = CGPointMake(
+        newFrame.origin.x + anchor.x * newFrame.size.width,
+        newFrame.origin.y + anchor.y * newFrame.size.height
+    );
+
     [self maybeAutolayout:oldBounds];
 }
 
 - (void) setCenter:(CGPoint)center
 {
-    CGPoint oldCenter = self.center;
-    CGPoint origin = _animatedFrameOrigin.dest;
-    origin.x += (center.x - oldCenter.x);
-    origin.y += (center.y - oldCenter.y);
-    _animatedFrameOrigin.dest = origin;
+    _animatedFrameCenter.dest = center;
 }
 
 - (void) setTransform:(CGAffineTransform)transform
@@ -210,80 +223,136 @@
 #pragma mark - Hit testing & event dispatch
 //------------------------------------------------------------------------------------
 
-static CGPoint convertPoint(CGPoint point, AP_View* src, AP_View* dest) {
-    for (AP_View* v = dest; v; v = v->_superview) {
-        CGPoint boundsOrigin = v->_animatedBoundsOrigin.dest;
-        CGPoint frameOrigin = v->_animatedFrameOrigin.dest;
-        point.x -= frameOrigin.x - boundsOrigin.x;
-        point.y -= frameOrigin.y - boundsOrigin.y;
-    }
-    for (AP_View* v = src; v; v = v->_superview) {
-        CGPoint boundsOrigin = v->_animatedBoundsOrigin.dest;
-        CGPoint frameOrigin = v->_animatedFrameOrigin.dest;
-        point.x += frameOrigin.x - boundsOrigin.x;
-        point.y += frameOrigin.y - boundsOrigin.y;
-    }
-    return point;
+static inline CGAffineTransform toParent(AP_View* v) {
+    CGPoint anchor = v->_animatedAnchor.dest;
+    CGPoint boundsOrigin = v->_animatedBoundsOrigin.dest;
+    CGPoint frameCenter = v->_animatedFrameCenter.dest;
+    CGSize size = v->_animatedBoundsSize.dest;
+    CGAffineTransform transform = v->_animatedTransform.dest;
+
+    // In reverse order... (0,0) -> frameCenter
+    CGAffineTransform t = CGAffineTransformMakeTranslation(frameCenter.x, frameCenter.y);
+
+    // Transform about the frame center.
+    t = CGAffineTransformConcat(transform, t);
+
+    // Bounds center -> (0, 0)
+    t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
+    
+    // Bounds origin -> (0, 0)
+    t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
+
+    return t;
 }
 
-static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) {
-    for (AP_View* v = dest; v; v = v->_superview) {
-        CGPoint boundsOrigin = v->_animatedBoundsOrigin.inFlight;
-        CGPoint frameOrigin = v->_animatedFrameOrigin.inFlight;
-        point.x -= frameOrigin.x - boundsOrigin.x;
-        point.y -= frameOrigin.y - boundsOrigin.y;
+static inline CGAffineTransform toParentInFlight(AP_View* v) {
+    CGPoint anchor = v->_animatedAnchor.inFlight;
+    CGPoint boundsOrigin = v->_animatedBoundsOrigin.inFlight;
+    CGPoint frameCenter = v->_animatedFrameCenter.inFlight;
+    CGSize size = v->_animatedBoundsSize.inFlight;
+    CGAffineTransform transform = v->_animatedTransform.inFlight;
+
+    // In reverse order... (0,0) -> frameCenter
+    CGAffineTransform t = CGAffineTransformMakeTranslation(frameCenter.x, frameCenter.y);
+
+    // Transform about the frame center.
+    t = CGAffineTransformConcat(transform, t);
+
+    // Bounds center -> (0, 0)
+    t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
+    
+    // Bounds origin -> (0, 0)
+    t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
+
+    return t;
+}
+
+static inline CGAffineTransform fromParent(AP_View* v) {
+    return CGAffineTransformInvert(toParent(v));
+}
+
+static inline CGAffineTransform fromParentInFlight(AP_View* v) {
+    return CGAffineTransformInvert(toParentInFlight(v));
+}
+
+static inline CGAffineTransform toScreen(AP_View* v) {
+    if (v) {
+        return CGAffineTransformConcat(toParent(v), toScreen(v->_superview));
+    } else {
+        return CGAffineTransformIdentity;
     }
-    for (AP_View* v = src; v; v = v->_superview) {
-        CGPoint boundsOrigin = v->_animatedBoundsOrigin.inFlight;
-        CGPoint frameOrigin = v->_animatedFrameOrigin.inFlight;
-        point.x += frameOrigin.x - boundsOrigin.x;
-        point.y += frameOrigin.y - boundsOrigin.y;
+}
+
+static inline CGAffineTransform toScreenInFlight(AP_View* v) {
+    if (v) {
+        return CGAffineTransformConcat(toParentInFlight(v), toScreenInFlight(v->_superview));
+    } else {
+        return CGAffineTransformIdentity;
     }
-    return point;
+}
+
+static inline CGAffineTransform fromScreen(AP_View* v) {
+    if (v) {
+        return CGAffineTransformConcat(fromScreen(v->_superview), fromParent(v));
+    } else {
+        return CGAffineTransformIdentity;
+    }
+}
+
+static inline CGAffineTransform fromScreenInFlight(AP_View* v) {
+    if (v) {
+        return CGAffineTransformConcat(fromScreenInFlight(v->_superview), fromParentInFlight(v));
+    } else {
+        return CGAffineTransformIdentity;
+    }
+}
+
+static inline CGAffineTransform viewToView(AP_View* src, AP_View* dest) {
+    return CGAffineTransformConcat(toScreen(src), fromScreen(dest));
+}
+
+static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) {
+    return CGAffineTransformConcat(toScreenInFlight(src), fromScreenInFlight(dest));
 }
 
 - (CGPoint) convertPoint:(CGPoint)point fromView:(AP_View*)view
 {
-    return convertPoint(point, view, self);
+    return CGPointApplyAffineTransform(point, viewToView(view, self));
 }
 
 - (CGPoint) convertPoint:(CGPoint)point toView:(AP_View*)view
 {
-    return convertPoint(point, self, view);
+    return CGPointApplyAffineTransform(point, viewToView(self, view));
 }
 
 - (CGRect) convertRect:(CGRect)rect fromView:(AP_View *)view
 {
-    rect.origin = convertPoint(rect.origin, view, self);
-    return rect;
+    return CGRectApplyAffineTransform(rect, viewToView(view, self));
 }
 
 - (CGRect) convertRect:(CGRect)rect toView:(AP_View *)view
 {
-    rect.origin = convertPoint(rect.origin, self, view);
-    return rect;
+    return CGRectApplyAffineTransform(rect, viewToView(self, view));
 }
 
 - (CGPoint) convertInFlightPoint:(CGPoint)point fromView:(AP_View*)view
 {
-    return convertInFlightPoint(point, view, self);
+    return CGPointApplyAffineTransform(point, viewToViewInFlight(view, self));
 }
 
 - (CGPoint) convertInFlightPoint:(CGPoint)point toView:(AP_View*)view
 {
-    return convertInFlightPoint(point, self, view);
+    return CGPointApplyAffineTransform(point, viewToViewInFlight(self, view));
 }
 
 - (CGRect) convertInFlightRect:(CGRect)rect fromView:(AP_View *)view
 {
-    rect.origin = convertInFlightPoint(rect.origin, view, self);
-    return rect;
+    return CGRectApplyAffineTransform(rect, viewToViewInFlight(view, self));
 }
 
 - (CGRect) convertInFlightRect:(CGRect)rect toView:(AP_View *)view
 {
-    rect.origin = convertInFlightPoint(rect.origin, self, view);
-    return rect;
+    return CGRectApplyAffineTransform(rect, viewToViewInFlight(self, view));
 }
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event
@@ -302,7 +371,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     }
     if (_allowSubviewHitTestOutsideBounds || [self pointInside:point withEvent:event]) {
         for (AP_View* view in [_subviews reverseObjectEnumerator]) {
-            CGPoint p = [view convertInFlightPoint:point fromView:self];
+            CGPoint p = CGPointApplyAffineTransform(point, fromParentInFlight(view));
             AP_View* v = [view hitTest:p withEvent:event];
             if (v) {
                 return v;
@@ -666,7 +735,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
                 newBounds.size.width - oldBounds.size.width,
                 newBounds.size.height - oldBounds.size.height);
 
-            CGRect r = view.frameWithoutTransform;
+            CGRect r = view.frame;
 
             CGFloat leftMargin = CGRectGetMinX(r) - CGRectGetMinX(oldBounds);
             CGFloat rightMargin = CGRectGetMaxX(oldBounds) - CGRectGetMaxX(r);
@@ -754,7 +823,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 - (CGSize) sizeThatFits:(CGSize)size
 {
 #if 1
-    return self.frameWithoutTransform.size;
+    return self.frame.size;
 #else
     // It seems like the logic ought to be as follows, especially
     // to make the dice game work, but that breaks other stuff
@@ -775,7 +844,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
 - (void) sizeToFit
 {
-    CGRect r = self.frameWithoutTransform;
+    CGRect r = self.frame;
     r.size = [self sizeThatFits:r.size];
     self.frame = r;
 }
@@ -843,7 +912,7 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
         // Highlight all views in red, for debugging...
         backgroundColor = GLKVector4Make(1, 0, 0, 0.1);
     }
-#if 0
+#if 1
     if ([self.window isHitTestView:self]) {
         backgroundColor.r = 1;
         backgroundColor.a = MAX(0.25, backgroundColor.a);
@@ -929,16 +998,15 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
 
     CGPoint anchor = _animatedAnchor.inFlight;
     CGPoint boundsOrigin = _animatedBoundsOrigin.inFlight;
-    CGPoint frameOrigin = _animatedFrameOrigin.inFlight;
-    CGSize size = _animatedSize.inFlight;
+    CGPoint frameCenter = _animatedFrameCenter.inFlight;
+    CGSize size = _animatedBoundsSize.inFlight;
 
     CGAffineTransform boundsCenterToOrigin = CGAffineTransformMakeTranslation(
         -(boundsOrigin.x + anchor.x * size.width),
         -(boundsOrigin.y + anchor.y * size.height));
 
     CGAffineTransform originToFrameCenter = CGAffineTransformMakeTranslation(
-        (frameOrigin.x + anchor.x * size.width),
-        (frameOrigin.y + anchor.y * size.height));
+        frameCenter.x, frameCenter.y);
 
     CGAffineTransform boundsToGL = CGAffineTransformIdentity;
     boundsToGL = CGAffineTransformConcat(boundsToGL, boundsCenterToOrigin);
@@ -946,15 +1014,15 @@ static CGPoint convertInFlightPoint(CGPoint point, AP_View* src, AP_View* dest) 
     boundsToGL = CGAffineTransformConcat(boundsToGL, originToFrameCenter);
     boundsToGL = CGAffineTransformConcat(boundsToGL, frameToGL);
 
-    // Skip drawing if we're entirely off-screen.
-    CGRect glBounds;
-    glBounds.origin = _animatedBoundsOrigin.inFlight;
-    glBounds.size = _animatedSize.inFlight;
-    glBounds = CGRectApplyAffineTransform(glBounds, boundsToGL);
-    CGRect glScreen = { -1, -1, 2, 2 };
-    if (!CGRectIntersectsRect(glBounds, glScreen)) {
-        return;
-    }
+//    // Skip drawing if we're entirely off-screen.
+//    CGRect glBounds;
+//    glBounds.origin = boundsOrigin;
+//    glBounds.size = size;
+//    glBounds = CGRectApplyAffineTransform(glBounds, boundsToGL);
+//    CGRect glScreen = { -1, -1, 2, 2 };
+//    if (!CGRectIntersectsRect(glBounds, glScreen)) {
+//        return;
+//    }
 
     [self renderWithBoundsToGL:boundsToGL alpha:alpha];
 
