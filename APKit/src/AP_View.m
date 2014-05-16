@@ -110,6 +110,19 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
     r.origin.x += center.x;
     r.origin.y += center.y;
 
+    // Hack: make sure negative sizes are preserved. This can happen
+    // if the parent view has size 0, and it has an impact on autolayout.
+    // as this affects autolayout.
+
+    if (size.width < 0) {
+        r.origin.x += r.size.width;
+        r.size.width = -r.size.width;
+    }
+    if (size.height < 0) {
+        r.origin.y += r.size.height;
+        r.size.height = -r.size.height;
+    }
+
     return r;
 }
 
@@ -757,7 +770,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
                 widthCount += 1;
             }
 
-            if (fabs(flexibleWidth) > 1e-6) {
+            if (fabs(flexibleWidth) > 0.01) {
                 if (mask & UIViewAutoresizingFlexibleLeftMargin) {
                     r.origin.x += delta.width * (leftMargin / flexibleWidth);
                 }
@@ -788,7 +801,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
                 heightCount += 1;
             }
 
-            if (fabs(flexibleHeight) > 1e-6) {
+            if (fabs(flexibleHeight) > 0.01) {
                 if (mask & UIViewAutoresizingFlexibleTopMargin) {
                     r.origin.y += delta.height * (topMargin / flexibleHeight);
                 }
