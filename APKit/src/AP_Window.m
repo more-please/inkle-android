@@ -252,6 +252,7 @@ static inline CGFloat aspect(CGSize size) {
         [[NSNotificationCenter defaultCenter] postNotificationName:AP_ScreenSizeChangedNotification object:nil];
         if (_rootViewController) {
             _rootViewController.view.frame = bounds;
+            [_rootViewController.view setNeedsLayout];
         }
     }
 
