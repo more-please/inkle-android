@@ -690,37 +690,26 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) layoutIfNeeded
 {
-    AP_View* view = self;
-    AP_View* superview = view->_superview;
-    while (superview && superview->_needsLayout) {
-        view = superview;
-        superview = view->_superview;
-    }
-    if (view->_needsLayout) {
-        [view layoutSelfAndChildren];
-    }
-}
-
-- (void) layoutSelfAndChildren
-{
     id protectSelf = self;
 
     ++_iterating;
     for (AP_View* view in _subviews) {
-        [view layoutSelfAndChildren];
+        [view layoutIfNeeded];
     }
     --_iterating;
 
-    AP_ViewController* controller = _viewDelegate;
-    if (controller) {
-        [controller viewWillLayoutSubviews];
-    }
+    if (_needsLayout) {
+        AP_ViewController* controller = _viewDelegate;
+        if (controller) {
+            [controller viewWillLayoutSubviews];
+        }
 
-    [self layoutSubviews];
-    _needsLayout = NO;
+        [self layoutSubviews];
+        _needsLayout = NO;
 
-    if (controller) {
-        [controller viewDidLayoutSubviews];
+        if (controller) {
+            [controller viewDidLayoutSubviews];
+        }
     }
 
     [protectSelf self];

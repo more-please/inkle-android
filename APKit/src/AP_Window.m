@@ -255,7 +255,9 @@ static inline CGFloat aspect(CGSize size) {
         [[NSNotificationCenter defaultCenter] postNotificationName:AP_ScreenSizeChangedNotification object:nil];
         if (_rootViewController) {
             _rootViewController.view.frame = bounds;
-            [_rootViewController.view setNeedsLayout];
+            [_rootViewController.view visitWithBlock:^(AP_View* v) {
+                [v setNeedsLayout];
+            }];
         }
     }
 
@@ -308,10 +310,7 @@ static inline CGFloat aspect(CGSize size) {
 
     [_profiler step:@"layout"];
     if (_rootViewController) {
-        AP_View* v = _rootViewController.view;
-        [v visitWithBlock:^(AP_View* view) {
-            [view layoutIfNeeded];
-        }];
+        [_rootViewController.view layoutIfNeeded];
     }
 
     [_profiler step:@"render"];
