@@ -426,9 +426,15 @@
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
+    CGRect bounds = self.bounds;
+    if (bounds.size.width > 0) {
+        self.backgroundColor = [UIColor colorWithRed:0 green:1 blue:0 alpha:0.5];
+    } else {
+        self.backgroundColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:0.5];
+    }
+
     [super renderWithBoundsToGL:boundsToGL alpha:alpha];
 
-    CGRect bounds = self.bounds;
     [self textLayoutWithWidth:bounds.size.width];
     AP_CHECK(_formattedRuns, return);
 
