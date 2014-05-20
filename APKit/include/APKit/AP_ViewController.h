@@ -40,6 +40,6 @@
 - (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 - (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 
-- (void) updateGL;
+- (void) updateGL:(float)dt;
 
 @end

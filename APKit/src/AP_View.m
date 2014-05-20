@@ -881,7 +881,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 #pragma mark - Rendering
 //------------------------------------------------------------------------------------
 
-- (void) updateGL
+- (void) updateGL:(float)dt
 {
 }
 

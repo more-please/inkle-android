@@ -210,14 +210,8 @@ AP_BAN_EVIL_INIT;
     }
 }
 
-- (void) updateGL
+- (void) updateGL:(float)timeStep
 {
-    // Measure the time step since the previous call
-    static double previousTime = 0;
-    double time = CACurrentMediaTime();
-    double timeStep = MAX(0.01, MIN(1, time - previousTime));
-    previousTime = time;
-
     AP_PageView* view = (AP_PageView*) self.view;
 
     if (_inGesture) {

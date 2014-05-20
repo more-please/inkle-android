@@ -227,7 +227,10 @@ static inline CGFloat aspect(CGSize size) {
     [AP_GLTexture processDeleteQueue];
     [AP_GLBuffer processDeleteQueue];
 
-    _clock = AP_TimeInSeconds();
+    double t = AP_TimeInSeconds();
+    float dt = MAX(0.01, MIN(1, _clock - t));
+    _clock = t;
+
     [AP_Animation setMasterClock:_clock];
     [_fps tick];
 //    [_profiler maybeReport];
@@ -284,10 +287,10 @@ static inline CGFloat aspect(CGSize size) {
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v visitControllersWithBlock:^(AP_ViewController* c) {
-            [c updateGL];
+            [c updateGL:dt];
         }];
         [v visitWithBlock:^(AP_View* view) {
-            [view updateGL];
+            [view updateGL:dt];
             if (view.needsDisplay) {
                 *needsDisplayPtr = YES;
                 view.needsDisplay = NO;

@@ -290,7 +290,7 @@
     }
 }
 
-- (void) updateGL
+- (void) updateGL:(float)dt
 {
     [self refreshStateIfNeeded];
 }

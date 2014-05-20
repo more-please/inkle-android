@@ -101,6 +101,6 @@
     return nil;
 }
 
-- (void) updateGL {}
+- (void) updateGL:(float)dt {}
 
 @end

@@ -6,9 +6,9 @@
 
 @implementation AP_GLKView
 
-- (void) updateGL
+- (void) updateGL:(float)dt
 {
-    [super updateGL];
+    [super updateGL:dt];
 
     AP_CHECK(_delegate, return);
     [_delegate update];

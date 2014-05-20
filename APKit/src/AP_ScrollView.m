@@ -106,14 +106,8 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
     return sqrt(x * x + y * y);
 }
 
-- (void) updateGL
+- (void) updateGL:(float)timeStep
 {
-    // Measure the time step since the previous call
-    static double previousTime = 0;
-    double time = CACurrentMediaTime();
-    double timeStep = MAX(0.01, MIN(1, time - previousTime));
-    previousTime = time;
-
     if (_inGesture) {
         _velocity.x = _previousTranslation.x - _nextTranslation.x;
         _velocity.y = _previousTranslation.y - _nextTranslation.y;

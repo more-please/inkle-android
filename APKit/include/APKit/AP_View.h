@@ -127,7 +127,7 @@
 
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
-- (void) updateGL;
+- (void) updateGL:(float)dt;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
 
