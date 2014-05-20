@@ -71,6 +71,8 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     CGPoint offset = self.contentOffset;
     _contentSize = contentSize;
     self.contentOffset = offset;
+
+    [self setNeedsLayout];
 }
 
 - (void) layoutSubviews
