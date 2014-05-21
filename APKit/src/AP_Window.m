@@ -228,7 +228,7 @@ static inline CGFloat aspect(CGSize size) {
     [AP_GLBuffer processDeleteQueue];
 
     double t = AP_TimeInSeconds();
-    float dt = MAX(0.01, MIN(1, _clock - t));
+    float dt = MAX(0.01, MIN(1, t - _clock));
     _clock = t;
 
     [AP_Animation setMasterClock:_clock];
