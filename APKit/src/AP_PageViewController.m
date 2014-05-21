@@ -212,6 +212,8 @@ AP_BAN_EVIL_INIT;
 
 - (void) updateGL:(float)timeStep
 {
+    [super updateGL:timeStep];
+
     AP_PageView* view = (AP_PageView*) self.view;
 
     if (_inGesture) {

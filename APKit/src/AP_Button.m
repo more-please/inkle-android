@@ -292,6 +292,7 @@
 
 - (void) updateGL:(float)dt
 {
+    [super updateGL:dt];
     [self refreshStateIfNeeded];
 }
 

@@ -110,6 +110,8 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
 
 - (void) updateGL:(float)timeStep
 {
+    [super updateGL:timeStep];
+
     if (_inGesture) {
         _velocity.x = _previousTranslation.x - _nextTranslation.x;
         _velocity.y = _previousTranslation.y - _nextTranslation.y;

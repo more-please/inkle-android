@@ -44,6 +44,8 @@
 
 - (void) updateGL:(float)timeStep
 {
+    [super updateGL:timeStep];
+
     if (_isAnimating) {
         float phi = (1 + sqrtf(5)) / 2;
         _innerAngle += 2 * timeStep * phi;
