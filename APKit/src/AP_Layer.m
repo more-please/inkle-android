@@ -50,7 +50,7 @@ AP_BAN_EVIL_INIT
 {
     if (zPosition != _zPosition) {
         _zPosition = zPosition;
-        [_view zOrderChanged];
+        [_view.superview zOrderChanged];
     }
 }
 
