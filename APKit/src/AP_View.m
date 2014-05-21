@@ -232,6 +232,14 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
     [AP_AnimatedProperty currentAnimation].tag = tag;
 }
 
++ (void) withoutAnimation:(void (^)(void))block
+{
+    AP_Animation* oldAnimation = [AP_AnimatedProperty currentAnimation];
+    [AP_AnimatedProperty setCurrentAnimation:nil];
+    block();
+    [AP_AnimatedProperty setCurrentAnimation:oldAnimation];
+}
+
 //------------------------------------------------------------------------------------
 #pragma mark - Hit testing & event dispatch
 //------------------------------------------------------------------------------------

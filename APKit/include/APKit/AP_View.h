@@ -75,6 +75,8 @@
 
 + (void)debugAnimationWithTag:(NSString*)tag;
 
++ (void)withoutAnimation:(void (^)(void))block;
+
 @property(nonatomic,weak) AP_Window* window;
 @property(nonatomic,readonly,weak) AP_View* superview;
 @property(nonatomic,readonly) AP_Layer* layer;
