@@ -30,12 +30,36 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
 {
     if (animated) {
-        [AP_View animateWithDuration:1.0 animations:^{
+        [AP_View animateWithDuration:1.0f animations:^{
             self.contentOffset = contentOffset;
         }];
     } else {
         self.contentOffset = contentOffset;
     }
+}
+
+- (void)scrollToBottom
+{
+    [self.animatedBoundsOrigin cancelAnimation];
+    CGPoint bottom = {
+        self.contentSize.width - self.bounds.size.width,
+        self.contentSize.height - self.bounds.size.height
+    };
+    CGPoint delta = {
+        bottom.x - self.contentOffset.x,
+        bottom.y - self.contentOffset.y
+    };
+    CGFloat distance = sqrt(delta.x * delta.x + delta.y * delta.y);
+    CGFloat speed = 25;
+
+    [AP_View animateWithDuration:(distance / speed)
+        delay:1.0
+        options:UIViewAnimationOptionAllowUserInteraction
+        animations:^{
+            self.contentOffset = bottom;
+        }
+        completion:nil
+    ];
 }
 
 - (CGPoint) contentOffset
@@ -45,6 +69,12 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 - (void) setContentOffset:(CGPoint)offset;
 {
+    CGSize content = self.contentSize;
+    CGSize size = self.bounds.size;
+
+    offset.x = MAX(0, MIN(content.width - size.width, offset.x));
+    offset.y = MAX(0, MIN(content.height - size.height, offset.y));
+
     AP_AnimatedPoint* origin = self.animatedBoundsOrigin;
     if (!CGPointEqualToPoint(offset, origin.dest)) {
         origin.dest = offset;
@@ -56,14 +86,9 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 - (void) setBounds:(CGRect)bounds
 {
-    CGPoint p = self.contentOffset;
+    CGPoint offset = self.contentOffset;
     [super setBounds:bounds];
-    if (!CGPointEqualToPoint(p, self.contentOffset)) {
-        [self setNeedsLayout];
-        if ([_delegate respondsToSelector:@selector(scrollViewDidScroll:)]) {
-            [_delegate scrollViewDidScroll:self];
-        }
-    }
+    self.contentOffset = offset;
 }
 
 - (void) setContentSize:(CGSize)contentSize
@@ -79,7 +104,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 {
     [super layoutSubviews];
 
-    CGSize size = self.frame.size;
+    CGSize size = self.bounds.size;
     _gesture.preventHorizontalMovement = (_contentSize.width <= size.width);
     _gesture.preventVerticalMovement = (_contentSize.height <= size.height);
 }
@@ -87,6 +112,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 - (void) pan
 {
     if (_gesture.state == UIGestureRecognizerStateBegan) {
+        [self.animatedBoundsOrigin cancelAnimation];
         _inGesture = YES;
         _previousTranslation = [_gesture translationInView:nil];
         _nextTranslation = _previousTranslation;
@@ -126,17 +152,17 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
     }
 
     CGPoint pos = self.contentOffset;
-    CGSize size = self.frame.size;
+    CGSize size = self.bounds.size;
 
     if (_velocity.x != 0 || _velocity.y != 0) {
         pos.x += _velocity.x;
         pos.y += _velocity.y;
+
+        pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
+        pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
+
+        self.contentOffset = pos;
     }
-
-    pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
-    pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
-
-    self.contentOffset = pos;
 
     static const float kMinSpeed = 5;
 

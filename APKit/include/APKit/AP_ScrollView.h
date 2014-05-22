@@ -38,4 +38,6 @@
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;  // animate at constant velocity to new offset
 
+- (void)scrollToBottom; // Scroll slowly to the bottom
+
 @end
