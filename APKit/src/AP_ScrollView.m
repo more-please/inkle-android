@@ -131,12 +131,12 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
     if (_velocity.x != 0 || _velocity.y != 0) {
         pos.x += _velocity.x;
         pos.y += _velocity.y;
-
-        pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
-        pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
-
-        self.contentOffset = pos;
     }
+
+    pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
+    pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
+
+    self.contentOffset = pos;
 
     static const float kMinSpeed = 5;
 
