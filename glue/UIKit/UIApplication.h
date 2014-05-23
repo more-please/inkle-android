@@ -14,6 +14,9 @@
 @property(nonatomic,strong) NSString* publicDocumentsDir;
 @property(nonatomic) BOOL isCrappyDevice;
 
+- (NSString*) versionName;
+- (int) versionCode;
+
 - (BOOL) isPartInstalled:(int)part;
 - (void) openPart:(int)part;
 

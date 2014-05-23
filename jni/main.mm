@@ -120,6 +120,12 @@ static JavaMethod kIsPartInstalled = {
 static JavaMethod kOpenPart = {
     "openPart", "(I)V", NULL
 };
+static JavaMethod kVersionName = {
+    "versionName", "()Ljava/lang/String;", NULL
+};
+static JavaMethod kVersionCode = {
+    "versionCode", "()I", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -372,6 +378,13 @@ static JNINativeMethod kNatives[] = {
     return result;
 }
 
+- (int) javaIntMethod:(JavaMethod*)m
+{
+    [self maybeInitJavaMethod:m];
+    jint result = _env->CallIntMethod(_instance, m->method);
+    return result;
+}
+
 - (NSString*) javaStringMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
@@ -428,6 +441,16 @@ static JNINativeMethod kNatives[] = {
 
     _env->PopLocalFrame(NULL);
     return result;
+}
+
+- (NSString*) versionName
+{
+    return [self javaStringMethod:&kVersionName];
+}
+
+- (int) versionCode
+{
+    return [self javaIntMethod:&kVersionCode];
 }
 
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey

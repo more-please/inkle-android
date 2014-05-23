@@ -11,6 +11,18 @@ static UIApplication* g_Application;
     return g_Application;
 }
 
+- (NSString*) versionName
+{
+    GLUE_NOT_IMPLEMENTED;
+    return @"VERSION_NAME";
+}
+
+- (int) versionCode
+{
+    GLUE_NOT_IMPLEMENTED;
+    return -1;
+}
+
 - (id) init
 {
     self = [super init];
