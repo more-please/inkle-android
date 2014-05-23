@@ -67,6 +67,17 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     return self.bounds.origin;
 }
 
+- (CGPoint) maxContentOffset
+{
+    CGSize boundsSize = self.bounds.size;
+    CGSize contentSize = self.contentSize;
+    CGPoint p = {
+        MAX(0, contentSize.width - boundsSize.width),
+        MAX(0, contentSize.height - boundsSize.height)
+    };
+    return p;
+}
+
 - (void) setContentOffset:(CGPoint)offset;
 {
     AP_AnimatedPoint* origin = self.animatedBoundsOrigin;
@@ -94,7 +105,12 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 {
     CGPoint offset = self.contentOffset;
     _contentSize = contentSize;
-    self.contentOffset = offset;
+
+    CGPoint maxOffset = self.maxContentOffset;
+    self.contentOffset = CGPointMake(
+        MAX(0, MIN(maxOffset.x, offset.x)),
+        MAX(0, MIN(maxOffset.y, offset.y))
+    );
 
     [self setNeedsLayout];
 }

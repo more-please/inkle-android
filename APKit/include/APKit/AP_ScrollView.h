@@ -20,6 +20,8 @@
 @property(nonatomic) CGPoint contentOffset; // default CGPointZero
 @property(nonatomic) CGSize contentSize; // default CGSizeZero
 
+@property(nonatomic,readonly) CGPoint maxContentOffset;
+
 @property(nonatomic) BOOL showsHorizontalScrollIndicator;
 @property(nonatomic) BOOL showsVerticalScrollIndicator;
 
