@@ -2,6 +2,7 @@
 
 #import "AP_Check.h"
 #import "AP_GestureRecognizer.h"
+#import "AP_Window.h"
 
 #ifdef ANDROID
 const CGFloat UIScrollViewDecelerationRateNormal = 5.0;
@@ -50,7 +51,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
         bottom.y - self.contentOffset.y
     };
     CGFloat distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-    CGFloat speed = 25;
+    CGFloat speed = [AP_Window heightForIPhone:20 iPad:40];
 
     [AP_View animateWithDuration:(distance / speed)
         delay:1.0
