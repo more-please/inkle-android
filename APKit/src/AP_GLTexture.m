@@ -113,9 +113,10 @@ static NSMutableArray* s_deleteQueue = nil;
         if (limitSize) {
             CGSize s = [AP_Window screenSize];
             CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-            CGFloat screenMaxTextureSize = [UIApplication sharedApplication].isCrappyDevice
-                ? screenSize * 1.59  // Use 1024 texture for screens up to 1280 pixels in size
-                : screenSize * 1.99; // Use 1024 texture for screens up to 1024 pixels in size
+//            CGFloat screenMaxTextureSize = [UIApplication sharedApplication].isCrappyDevice
+//                ? screenSize * 1.59  // Use 1024 texture for screens up to 1280 pixels in size
+//                : screenSize * 1.99; // Use 1024 texture for screens up to 1024 pixels in size
+            CGFloat screenMaxTextureSize = screenSize * 1.99;
             _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
         }
 #endif
