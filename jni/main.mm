@@ -1075,6 +1075,8 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
             _inForeground = NO;
             if (self.isCrappyDevice) {
                 _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:30];
+            } else {
+                _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:120];
             }
             CkSuspend();
             break;
@@ -1157,12 +1159,8 @@ void android_main(struct android_app* android) {
 
             int timeout;
             if (!g_Main.inForeground) {
-                if (g_Main.isCrappyDevice) {
-                    timeout = 10 * 1000;
-                    [g_Main maybeAutoQuit];
-                } else {
-                    timeout = -1;
-                }
+                timeout = 10 * 1000;
+                [g_Main maybeAutoQuit];
             } else if (g_Main.canDraw && g_Main.idleCount < 4) {
                 timeout = 0;
             } else {
