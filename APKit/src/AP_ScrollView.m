@@ -187,8 +187,8 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
     if (_pagingEnabled) {
         CGPoint idealPage = { roundf(pos.x / size.width), roundf(pos.y / size.height) };
         CGPoint idealPos = { idealPage.x * size.width, idealPage.y * size.height };
-        idealVelocity.x = (idealPos.x - pos.x) / size.width * kMinSpeed;
-        idealVelocity.y = (idealPos.y - pos.y) / size.height * kMinSpeed;
+        idealVelocity.x = sqrt(size.width) * (idealPos.x - pos.x) / size.width;
+        idealVelocity.y = sqrt(size.height) * (idealPos.y - pos.y) / size.height;
     }
 
     // Get our absolute speed, relative to the ideal velocity.
