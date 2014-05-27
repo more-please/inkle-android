@@ -17,7 +17,7 @@ COMMON_SRCS = \
 	3rd-party/stb/stb_image.c \
 	3rd-party/stb/stb_truetype.c
 
-all: build/bin/pak build/bin/atlas build/bin/superellipse build/bin/fontex build/bin/split build/bin/tippex
+all: build/bin/pak build/bin/atlas build/bin/superellipse build/bin/fontex build/bin/split build/bin/tippex build/bin/bbox
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
@@ -42,6 +42,10 @@ build/bin/split: tools/split.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 build/bin/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/tippex.cpp $(COMMON_SRCS) -o build/bin/tippex
+
+build/bin/bbox: tools/bbox.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/bbox.cpp $(COMMON_SRCS) -o build/bin/bbox
 
 clean:
 	rm build/bin/*
