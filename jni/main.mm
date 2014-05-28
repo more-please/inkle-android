@@ -977,6 +977,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     if (byForceIfNecessary || !vc.paused) {
         eglMakeCurrent(_display, _surface, _surface, _context);
         [vc draw];
+        glFlush();
         eglSwapBuffers(_display, _surface);
 
         EGLint err = eglGetError();
