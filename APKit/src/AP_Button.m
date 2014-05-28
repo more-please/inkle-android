@@ -3,6 +3,7 @@
 #import "AP_Check.h"
 
 @implementation AP_Button {
+    NSMutableDictionary* _attributedTitle;
     NSMutableDictionary* _title;
     NSMutableDictionary* _titleColor;
     NSMutableDictionary* _titleShadowColor;
@@ -36,6 +37,7 @@
     [self addSubview:_titleLabel];
     [self addSubview:_imageView];
 
+    _attributedTitle = [NSMutableDictionary dictionary];
     _title = [NSMutableDictionary dictionary];
     _titleColor = [NSMutableDictionary dictionary];
     _titleShadowColor = [NSMutableDictionary dictionary];
@@ -122,6 +124,17 @@
     [super setNeedsLayout];
 }
 
+- (void) setAttributedTitle:(NSAttributedString*)title forState:(UIControlState)state
+{
+    id key = [NSNumber numberWithInt:state];
+    if (title) {
+        [_attributedTitle setObject:title forKey:key];
+    } else {
+        [_attributedTitle removeObjectForKey:key];
+    }
+    [self setNeedsLayout];
+}
+
 - (void) setTitle:(NSString*)title forState:(UIControlState)state
 {
     id key = [NSNumber numberWithInt:state];
@@ -186,6 +199,15 @@
         [_backgroundColor removeObjectForKey:key];
     }
     _needsStateRefresh = YES;
+}
+
+- (NSAttributedString*)attributedTitleForState:(UIControlState)state
+{
+    NSAttributedString* result = [_attributedTitle objectForKey:[NSNumber numberWithInt:state]];
+    if (!result) {
+        result = [_attributedTitle objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    }
+    return result;
 }
 
 - (NSString*)titleForState:(UIControlState)state
@@ -280,9 +302,14 @@
     if (_needsStateRefresh) {
         UIControlState state = self.highlighted ? UIControlStateHighlighted : UIControlStateNormal;
 
-        [_titleLabel setText:[self titleForState:state]];
-        [_titleLabel setTextColor:[self titleColorForState:state]];
-        [_titleLabel setShadowColor: [self titleShadowColorForState:state]];
+        NSAttributedString* title = [self attributedTitleForState:state];
+        if (title) {
+            [_titleLabel setAttributedText:title];
+        } else {
+            [_titleLabel setText:[self titleForState:state]];
+            [_titleLabel setTextColor:[self titleColorForState:state]];
+            [_titleLabel setShadowColor: [self titleShadowColorForState:state]];
+        }
         [_imageView setImage:[self imageForState:state]];
         [self setBackgroundColor:[self backgroundColorForState:state]];
 

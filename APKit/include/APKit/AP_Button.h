@@ -11,6 +11,7 @@
 
 + (AP_Button*) buttonWithType:(UIButtonType)buttonType;
 
+- (void) setAttributedTitle:(NSAttributedString*)title forState:(UIControlState)state;
 - (void) setTitle:(NSString*)title forState:(UIControlState)state;
 - (void) setTitleColor:(UIColor*)color forState:(UIControlState)state;
 - (void) setTitleShadowColor:(UIColor*)color forState:(UIControlState)state;
@@ -18,6 +19,7 @@
 - (void) setBackgroundImage:(AP_Image*)image forState:(UIControlState)state;
 - (void) setBackgroundColor:(UIColor*)color forState:(UIControlState)state;
 
+- (NSAttributedString*)attributedTitleForState:(UIControlState)state;
 - (NSString*)titleForState:(UIControlState)state;
 - (UIColor*)titleColorForState:(UIControlState)state;
 - (UIColor*)titleShadowColorForState:(UIControlState)state;
