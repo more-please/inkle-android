@@ -227,8 +227,10 @@ static inline CGFloat aspect(CGSize size) {
     [AP_GLTexture processDeleteQueue];
     [AP_GLBuffer processDeleteQueue];
 
-    double t = AP_TimeInSeconds();
-    float dt = MAX(0.01, MIN(1, t - _clock));
+    const double t = AP_TimeInSeconds();
+    const float minFrameTime = 1.0 / 120;
+    const float maxFrameTime = 1.0 / 10;
+    const float dt = MAX(minFrameTime, MIN(maxFrameTime, t - _clock));
     _clock = t;
 
     [AP_Animation setMasterClock:_clock];
