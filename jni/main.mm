@@ -1100,7 +1100,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
             if (self.isCrappyDevice) {
                 _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:30];
             } else {
-                _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:120];
+                _autoQuitTime = [[NSDate date] dateByAddingTimeInterval:300];
             }
             CkSuspend();
             break;
