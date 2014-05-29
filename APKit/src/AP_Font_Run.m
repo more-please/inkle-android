@@ -170,7 +170,7 @@ typedef struct VertexData {
 {
     int lastBreak = _start - 1;
     for (int i = _start; i < _end; ++i) {
-        if (_positions[i] - _positions[_start] > width) {
+        if (_positions[i + 1] - _positions[_start] > width) {
             *leftover = [[AP_Font_Run alloc] initWithRun:self start:(lastBreak + 1) end:_end];
             return [[AP_Font_Run alloc] initWithRun:self start:_start end:MAX(_start, lastBreak)];
         }
