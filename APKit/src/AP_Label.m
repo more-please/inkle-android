@@ -19,6 +19,7 @@
     // Properties applied to non-attributed text.
     UIFont* _font;
     NSTextAlignment _alignment;
+    CGFloat _lineSpacing;
     UIColor* _textColor;
     UIColor* _shadowColor;
     CGSize _shadowOffset;
@@ -46,6 +47,7 @@
     _text = [NSMutableAttributedString attributedStringWithString:@""];
     _font = [UIFont systemFontOfSize:17];
     _alignment = NSTextAlignmentNatural;
+    _lineSpacing = 0;
     _textColor = [UIColor blackColor];
     _shadowColor = [UIColor clearColor];
     _shadowOffset = CGSizeMake(0, -1);
@@ -197,6 +199,7 @@
     [_text setFont:_font];
     [_text setTextColor:_textColor];
     [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(_alignment)];
+    [_text setLineSpacingAdjustment:_lineSpacing];
     [self setNeedsTextLayout];
 }
 
@@ -236,6 +239,13 @@
 {
     _alignment = alignment;
     [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(alignment)];
+    [self setNeedsTextLayout];
+}
+
+- (void) setLineSpacingAdjustment:(CGFloat)adjustment
+{
+    _lineSpacing = adjustment;
+    [_text setLineSpacingAdjustment:adjustment];
     [self setNeedsTextLayout];
 }
 
@@ -287,11 +297,12 @@
         // Calculate y adjustment based on maximum ascent and line height.
         CGFloat maxAscent = 0;
         CGFloat maxLineHeight = 0;
+        CGFloat lineSpacing = _currentStyle.lineSpacingAdjustment;
         for (AP_Font_Run* run in _currentLineRuns) {
             maxAscent = MAX(maxAscent, run.ascender);
             maxLineHeight = MAX(maxLineHeight, run.size.height);
         }
-        offset.y = maxAscent;
+        offset.y = maxAscent + lineSpacing / 2;
 
         // Apply adjustments and mark the current line as formatted.
         for (AP_Font_Run* run in _currentLineRuns) {
@@ -305,7 +316,7 @@
 
         // Get ready for the next line.
         _cursor.x = 0;
-        _cursor.y += maxLineHeight;
+        _cursor.y += maxLineHeight + lineSpacing;
         _atStartOfLine = YES;
 
         _formattedSize.height = _cursor.y;

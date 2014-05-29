@@ -20,6 +20,7 @@
 - (void) setShadowOffset:(CGSize)offset;
 - (void) setShadowColor:(UIColor*)color;
 - (void) setLineBreakMode:(NSLineBreakMode)mode;
+- (void) setLineSpacingAdjustment:(CGFloat)adjustment;
 
 // Getters get the property at the beginning of the string.
 - (UIFont*)font;
