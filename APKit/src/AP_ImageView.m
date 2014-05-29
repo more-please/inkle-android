@@ -4,6 +4,7 @@
 
 #import "AP_Layer.h"
 #import "AP_Log.h"
+#import "AP_window.h"
 
 @implementation AP_ImageView
 
@@ -125,41 +126,16 @@
 
 //        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", image.assetName, pos.x, pos.y, size.width, size.height, alpha);
 
-        UIScreen* screen = [UIScreen mainScreen];
-        CGRect scissorRect = screen.bounds;
-
-        if (self.clipsToBounds) {
-            CGRect r = [self convertInFlightRect:bounds toView:nil];
-            scissorRect = CGRectIntersection(scissorRect, r);
-        }
-
         AP_View* maskView = self.layer.mask.view;
         if (maskView) {
             // In most cases the mask is an opaque white view, so just clip to its bounds.
-            CGRect r = [self convertInFlightRect:maskView.frame toView:nil];
-            scissorRect = CGRectIntersection(scissorRect, r);
-        }
-
-        if (CGRectIsEmpty(scissorRect)) {
-            // Nothing to draw!
-            return;
-        }
-
-        BOOL useScissor = !CGRectEqualToRect(scissorRect, screen.bounds);
-        if (useScissor) {
-            CGFloat scale = screen.scale;
-            int x = scissorRect.origin.x * scale;
-            int y = (screen.bounds.size.height - (scissorRect.origin.y + scissorRect.size.height)) * scale;
-            int w = scissorRect.size.width * scale;
-            int h = scissorRect.size.height * scale;
-            glEnable(GL_SCISSOR_TEST);
-            glScissor(x, y, w, h);
-        }
-
-        [image renderGLWithSize:size transform:t alpha:alpha];
-
-        if (useScissor) {
-            glDisable(GL_SCISSOR_TEST);
+            CGRect maskRect = [maskView convertInFlightRect:maskView.inFlightBounds toView:nil];
+            CGRect scissorRect = CGRectApplyAffineTransform(maskRect, boundsToGL);
+            CGRect oldScissor = [AP_Window overlayScissorRect:scissorRect];
+            [image renderGLWithSize:size transform:t alpha:alpha];
+            [AP_Window setScissorRect:oldScissor];
+        } else {
+            [image renderGLWithSize:size transform:t alpha:alpha];
         }
     }
 }

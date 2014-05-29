@@ -33,6 +33,7 @@ NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotific
 
 static CGRect g_ScreenBounds = {0, 0, 320, 480};
 static CGFloat g_ScreenScale = 1.0;
+static CGRect g_ScissorRect;
 
 + (CGRect) screenBounds
 {
@@ -47,6 +48,31 @@ static CGFloat g_ScreenScale = 1.0;
 + (CGFloat) screenScale
 {
     return g_ScreenScale;
+}
+
++ (CGRect) overlayScissorRect:(CGRect)r
+{
+    r = CGRectIntersection(g_ScissorRect, r);
+    return [AP_Window setScissorRect:r];
+}
+
++ (CGRect) setScissorRect:(CGRect)r
+{
+    CGRect previous = g_ScissorRect;
+    g_ScissorRect = r;
+
+    // Scale from GL coordinates (-1, -1, 2, 2) to screen coordinates.
+    CGPoint scale = {
+        g_ScreenScale * g_ScreenBounds.size.width / 2,
+        g_ScreenScale * g_ScreenBounds.size.height / 2
+    };
+    int x0 = (r.origin.x + 1) * scale.x;
+    int y0 = (r.origin.y + 1) * scale.y;
+    int x1 = x0 + MAX(0, r.size.width * scale.x);
+    int y1 = y0 + MAX(0, r.size.height * scale.y);
+    glScissor(x0, y0, x1 - x0, y1 - y0);
+
+    return previous;
 }
 
 static const CGSize iPhonePortrait = { 320, 480 };
@@ -265,11 +291,16 @@ static inline CGFloat aspect(CGSize size) {
 
     [_profiler step:@"clear"];
     glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDisable(GL_SCISSOR_TEST);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_SCISSOR_TEST);
+
+    [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
     // - scale from screen size to (2, 2).

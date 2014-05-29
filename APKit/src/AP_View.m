@@ -1034,6 +1034,12 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         return;
     }
 
+    BOOL shouldScissor = _clipsToBounds;
+    CGRect oldScissorRect;
+    if (shouldScissor) {
+        oldScissorRect = [AP_Window overlayScissorRect:glBounds];
+    }
+
     [self renderWithBoundsToGL:boundsToGL alpha:alpha];
 
     if (_zSortedSubviews) {
@@ -1055,6 +1061,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [view renderSelfAndChildrenWithFrameToGL:boundsToGL alpha:alpha];
     }
     --_iterating;
+
+    if (shouldScissor) {
+        [AP_Window setScissorRect:oldScissorRect];
+    }
 }
 
 //------------------------------------------------------------------------------------
