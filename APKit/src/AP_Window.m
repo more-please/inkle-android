@@ -104,8 +104,12 @@ static inline CGFloat side(CGSize size) {
 
 + (CGFloat) scaleForIPhone:(CGFloat)iPhone iPad:(CGFloat)iPad
 {
+    // Ensure negative values are handled correctly.
+    if (iPhone < 0 && iPad < 0) {
+        return -[AP_Window scaleForIPhone:-iPhone iPad:-iPad];
+    }
+    // Ensure we're scaling *up* from iPhone to iPad.
     if (iPhone > iPad) {
-        // To make the lerp consistent, ensure we're scaling *up* from iPhone to iPad.
         if (iPad > 0) {
             return 1.0 / [AP_Window scaleForIPhone:1.0/iPhone iPad:1.0/iPad];
         } else {
