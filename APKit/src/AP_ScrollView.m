@@ -43,24 +43,26 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 {
     [self.animatedBoundsOrigin cancelAnimation];
     CGPoint bottom = {
-        self.contentSize.width - self.bounds.size.width,
-        self.contentSize.height - self.bounds.size.height
+        MAX(0, self.contentSize.width - self.bounds.size.width),
+        MAX(0, self.contentSize.height - self.bounds.size.height)
     };
     CGPoint delta = {
         bottom.x - self.contentOffset.x,
         bottom.y - self.contentOffset.y
     };
     CGFloat distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-    CGFloat speed = [AP_Window heightForIPhone:20 iPad:40];
+    CGFloat speed = [AP_Window scaleForIPhone:20 iPad:40];
 
-    [AP_View animateWithDuration:(distance / speed)
-        delay:1.0
-        options:UIViewAnimationOptionAllowUserInteraction
-        animations:^{
-            self.contentOffset = bottom;
-        }
-        completion:nil
-    ];
+    if (distance > 0) {
+        [AP_View animateWithDuration:(distance / speed)
+            delay:0.5
+            options:UIViewAnimationOptionAllowUserInteraction
+            animations:^{
+                self.contentOffset = bottom;
+            }
+            completion:nil
+        ];
+    }
 }
 
 - (CGPoint) contentOffset
