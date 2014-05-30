@@ -117,6 +117,12 @@ static inline CGRect CGRectInset(CGRect rect, CGFloat dx, CGFloat dy) {
     return rect;
 }
 
+static inline CGRect CGRectOffset(CGRect rect, CGFloat dx, CGFloat dy) {
+    rect.origin.x += dx;
+    rect.origin.y += dy;
+    return rect;
+}
+
 static inline bool CGPointEqualToPoint(CGPoint point1, CGPoint point2) {
     return point1.x == point2.x
         && point1.y == point2.y;
