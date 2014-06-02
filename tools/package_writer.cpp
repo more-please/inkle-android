@@ -89,14 +89,16 @@ void PackageWriter::addData(const char *name, size_t size, const void *data, boo
 		z.avail_out = size;
 
 		zerr = deflate(&z, Z_FINISH);
-		assert(zerr == Z_STREAM_END);
-
-		info.dataSize = z.total_out;
+		if (zerr == Z_STREAM_END && z.total_out < size) {
+			// Compression succeeded
+			info.dataSize = z.total_out;
+			write(info.dataSize, buffer);
+		} else {
+			write(size, data);
+		}
 
 		zerr = deflateEnd(&z);
 		assert(zerr == Z_OK);
-
-		write(info.dataSize, buffer);
 		free(buffer);
 	} else {
 	    write(size, data);
