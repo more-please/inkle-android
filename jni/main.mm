@@ -163,6 +163,7 @@ static JNINativeMethod kNatives[] = {
     NSMutableDictionary* _parseFindBlocks; // Map of int -> PFArrayResultBlock
 
     jobject _gaiDefaultTracker;
+    NSArray* _pakNamesCache;
 }
 
 - (id) initWithAndroidApp:(struct android_app*)android
@@ -267,32 +268,34 @@ static JNINativeMethod kNatives[] = {
 
 - (NSArray*) pakNames
 {
-    // There's no API for iterating over asset directories.
-    // We'll just have to hard-code the directory names, bah!
-    const char* dirNames[] = {
-        "",
-        "AudioLoops",
-        "AudioShuffles",
-        "CommonAudioLoops",
-        "CommonAudioShuffles",
-        NULL
-    };
-    NSMutableArray* result = [NSMutableArray array];
-    for (int i = 0; dirNames[i]; ++i) {
-        AAssetDir* d = AAssetManager_openDir(_assetManager, dirNames[i]);
-        if (!d) {
-            continue;
+    if (!_pakNamesCache) {
+        // There's no API for iterating over asset directories.
+        // We'll just have to hard-code the directory names, bah!
+        const char* dirNames[] = {
+            "AudioLoops",
+            "AudioShuffles",
+            "CommonAudioLoops",
+            "CommonAudioShuffles",
+            NULL
+        };
+        NSMutableArray* cache = [NSMutableArray array];
+        for (int i = 0; dirNames[i]; ++i) {
+            AAssetDir* d = AAssetManager_openDir(_assetManager, dirNames[i]);
+            if (!d) {
+                continue;
+            }
+            NSString* dirName = [NSString stringWithCString:dirNames[i]];
+            const char* c = AAssetDir_getNextFileName(d);
+            for ( ; c; c = AAssetDir_getNextFileName(d)) {
+                NSString* s = [NSString stringWithCString:c];
+                s = [dirName stringByAppendingPathComponent:s];
+                [cache addObject:s];
+            }
+            AAssetDir_close(d);
         }
-        NSString* dirName = [NSString stringWithCString:dirNames[i]];
-        const char* c = AAssetDir_getNextFileName(d);
-        for ( ; c; c = AAssetDir_getNextFileName(d)) {
-            NSString* s = [NSString stringWithCString:c];
-            s = [dirName stringByAppendingPathComponent:s];
-            [result addObject:s];
-        }
-        AAssetDir_close(d);
+        _pakNamesCache = cache;
     }
-    return result;
+    return _pakNamesCache;
 }
 
 
@@ -814,6 +817,10 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
     } else {
         pak = [PAK pakWithMemoryMappedFile:_obbPath];
+
+        // A cheat: assume all the sounds are in the OBB, so we
+        // don't have to bother checking assets (which are very slow).
+        _pakNamesCache = [NSArray array];
     }
 
     NSAssert(pak, @"Can't find .pak file");
