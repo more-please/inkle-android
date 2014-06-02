@@ -37,6 +37,7 @@ static AP_Bundle* g_Bundle;
         }
         fullName = [name stringByAppendingString:ext];
     }
+    NSLog(@"Loading resource: %@", fullName);
 #ifdef ANDROID
     PAK_Item* item = [PAK_Search item:fullName];
     if (item) {
