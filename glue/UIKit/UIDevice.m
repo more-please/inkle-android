@@ -32,12 +32,12 @@
 
 - (void)beginGeneratingDeviceOrientationNotifications
 {
-    GLUE_NOT_IMPLEMENTED;
+    // Not needed
 }
 
 - (void)endGeneratingDeviceOrientationNotifications;
 {
-    GLUE_NOT_IMPLEMENTED;
+    // Not needed
 }
 
 @end
