@@ -854,9 +854,16 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) sizeToFit
 {
+    CGPoint oldOrigin = self.frame.origin;
+
     CGRect r = self.bounds;
     r.size = [self sizeThatFits:r.size];
     self.bounds = r;
+
+    // Anchor the frame at its origin, not its center.
+    r = self.frame;
+    r.origin = oldOrigin;
+    self.frame = r;
 }
 
 //------------------------------------------------------------------------------------
