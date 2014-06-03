@@ -25,6 +25,7 @@ typedef enum UIImageResizingMode {
 + (AP_Image*) imageWithContentsOfFileNamedAuto:(NSString*)name;
 
 - (AP_Image*) imageWithWidth:(CGFloat)width;
+- (AP_Image*) imageScaledBy:(CGFloat)scale;
 
 - (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets;
 - (AP_Image*) stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight;

@@ -288,8 +288,13 @@ AP_BAN_EVIL_INIT
 
 - (AP_Image*) imageWithWidth:(CGFloat)width
 {
+    return [self imageScaledBy:width / self.size.width];
+}
+
+- (AP_Image*) imageScaledBy:(CGFloat)scale
+{
     AP_Image* other = [[AP_Image alloc] initWithImage:self];
-    other->_scale *= self.size.width / width;
+    other->_scale /= scale;
     return other;
 }
 
