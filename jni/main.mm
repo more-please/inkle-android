@@ -126,6 +126,9 @@ static JavaMethod kVersionName = {
 static JavaMethod kVersionCode = {
     "versionCode", "()I", NULL
 };
+static JavaMethod kTweet = {
+    "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
@@ -781,6 +784,24 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 {
     [self maybeInitJavaMethod:&kOpenPart];
     _env->CallVoidMethod(_instance, kOpenPart.method, part);
+}
+
+- (BOOL) canTweet
+{
+    return YES;
+}
+
+- (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image
+{
+    [self maybeInitJavaMethod:&kTweet];
+
+    _env->PushLocalFrame(4);
+    jstring s1 = text ? _env->NewStringUTF(text.UTF8String) : NULL;
+    jstring s2 = url ? _env->NewStringUTF(url.UTF8String) : NULL;
+    jstring s3 = image ? _env->NewStringUTF(image.UTF8String) : NULL;
+    _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
+
+    _env->PopLocalFrame(NULL);
 }
 
 - (void) maybeInitApp

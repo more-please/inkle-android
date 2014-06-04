@@ -33,6 +33,17 @@ static UIApplication* g_Application;
     return self;
 }
 
+- (BOOL) canTweet
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NO;
+}
+
+- (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (void) quit
 {
     GLUE_NOT_IMPLEMENTED;

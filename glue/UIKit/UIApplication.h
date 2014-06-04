@@ -20,6 +20,9 @@
 - (BOOL) isPartInstalled:(int)part;
 - (void) openPart:(int)part;
 
+- (BOOL) canTweet;
+- (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image;
+
 - (void) quit;
 
 - (JNIEnv*) jniEnv;
