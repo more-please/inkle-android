@@ -15,7 +15,7 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 #endif
 
 @implementation AP_View {
-    AP_Window* _window;
+    __weak AP_Window* _window;
     BOOL _needsLayout;
 
     NSMutableArray* _animatedProperties;

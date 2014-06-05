@@ -863,6 +863,10 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
     [self updateScreenSize];
 
+    AP_Window* window = [[AP_Window alloc] init];
+    sorcery.window = [[UIWindow alloc] init];
+    sorcery.window.rootViewController = window; // Err, yes, well
+
     AP_Image* logo = [AP_Image imageWithContentsOfFileNamedAuto:@"sorcery-title.png"];
     logo = [logo imageScaledBy:0.75];
 
@@ -873,14 +877,12 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
     AP_ViewController* controller = [[AP_ViewController alloc] init];
     controller.view = view;
-
-    AP_Window* window = [[AP_Window alloc] init];
     window.rootViewController = controller;
 
-    sorcery.window = [[UIWindow alloc] init];
-    sorcery.window.rootViewController = window; // Err, yes, well
-
     [self updateGL:YES];
+
+    // Without this, the splash screen gets leaked...?
+    window.rootViewController = nil;
 
     // Finally, start the game!
 

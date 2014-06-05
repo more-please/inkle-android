@@ -16,7 +16,7 @@
 
 @interface AP_WebView : AP_View
 
-@property(nonatomic,readonly,retain) AP_ScrollView* scrollView;
+@property(nonatomic,readonly,strong) AP_ScrollView* scrollView;
 @property(nonatomic,weak) id<AP_WebViewDelegate> delegate;
 
 - (void) loadHtmlResource:(NSString*)name;

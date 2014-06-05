@@ -7,7 +7,7 @@
 
 @interface UIWindow : NSObject
 
-@property(nonatomic,retain) UIViewController* rootViewController;
+@property(nonatomic,strong) UIViewController* rootViewController;
 
 - (id) initWithFrame:(CGRect)frame;
 

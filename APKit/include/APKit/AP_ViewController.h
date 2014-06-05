@@ -7,7 +7,7 @@
 
 @interface AP_ViewController : AP_Responder
 
-@property(nonatomic, retain) AP_View *view;
+@property(nonatomic, strong) AP_View *view;
 
 - (BOOL) isViewLoaded;
 
