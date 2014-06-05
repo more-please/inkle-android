@@ -33,7 +33,7 @@
     }
     NSData* result = _uncompressedData;
     if (!result) {
-        NSLog(@"Decompressing %@ (%d -> %d)", _name, _originalData.length, _length);
+//        NSLog(@"Decompressing %@ (%d -> %d)", _name, _originalData.length, _length);
         result = [NSMutableData dataWithLength:_length];
 
         z_stream z;
