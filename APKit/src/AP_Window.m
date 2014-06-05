@@ -180,6 +180,13 @@ static inline CGFloat aspect(CGSize size) {
     return self;
 }
 
+#ifdef ANDROID
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+#endif
+
 - (AP_ViewController*) rootViewController
 {
     return _rootViewController;

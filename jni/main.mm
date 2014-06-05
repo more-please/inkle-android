@@ -859,6 +859,31 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
     self.delegate = sorcery;
 
+    // Splash screen
+
+    [self updateScreenSize];
+
+    AP_Image* logo = [AP_Image imageWithContentsOfFileNamedAuto:@"sorcery-title.png"];
+    logo = [logo imageScaledBy:0.75];
+
+    AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
+    view.frame = [[UIScreen mainScreen] bounds];
+    view.contentMode = UIViewContentModeCenter;
+    view.autoresizingMask = UIViewAutoresizing(-1);
+
+    AP_ViewController* controller = [[AP_ViewController alloc] init];
+    controller.view = view;
+
+    AP_Window* window = [[AP_Window alloc] init];
+    window.rootViewController = controller;
+
+    sorcery.window = [[UIWindow alloc] init];
+    sorcery.window.rootViewController = window; // Err, yes, well
+
+    [self updateGL:YES];
+
+    // Finally, start the game!
+
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
 }
