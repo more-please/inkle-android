@@ -126,6 +126,9 @@ static JavaMethod kVersionName = {
 static JavaMethod kVersionCode = {
     "versionCode", "()I", NULL
 };
+static JavaMethod kCanTweet = {
+    "canTweet", "()Z", NULL
+};
 static JavaMethod kTweet = {
     "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
@@ -788,7 +791,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
 - (BOOL) canTweet
 {
-    return YES;
+    return [self javaBoolMethod:&kCanTweet];
 }
 
 - (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image
