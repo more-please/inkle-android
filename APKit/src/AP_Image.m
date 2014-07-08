@@ -228,7 +228,7 @@ typedef struct VertexData {
             return [[AP_Image alloc] initWithName:img data:data scale:scale];
         }
 
-        AP_GLTexture* texture = [AP_GLTexture textureNamed:tex limitSize:YES];
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:tex maxSize:1.99];
         if (texture) {
             return [[AP_Image alloc] initWithName:img texture:texture scale:scale];
         }
@@ -568,7 +568,7 @@ AP_BAN_EVIL_INIT
         // Load texture
         const uint8_t* texNamePtr = &bytes[texNameStart];
         NSString* texName = [[NSString alloc] initWithBytes:texNamePtr length:texNameLength encoding:NSUTF8StringEncoding];
-        _texture = [AP_GLTexture textureNamed:texName limitSize:YES];
+        _texture = [AP_GLTexture textureNamed:texName maxSize:1.99];
         AP_CHECK(_texture, return nil);
 
         // Load quads

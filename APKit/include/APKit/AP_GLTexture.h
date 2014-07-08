@@ -14,7 +14,7 @@
 @property (nonatomic,readonly) int height;
 @property (nonatomic) int memoryUsage;
 
-- (instancetype) initLimitSize:(BOOL)limitSize;
+- (instancetype) initMaxSize:(CGFloat)screens;
 
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data;
 - (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize;
@@ -23,11 +23,13 @@
 
 // Load a texture resource (via AP_Bundle).
 // The results are cached, so the same object may be returned in subsequent calls.
-// If limitSize is YES, we'll avoid loading mipmaps more than twice the screen size.
-+ (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize;
+// We won't load mipmaps more than 'screens' times the largest screen dimension.
+// For images displayed at 1:1 size, 1.99 is a good default value, ensuring we
+// minify rather than magnify the texture.
++ (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens;
 
-+ (AP_GLTexture*) textureWithData:(NSData*)data limitSize:(BOOL)limitSize;
-+ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path limitSize:(BOOL)limitSize;
++ (AP_GLTexture*) textureWithData:(NSData*)data maxSize:(CGFloat)screens;
++ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens;
 
 // Estimated total memory usage for all textures.
 + (int) totalMemoryUsage;

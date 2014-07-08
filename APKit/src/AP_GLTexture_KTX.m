@@ -32,9 +32,9 @@ typedef struct Header
 
 @implementation AP_GLTexture_KTX
 
-+ (AP_GLTexture*) withData:(NSData *)data limitSize:(BOOL)limitSize
++ (AP_GLTexture*) withData:(NSData *)data maxSize:(CGFloat)screens
 {
-    return [[AP_GLTexture_KTX alloc] initWithData:data limitSize:limitSize];
+    return [[AP_GLTexture_KTX alloc] initWithData:data maxSize:screens];
 }
 
 + (BOOL) isKTX:(NSData *)data
@@ -48,11 +48,11 @@ typedef struct Header
 
 AP_BAN_EVIL_INIT;
 
-- (AP_GLTexture_KTX*) initWithData:(NSData *)data limitSize:(BOOL)limitSize
+- (AP_GLTexture_KTX*) initWithData:(NSData *)data maxSize:(CGFloat)screens
 {
     AP_CHECK([AP_GLTexture_KTX isKTX:data], return nil);
 
-    self = [super initLimitSize:limitSize];
+    self = [super initMaxSize:screens];
     if (self) {
         const Header* header = (const Header*)[data bytes];
 

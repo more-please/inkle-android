@@ -40,7 +40,7 @@ static NSMutableArray* s_deleteQueue = nil;
     [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
 }
 
-+ (AP_GLTexture*) textureNamed:(NSString*)name limitSize:(BOOL)limitSize
++ (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens
 {
     static AP_WeakCache* g_TextureCache;
     if (!g_TextureCache) {
@@ -50,7 +50,7 @@ static NSMutableArray* s_deleteQueue = nil;
 
     AP_GLTexture* result = [g_TextureCache get:name withLoader:^{
         NSData* data = [AP_Bundle dataForResource:name ofType:nil];
-        AP_GLTexture* result = [AP_GLTexture textureWithData:data limitSize:limitSize];
+        AP_GLTexture* result = [AP_GLTexture textureWithData:data maxSize:screens];
         if (result) {
             result->_assetName = name;
             int bytes = result->_memoryUsage;
@@ -66,19 +66,19 @@ static NSMutableArray* s_deleteQueue = nil;
     return result;
 }
 
-+ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path limitSize:(BOOL)limitSize
++ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens
 {
     NSData* data = [NSData dataWithContentsOfMappedFile:path];
-    return [AP_GLTexture textureWithData:data limitSize:limitSize];
+    return [AP_GLTexture textureWithData:data maxSize:screens];
 }
 
-+ (AP_GLTexture*) textureWithData:(NSData*)data limitSize:(BOOL)limitSize
++ (AP_GLTexture*) textureWithData:(NSData*)data maxSize:(CGFloat)screens
 {
     AP_CHECK(data, return nil);
     if ([AP_GLTexture_PVR isPVR:data]) {
         return [AP_GLTexture_PVR withData:data];
     } else if ([AP_GLTexture_KTX isKTX:data]) {
-        return [AP_GLTexture_KTX withData:data limitSize:limitSize];
+        return [AP_GLTexture_KTX withData:data maxSize:screens];
     } else if ([AP_GLTexture_PNG isPNG:data]) {
         return [AP_GLTexture_PNG withData:data];
     } else {
@@ -94,10 +94,10 @@ static NSMutableArray* s_deleteQueue = nil;
 
 - (AP_GLTexture*) init
 {
-    return [self initLimitSize:NO];
+    return [self initMaxSize:4];
 }
 
-- (AP_GLTexture*) initLimitSize:(BOOL)limitSize
+- (AP_GLTexture*) initMaxSize:(CGFloat)screens
 {
 #ifndef ANDROID
     AP_CHECK([EAGLContext currentContext], return nil);
@@ -110,15 +110,10 @@ static NSMutableArray* s_deleteQueue = nil;
         }
         _maxTextureSize = systemMaxTextureSize;
 #ifdef ANDROID
-        if (limitSize) {
-            CGSize s = [AP_Window screenSize];
-            CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-//            CGFloat screenMaxTextureSize = [UIApplication sharedApplication].isCrappyDevice
-//                ? screenSize * 1.59  // Use 1024 texture for screens up to 1280 pixels in size
-//                : screenSize * 1.99; // Use 1024 texture for screens up to 1024 pixels in size
-            CGFloat screenMaxTextureSize = screenSize * 1.99;
-            _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
-        }
+        CGSize s = [AP_Window screenSize];
+        CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
+        CGFloat screenMaxTextureSize = screenSize * screens;
+        _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
 #endif
         glGenTextures(1, &_name);
         AP_CHECK(_name, return nil);
@@ -143,7 +138,7 @@ static NSMutableArray* s_deleteQueue = nil;
         _height = height;
     }
     if (width > _maxTextureSize || height > _maxTextureSize) {
-//        NSLog(@"Mipmap level %d is too big (%d x %d, max texture size: %d)", level, width, height, _maxTextureSize);
+        NSLog(@"Mipmap level %d is too big (%d x %d, max texture size: %d)", level, width, height, _maxTextureSize);
         _minLevel = MAX(_minLevel, level + 1);
     }
 }

@@ -123,7 +123,7 @@ static LigatureRHS g_ZeroLigature;
         _newlineGlyph = [self glyphForChar:'\n'];
 
         NSString* textureName = [NSString stringWithFormat:@"%@.ktx", _name];
-        _texture = [AP_GLTexture textureNamed:textureName limitSize:NO];
+        _texture = [AP_GLTexture textureNamed:textureName maxSize:4];
         AP_CHECK(_texture, return nil);
     }
     return self;

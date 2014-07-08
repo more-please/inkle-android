@@ -9,9 +9,9 @@
 
 @interface AP_GLTexture_KTX : AP_GLTexture
 
-- (AP_GLTexture_KTX*) initWithData:(NSData*)data limitSize:(BOOL)limitSize;
+- (AP_GLTexture_KTX*) initWithData:(NSData*)data maxSize:(CGFloat)screens;
 
 + (BOOL) isKTX:(NSData*)data;
-+ (AP_GLTexture*) withData:(NSData*)data limitSize:(BOOL)limitSize;
++ (AP_GLTexture*) withData:(NSData*)data maxSize:(CGFloat)screens;
 
 @end
