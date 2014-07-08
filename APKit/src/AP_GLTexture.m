@@ -138,7 +138,7 @@ static NSMutableArray* s_deleteQueue = nil;
         _height = height;
     }
     if (width > _maxTextureSize || height > _maxTextureSize) {
-        NSLog(@"Mipmap level %d is too big (%d x %d, max texture size: %d)", level, width, height, _maxTextureSize);
+//        NSLog(@"Mipmap level %d is too big (%d x %d, max texture size: %d)", level, width, height, _maxTextureSize);
         _minLevel = MAX(_minLevel, level + 1);
     }
 }
