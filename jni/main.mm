@@ -54,6 +54,9 @@ static JavaMethod kGetPublicDocumentsDir = {
 static JavaMethod kGetExpansionFilePath = {
     "getExpansionFilePath", "()Ljava/lang/String;", NULL
 };
+static JavaMethod kGetPatchFilePath = {
+    "getPatchFilePath", "()Ljava/lang/String;", NULL
+};
 static JavaMethod kGetScreenInfo = {
     "getScreenInfo", "()[F", NULL
 };
@@ -840,6 +843,14 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
 
     } else {
+        // Using Google Play-style expansion files.
+        // This means there may be a patch file.
+        NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
+        if (patch) {
+            pak = [PAK pakWithMemoryMappedFile:patch];
+            [PAK_Search add:pak];
+        }
+
         pak = [PAK pakWithMemoryMappedFile:_obbPath];
 
         // A cheat: assume all the sounds are in the OBB, so we
