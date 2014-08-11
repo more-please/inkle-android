@@ -3,7 +3,7 @@
 
 # Is this the world's worst makefile? Oh, come on, who needs separate compilation...
 
-CXX = clang++ -x c++ -O3 -I./3rd-party/stb
+CXX = clang++ -x c++ -O3 -std=c++11 -I./3rd-party/stb
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
@@ -17,11 +17,29 @@ COMMON_SRCS = \
 	3rd-party/stb/stb_image.c \
 	3rd-party/stb/stb_truetype.c
 
-all: build/bin/pak build/bin/atlas build/bin/superellipse build/bin/fontex build/bin/split build/bin/tippex build/bin/bbox
+all: \
+		build/bin/pak \
+		build/bin/repak \
+		build/bin/atlas \
+		build/bin/superellipse \
+		build/bin/fontex \
+		build/bin/split \
+		build/bin/tippex \
+		build/bin/bbox
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/pak.cpp tools/package_writer.cpp $(COMMON_SRCS) -lz -o build/bin/pak
+
+build/bin/repak: tools/repak.cpp \
+		tools/package_reader.cpp tools/package_reader.h \
+		tools/package_writer.cpp tools/package_writer.h \
+		$(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/repak.cpp \
+		tools/package_reader.cpp \
+		tools/package_writer.cpp \
+		$(COMMON_SRCS) -lz -o build/bin/repak
 
 build/bin/atlas: tools/atlas.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
