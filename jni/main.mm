@@ -18,8 +18,7 @@
 #import <ck/ck.h>
 #import <ck/mixer.h>
 
-#import "SorceryAppDelegate.h"
-#import "ExpiredAppDelegate.h"
+#import "AppDelegate.h"
 
 @interface ParseResult : NSObject
 @property(nonatomic) int handle;
