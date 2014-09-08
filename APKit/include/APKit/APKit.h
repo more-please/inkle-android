@@ -82,7 +82,7 @@
 #define UITextFieldDelegate            AP_TextFieldDelegate
 // #define UITouch                        AP_Touch
 #define UIView                         AP_View
-// #define UIViewController               AP_ViewController
+#define UIViewController               AP_ViewController
 #define UIWebView                      AP_WebView
 #define UIWebViewDelegate              AP_WebViewDelegate
 // #define UIWindow                       AP_Window

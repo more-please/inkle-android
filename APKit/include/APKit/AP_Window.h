@@ -11,7 +11,7 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 // Plays the role of a UIWindow containing UIViews.
 // Actually implemented as a GL-based UIView.
 
-@interface AP_Window : GLKViewController
+@interface AP_Window : Real_GLKViewController
 
 @property (readonly) CGRect bounds;
 

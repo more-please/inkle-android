@@ -7,5 +7,5 @@
 @protocol AP_NavigationControllerDelegate <NSObject>
 @end
 
-@interface AP_NagivationController : AP_ViewController
+@interface AP_NavigationController : AP_ViewController
 @end

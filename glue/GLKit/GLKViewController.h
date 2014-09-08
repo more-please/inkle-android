@@ -3,6 +3,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIViewController.h>
 
-@interface GLKViewController : UIViewController
+@interface Real_GLKViewController : Real_UIViewController
 
 @end

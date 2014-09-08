@@ -1,5 +1,5 @@
 #import "GLKViewController.h"
 
-@implementation GLKViewController
+@implementation Real_GLKViewController
 
 @end

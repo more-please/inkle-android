@@ -1,6 +1,6 @@
 #import "UIViewController.h"
 
-@implementation UIViewController
+@implementation Real_UIViewController
 
 - (void) draw
 {

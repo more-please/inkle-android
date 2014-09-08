@@ -138,14 +138,16 @@ AP_BAN_EVIL_INIT;
         _alert.transform = CGAffineTransformIdentity;
     }];
 
-    [[AP_Application sharedApplication].delegate addBackCloseBlock:^() {
-        [self backButtonPressed];
-    }];
+// FIXME!
+//     [[AP_Application sharedApplication].delegate addBackCloseBlock:^() {
+//         [self backButtonPressed];
+//     }];
 }
 
 - (void) hide
 {
-    [[AP_Application sharedApplication].delegate removeLastBackButtonBlock];
+// FIXME!
+//     [[AP_Application sharedApplication].delegate removeLastBackButtonBlock];
 
     [AP_View animateWithDuration:0.25 animations:^{
         self.transform = CGAffineTransformMakeScale(0.25, 0.25);

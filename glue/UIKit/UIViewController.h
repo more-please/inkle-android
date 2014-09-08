@@ -6,7 +6,7 @@
 @class UIEvent;
 @class UIView;
 
-@interface UIViewController : NSObject
+@interface Real_UIViewController : NSObject
 
 @property(nonatomic,assign,getter=isPaused) BOOL paused;
 @property(nonatomic,readonly,strong) UIView* view; // Not actually used for anything (yet)

@@ -12,10 +12,12 @@
 
 @property (nonatomic,strong) UIWindow* window;
 
+#if 0 // Sorcery-specific?
 // Android-specific additions
 - (void) addBackCloseBlock:(void(^)())backBlock;
 - (void) removeLastBackButtonBlock;
 - (BOOL) goBack; // Return YES if the event was handled.
+#endif
 
 @end
 

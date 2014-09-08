@@ -988,7 +988,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
 - (void) teardownSurface
 {
-    UIViewController* vc = self.delegate.window.rootViewController;
+    Real_UIViewController* vc = self.delegate.window.rootViewController;
     if (vc) {
         [vc resetTouches];
     }
@@ -1031,7 +1031,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         return;
     }
 
-    UIViewController* vc = self.delegate.window.rootViewController;
+    Real_UIViewController* vc = self.delegate.window.rootViewController;
     AP_CHECK(vc, return);
 
     int maxIdleCount = byForceIfNecessary ? 0 : 8;
@@ -1086,7 +1086,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
 - (BOOL) handleInputEvent:(AInputEvent*)event
 {
-    UIViewController* vc = self.delegate.window.rootViewController;
+    Real_UIViewController* vc = self.delegate.window.rootViewController;
     if (!vc) {
         NSLog(@"App isn't initialized yet -- ignoring input event");
         return NO;
@@ -1095,7 +1095,8 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_KEY
         && AKeyEvent_getKeyCode(event) == AKEYCODE_BACK
         && AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP) {
-        return [self.delegate goBack];
+        // FIXME
+        return NO; // [self.delegate goBack];
     }
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
