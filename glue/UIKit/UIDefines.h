@@ -2,6 +2,35 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreText/CoreText.h>
 
+#ifndef NS_ENUM
+#define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
+#endif
+
+#ifndef NS_OPTIONS
+#define NS_OPTIONS(_type, _name) enum _name : _type _name; enum _name : _type
+#endif
+
+// Annotate classes which are root classes as really being root classes
+#ifndef NS_ROOT_CLASS
+#if __has_attribute(objc_root_class)
+#define NS_ROOT_CLASS __attribute__((objc_root_class))
+#else
+#define NS_ROOT_CLASS
+#endif
+#endif
+
+#ifndef NS_REQUIRES_SUPER
+#if __has_attribute(objc_requires_super)
+#define NS_REQUIRES_SUPER __attribute__((objc_requires_super))
+#else
+#define NS_REQUIRES_SUPER
+#endif
+#endif
+
+#ifndef CG_INLINE
+#define CG_INLINE inline
+#endif
+
 extern const CGFloat UIScrollViewDecelerationRateNormal;
 extern const CGFloat UIScrollViewDecelerationRateFast;
 

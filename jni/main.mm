@@ -866,7 +866,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     [PAK_Search add:self];
 
     NSLog(@"Let's get started!");
-    SorceryAppDelegate* sorcery = [[SorceryAppDelegate alloc] init];
+    AppDelegate* sorcery = [[AppDelegate alloc] init];
     self.delegate = sorcery;
 
     // Splash screen
