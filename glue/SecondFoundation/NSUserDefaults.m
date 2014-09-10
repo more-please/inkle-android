@@ -104,6 +104,12 @@ static NSUserDefaults* g_Defaults = nil;
     return [number integerValue];
 }
 
+- (void) setInteger:(NSInteger)value forKey:(NSString*)defaultName
+{
+    NSNumber* number = [NSNumber numberWithInteger:value];
+    [_contents setObject:number forKey:defaultName];
+}
+
 - (NSString*) stringForKey:(NSString*)defaultName
 {
     return [_contents objectForKey:defaultName];

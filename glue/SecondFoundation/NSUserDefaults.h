@@ -14,6 +14,8 @@
 - (void) setBool:(BOOL)value forKey:(NSString*)defaultName;
 
 - (NSInteger) integerForKey:(NSString *)defaultName;
+- (void) setInteger:(NSInteger)value forKey:(NSString*)defaultName;
+
 - (NSString*) stringForKey:(NSString*)defaultName;
 - (NSArray*) stringArrayForKey:(NSString*)defaultName;
 
