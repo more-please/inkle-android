@@ -42,6 +42,11 @@
     }
 }
 
+- (NSTimeInterval) duration
+{
+    return 1000 * _sound->getLengthMs();
+}
+
 - (float) pan
 {
     return _sound->getPan();
