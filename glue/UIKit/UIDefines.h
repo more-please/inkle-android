@@ -189,9 +189,9 @@ typedef enum UIControlState {
     UIControlStateNormal       = 0,
     UIControlStateHighlighted  = 1 << 0,                  // used when UIControl isHighlighted is set
     UIControlStateDisabled     = 1 << 1,
-//    UIControlStateSelected     = 1 << 2,                  // flag usable by app (see below)
-//    UIControlStateApplication  = 0x00FF0000,              // additional flags available for application use
-//    UIControlStateReserved     = 0xFF000000               // flags reserved for internal framework use
+    UIControlStateSelected     = 1 << 2,                  // flag usable by app (see below)
+    UIControlStateApplication  = 0x00FF0000,              // additional flags available for application use
+    UIControlStateReserved     = 0xFF000000               // flags reserved for internal framework use
 }
 UIControlState;
 
