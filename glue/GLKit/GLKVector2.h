@@ -155,3 +155,7 @@ inline GLKVector2 GLKVector2Lerp(GLKVector2 vectorStart, GLKVector2 vectorEnd, f
     };
     return v;
 }
+
+inline float GLKVector2DotProduct(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+    return vectorLeft.v[0] * vectorRight.v[0] + vectorLeft.v[1] * vectorRight.v[1];
+}
