@@ -38,6 +38,33 @@
     return result;
 }
 
++ (UIColor*) redColor
+{
+    static UIColor* result;
+    if (!result) {
+        result = [UIColor colorWithRed:1 green:0 blue:0 alpha:1];
+    }
+    return result;
+}
+
++ (UIColor*) greenColor
+{
+    static UIColor* result;
+    if (!result) {
+        result = [UIColor colorWithRed:0 green:1 blue:0 alpha:1];
+    }
+    return result;
+}
+
++ (UIColor*) blueColor
+{
+    static UIColor* result;
+    if (!result) {
+        result = [UIColor colorWithRed:0 green:0 blue:1 alpha:1];
+    }
+    return result;
+}
+
 + (UIColor*) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha
 {
     GLKVector4 rgba = {white, white, white, alpha};

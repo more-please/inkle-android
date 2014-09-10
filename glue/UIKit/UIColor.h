@@ -12,6 +12,9 @@ typedef GLKVector4 CGColorRef;
 + (UIColor*) blackColor;
 + (UIColor*) grayColor;
 + (UIColor*) clearColor;
++ (UIColor*) redColor;
++ (UIColor*) greenColor;
++ (UIColor*) blueColor;
 + (UIColor*) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha;
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
 
