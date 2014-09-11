@@ -12,4 +12,7 @@
 - (void) saveInBackground;
 - (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block;
 
+- (id)objectForKeyedSubscript:(NSString*)key;
+- (void)setObject:(id)object forKeyedSubscript:(NSString*)key;
+
 @end

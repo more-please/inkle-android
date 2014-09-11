@@ -52,4 +52,14 @@
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (id) objectForKeyedSubscript:(NSString*)key
+{
+    return [self objectForKey:key];
+}
+
+- (void) setObject:(id)object forKeyedSubscript:(NSString*)key
+{
+    [self setObject:object forKey:key];
+}
+
 @end
