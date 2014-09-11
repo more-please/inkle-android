@@ -1,5 +1,6 @@
 #pragma once
 
+#import "PFAnalytics.h"
 #import "PFCloud.h"
 #import "PFInstallation.h"
 #import "PFObject.h"
