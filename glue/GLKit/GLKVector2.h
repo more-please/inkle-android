@@ -163,4 +163,21 @@ inline float GLKVector2DotProduct(GLKVector2 vectorLeft, GLKVector2 vectorRight)
 inline float GLKVector2Distance(GLKVector2 vectorStart, GLKVector2 vectorEnd) {
     return GLKVector2Length(GLKVector2Subtract(vectorEnd, vectorStart));
 }
-    
+
+inline bool GLKVector2AllEqualToScalar(GLKVector2 vector, float value)
+{
+#if defined(__ARM_NEON_)
+    float32x2_t v1 = *(float32x2_t *)&vector;
+    float32x2_t v2 = vdup_n_f32(value);
+    uint32x2_t vCmp = vceq_f32(v1, v2);
+    uint32x2_t vAnd = vand_u32(vCmp, vext_u32(vCmp, vCmp, 1));
+    vAnd = vand_u32(vAnd, vdup_n_u32(1));
+    return (bool)vget_lane_u32(vAnd, 0);
+#else
+    bool compare = false;
+    if (vector.v[0] == value &&
+        vector.v[1] == value)
+        compare = true;
+    return compare;
+#endif
+}
