@@ -15,12 +15,12 @@ typedef union _GLKQuaternion GLKQuaternion;
 
 extern const GLKQuaternion GLKQuaternionIdentity; 
 
-static inline GLKQuaternion GLKQuaternionMake(float x, float y, float z, float w) {
+inline GLKQuaternion GLKQuaternionMake(float x, float y, float z, float w) {
     GLKQuaternion q = { x, y, z, w };
     return q;
 }
 
-static inline GLKQuaternion GLKQuaternionMultiply(GLKQuaternion lhs, GLKQuaternion rhs) {
+inline GLKQuaternion GLKQuaternionMultiply(GLKQuaternion lhs, GLKQuaternion rhs) {
     GLKQuaternion result = {
         lhs.q[3] * rhs.q[0] +
         lhs.q[0] * rhs.q[3] +
@@ -45,7 +45,7 @@ static inline GLKQuaternion GLKQuaternionMultiply(GLKQuaternion lhs, GLKQuaterni
     return result;
 }
 
-static inline GLKQuaternion GLKQuaternionInvert(GLKQuaternion quaternion) {
+inline GLKQuaternion GLKQuaternionInvert(GLKQuaternion quaternion) {
 #if defined(__ARM_NEON__)
     float32x4_t *q = (float32x4_t *)&quaternion;
     float32x4_t v = vmulq_f32(*q, *q);
@@ -76,14 +76,14 @@ static inline GLKQuaternion GLKQuaternionInvert(GLKQuaternion quaternion) {
 #endif
 }
 
-static inline GLKVector3 GLKQuaternionRotateVector3(GLKQuaternion quaternion, GLKVector3 vector)
+inline GLKVector3 GLKQuaternionRotateVector3(GLKQuaternion quaternion, GLKVector3 vector)
 {
     GLKQuaternion rotatedQuaternion = GLKQuaternionMake(vector.v[0], vector.v[1], vector.v[2], 0.0f);
     rotatedQuaternion = GLKQuaternionMultiply(GLKQuaternionMultiply(quaternion, rotatedQuaternion), GLKQuaternionInvert(quaternion));
     return GLKVector3Make(rotatedQuaternion.q[0], rotatedQuaternion.q[1], rotatedQuaternion.q[2]);
 }
 
-static inline GLKQuaternion GLKQuaternionMakeWithAngleAndAxis(float radians, float x, float y, float z)
+inline GLKQuaternion GLKQuaternionMakeWithAngleAndAxis(float radians, float x, float y, float z)
 {
     float halfAngle = radians * 0.5f;
     float scale = sinf(halfAngle);
@@ -91,9 +91,14 @@ static inline GLKQuaternion GLKQuaternionMakeWithAngleAndAxis(float radians, flo
     return q;
 }
 
+inline GLKQuaternion GLKQuaternionMakeWithAngleAndVector3Axis(float radians, GLKVector3 axisVector)
+{
+    return GLKQuaternionMakeWithAngleAndAxis(radians, axisVector.v[0], axisVector.v[1], axisVector.v[2]);
+}
+
 extern GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 matrix);
 
-static inline float GLKQuaternionLength(GLKQuaternion quaternion) {
+inline float GLKQuaternionLength(GLKQuaternion quaternion) {
 #if defined(__ARM_NEON__)
     float32x4_t v = vmulq_f32(*(float32x4_t *)&quaternion,
                               *(float32x4_t *)&quaternion);
@@ -108,7 +113,7 @@ static inline float GLKQuaternionLength(GLKQuaternion quaternion) {
 #endif
 }
 
-static inline GLKQuaternion GLKQuaternionNormalize(GLKQuaternion quaternion) {
+inline GLKQuaternion GLKQuaternionNormalize(GLKQuaternion quaternion) {
     float scale = 1.0f / GLKQuaternionLength(quaternion);
 #if defined(__ARM_NEON__)
     float32x4_t v = vmulq_f32(*(float32x4_t *)&quaternion,
@@ -120,7 +125,7 @@ static inline GLKQuaternion GLKQuaternionNormalize(GLKQuaternion quaternion) {
 #endif
 }
 
-static inline GLKQuaternion GLKQuaternionSlerp(GLKQuaternion lhs, GLKQuaternion rhs, float t) {
+inline GLKQuaternion GLKQuaternionSlerp(GLKQuaternion lhs, GLKQuaternion rhs, float t) {
     // Just using normalized linear interpolation, based on this interesting article:
     // http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
     GLKQuaternion result = {
