@@ -36,6 +36,11 @@
 
 @property(nonatomic,copy) NSString *title;  // Localized title for use by a parent controller.
 
+// FIXME
+- (void) presentViewController:(AP_ViewController*)viewControllerToPresent animated:(BOOL)flag completion:(void(^)(void))completion;
+// The completion handler, if provided, will be invoked after the dismissed controller's viewDidDisappear: callback is invoked.
+- (void) dismissViewControllerAnimated:(BOOL)flag completion: (void(^)(void))completion;
+
 // These methods are delegated from the real UIViewController.
 
 - (void) didReceiveMemoryWarning;

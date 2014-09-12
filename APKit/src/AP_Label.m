@@ -182,9 +182,9 @@
     [self setNeedsTextLayout];
 }
 
-- (AP_Label_Text*) text
+- (NSString*) text
 {
-    return [[AP_Label_Text alloc] initWithText:[_text string]];
+    return [_text string];
 }
 
 - (void) setText:(NSString *)text

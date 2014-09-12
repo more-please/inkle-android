@@ -8,6 +8,14 @@
 
 - (AP_Responder*) nextResponder;
 
+- (BOOL)canBecomeFirstResponder;    // default is NO
+- (BOOL)becomeFirstResponder;
+
+- (BOOL)canResignFirstResponder;    // default is YES
+- (BOOL)resignFirstResponder;
+
+- (BOOL)isFirstResponder;
+
 - (void)touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event;
 - (void)touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event;
 - (void)touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event;

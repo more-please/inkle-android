@@ -12,6 +12,8 @@
 
 @interface AP_AlertView : AP_View
 
+@property(nonatomic,weak) id<AP_AlertViewDelegate> delegate;
+
 - (id) initWithTitle:(NSString*)title message:(NSString*)message delegate:(id<AP_AlertViewDelegate>)delegate cancelButtonTitle:(NSString*)cancelButtonTitle otherButtonTitles:(NSString*)otherButtonTitles, ...;
 
 - (void) show;

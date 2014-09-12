@@ -7,7 +7,8 @@
 
 @interface AP_ImageView : AP_View
 
-- (AP_ImageView*) initWithImage:(AP_Image*)image;
+- (instancetype) initWithImage:(AP_Image*)image;
+- (instancetype) initWithImage:(AP_Image*)image highlightedImage:(AP_Image*)highlightedImage;
 
 @property AP_Image* image;
 

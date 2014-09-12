@@ -7,7 +7,9 @@
 #import <PAK/PAK.h>
 #endif
 
+#ifdef ANDROID
 const NSString* kCFBundleVersionKey = @"CFBundleVersion";
+#endif
 
 @implementation AP_Bundle {
     NSDictionary* _info;

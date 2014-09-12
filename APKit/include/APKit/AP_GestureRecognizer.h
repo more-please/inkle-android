@@ -57,10 +57,12 @@
 
 @interface AP_PinchGestureRecognizer : AP_GestureRecognizer
 @property (nonatomic,readonly) CGFloat scale;               // scale relative to the touch points in screen coordinates
+@property (nonatomic,readonly) CGFloat velocity;            // velocity of the pinch in scale/second
 @end
 
 @interface AP_PanGestureRecognizer : AP_GestureRecognizer
 - (CGPoint) translationInView:(AP_View*)view;
+- (CGPoint) velocityInView:(AP_View*)view;
 
 // Iain's additions, used to make AP_ScrollView behave approximately right...
 @property(nonatomic) BOOL preventHorizontalMovement;

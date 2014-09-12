@@ -8,11 +8,20 @@
 
 @implementation AP_ImageView
 
-- (AP_ImageView*) initWithImage:(AP_Image *)image
+- (instancetype) initWithImage:(AP_Image *)image
 {
     self = [super initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
     if (self) {
         _image = image;
+    }
+    return self;
+}
+
+- (instancetype) initWithImage:(AP_Image*)image highlightedImage:(AP_Image*)highlightedImage
+{
+    self = [self initWithImage:image];
+    if (self) {
+        _highlightedImage = highlightedImage;
     }
     return self;
 }

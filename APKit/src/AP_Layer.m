@@ -20,6 +20,9 @@ AP_BAN_EVIL_INIT
         _shadowOffset = CGSizeMake(0, -3);
         _shadowRadius = 3;
         _cornerRadius = 0;
+
+        _borderWidth = 0;
+        _borderColor = [UIColor blackColor].CGColor;
     }
     return self;
 }

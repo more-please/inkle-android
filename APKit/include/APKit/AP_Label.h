@@ -3,7 +3,6 @@
 #import <Foundation/Foundation.h>
 
 #import "AP_Font.h"
-#import "AP_Label_Text.h"
 #import "AP_View.h"
 
 @interface AP_Label : AP_View

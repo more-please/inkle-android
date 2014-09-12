@@ -28,6 +28,7 @@ typedef enum UIImageResizingMode {
 - (AP_Image*) imageScaledBy:(CGFloat)scale;
 
 - (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets;
+- (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets resizingMode:(UIImageResizingMode)mode;
 - (AP_Image*) stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight;
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor;
 

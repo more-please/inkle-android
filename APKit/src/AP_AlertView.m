@@ -9,7 +9,6 @@
 #import "AP_Window.h"
 
 @implementation AP_AlertView {
-    id<AP_AlertViewDelegate> _delegate;
     AP_Label* _header;
     AP_Label* _body;
     NSMutableArray* _buttons;

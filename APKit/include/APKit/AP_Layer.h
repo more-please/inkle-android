@@ -15,6 +15,8 @@
 @property(nonatomic) CGSize shadowOffset; // Default is (0, -3)
 @property(nonatomic) CGFloat shadowRadius; // Default is 3
 @property(nonatomic) CGFloat cornerRadius; // Default is 0
+@property(nonatomic) CGFloat borderWidth; // Default is 0
+@property(nonatomic) CGColorRef borderColor; // Default is black
 
 @property(nonatomic,strong) AP_Layer* mask; // Wow, I hope nobody actually uses this
 @property(nonatomic) BOOL masksToBounds; // ...or this

@@ -6,7 +6,8 @@
 
 @interface AP_Control : AP_View
 
-- (void)addTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
+- (void) addTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
+- (void) removeTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
 
 @property(nonatomic,getter=isEnabled) BOOL enabled; // default is YES
 @property(nonatomic,getter=isHighlighted) BOOL highlighted; // default is NO
