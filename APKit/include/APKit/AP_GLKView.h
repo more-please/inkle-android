@@ -3,6 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
+#import "AP_Image.h"
 #import "AP_ViewController.h"
 
 @class AP_GLKView;
@@ -16,5 +17,11 @@
 @interface AP_GLKView : AP_View
 
 @property id <AP_GLKViewDelegate> delegate;
+
+/*
+ Returns a UIImage of the resulting draw. Snapshot should never be called from within the draw method or from a
+ thread other than the main thread.
+ */
+- (AP_Image*) snapshot;
 
 @end

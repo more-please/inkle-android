@@ -30,6 +30,7 @@
 @property (nonatomic) NSInteger tag; // default is 0
 
 - (void) addGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer;
+- (void) removeGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer;
 
 - (CGSize) sizeThatFits:(CGSize)size;
 - (void) sizeToFit;
@@ -39,10 +40,6 @@
 - (void) layoutSubviews;
 
 @property (nonatomic) BOOL needsDisplay;
-
-// Should really be on AP_Responder. Maybe have AP_View subclass UIResponder?
-- (BOOL) resignFirstResponder;
-- (BOOL) isFirstResponder;
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event;
 - (BOOL) pointInside:(CGPoint)point withEvent:(AP_Event*)event;

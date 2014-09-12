@@ -5,14 +5,9 @@
 
 #import <jni.h>
 
-@class AP_Window;
-
 @interface UIApplication : NSObject
 
 + (UIApplication*) sharedApplication;
-
-// FIXME -- needs to be properly implemented!
-@property(nonatomic,readonly) AP_Window *keyWindow;
 
 // Android-specific additions
 @property(nonatomic,strong) NSString* documentsDir;

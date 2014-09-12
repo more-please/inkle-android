@@ -48,7 +48,6 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (void) wasAddedToView:(AP_View*)view
 {
-    AP_CHECK(!_view, _view = nil);
     _view = view;
     [self reset];
 }

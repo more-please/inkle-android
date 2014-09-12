@@ -49,8 +49,8 @@ AP_BAN_EVIL_INIT;
         _alert.backgroundColor = [UIColor colorWithWhite:1 alpha:1];
         [self addSubview:_alert];
 
-        UIFont* bold = [UIFont fontWithName:@"Helvetica-Bold" size:20];
-        UIFont* plain = [UIFont fontWithName:@"Helvetica" size:17];
+        AP_Font* bold = [AP_Font fontWithName:@"Helvetica-Bold" size:20];
+        AP_Font* plain = [AP_Font fontWithName:@"Helvetica" size:17];
 
         if (title) {
             _header = [[AP_Label alloc] init];

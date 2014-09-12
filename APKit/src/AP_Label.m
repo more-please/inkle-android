@@ -17,7 +17,7 @@
     NSMutableAttributedString* _text;
 
     // Properties applied to non-attributed text.
-    UIFont* _font;
+    AP_Font* _font;
     NSTextAlignment _alignment;
     CGFloat _lineSpacing;
     UIColor* _textColor;
@@ -45,7 +45,7 @@
     self.userInteractionEnabled = NO;
 
     _text = [NSMutableAttributedString attributedStringWithString:@""];
-    _font = [UIFont systemFontOfSize:17];
+    _font = [AP_Font systemFontOfSize:17];
     _alignment = NSTextAlignmentNatural;
     _lineSpacing = 0;
     _textColor = [UIColor blackColor];
@@ -203,7 +203,7 @@
     [self setNeedsTextLayout];
 }
 
-- (UIFont*) font
+- (AP_Font*) font
 {
     if (_text.length > 0) {
         return [_text attribute:kINKAttributedStringFontAttribute atIndex:0 effectiveRange:NULL];
@@ -212,7 +212,7 @@
     }
 }
 
-- (void) setFont:(UIFont*)font
+- (void) setFont:(AP_Font*)font
 {
     _font = font;
     [_text setFont:font];
@@ -338,7 +338,7 @@
     NSString* str = [_text string];
 
     INKAttributedStringParagraphStyle* defaultStyle = [INKAttributedStringParagraphStyle style];
-    UIFont* defaultFont = [UIFont systemFontOfSize:17];
+    AP_Font* defaultFont = [AP_Font systemFontOfSize:17];
     UIColor* defaultColor = [UIColor blackColor];
 
     _layoutWidth = width;
@@ -353,7 +353,7 @@
     [_text enumerateAttributesInRange:NSMakeRange(0, [_text length]) options:0 usingBlock:^(NSDictionary* attrs, NSRange range, BOOL* stop) {
 
         // Get the font, color and paragraph style.
-        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
         if (!font) {
             font = defaultFont;
         }
@@ -369,7 +369,7 @@
 
         // Parse the characters.
         NSString* chars = [str substringWithRange:range];
-        AP_Font_Run* run = [[AP_Font fontWithUIFont:font] runForString:chars];
+        AP_Font_Run* run = [font runForString:chars];
         run.textColor = color;
         run.image = [attrs objectForKey:kINKAttributedStringImageAttribute];
 

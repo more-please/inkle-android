@@ -6,15 +6,13 @@
 #import "AP_Label_Text.h"
 #import "AP_View.h"
 
-@class AP_Font;
-
 @interface AP_Label : AP_View
 
 - (void) setText:(NSString*)text;
-- (AP_Label_Text*) text; // Change the return type so we can support sizeWithFont:
+- (NSString*) text;
 
 // Setters set the corresponding property for the entire string.
-- (void) setFont:(UIFont*)font;
+- (void) setFont:(AP_Font*)font;
 - (void) setTextColor:(UIColor*)color;
 - (void) setTextAlignment:(NSTextAlignment)alignment;
 - (void) setShadowOffset:(CGSize)offset;
@@ -23,7 +21,7 @@
 - (void) setLineSpacingAdjustment:(CGFloat)adjustment;
 
 // Getters get the property at the beginning of the string.
-- (UIFont*)font;
+- (AP_Font*)font;
 - (UIColor*)textColor;
 
 @property(nonatomic) NSAttributedString* attributedText;

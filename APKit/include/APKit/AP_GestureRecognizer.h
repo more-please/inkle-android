@@ -9,6 +9,7 @@
 @class AP_View;
 
 @protocol AP_GestureRecognizerDelegate <NSObject>
+@optional
 - (BOOL) gestureRecognizer:(AP_GestureRecognizer*)recognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(AP_GestureRecognizer*)other;
 @end
 

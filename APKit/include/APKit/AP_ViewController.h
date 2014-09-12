@@ -34,6 +34,8 @@
 @property(nonatomic,readonly,strong) NSArray* childViewControllers;
 @property(nonatomic,readonly,weak) AP_ViewController* parentViewController;
 
+@property(nonatomic,copy) NSString *title;  // Localized title for use by a parent controller.
+
 // These methods are delegated from the real UIViewController.
 
 - (void) didReceiveMemoryWarning;

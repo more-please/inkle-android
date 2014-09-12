@@ -8,4 +8,9 @@
 
 @interface AP_GLKViewController : AP_ViewController <AP_GLKViewDelegate>
 
+/*
+ Used to pause and resume the controller.
+ */
+@property (nonatomic, getter=isPaused) BOOL paused;
+
 @end

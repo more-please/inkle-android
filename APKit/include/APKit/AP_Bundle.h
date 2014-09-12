@@ -4,7 +4,9 @@
 
 #import "AP_Application.h"
 
+#ifdef ANDROID
 extern const NSString* kCFBundleVersionKey;
+#endif
 
 // Wrapper for NSBundle. Also allows resource to be loaded from external .pak files.
 // We use this on Android to manage extension files.

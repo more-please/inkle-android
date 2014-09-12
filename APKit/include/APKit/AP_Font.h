@@ -11,6 +11,9 @@
 @interface AP_Font : NSObject
 
 + (AP_Font*) fontWithName:(NSString*)fontName size:(CGFloat)fontSize;
++ (AP_Font*) systemFontOfSize:(CGFloat)fontSize;
++ (AP_Font*) boldSystemFontOfSize:(CGFloat)fontSize;
++ (AP_Font*) italicSystemFontOfSize:(CGFloat)fontSize;
 
 @property(nonatomic,readonly) NSString* fontName;
 @property(nonatomic,readonly) CGFloat pointSize;
@@ -23,8 +26,5 @@
 
 - (AP_Font_Run*) runForString:(NSString*)string;
 - (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size;
-
-+ (AP_Font*) fontWithUIFont:(UIFont*)font;
-- (UIFont*) UIFont;
 
 @end

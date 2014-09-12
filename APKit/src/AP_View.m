@@ -1080,8 +1080,19 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) addGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer
 {
+    NSAssert(!gestureRecognizer.view,
+        @"Tried to GestureRecognizer to view: %@, but it's already in view: %@",
+        self, gestureRecognizer.view);
     [_gestureRecognizers addObject:gestureRecognizer];
     [gestureRecognizer wasAddedToView:self];
+}
+
+- (void) removeGestureRecognizer:(AP_GestureRecognizer*)gestureRecognizer
+{
+    NSAssert(gestureRecognizer.view == self,
+        @"Tried to remove non-existent GestureRecognizer from view: %@", self);
+    [_gestureRecognizers removeObject:gestureRecognizer];
+    [gestureRecognizer wasAddedToView:nil];
 }
 
 @end

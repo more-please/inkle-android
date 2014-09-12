@@ -17,6 +17,8 @@
 @property(nonatomic) CGFloat cornerRadius; // Default is 0
 
 @property(nonatomic,strong) AP_Layer* mask; // Wow, I hope nobody actually uses this
+@property(nonatomic) BOOL masksToBounds; // ...or this
+
 @property(nonatomic) CGPoint anchorPoint; // Default is (0.5, 0.5), i.e. the center of the bounds rect
 @property(nonatomic) CGPoint position;
 

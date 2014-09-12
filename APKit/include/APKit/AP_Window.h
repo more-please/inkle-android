@@ -4,6 +4,11 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <GLKit/GLKit.h>
 
+// Blerg, this top-level stuff is a real mess. Sort it out!
+#ifndef ANDROID
+#define Real_GLKViewController GLKViewController
+#endif
+
 #import "AP_ViewController.h"
 
 extern NSString* const AP_ScreenSizeChangedNotification;

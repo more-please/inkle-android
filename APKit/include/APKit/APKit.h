@@ -47,8 +47,8 @@
 #define UIActivityIndicatorView        AP_ActivityIndicatorView
 #define UIAlertView                    AP_AlertView
 #define UIAlertViewDelegate            AP_AlertViewDelegate
-// #define UIApplication                  AP_Application
-// #define UIApplicationDelegate          AP_ApplicationDelegate
+#define UIApplication                  AP_Application
+#define UIApplicationDelegate          AP_ApplicationDelegate
 #define UIButton                       AP_Button
 #define NSBundle                       AP_Bundle
 #define UIControl                      AP_Control
@@ -80,12 +80,12 @@
 #define UIScrollViewDelegate           AP_ScrollViewDelegate
 #define UITextField                    AP_TextField
 #define UITextFieldDelegate            AP_TextFieldDelegate
-// #define UITouch                        AP_Touch
+#define UITouch                        AP_Touch
 #define UIView                         AP_View
 #define UIViewController               AP_ViewController
 #define UIWebView                      AP_WebView
 #define UIWebViewDelegate              AP_WebViewDelegate
-// #define UIWindow                       AP_Window
+#define UIWindow                       AP_Window
 #define UIResponder                    AP_Responder
 
 #else

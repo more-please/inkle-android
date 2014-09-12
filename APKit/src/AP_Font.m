@@ -7,23 +7,9 @@
 #import "AP_Font_Data.h"
 #import "AP_GLTexture.h"
 
-CGFloat UIFont_getDescender(UIFont* font) {
-    return [AP_Font fontWithUIFont:font].descender;
-}
-
 @implementation AP_Font {
     CGFloat _size;
     AP_Font_Data* _font;
-}
-
-+ (AP_Font*) fontWithUIFont:(UIFont*)font
-{
-    return [AP_Font fontWithName:font.fontName size:font.pointSize];
-}
-
-- (UIFont*) UIFont
-{
-    return [UIFont fontWithName:self.fontName size:self.pointSize];
 }
 
 + (AP_Font*) fontWithName:(NSString *)fontName size:(CGFloat)fontSize
@@ -33,6 +19,21 @@ CGFloat UIFont_getDescender(UIFont* font) {
     result->_font = [AP_Font_Data fontDataNamed:fontName];
     AP_CHECK(result->_font, return nil);
     return result;
+}
+
++ (AP_Font*) systemFontOfSize:(CGFloat)fontSize
+{
+    return [AP_Font fontWithName:@"Helvetica" size:fontSize];
+}
+
++ (AP_Font*) boldSystemFontOfSize:(CGFloat)fontSize
+{
+    return [AP_Font fontWithName:@"Helvetica-Bold" size:fontSize];
+}
+
++ (AP_Font*) italicSystemFontOfSize:(CGFloat)fontSize
+{
+    return [AP_Font fontWithName:@"Helvetica-Oblique" size:fontSize];
 }
 
 - (AP_Font *)fontWithSize:(CGFloat)fontSize
