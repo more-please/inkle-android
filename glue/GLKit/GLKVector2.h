@@ -159,3 +159,8 @@ inline GLKVector2 GLKVector2Lerp(GLKVector2 vectorStart, GLKVector2 vectorEnd, f
 inline float GLKVector2DotProduct(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
     return vectorLeft.v[0] * vectorRight.v[0] + vectorLeft.v[1] * vectorRight.v[1];
 }
+
+inline float GLKVector2Distance(GLKVector2 vectorStart, GLKVector2 vectorEnd) {
+    return GLKVector2Length(GLKVector2Subtract(vectorEnd, vectorStart));
+}
+    
