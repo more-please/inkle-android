@@ -9,6 +9,8 @@
 #import "AP_Touch.h"
 #import "AP_Utils.h"
 
+#undef UITouch
+
 NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotification";
 
 @implementation AP_Window {
@@ -203,7 +205,7 @@ static inline CGFloat aspect(CGSize size) {
     }
 }
 
-#ifndef ANDROID
+#ifndef AP_REPLACE_UI
 - (void)viewDidLoad
 {
     [super viewDidLoad];

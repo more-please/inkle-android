@@ -7,6 +7,7 @@
 // Blerg, this top-level stuff is a real mess. Sort it out!
 #ifndef ANDROID
 #define Real_GLKViewController GLKViewController
+#define Real_UIWindow UIWindow
 #endif
 
 #import "AP_ViewController.h"
