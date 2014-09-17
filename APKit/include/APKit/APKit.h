@@ -61,6 +61,7 @@
 #define UIPinchGestureRecognizer       AP_PinchGestureRecognizer
 #define UITapGestureRecognizer         AP_TapGestureRecognizer
 #define GLKBaseEffect                  AP_GLKBaseEffect
+#define GLKVertexAttribColor           AP_GLKVertexAttribColor
 #define GLKVertexAttribPosition        AP_GLKVertexAttribPosition
 #define GLKVertexAttribTexCoord0       AP_GLKVertexAttribTexCoord0
 #define GLKEffectPropertyTexture       AP_GLKEffectPropertyTexture
@@ -110,6 +111,7 @@
 #define AP_PinchGestureRecognizer       UIPinchGestureRecognizer
 #define AP_TapGestureRecognizer         UITapGestureRecognizer
 #define AP_GLKBaseEffect                GLKBaseEffect
+#define AP_GLKVertexAttribColor         GLKVertexAttribColor
 #define AP_GLKVertexAttribPosition      GLKVertexAttribPosition
 #define AP_GLKVertexAttribTexCoord0     GLKVertexAttribTexCoord0
 #define AP_GLKEffectPropertyTexture     GLKEffectPropertyTexture

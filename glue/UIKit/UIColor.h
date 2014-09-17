@@ -6,6 +6,8 @@
 // Don't use CGColor, just use RGBA vectors.
 typedef GLKVector4 CGColorRef;
 
+extern size_t CGColorGetNumberOfComponents(CGColorRef color);
+
 @interface UIColor : NSObject
 
 + (UIColor*) whiteColor;
@@ -19,6 +21,9 @@ typedef GLKVector4 CGColorRef;
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
 
 @property(nonatomic,readonly) CGColorRef CGColor;
+
+- (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha;
+- (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha;
 
 // Android extensions...
 @property(nonatomic,readonly,assign) GLKVector4 rgba;

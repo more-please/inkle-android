@@ -1,5 +1,9 @@
 #import "UIColor.h"
 
+size_t CGColorGetNumberOfComponents(CGColorRef color) {
+    return 4;
+}
+
 @implementation UIColor
 
 + (UIColor*) whiteColor
@@ -87,6 +91,19 @@
 - (CGColorRef) CGColor
 {
     return _rgba;
+}
+
+- (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha {
+    AP_NOT_IMPLEMENTED;
+    return NO;
+}
+
+- (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha {
+    *red = _rgba.r;
+    *green = _rgba.g;
+    *blue = _rgba.b;
+    *alpha = _rgba.a;
+    return YES;
 }
 
 @end

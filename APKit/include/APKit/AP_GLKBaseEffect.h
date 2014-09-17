@@ -11,7 +11,7 @@
 enum {
     AP_GLKVertexAttribPosition,
     // GLKVertexAttribNormal,
-    // GLKVertexAttribColor,
+    AP_GLKVertexAttribColor,
     AP_GLKVertexAttribTexCoord0,
     // GLKVertexAttribTexCoord1
 };
