@@ -24,7 +24,7 @@ AP_BAN_EVIL_INIT;
 - (AP_GLTexture_PNG*) initWithData:(NSData *)data
 {
     AP_CHECK([AP_GLTexture_PNG isPNG:data], return nil);
-    self = [super init];
+    self = [super initMaxSize:16]; // PNGs don't have mipmaps
     if (self) {
         int w, h, components;
         unsigned char* bytes = stbi_load_from_memory([data bytes], [data length], &w, &h, &components, 0);
