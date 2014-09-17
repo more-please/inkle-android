@@ -874,7 +874,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     [self updateScreenSize];
 
     AP_Window* window = [[AP_Window alloc] init];
-    sorcery.window = [[UIWindow alloc] init];
+    sorcery.window = [[Real_UIWindow alloc] init];
     sorcery.window.rootViewController = window; // Err, yes, well
 
     AP_Image* logo = [AP_Image imageWithContentsOfFileNamedAuto:@"sorcery-title.png"];
@@ -1065,12 +1065,12 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     }
 }
 
-- (UITouch*) touchForPointerID:(int32_t)pointerID x:(float)x y:(float)y
+- (Real_UITouch*) touchForPointerID:(int32_t)pointerID x:(float)x y:(float)y
 {
     NSNumber* n = [NSNumber numberWithInt:pointerID];
-    UITouch* result = [_touches objectForKey:n];
+    Real_UITouch* result = [_touches objectForKey:n];
     if (!result) {
-        result = [[UITouch alloc] init];
+        result = [[Real_UITouch alloc] init];
         [_touches setObject:result forKey:n];
     }
     float scale = [UIScreen mainScreen].scale;
@@ -1110,7 +1110,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
                 int32_t pointer = AMotionEvent_getPointerId(event, i);
                 float x = AMotionEvent_getX(event, i);
                 float y = AMotionEvent_getY(event, i);
-                UITouch* touch = [self touchForPointerID:pointer x:x y:y];
+                Real_UITouch* touch = [self touchForPointerID:pointer x:x y:y];
                 [set addObject:touch];
             }
             [vc touchesMoved:set withEvent:nil];
@@ -1125,7 +1125,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
             int32_t pointer = AMotionEvent_getPointerId(event, index);
             float x = AMotionEvent_getX(event, index);
             float y = AMotionEvent_getY(event, index);
-            UITouch* touch = [self touchForPointerID:pointer x:x y:y];
+            Real_UITouch* touch = [self touchForPointerID:pointer x:x y:y];
             [set addObject:touch];
             switch(action) {
                 case AMOTION_EVENT_ACTION_DOWN:

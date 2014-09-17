@@ -5,7 +5,7 @@
 
 #import "UIViewController.h"
 
-@interface UIWindow : NSObject
+@interface Real_UIWindow : NSObject
 
 @property(nonatomic,strong) Real_UIViewController* rootViewController;
 

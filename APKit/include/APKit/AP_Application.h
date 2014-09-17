@@ -11,7 +11,7 @@
 
 - (BOOL) application:(AP_Application*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions;
 
-@property (nonatomic,strong) UIWindow* window;
+@property (nonatomic,strong) Real_UIWindow* window;
 
 #if 0 // Sorcery-specific?
 // Android-specific additions

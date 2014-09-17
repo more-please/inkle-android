@@ -30,7 +30,7 @@ typedef enum UITouchPhase {
 
 // On Android, UITouch is a thin wrapper around an Android motion event.
 // It holds a direct reference to an AP_Touch object.
-@interface UITouch : NSObject
+@interface Real_UITouch : NSObject
 
 @property (nonatomic,strong) AP_Touch* android;
 @property (nonatomic,assign) CGPoint location;
