@@ -17,11 +17,16 @@ inline GLKVector3 GLKVector3Make(float x, float y, float z) {
     return v;
 }
 
+inline GLKVector3 GLKVector3MakeWithArray(float values[3]) {
+    GLKVector3 v = { values[0], values[1], values[2] };
+    return v;
+}
+   
 inline GLKVector3 GLKVector3Negate(GLKVector3 vector) {
     GLKVector3 v = { -vector.v[0], -vector.v[1], -vector.v[2] };
     return v;
 }
-    
+
 inline float GLKVector3Length(GLKVector3 vector) {
     return sqrt(vector.v[0] * vector.v[0] + vector.v[1] * vector.v[1] + vector.v[2] * vector.v[2]);
 }
