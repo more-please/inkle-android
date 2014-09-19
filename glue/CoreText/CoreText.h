@@ -56,5 +56,12 @@ typedef enum CTParagraphStyleSpecifier {
 }
 CTParagraphStyleSpecifier;
 
-extern NSString* const kCTFontAttributeName;
+// Used a lot in Sorcery! but not at all in 80 Days, hmm...
 extern NSString* const kCTParagraphStyleAttributeName;
+
+extern NSString* const NSFontAttributeName;
+extern NSString* const NSKernAttributeName;
+extern NSString* const NSForegroundColorAttributeName;
+
+// iOS distinguishes between NSString and CFStr but we don't have to.
+#define kCTFontAttributeName NSFontAttributeName
