@@ -94,7 +94,7 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 }
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha {
-    AP_NOT_IMPLEMENTED;
+    NSLog(@"[UIColor getWhite:alpha:] not implemented!");
     return NO;
 }
 
