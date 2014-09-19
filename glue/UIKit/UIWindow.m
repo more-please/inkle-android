@@ -1,6 +1,6 @@
 #import "UIWindow.h"
 
-@implementation UIWindow
+@implementation Real_UIWindow
 
 - (id) init
 {

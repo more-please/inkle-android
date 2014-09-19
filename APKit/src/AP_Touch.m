@@ -5,7 +5,7 @@
 
 #ifdef ANDROID
 
-@implementation UITouch
+@implementation Real_UITouch
 
 - (CGPoint)locationInView:(UIView*)view
 {

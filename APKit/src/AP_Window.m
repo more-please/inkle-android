@@ -9,8 +9,6 @@
 #import "AP_Touch.h"
 #import "AP_Utils.h"
 
-#undef UITouch
-
 NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotification";
 
 @implementation AP_Window {
@@ -431,7 +429,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 - (void) touchesBegan:(NSSet*)ts withEvent:(UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
-    for (UITouch* t in ts) {
+    for (Real_UITouch* t in ts) {
         CGPoint p = [t locationInView:self.view];
         AP_Touch* touch = [AP_Touch touchWithWindowPos:p];
         t.android = touch;
@@ -458,7 +456,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 - (void) touchesCancelled:(NSSet*)ts withEvent:(UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
-    for (UITouch* t in ts) {
+    for (Real_UITouch* t in ts) {
         if (!t.android) {
             NSLog(@"Touches out of sync!");
             [self resetTouches];
@@ -489,7 +487,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 - (void) touchesEnded:(NSSet*)ts withEvent:(UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
-    for (UITouch* t in ts) {
+    for (Real_UITouch* t in ts) {
         if (!t.android) {
             NSLog(@"Touches out of sync!");
             [self resetTouches];
@@ -524,7 +522,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 
     NSMutableSet* touches = [NSMutableSet set];
-    for (UITouch* t in ts) {
+    for (Real_UITouch* t in ts) {
         if (!t.android) {
             NSLog(@"Touches out of sync!");
             [self resetTouches];
