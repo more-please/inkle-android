@@ -144,3 +144,11 @@ static inline uint64_t CFSwapInt64HostToLittle(uint64_t arg) {
     return CFSwapInt64(arg);
 #endif
 }
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif

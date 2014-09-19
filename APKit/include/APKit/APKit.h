@@ -17,6 +17,7 @@
 #import "AP_GLKBaseEffect.h"
 #import "AP_GLKEffectPropertyTexture.h"
 #import "AP_GLKEffectPropertyTransform.h"
+#import "AP_GLKTextureLoader.h"
 #import "AP_GLKView.h"
 #import "AP_GLKViewController.h"
 #import "AP_Image.h"
@@ -66,6 +67,8 @@
 #define GLKVertexAttribTexCoord0       AP_GLKVertexAttribTexCoord0
 #define GLKEffectPropertyTexture       AP_GLKEffectPropertyTexture
 #define GLKEffectPropertyTransform     AP_GLKEffectPropertyTransform
+#define GLKTextureInfo                 AP_GLKTextureInfo
+#define GLKTextureLoader               AP_GLKTextureLoader
 #define GLKView                        AP_GLKView
 #define GLKViewController              AP_GLKViewController
 #define UIImage                        AP_Image
