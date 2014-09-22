@@ -15,4 +15,15 @@
 - (id)objectForKeyedSubscript:(NSString*)key;
 - (void)setObject:(id)object forKeyedSubscript:(NSString*)key;
 
+// To be implemented...
+- (void) refreshInBackgroundWithBlock:(PFObjectResultBlock)block;
+- (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block;
+- (void) removeObjectForKey:(NSString*)key;
+- (void) saveEventually:(PFBooleanResultBlock)callback;
+
+@property (nonatomic,strong) NSString* objectId;
+@property (nonatomic,strong,readonly) NSDate* updatedAt;
+
++ (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId;
+
 @end

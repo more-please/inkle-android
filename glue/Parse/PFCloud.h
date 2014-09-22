@@ -4,6 +4,6 @@
 
 @interface PFCloud : NSObject
 
-+ (void) callFunctionInBackground:(NSString*)function withParameters:(NSDictionary*)parameters block:(PFStringResultBlock)block;
++ (void) callFunctionInBackground:(NSString*)function withParameters:(NSDictionary*)parameters block:(PFIdResultBlock)block;
 
 @end

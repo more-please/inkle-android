@@ -5,6 +5,8 @@
 #import "PFInstallation.h"
 #import "PFObject.h"
 #import "PFQuery.h"
+#import "PFUser.h"
+#import "PFACL.h"
 
 @interface Parse : NSObject
 
