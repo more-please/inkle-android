@@ -28,7 +28,7 @@
 #endif
 
 #ifndef CG_INLINE
-#define CG_INLINE inline
+#define CG_INLINE static inline
 #endif
 
 extern const CGFloat UIScrollViewDecelerationRateNormal;

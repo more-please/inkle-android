@@ -9,12 +9,12 @@ union _GLKVector2 {
 } __attribute__((aligned(8)));
 typedef union _GLKVector2 GLKVector2;
 
-inline GLKVector2 GLKVector2Make(float x, float y) {
+static inline GLKVector2 GLKVector2Make(float x, float y) {
     GLKVector2 v = { x, y };
     return v;
 }
 
-inline float GLKVector2Length(GLKVector2 vector) {
+static inline float GLKVector2Length(GLKVector2 vector) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vmul_f32(*(float32x2_t *)&vector,
                              *(float32x2_t *)&vector);
@@ -25,7 +25,7 @@ inline float GLKVector2Length(GLKVector2 vector) {
 #endif
 }
 
-inline GLKVector2 GLKVector2Negate(GLKVector2 vector) {
+static inline GLKVector2 GLKVector2Negate(GLKVector2 vector) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vneg_f32(*(float32x2_t *)&vector);
     return *(GLKVector2 *)&v;
@@ -35,7 +35,7 @@ inline GLKVector2 GLKVector2Negate(GLKVector2 vector) {
 #endif
 }
  
-inline GLKVector2 GLKVector2Add(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+static inline GLKVector2 GLKVector2Add(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vadd_f32(*(float32x2_t *)&vectorLeft,
                              *(float32x2_t *)&vectorRight);
@@ -47,7 +47,7 @@ inline GLKVector2 GLKVector2Add(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
 #endif
 }
   
-inline GLKVector2 GLKVector2Subtract(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+static inline GLKVector2 GLKVector2Subtract(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vsub_f32(*(float32x2_t *)&vectorLeft,
                              *(float32x2_t *)&vectorRight);
@@ -59,7 +59,7 @@ inline GLKVector2 GLKVector2Subtract(GLKVector2 vectorLeft, GLKVector2 vectorRig
 #endif
 }
     
-inline GLKVector2 GLKVector2Multiply(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+static inline GLKVector2 GLKVector2Multiply(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vmul_f32(*(float32x2_t *)&vectorLeft,
                              *(float32x2_t *)&vectorRight);
@@ -71,7 +71,7 @@ inline GLKVector2 GLKVector2Multiply(GLKVector2 vectorLeft, GLKVector2 vectorRig
 #endif
 }
     
-inline GLKVector2 GLKVector2Divide(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+static inline GLKVector2 GLKVector2Divide(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
 #if defined(__ARM_NEON__)
     float32x2_t *vLeft = (float32x2_t *)&vectorLeft;
     float32x2_t *vRight = (float32x2_t *)&vectorRight;
@@ -87,7 +87,7 @@ inline GLKVector2 GLKVector2Divide(GLKVector2 vectorLeft, GLKVector2 vectorRight
 #endif
 }
 
-inline GLKVector2 GLKVector2AddScalar(GLKVector2 vector, float value) {
+static inline GLKVector2 GLKVector2AddScalar(GLKVector2 vector, float value) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vadd_f32(*(float32x2_t *)&vector,
                              vdup_n_f32((float32_t)value));
@@ -99,7 +99,7 @@ inline GLKVector2 GLKVector2AddScalar(GLKVector2 vector, float value) {
 #endif
 }
     
-inline GLKVector2 GLKVector2SubtractScalar(GLKVector2 vector, float value) {
+static inline GLKVector2 GLKVector2SubtractScalar(GLKVector2 vector, float value) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vsub_f32(*(float32x2_t *)&vector,
                              vdup_n_f32((float32_t)value));
@@ -111,7 +111,7 @@ inline GLKVector2 GLKVector2SubtractScalar(GLKVector2 vector, float value) {
 #endif
 }
     
-inline GLKVector2 GLKVector2MultiplyScalar(GLKVector2 vector, float value) {
+static inline GLKVector2 GLKVector2MultiplyScalar(GLKVector2 vector, float value) {
 #if defined(__ARM_NEON__)
     float32x2_t v = vmul_f32(*(float32x2_t *)&vector,
                              vdup_n_f32((float32_t)value));
@@ -127,7 +127,7 @@ inline GLKVector2 GLKVector2MultiplyScalar(GLKVector2 vector, float value) {
 #endif
 }
     
-inline GLKVector2 GLKVector2DivideScalar(GLKVector2 vector, float value) {
+static inline GLKVector2 GLKVector2DivideScalar(GLKVector2 vector, float value) {
 #if defined(__ARM_NEON__)
     float32x2_t values = vdup_n_f32((float32_t)value);
     float32x2_t estimate = vrecpe_f32(values);    
@@ -142,13 +142,13 @@ inline GLKVector2 GLKVector2DivideScalar(GLKVector2 vector, float value) {
 #endif
 }
 
-inline GLKVector2 GLKVector2Normalize(GLKVector2 vector) {
+static inline GLKVector2 GLKVector2Normalize(GLKVector2 vector) {
     float scale = 1.0f / GLKVector2Length(vector);
     GLKVector2 v = GLKVector2MultiplyScalar(vector, scale);
     return v;
 }
 
-inline GLKVector2 GLKVector2Lerp(GLKVector2 vectorStart, GLKVector2 vectorEnd, float t) {
+static inline GLKVector2 GLKVector2Lerp(GLKVector2 vectorStart, GLKVector2 vectorEnd, float t) {
     GLKVector2 v = {
         vectorStart.v[0] + ((vectorEnd.v[0] - vectorStart.v[0]) * t),
         vectorStart.v[1] + ((vectorEnd.v[1] - vectorStart.v[1]) * t)
@@ -156,15 +156,15 @@ inline GLKVector2 GLKVector2Lerp(GLKVector2 vectorStart, GLKVector2 vectorEnd, f
     return v;
 }
 
-inline float GLKVector2DotProduct(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
+static inline float GLKVector2DotProduct(GLKVector2 vectorLeft, GLKVector2 vectorRight) {
     return vectorLeft.v[0] * vectorRight.v[0] + vectorLeft.v[1] * vectorRight.v[1];
 }
 
-inline float GLKVector2Distance(GLKVector2 vectorStart, GLKVector2 vectorEnd) {
+static inline float GLKVector2Distance(GLKVector2 vectorStart, GLKVector2 vectorEnd) {
     return GLKVector2Length(GLKVector2Subtract(vectorEnd, vectorStart));
 }
 
-inline bool GLKVector2AllEqualToScalar(GLKVector2 vector, float value)
+static inline bool GLKVector2AllEqualToScalar(GLKVector2 vector, float value)
 {
 #if defined(__ARM_NEON_)
     float32x2_t v1 = *(float32x2_t *)&vector;
