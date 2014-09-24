@@ -87,15 +87,15 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     }
 
     if (isTag(n, "strong")) {
-        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
-        font = [UIFont fontWithName:@"Baskerville-Bold" size:font.pointSize];
+        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize];
         attrs = [attrs mutableCopy];
         [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
     }
 
     if (isTag(n, "em")) {
-        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
-        font = [UIFont fontWithName:@"Baskerville-Italic" size:font.pointSize];
+        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [AP_Font fontWithName:@"Baskerville-Italic" size:font.pointSize];
         attrs = [attrs mutableCopy];
         [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
     }
@@ -119,8 +119,8 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
     // Hack -- just so happens there's only one <span> in credits.css
     if (isTag(n, "span")) {
-        UIFont* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
-        font = [UIFont fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
+        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
         attrs = [attrs mutableCopy];
         [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
     }
@@ -169,7 +169,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         
         attrs = @{
             kINKAttributedStringColorAttribute:[attrs objectForKey:kINKAttributedStringColorAttribute],
-            kINKAttributedStringFontAttribute:[UIFont fontWithName:font size:size],
+            kINKAttributedStringFontAttribute:[AP_Font fontWithName:font size:size],
             kINKAttributedStringParagraphStyleAttribute:style
         };
 
@@ -202,7 +202,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
                 image = [image imageWithWidth:width];
             }
 
-            UIFont* f = [UIFont fontWithName:font size:size];
+            AP_Font* f = [AP_Font fontWithName:font size:size];
             INKAttributedStringParagraphStyle* style = [INKAttributedStringParagraphStyle style];
             style.alignment = kCTTextAlignmentCenter;
             style.paragraphSpacing = 20;
