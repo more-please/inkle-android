@@ -6,6 +6,7 @@
 #import "AP_Log.h"
 
 #import "AP_ActivityIndicatorView.h"
+#import "AP_ActivityViewController.h"
 #import "AP_AlertView.h"
 #import "AP_Application.h"
 #import "AP_Button.h"
@@ -46,6 +47,7 @@
 #import "NSObject+AP_PerformBlock.h"
 
 #define UIActivityIndicatorView        AP_ActivityIndicatorView
+#define UIActivityViewController       AP_ActivityViewController
 #define UIAlertView                    AP_AlertView
 #define UIAlertViewDelegate            AP_AlertViewDelegate
 #define UIApplication                  AP_Application
