@@ -6,6 +6,10 @@ const UIEdgeInsets UIEdgeInsetsZero = {0, 0};
 const UIOffset UIOffsetZero = {0, 0};
 
 NSString* const UIApplicationDidReceiveMemoryWarningNotification = @"UIApplicationDidReceiveMemoryWarningNotification";
+NSString* const UIKeyboardWillShowNotification = @"UIKeyboardWillShowNotification";
+NSString* const UIKeyboardWillHideNotification = @"UIKeyboardWillHideNotification";
+NSString* const UIKeyboardAnimationDurationUserInfoKey = @"UIKeyboardAnimationDurationUserInfoKey";
+NSString* const UIKeyboardAnimationCurveUserInfoKey = @"UIKeyboardAnimationCurveUserInfoKey";
 
 NSString* const UIPageViewControllerOptionSpineLocationKey = @"spineLocation";
 
