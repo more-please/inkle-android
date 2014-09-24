@@ -1,5 +1,7 @@
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 typedef enum CTTextAlignment {
     kCTTextAlignmentLeft = 0,
     kCTTextAlignmentRight = 1,

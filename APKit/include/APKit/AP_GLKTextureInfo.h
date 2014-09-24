@@ -2,6 +2,7 @@
 
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
+#import <OpenGLES/ES2/gl.h>
 
 @interface AP_GLKTextureInfo : NSObject
 
