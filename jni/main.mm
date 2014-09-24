@@ -478,7 +478,7 @@ static JNINativeMethod kNatives[] = {
     _env->PopLocalFrame(NULL);
 }
 
-- (void) parseCallFunction:(NSString*)function block:(PFStringResultBlock)block
+- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
 {
     static int handle = 0;
     ++handle;
@@ -514,7 +514,7 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 - (void) parseCallResult:(ParseResult*)result
 {
     // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
-    PFStringResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
+    PFIdResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
     if (block) {
         NSError* error = result.string ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
         block(result.string, error);

@@ -72,7 +72,7 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
-- (void) parseCallFunction:(NSString*)function block:(PFStringResultBlock)block
+- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
 {
     GLUE_NOT_IMPLEMENTED;
 }

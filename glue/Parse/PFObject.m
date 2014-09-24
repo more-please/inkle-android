@@ -62,4 +62,30 @@
     [self setObject:object forKey:key];
 }
 
+- (void) refreshInBackgroundWithBlock:(PFObjectResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) removeObjectForKey:(NSString*)key
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) saveEventually:(PFBooleanResultBlock)callback
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
++ (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId
+{
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+}
+
 @end
