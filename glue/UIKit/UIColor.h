@@ -24,6 +24,7 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha;
 - (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha;
+- (UIColor*) colorWithAlphaComponent:(CGFloat)alpha;
 
 // Android extensions...
 @property(nonatomic,readonly,assign) GLKVector4 rgba;

@@ -106,4 +106,10 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return YES;
 }
 
+- (UIColor*) colorWithAlphaComponent:(CGFloat)alpha {
+    CLKVector4 rgba = _rgba;
+    rgba.a = alpha;
+    return [UIColor colorWithRgba:rgba];
+}
+
 @end
