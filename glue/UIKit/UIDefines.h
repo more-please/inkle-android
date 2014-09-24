@@ -264,6 +264,12 @@ extern const UIEdgeInsets UIEdgeInsetsZero;
 extern const UIOffset UIOffsetZero;
 
 extern NSString* const UIApplicationDidReceiveMemoryWarningNotification;
+extern NSString* const UIKeyboardWillShowNotification;
+extern NSString* const UIKeyboardWillHideNotification;
+
+// Properties of keyboard notifications
+extern NSString* const UIKeyboardAnimationDurationUserInfoKey;
+extern NSString* const UIKeyboardAnimationCurveUserInfoKey;
 
 extern CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment);
 
