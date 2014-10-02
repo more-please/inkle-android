@@ -3,7 +3,7 @@
 
 # Is this the world's worst makefile? Oh, come on, who needs separate compilation...
 
-CXX = clang++ -x c++ -O3 -std=c++11 -I./3rd-party/stb
+CXX = clang++ -x c++ -O3 -std=c++11 -I./3rd-party/stb -I./3rd-party/imgtec.com
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
@@ -25,7 +25,8 @@ all: \
 		build/bin/fontex \
 		build/bin/split \
 		build/bin/tippex \
-		build/bin/bbox
+		build/bin/bbox \
+		build/bin/pvr2png
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
@@ -64,6 +65,13 @@ build/bin/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 build/bin/bbox: tools/bbox.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/bbox.cpp $(COMMON_SRCS) -o build/bin/bbox
+
+build/bin/pvr2png: tools/pvr2png.cpp \
+		3rd-party/imgtec.com/PVRTDecompress.cpp \
+		3rd-party/imgtec.com/PVRTDecompress.h \
+		$(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/pvr2png.cpp 3rd-party/imgtec.com/PVRTDecompress.cpp $(COMMON_SRCS) -o build/bin/pvr2png
 
 clean:
 	rm build/bin/*
