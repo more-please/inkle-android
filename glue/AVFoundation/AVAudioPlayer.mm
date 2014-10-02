@@ -16,6 +16,8 @@
 {
     self = [super init];
     if (self) {
+        // Audio file type is always .cks
+        path = [[path stringByDeletingPathExtension] stringByAppendingString:@".cks"];
         _name = [path lastPathComponent];
         PAK_Item* item = [PAK_Search item:path];
         if (!item) {
