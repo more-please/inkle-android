@@ -4,10 +4,15 @@
 #import <GLKit/GLKit.h>
 #import <OpenGLES/ES2/gl.h>
 
+@class AP_GLTexture;
+
 @interface AP_GLKTextureInfo : NSObject
 
-@property (nonatomic) GLuint name;
-@property (nonatomic) GLuint width;
-@property (nonatomic) GLuint height;
+@property (readonly,nonatomic) GLuint name;
+@property (readonly,nonatomic) GLuint width;
+@property (readonly,nonatomic) GLuint height;
+
+// Android-only
+@property (nonatomic,strong) AP_GLTexture* tex;
 
 @end
