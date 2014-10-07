@@ -505,7 +505,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view aboveSubview:(AP_View*)siblingSubview
 {
-    AP_CHECK(!_iterating, abort());
+    if (_iterating) {
+        _subviews = [_subviews mutableCopy];
+    }
     AP_CHECK([_subviews containsObject:siblingSubview], abort());
     if ([_subviews containsObject:view]) {
         // Already have this view, just need to move it.
@@ -521,7 +523,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view belowSubview:(AP_View*)siblingSubview
 {
-    AP_CHECK(!_iterating, abort());
+    if (_iterating) {
+        _subviews = [_subviews mutableCopy];
+    }
     AP_CHECK([_subviews containsObject:siblingSubview], abort());
     if ([_subviews containsObject:view]) {
         // Already have this view, just need to move it.
@@ -537,7 +541,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) insertSubview:(AP_View *)view atIndex:(NSInteger)index
 {
-    AP_CHECK(!_iterating, abort());
+    if (_iterating) {
+        _subviews = [_subviews mutableCopy];
+    }
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview != self, abort());
 
@@ -594,7 +600,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     if (!_superview) {
         return;
     }
-    AP_CHECK(!_superview->_iterating, abort());
+    if (_superview->_iterating) {
+        _superview->_subviews = [_superview->_subviews mutableCopy];
+    }
 
     id protectSelf = self;
 
@@ -632,7 +640,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) bringSubviewToFront:(AP_View*)view
 {
-    AP_CHECK(!_iterating, abort());
+    if (_iterating) {
+        _subviews = [_subviews mutableCopy];
+    }
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview == self, abort());
     if ([_subviews lastObject] != view) {
@@ -644,7 +654,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) sendSubviewToBack:(AP_View*)view
 {
-    AP_CHECK(!_iterating, abort());
+    if (_iterating) {
+        _subviews = [_subviews mutableCopy];
+    }
     AP_CHECK(view, abort());
     AP_CHECK(view->_superview == self, abort());
     if ([_subviews objectAtIndex:0] != view) {
@@ -1083,6 +1095,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     NSAssert(!gestureRecognizer.view,
         @"Tried to GestureRecognizer to view: %@, but it's already in view: %@",
         self, gestureRecognizer.view);
+    // Defend against "modified during iteration" errors
+    _gestureRecognizers = [_gestureRecognizers mutableCopy];
     [_gestureRecognizers addObject:gestureRecognizer];
     [gestureRecognizer wasAddedToView:self];
 }
@@ -1091,6 +1105,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 {
     NSAssert(gestureRecognizer.view == self,
         @"Tried to remove non-existent GestureRecognizer from view: %@", self);
+    // Defend against "modified during iteration" errors
+    _gestureRecognizers = [_gestureRecognizers mutableCopy];
     [_gestureRecognizers removeObject:gestureRecognizer];
     [gestureRecognizer wasAddedToView:nil];
 }
