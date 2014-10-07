@@ -358,6 +358,9 @@ static inline CGFloat aspect(CGSize size) {
     }
 
     [_profiler step:@"render"];
+#ifdef ANDROID
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v renderSelfAndChildrenWithFrameToGL:frameToGL alpha:1];
