@@ -88,6 +88,7 @@ static NSMutableArray* s_deleteQueue = nil;
     AP_GLBuffer* buffer = [[AP_GLBuffer alloc] init];
     if (buffer) {
         [buffer bufferTarget:target usage:usage data:data];
+        [buffer unbind];
     }
     return buffer;
 }
@@ -97,6 +98,7 @@ static NSMutableArray* s_deleteQueue = nil;
     AP_GLBuffer* buffer = [[AP_GLBuffer alloc] init];
     if (buffer) {
         [buffer bufferTarget:target usage:usage data:data size:size];
+        [buffer unbind];
     }
     return buffer;
 }
