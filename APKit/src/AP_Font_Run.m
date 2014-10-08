@@ -295,6 +295,9 @@ typedef struct VertexData {
         glVertexAttribPointer(texCoord, 2, GL_FLOAT, false, 16, (void*)8);
 
         glDrawElements(GL_TRIANGLES, 6 * (_end - _start), GL_UNSIGNED_SHORT, (void*)(_start * 6 * sizeof(GLushort)));
+
+        [_indexBuffer unbind];
+        [_arrayBuffer unbind];
     }
 }
 

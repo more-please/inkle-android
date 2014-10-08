@@ -980,6 +980,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         glVertexAttribPointer(pos, 2, GL_FLOAT, false, 0, 0);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        [buffer unbind];
     }
 }
 

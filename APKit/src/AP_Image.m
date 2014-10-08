@@ -835,6 +835,9 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     glVertexAttribPointer(g_SolidProg.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
 
     glDrawElements(GL_TRIANGLES, 6 * e.numSolid, GL_UNSIGNED_SHORT, (void*)(12 * e.numAlpha));
+
+    [e.arrayBuffer unbind];
+    [e.indexBuffer unbind];
 }
 
 - (AP_Image*) tintedImageUsingColor:(UIColor*)tintColor

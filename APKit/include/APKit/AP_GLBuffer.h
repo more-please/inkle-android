@@ -11,6 +11,8 @@
 - (void) bufferTarget:(GLenum) target usage:(GLenum)usage data:(NSData*)data;
 - (void) bufferTarget:(GLenum) target usage:(GLenum)usage data:(const void*)data size:(size_t)size;
 
+- (void) unbind;
+
 + (AP_GLBuffer*) bufferWithTarget:(GLenum)target usage:(GLenum)usage data:(NSData*)data;
 + (AP_GLBuffer*) bufferWithTarget:(GLenum)target usage:(GLenum)usage data:(const void*)data size:(size_t)size;
 

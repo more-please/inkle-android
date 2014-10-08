@@ -60,6 +60,11 @@ static NSMutableArray* s_deleteQueue = nil;
     glBindBuffer(_target, _name);
 }
 
+- (void) unbind
+{
+    glBindBuffer(_target, 0);
+}
+
 - (void) bufferTarget:(GLenum)target usage:(GLenum)usage data:(NSData *)data
 {
     [self bufferTarget:target usage:usage data:[data bytes] size:[data length]];
