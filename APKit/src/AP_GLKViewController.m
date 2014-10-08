@@ -16,6 +16,11 @@
 
 - (void) glkView:(AP_GLKView *)view drawWithAlpha:(CGFloat)alpha
 {
+    [self glkView:view drawInRect:view.bounds];
+}
+
+- (void) glkView:(AP_GLKView *)view drawInRect:(CGRect)rect
+{
     // Nothing
 }
 
