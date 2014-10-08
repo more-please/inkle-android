@@ -515,4 +515,10 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     return delta;
 }
 
+- (CGPoint) velocityInView:(AP_View*)view
+{
+    AP_NOT_IMPLEMENTED;
+    return CGPointZero;
+}
+
 @end
