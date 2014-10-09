@@ -26,7 +26,8 @@ all: \
 		build/bin/split \
 		build/bin/tippex \
 		build/bin/bbox \
-		build/bin/pvr2png
+		build/bin/pvr2png \
+		build/bin/swizzle
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
@@ -72,6 +73,10 @@ build/bin/pvr2png: tools/pvr2png.cpp \
 		$(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/pvr2png.cpp 3rd-party/imgtec.com/PVRTDecompress.cpp $(COMMON_SRCS) -o build/bin/pvr2png
+
+build/bin/swizzle: tools/swizzle.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/swizzle.cpp $(COMMON_SRCS) -o build/bin/swizzle
 
 clean:
 	rm build/bin/*
