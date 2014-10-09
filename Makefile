@@ -26,6 +26,7 @@ all: \
 		build/bin/split \
 		build/bin/tippex \
 		build/bin/bbox \
+		build/bin/png2ktx \
 		build/bin/pvr2png \
 		build/bin/swizzle
 
@@ -66,6 +67,10 @@ build/bin/tippex: tools/tippex.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 build/bin/bbox: tools/bbox.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/bbox.cpp $(COMMON_SRCS) -o build/bin/bbox
+
+build/bin/png2ktx: tools/png2ktx.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/png2ktx.cpp $(COMMON_SRCS) -o build/bin/png2ktx
 
 build/bin/pvr2png: tools/pvr2png.cpp \
 		3rd-party/imgtec.com/PVRTDecompress.cpp \
