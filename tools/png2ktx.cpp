@@ -63,12 +63,12 @@ int main(int argc, const char* argv[]) {
     char scratch[22] = "/tmp/png2ktx.XXXXXXXX";
     mkdtemp(scratch);
     string tempDir(scratch);
-    string pngFile = tempDir + "/temp.png";
+    string ppmFile = tempDir + "/temp.ppm";
     string texFile = tempDir + "/temp.ktx";
 
-    sys("cp " + string(infile) + " " + pngFile);
-    sys("cd " + binDir + " && ./etcpack " + pngFile + " " + tempDir + " -c etc1 -mipmaps -ktx");
-    sys("rm " + pngFile);
+    sys("cd " + binDir + " && ./convert " + infile + " " + ppmFile);
+    sys("cd " + binDir + " && ./etcpack " + ppmFile + " " + tempDir + " -c etc1 -mipmaps -ktx");
+    sys("rm " + ppmFile);
     sys("mv " + texFile + " " + outfile);
     sys("rmdir " + tempDir);
     return 0;
