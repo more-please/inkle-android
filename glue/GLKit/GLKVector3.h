@@ -138,3 +138,9 @@ static inline GLKVector3 GLKVector3Lerp(GLKVector3 vectorStart, GLKVector3 vecto
     };
     return v;
 }
+
+static inline BOOL GLKVector3AllEqualToVector3(GLKVector3 lhs, GLKVector3 rhs) {
+    return lhs.v[0] == rhs.v[0]
+        && lhs.v[1] == rhs.v[1]
+        && lhs.v[2] == rhs.v[2];
+}
