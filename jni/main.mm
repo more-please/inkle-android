@@ -1100,6 +1100,11 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     }
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+        int64_t nanos = AMotionEvent_getEventTime(event);
+        double secs = nanos / (1000.0 * 1000.0 * 1000.0);
+        Real_UIEvent* e = [[Real_UIEvent alloc] init];
+        e.timestamp = secs;
+
         NSMutableSet* set = [NSMutableSet set];
 
         int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
@@ -1113,11 +1118,11 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
                 Real_UITouch* touch = [self touchForPointerID:pointer x:x y:y];
                 [set addObject:touch];
             }
-            [vc touchesMoved:set withEvent:nil];
+            [vc touchesMoved:set withEvent:e];
         } else if (action == AMOTION_EVENT_ACTION_CANCEL) {
             // Cancel all the touches.
             [set addObjectsFromArray:[_touches allValues]];
-            [vc touchesCancelled:set withEvent:nil];
+            [vc touchesCancelled:set withEvent:e];
             [_touches removeAllObjects];
         } else {
             // It's an UP or DOWN event, with just one pointer.
@@ -1131,11 +1136,11 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
                 case AMOTION_EVENT_ACTION_DOWN:
                 case AMOTION_EVENT_ACTION_POINTER_DOWN:
                     [self javaVoidMethod:&kHideStatusBar];
-                    [vc touchesBegan:set withEvent:nil];
+                    [vc touchesBegan:set withEvent:e];
                     break;
                 case AMOTION_EVENT_ACTION_UP:
                 case AMOTION_EVENT_ACTION_POINTER_UP:
-                    [vc touchesEnded:set withEvent:nil];
+                    [vc touchesEnded:set withEvent:e];
                     [self deletePointerID:pointer];
                     break;
                 default:

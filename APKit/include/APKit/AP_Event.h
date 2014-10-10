@@ -7,6 +7,7 @@
 @interface AP_Event : NSObject
 
 @property(nonatomic,strong) NSSet* allTouches;
+@property(nonatomic) NSTimeInterval timestamp;
 
 - (NSSet*) touchesForView:(AP_View*) view;
 

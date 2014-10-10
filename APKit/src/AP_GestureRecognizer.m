@@ -3,9 +3,13 @@
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
+static inline CGFloat length(CGPoint p) {
+    return sqrtf(p.x * p.x + p.y * p.y);
+}
+
 static inline CGFloat distance(CGPoint a, CGPoint b) {
     CGPoint p = {a.x - b.x, a.y - b.y};
-    return sqrtf(p.x * p.x + p.y * p.y);
+    return length(p);
 }
 
 @implementation AP_GestureRecognizer {
@@ -429,9 +433,13 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 @implementation AP_Pan_Value
 @end
 
-@implementation AP_PanGestureRecognizer
+@implementation AP_PanGestureRecognizer {
+    CGPoint _lastTranslation;
+    NSTimeInterval _lastTranslationTime;
+    CGPoint _velocity;
+}
 
-- (void) zapTranslation:(CGPoint)translation
+- (void) zapTranslation:(CGPoint)translation time:(NSTimeInterval)t
 {
     for (AP_Touch* t in self.touches) {
         // Give this touch an initial value such that its impact
@@ -442,12 +450,25 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         AP_Pan_Value* value = [self valueForTouch:t];
         value.initialPos = p;
     }
+    _lastTranslation = translation;
+    _lastTranslationTime = t;
 }
 
-- (void) maybeStartedOrChanged
+- (void) maybeStartedOrChanged:(NSTimeInterval)t
 {
+    CGPoint translation = [self translationInView:nil];
+    if (t > _lastTranslationTime) {
+        float dt = t - _lastTranslationTime;
+        _velocity.x = (translation.x - _lastTranslation.x) / dt;
+        _velocity.y = (translation.y - _lastTranslation.y) / dt;
+    } else {
+        _velocity = CGPointZero;
+    }
+    _lastTranslation = translation;
+    _lastTranslationTime = t;
+
     if (self.state == UIGestureRecognizerStatePossible) {
-        if (distance(CGPointZero, [self translationInView:nil]) > self.maxTapDistance) {
+        if (length(translation) > self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         }
     } else {
@@ -463,8 +484,8 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     for (AP_Touch* t in touches) {
         [self addTouch:t withValue:[[AP_Pan_Value alloc] init]];
     }
-    [self zapTranslation:currentTranslation];
-    [self maybeStartedOrChanged];
+    [self zapTranslation:currentTranslation time:event.timestamp];
+    [self maybeStartedOrChanged:event.timestamp];
 }
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
@@ -473,7 +494,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
     for (AP_Touch* t in self.touches) {
         if (t.phase == UITouchPhaseMoved) {
-            [self maybeStartedOrChanged];
+            [self maybeStartedOrChanged:event.timestamp];
             return;
         }
     }
@@ -485,7 +506,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
     CGPoint currentTranslation = [self translationInView:nil];
     [super touchesEnded:touches withEvent:event];
-    [self zapTranslation:currentTranslation];
+    [self zapTranslation:currentTranslation time:event.timestamp];
 }
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
@@ -494,7 +515,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
     CGPoint currentTranslation = [self translationInView:nil];
     [super touchesEnded:touches withEvent:event];
-    [self zapTranslation:currentTranslation];
+    [self zapTranslation:currentTranslation time:event.timestamp];
 }
 
 - (CGPoint) translationInView:(AP_View*)view
@@ -517,8 +538,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 
 - (CGPoint) velocityInView:(AP_View*)view
 {
-    AP_NOT_IMPLEMENTED;
-    return CGPointZero;
+    return _velocity;
 }
 
 @end

@@ -429,7 +429,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 }
 
-- (void) touchesBegan:(NSSet*)ts withEvent:(UIEvent*)e
+- (void) touchesBegan:(NSSet*)ts withEvent:(Real_UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (Real_UITouch* t in ts) {
@@ -441,6 +441,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         [touches addObject:touch];
     }
     AP_Event* event = [[AP_Event alloc] init];
+    event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
     for (AP_Touch* touch in touches) {
@@ -456,7 +457,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 }
 
-- (void) touchesCancelled:(NSSet*)ts withEvent:(UIEvent*)e
+- (void) touchesCancelled:(NSSet*)ts withEvent:(Real_UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (Real_UITouch* t in ts) {
@@ -469,6 +470,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
+    event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
     [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
@@ -487,7 +489,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 }
 
-- (void) touchesEnded:(NSSet*)ts withEvent:(UIEvent*)e
+- (void) touchesEnded:(NSSet*)ts withEvent:(Real_UIEvent*)e
 {
     NSMutableSet* touches = [NSMutableSet set];
     for (Real_UITouch* t in ts) {
@@ -500,6 +502,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
+    event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
     [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
@@ -518,7 +521,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 }
 
-- (void) touchesMoved:(NSSet*)ts withEvent:(UIEvent*)e
+- (void) touchesMoved:(NSSet*)ts withEvent:(Real_UIEvent*)e
 {
     for (AP_Touch* touch in _activeTouches) {
         touch.phase = UITouchPhaseStationary;
@@ -536,6 +539,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         [touches addObject:t.android];
     }
     AP_Event* event = [[AP_Event alloc] init];
+    event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
     [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
