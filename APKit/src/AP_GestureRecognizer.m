@@ -308,6 +308,9 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 @implementation AP_PinchGestureRecognizer {
     CGPoint _origin;
     float _initialScale;
+
+    float _lastScale;
+    NSTimeInterval _lastScaleTime;
 }
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
@@ -339,6 +342,11 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
             _origin.x += v.initialPos.x / self.touches.count;
             _origin.y += v.initialPos.y / self.touches.count;
         }
+
+        _lastScale = self.scale;
+        _lastScaleTime = event.timestamp;
+        _velocity = 0;
+
         [self fireWithState:UIGestureRecognizerStateBegan];
     } else {
         // Resuming a suspended gesture.
@@ -354,6 +362,13 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     if (self.touches.count >= 2) {
         for (AP_Touch* t in self.touches) {
             if (t.phase == UITouchPhaseMoved) {
+                float dt = event.timestamp - _lastScaleTime;
+                if (dt > 0) {
+                    _velocity = (self.scale - _lastScale) / dt;
+                    _lastScaleTime = event.timestamp;
+                    _lastScale = self.scale;
+                }
+
                 [self fireWithState:UIGestureRecognizerStateChanged];
                 return;
             }
