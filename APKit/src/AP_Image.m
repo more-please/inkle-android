@@ -19,6 +19,7 @@
 @property GLint stretch;
 @property GLint alpha;
 @property GLint tint;
+@property GLint texture;
 @property GLint edgePos;
 @property GLint stretchPos;
 @property GLint texCoord;
@@ -36,6 +37,7 @@ AP_BAN_EVIL_INIT
         _stretch = [self uniform:@"stretch"];
         _alpha = [self uniform:@"alpha"];
         _tint = [self uniform:@"tint"];
+        _texture = [self uniform:@"texture"];
         _edgePos = [self attr:@"edgePos"];
         _stretchPos = [self attr:@"stretchPos"];
         _texCoord = [self attr:@"texCoord"];
@@ -798,12 +800,14 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         transform.c, transform.d, 0,
         transform.tx, transform.ty, 1);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture.name);
 
     [g_AlphaProg use];
     [e.arrayBuffer bind];
     [e.indexBuffer bind];
 
+    glUniform1i(g_AlphaProg.texture, 0);
     glUniform1f(g_AlphaProg.alpha, alpha);
     glUniformMatrix3fv(g_AlphaProg.transform, 1, false, matrix.m);
     glUniform2f(g_AlphaProg.stretch, stretchScale.width, stretchScale.height);
@@ -822,6 +826,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     [e.arrayBuffer bind];
     [e.indexBuffer bind];
 
+    glUniform1i(g_SolidProg.texture, 0);
     glUniform1f(g_SolidProg.alpha, alpha);
     glUniformMatrix3fv(g_SolidProg.transform, 1, false, matrix.m);
     glUniform2f(g_SolidProg.stretch, stretchScale.width, stretchScale.height);
