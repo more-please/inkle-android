@@ -17,6 +17,7 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 @implementation AP_View {
     __weak AP_Window* _window;
     BOOL _needsLayout;
+    BOOL _needsDisplay;
 
     NSMutableArray* _animatedProperties;
 
@@ -896,6 +897,18 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 //------------------------------------------------------------------------------------
 #pragma mark - Rendering
 //------------------------------------------------------------------------------------
+
+- (void) setNeedsDisplay
+{
+    _needsDisplay = YES;
+}
+
+- (BOOL) takeNeedsDisplay
+{
+    BOOL result = _needsDisplay;
+    _needsDisplay = NO;
+    return result;
+}
 
 - (void) updateGL:(float)dt
 {

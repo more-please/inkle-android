@@ -89,7 +89,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setAll:(CGFloat)value
 {
     _src = _inFlight = _dest = value;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -99,7 +99,7 @@ static AP_Animation* g_CurrentAnimation = nil;
         NSLog(@"  %@.%@: %.2f -> %.2f", self.view, self.name, _inFlight, newValue);
     }
     _inFlight = newValue;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) setDest:(CGFloat)dest
@@ -107,7 +107,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (dest != _dest) {
         self.animation = g_CurrentAnimation;
         _dest = dest;
-        self.view.needsDisplay = YES;
+        [self.view setNeedsDisplay];
     }
     if (!self.animation) {
         _src = _inFlight = dest;
@@ -118,7 +118,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super leaveAnimation];
 }
 
@@ -133,7 +133,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasFinished];
 }
 
@@ -147,7 +147,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setAll:(CGPoint)value
 {
     _src = _inFlight = _dest = value;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -160,7 +160,7 @@ static AP_Animation* g_CurrentAnimation = nil;
         NSLog(@"  %@.%@: (%.1f,%.1f) -> (%.1f,%.1f)", self.view, self.name, _inFlight.x, _inFlight.y, newValue.x, newValue.y);
     }
     _inFlight = newValue;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) setDest:(CGPoint)dest
@@ -168,7 +168,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (!CGPointEqualToPoint(dest, _dest)) {
         self.animation = g_CurrentAnimation;
         _dest = dest;
-        self.view.needsDisplay = YES;
+        [self.view setNeedsDisplay];
     }
     if (!self.animation) {
         _src = _inFlight = dest;
@@ -179,7 +179,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super leaveAnimation];
 }
 
@@ -194,7 +194,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasFinished];
 }
 
@@ -208,7 +208,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setAll:(CGSize)value
 {
     _src = _inFlight = _dest = value;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -221,7 +221,7 @@ static AP_Animation* g_CurrentAnimation = nil;
         NSLog(@"  %@.%@: (%.1f,%.1f) -> (%.1f,%.1f)", self.view, self.name, _inFlight.width, _inFlight.height, newValue.width, newValue.height);
     }
     _inFlight = newValue;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) setDest:(CGSize)dest
@@ -229,7 +229,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (!CGSizeEqualToSize(dest, _dest)) {
         self.animation = g_CurrentAnimation;
         _dest = dest;
-        self.view.needsDisplay = YES;
+        [self.view setNeedsDisplay];
     }
     if (!self.animation) {
         _src = _inFlight = dest;
@@ -240,7 +240,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super leaveAnimation];
 }
 
@@ -248,7 +248,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _inFlight;
     _dest = _inFlight;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasCancelled];
 }
 
@@ -256,7 +256,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasFinished];
 }
 
@@ -270,7 +270,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setAll:(GLKVector4)value
 {
     _src = _inFlight = _dest = value;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -278,7 +278,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     for (int i = 0; i < 4; ++i) {
         _inFlight.v[i] = AP_Lerp(_src.v[i], _dest.v[i], progress);
     }
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) setDest:(GLKVector4)dest
@@ -286,7 +286,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (!GLKVector4AllEqualToVector4(dest, _dest)) {
         self.animation = g_CurrentAnimation;
         _dest = dest;
-        self.view.needsDisplay = YES;
+        [self.view setNeedsDisplay];
     }
     if (!self.animation) {
         _src = _inFlight = dest;
@@ -297,7 +297,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super leaveAnimation];
 }
 
@@ -312,7 +312,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasFinished];
 }
 
@@ -326,7 +326,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) setAll:(CGAffineTransform)value
 {
     _src = _inFlight = _dest = value;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) updateWithProgress:(CGFloat)progress
@@ -337,7 +337,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     _inFlight.d = AP_Lerp(_src.d, _dest.d, progress);
     _inFlight.tx = AP_Lerp(_src.tx, _dest.tx, progress);
     _inFlight.ty = AP_Lerp(_src.ty, _dest.ty, progress);
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
 }
 
 - (void) setDest:(CGAffineTransform)dest
@@ -345,7 +345,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (!CGAffineTransformEqualToTransform(dest, _dest)) {
         self.animation = g_CurrentAnimation;
         _dest = dest;
-        self.view.needsDisplay = YES;
+        [self.view setNeedsDisplay];
     }
     if (!self.animation) {
         _src = _inFlight = dest;
@@ -356,7 +356,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super leaveAnimation];
 }
 
@@ -371,7 +371,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     _src = _dest;
     _inFlight = _dest;
-    self.view.needsDisplay = YES;
+    [self.view setNeedsDisplay];
     [super animationWasFinished];
 }
 

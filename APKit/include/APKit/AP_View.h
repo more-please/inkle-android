@@ -39,7 +39,8 @@
 - (void) layoutIfNeeded;
 - (void) layoutSubviews;
 
-@property (nonatomic) BOOL needsDisplay;
+- (void) setNeedsDisplay;
+- (BOOL) takeNeedsDisplay;
 
 - (AP_View*) hitTest:(CGPoint)point withEvent:(AP_Event*)event;
 - (BOOL) pointInside:(CGPoint)point withEvent:(AP_Event*)event;

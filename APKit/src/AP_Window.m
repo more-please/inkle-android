@@ -272,7 +272,7 @@ static inline CGFloat aspect(CGSize size) {
 
     [AP_Animation setMasterClock:_clock];
     [_fps tick];
-//    [_profiler maybeReport];
+    [_profiler maybeReport];
 
     [_profiler step:@"animation"];
     for (AP_Animation* animation in [AP_Animation animations]) {
@@ -337,9 +337,8 @@ static inline CGFloat aspect(CGSize size) {
         }];
         [v visitWithBlock:^(AP_View* view) {
             [view updateGL:dt];
-            if (view.needsDisplay) {
+            if (view.takeNeedsDisplay) {
                 *needsDisplayPtr = YES;
-                view.needsDisplay = NO;
             }
         }];
     }
