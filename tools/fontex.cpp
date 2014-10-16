@@ -24,6 +24,7 @@ struct Range {
 static const Range kRanges[] = {
     { 10, 10 }, // Newline
     { 32, 126 }, // Basic ASCII
+    { 163, 163 }, // Pound sign
     { 192, 255 }, // Accented letters
     { 0x00a9, 0x00a9 }, // (c)
     { 0x2018, 0x2019 }, // Single quotes
