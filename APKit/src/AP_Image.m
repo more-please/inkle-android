@@ -172,7 +172,7 @@ typedef struct VertexData {
 
 + (AP_Image*) imageNamed:(NSString *)name
 {
-    AP_Image* result = [AP_Image imageNamed:name scale:1];
+    AP_Image* result = [AP_Image imageNamed:name scale:2];
     return result;
 }
 
