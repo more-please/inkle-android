@@ -8,9 +8,18 @@
 
 @implementation AP_ImageView
 
+- (instancetype) initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.userInteractionEnabled = NO;
+    }
+    return self;
+}
+
 - (instancetype) initWithImage:(AP_Image *)image
 {
-    self = [super initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
+    self = [self initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
     if (self) {
         _image = image;
     }
