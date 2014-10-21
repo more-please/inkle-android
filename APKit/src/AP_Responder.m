@@ -7,6 +7,11 @@
     return nil;
 }
 
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
 {
     AP_Responder* next = self.nextResponder;
