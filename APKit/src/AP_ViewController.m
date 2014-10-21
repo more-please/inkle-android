@@ -52,6 +52,11 @@
     self.view = [[AP_View alloc] initWithFrame:[UIScreen mainScreen].bounds];
 }
 
+- (void) protectAgainstIteration
+{
+    _childViewControllers = [_childViewControllers mutableCopy];
+}
+
 - (void) addChildViewController:(AP_ViewController*)child
 {
     AP_CHECK(child, return);
@@ -60,8 +65,10 @@
 
     AP_ViewController* p = child->_parentViewController;
     if (p) {
+        [p protectAgainstIteration];
         [p->_childViewControllers removeObject:child];
     }
+    [self protectAgainstIteration];
     [_childViewControllers addObject:child];
     child->_parentViewController = self;
 
@@ -74,6 +81,7 @@
     AP_ViewController* p = _parentViewController;
     if (p) {
         [self willMoveToParentViewController:self];
+        [p protectAgainstIteration];
         [p->_childViewControllers removeObject:self];
         _parentViewController = nil;
         [self didMoveToParentViewController:nil];
