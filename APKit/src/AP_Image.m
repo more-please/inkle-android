@@ -260,12 +260,47 @@ typedef struct VertexData {
     return _size;
 }
 
-AP_BAN_EVIL_INIT
+- (instancetype) init
+{
+    self = [super init];
+    if (self) {
+        static BOOL initialized = NO;
+        if (!initialized) {
+            initialized = YES;
+
+            // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
+            NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
+            if ([vendor hasPrefix:@"Vivante"]) {
+                NSLog(@"Hmm, GL_VENDOR is %@", vendor);
+                NSLog(@"Due to a bug in Vivante's GPU the graphics may look slightly blurry, sorry.");
+                g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteSolidFragment];
+                g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteAlphaFragment];
+            } else {
+                g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
+                g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
+            }
+        }
+        AP_CHECK(g_SolidProg, abort());
+        AP_CHECK(g_AlphaProg, abort());
+
+        _insets = UIEdgeInsetsZero;
+
+        _solidQuads = [NSMutableData data];
+        _alphaQuads = [NSMutableData data];
+
+        _cache = [[AP_StrongCache alloc] initWithSize:20];
+
+        _resizingMode = UIImageResizingModeTile;
+        _imageTransform = CGAffineTransformIdentity;
+    }
+    return self;
+}
+
 
 - (AP_Image*) initWithImage:(AP_Image*)other
 {
     AP_CHECK(other, return nil);
-    self = [super init];
+    self = [self init];
     if (self) {
         _assetName = other->_assetName;
         _insets = other->_insets;
@@ -298,38 +333,6 @@ AP_BAN_EVIL_INIT
     AP_Image* other = [[AP_Image alloc] initWithImage:self];
     other->_scale /= scale;
     return other;
-}
-
-- (void) commonInit
-{
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-
-        // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
-        NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
-        if ([vendor hasPrefix:@"Vivante"]) {
-            NSLog(@"Hmm, GL_VENDOR is %@", vendor);
-            NSLog(@"Due to a bug in Vivante's GPU the graphics may look slightly blurry, sorry.");
-            g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteSolidFragment];
-            g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteAlphaFragment];
-        } else {
-            g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
-            g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
-        }
-    }
-    AP_CHECK(g_SolidProg, abort());
-    AP_CHECK(g_AlphaProg, abort());
-
-    _insets = UIEdgeInsetsZero;
-
-    _solidQuads = [NSMutableData data];
-    _alphaQuads = [NSMutableData data];
-
-    _cache = [[AP_StrongCache alloc] initWithSize:20];
-
-    _resizingMode = UIImageResizingModeTile;
-    _imageTransform = CGAffineTransformIdentity;
 }
 
 - (void) addRaw:(RawQuad)raw solid:(BOOL)solid
@@ -468,10 +471,8 @@ AP_BAN_EVIL_INIT
 
 - (AP_Image*) initWithImage:(AP_Image*)other insets:(UIEdgeInsets)insets
 {
-    self = [super init];
+    self = [self init];
     if (self) {
-        [self commonInit];
-
         _assetName = other->_assetName;
         _texture = other->_texture;
         _size = other->_size;
@@ -517,9 +518,8 @@ AP_BAN_EVIL_INIT
     AP_CHECK(name, return nil);
     AP_CHECK(texture, return nil);
 
-    self = [super init];
+    self = [self init];
     if (self) {
-        [self commonInit];
         _assetName = name;
         _texture = texture;
         _size = CGSizeMake(_texture.width, _texture.height);
@@ -546,9 +546,8 @@ AP_BAN_EVIL_INIT
     AP_CHECK_EQ(sizeof(Header), 8, return nil);
     AP_CHECK_EQ(sizeof(RawQuad), 12, return nil);
 
-    self = [super init];
+    self = [self init];
     if (self) {
-        [self commonInit];
         _assetName = name;
         _scale = scale;
 
