@@ -40,4 +40,6 @@ typedef enum UIImageResizingMode {
 // Draw the image at the given size, with the top-left at 0,0.
 - (void) renderGLWithSize:(CGSize)size transform:(CGAffineTransform)transform alpha:(CGFloat)alpha;
 
+- (instancetype) initWithSize:(CGSize)size scale:(CGFloat)scale;
+
 @end

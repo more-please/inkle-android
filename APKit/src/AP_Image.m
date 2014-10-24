@@ -260,6 +260,16 @@ typedef struct VertexData {
     return _size;
 }
 
+- (instancetype) initWithSize:(CGSize)size scale:(CGFloat)scale
+{
+    self = [self init];
+    if (self) {
+        _size = size;
+        _scale = scale;
+    }
+    return self;
+}
+
 - (instancetype) init
 {
     self = [super init];
