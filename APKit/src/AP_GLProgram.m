@@ -7,8 +7,7 @@ static GLuint compileShader(const GLchar* ptr, GLenum type)
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &ptr, NULL);
     glCompileShader(shader);
-    
-#ifndef NDEBUG
+
     GLint logLength;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
@@ -17,7 +16,6 @@ static GLuint compileShader(const GLchar* ptr, GLenum type)
         NSLog(@"Shader compile log:\n%s", log);
         free(log);
     }
-#endif
 
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -35,7 +33,6 @@ static BOOL linkProgram(GLuint prog)
     GLint status;
     glLinkProgram(prog);
 
-#ifndef NDEBUG
     GLint logLength;
     glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
@@ -44,8 +41,7 @@ static BOOL linkProgram(GLuint prog)
         NSLog(@"Program link log:\n%s", log);
         free(log);
     }
-#endif
-    
+
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
     if (status == 0) {
         return NO;
