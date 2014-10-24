@@ -974,8 +974,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
         float data[8] = {
             r.origin.x, r.origin.y,
-            r.origin.x + r.size.width, r.origin.y,
             r.origin.x, r.origin.y + r.size.height,
+            r.origin.x + r.size.width, r.origin.y,
             r.origin.x + r.size.width, r.origin.y + r.size.height
         };
         [buffer bind];
