@@ -300,33 +300,6 @@ static inline CGFloat aspect(CGSize size) {
         }
     }
 
-    [_profiler step:@"clear"];
-    glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDisable(GL_SCISSOR_TEST);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_SCISSOR_TEST);
-
-    [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
-
-    // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
-    // - scale from screen size to (2, 2).
-    // - translate from (0, 0) to (-1, -1).
-    // - flip vertically.
-
-    CGAffineTransform frameToGL =
-        CGAffineTransformScale(
-            CGAffineTransformTranslate(
-                CGAffineTransformScale(
-                    CGAffineTransformIdentity,
-                    1.0, -1.0),
-                -1.0, -1.0),
-            2.0 / bounds.size.width, 2.0 / bounds.size.height);
-
     [_profiler step:@"update"];
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
@@ -356,10 +329,37 @@ static inline CGFloat aspect(CGSize size) {
         [_rootViewController.view layoutIfNeeded];
     }
 
-    [_profiler step:@"render"];
+    [_profiler step:@"clear"];
 #ifdef ANDROID
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
+    glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDisable(GL_SCISSOR_TEST);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_SCISSOR_TEST);
+
+    [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
+
+    // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
+    // - scale from screen size to (2, 2).
+    // - translate from (0, 0) to (-1, -1).
+    // - flip vertically.
+
+    CGAffineTransform frameToGL =
+        CGAffineTransformScale(
+            CGAffineTransformTranslate(
+                CGAffineTransformScale(
+                    CGAffineTransformIdentity,
+                    1.0, -1.0),
+                -1.0, -1.0),
+            2.0 / bounds.size.width, 2.0 / bounds.size.height);
+
+    [_profiler step:@"render"];
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
         [v renderSelfAndChildrenWithFrameToGL:frameToGL alpha:1];
