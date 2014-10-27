@@ -118,6 +118,7 @@ static NSMutableArray* s_deleteQueue = nil;
         glGenTextures(1, &_name);
         AP_CHECK(_name, return nil);
         _width = _height = 0;
+        _minLevel = 0;
     }
     return self;
 }
