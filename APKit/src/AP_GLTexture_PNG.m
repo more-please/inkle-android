@@ -29,7 +29,6 @@ AP_BAN_EVIL_INIT;
         int w, h, components;
         unsigned char* bytes = stbi_load_from_memory([data bytes], [data length], &w, &h, &components, 0);
         AP_CHECK(bytes, return nil);
-        
         GLenum format;
         if (components == 1) {
             format = GL_LUMINANCE;
@@ -50,11 +49,17 @@ AP_BAN_EVIL_INIT;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+        // glGenerateMipmap() doesn't work properly on the Kindle Fire, bah!
+        // It seems to work for LUMINANCE textures and square textures. Maybe
+        // it's only broken for non-square textures? (e.g. gradients)
+        // The only reliable fix may be to generate mipmaps manually.
+#if 0
         glGenerateMipmap(GL_TEXTURE_2D);
         self.memoryUsage = (4 * self.memoryUsage) / 3;
-        
+#endif
+
         AP_CHECK_GL("Failed to upload PNG texture", return nil);
     }
     return self;
