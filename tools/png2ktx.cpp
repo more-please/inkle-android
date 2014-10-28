@@ -19,7 +19,9 @@ void sys(const string& cmd) {
 void usage() {
     fprintf(stderr,
         "Converts a .png file to .ktx format (with ETC1 compression)\n\n"
-        "Usage: png2ktx -i in.png -o out.ktx\n\n"
+        "Usage: png2ktx [-n] [-s] -i in.png -o out.ktx\n\n"
+        "  -n, --nonperceptual: use non-perceptual error metric\n"
+        "  -s, --slow: high-quality output\n"
         "  -i, --infile: input file\n"
         "  -o, --outfile: output file\n");
     fflush(stderr);
@@ -42,6 +44,8 @@ int main(int argc, const char* argv[]) {
 
     const char* infile = NULL;
     const char* outfile = NULL;
+    bool nonperceptual = false;
+    bool slow = false;
     int width = 0, height = 0, bpp = 0;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
@@ -49,6 +53,10 @@ int main(int argc, const char* argv[]) {
             infile = argv[++i];
         } else if (isFlag(s, "-o", "--outfile")) {
             outfile = argv[++i];
+        } else if (isFlag(s, "-n", "--nonperceptual")) {
+            nonperceptual = true;
+        } else if (isFlag(s, "-s", "--slow")) {
+            slow = true;
         } else {
             fprintf(stderr, "Bad argument '%s'\n\n", s);
             usage();
@@ -67,7 +75,10 @@ int main(int argc, const char* argv[]) {
     string texFile = tempDir + "/temp.ktx";
 
     sys("cd " + binDir + " && ./convert " + infile + " " + ppmFile);
-    sys("cd " + binDir + " && ./etcpack " + ppmFile + " " + tempDir + " -c etc1 -mipmaps -ktx");
+    sys("cd " + binDir + " && ./etcpack " + ppmFile + " " + tempDir
+        + " -e " + (nonperceptual ? "nonperceptual" : "perceptual")
+        + " -s " + (slow ? "slow" : "fast")
+        + " -c etc1 -mipmaps -ktx");
     sys("rm " + ppmFile);
     sys("mv " + texFile + " " + outfile);
     sys("rmdir " + tempDir);
