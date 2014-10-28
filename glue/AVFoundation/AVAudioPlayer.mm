@@ -69,6 +69,12 @@
     _sound->setVolume(volume);
 }
 
+- (void) setNumberOfLoops:(int)i
+{
+    _numberOfLoops = i;
+    _sound->setLoopCount(i);
+}
+
 - (BOOL) prepareToPlay
 {
     return YES;
@@ -84,6 +90,8 @@
     if (!_timer) {
 //        NSLog(@"+++ %@", _name);
         if (_sound->isReady()) {
+            // Cricket resets the loop count after loading the audio file.
+            _sound->setLoopCount(_numberOfLoops);
             _sound->play();
             _timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(playingTimer:) userInfo:nil repeats:YES];
         } else {

@@ -15,7 +15,7 @@
 @property(nonatomic) NSTimeInterval currentTime;
 @property(nonatomic) float pan;
 @property(nonatomic) float volume;
-@property(nonatomic) NSInteger numberOfLoops;
+@property(nonatomic) int numberOfLoops;
 @property(nonatomic,readonly) NSTimeInterval duration;
 
 - (id) initWithResource:(NSString*)resource;
