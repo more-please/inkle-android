@@ -51,11 +51,15 @@ int main(int argc, const char* argv[]) {
     for (int i = 0; i < (w * h * 4); i += 4) {
         for (int j = 0; j < 4; ++j) {
             unsigned char value = 0;
+            unsigned char r = input[i], g = input[i+1], b = input[i+2], a = input[i+3];
+            if (a == 0) {
+                r = g = b = 0;
+            }
             switch (swizzle[j]) {
-                case 'r': case 'R': value = input[i]; break;
-                case 'g': case 'G': value = input[i + 1]; break;
-                case 'b': case 'B': value = input[i + 2]; break;
-                case 'a': case 'A': value = input[i + 3]; break;
+                case 'r': case 'R': value = r; break;
+                case 'g': case 'G': value = g; break;
+                case 'b': case 'B': value = b; break;
+                case 'a': case 'A': value = a; break;
                 case '0': value = 0; break;
                 case '1': value = 255; break;
                 default:
