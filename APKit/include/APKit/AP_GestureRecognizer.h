@@ -50,7 +50,7 @@
 @end
 
 @interface AP_TapGestureRecognizer : AP_GestureRecognizer
-@property (nonatomic) NSUInteger numberOfTapsRequired;       // Default is 1. The number of taps required to match
+@property (nonatomic) int numberOfTapsRequired;       // Default is 1. The number of taps required to match
 @end
 
 @interface AP_LongPressGestureRecognizer : AP_GestureRecognizer

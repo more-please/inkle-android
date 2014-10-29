@@ -172,7 +172,7 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
     NSSet* allTouches = event.allTouches;
     for (AP_Touch* t in _touches) {
         if (![allTouches containsObject:t]) {
-            NSLog(@"Stale touch in gesture recognizer %@, resetting", self);
+//            NSLog(@"Stale touch in gesture recognizer %@, resetting", self);
             [self reset];
             return;
         }
@@ -182,7 +182,20 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
 @end
 
 @implementation AP_TapGestureRecognizer {
-    CGPoint _origin;
+    NSTimeInterval _tapTime;
+    CGPoint _tapPoint;
+    int _tapCount;
+}
+
+static NSTimeInterval kDoubleTapTime = 0.5;
+
+- (id) initWithTarget:(id)target action:(SEL)action
+{
+    self = [super initWithTarget:target action:action];
+    if (self) {
+        _numberOfTapsRequired = 1;
+    }
+    return self;
 }
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
@@ -194,36 +207,27 @@ static inline CGFloat distance(CGPoint a, CGPoint b) {
         for (AP_Touch* t in touches) {
             [self addTouch:t];
         }
-        _origin = [self locationInView:self.view];
-    }
-}
-
-- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
-{
-    [self checkForStaleTouches:event];
-
-    CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
-        [self reset];
+        NSTimeInterval t = event.timestamp;
+        CGPoint p = [self locationInView:self.view];
+        if ((t - _tapTime > kDoubleTapTime) || distance(p, _tapPoint) > self.maxTapDistance) {
+            _tapCount = 0;
+        }
+        ++_tapCount;
+        _tapPoint = p;
+        _tapTime = t;
+        if (_tapCount == _numberOfTapsRequired) {
+            [self fireWithState:UIGestureRecognizerStateEnded];
+        }
     }
 }
 
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
-    [self checkForStaleTouches:event];
+    [self reset];
+}
 
-    CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
-        [self reset];
-        return;
-    }
-    for (AP_Touch* t in self.touches) {
-        if (t.phase != UITouchPhaseEnded) {
-            [super touchesEnded:touches withEvent:event];
-            return;
-        }
-    }
-    [self fireWithState:UIGestureRecognizerStateEnded];
+- (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
+{
     [self reset];
 }
 
