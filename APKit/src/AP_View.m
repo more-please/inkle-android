@@ -546,7 +546,18 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         _subviews = [_subviews mutableCopy];
     }
     AP_CHECK(view, abort());
-    AP_CHECK(view->_superview != self, abort());
+
+    if (view->_superview == self) {
+        // Already have this view, just need to move it.
+        NSInteger i = [_subviews indexOfObject:view];
+        [_subviews removeObject:view];
+        if (i < index) {
+            index -= 1;
+        }
+        [_subviews insertObject:view atIndex:index];
+        [self zOrderChanged];
+        return;
+    }
 
     AP_Window* oldWindow = view.window;
     AP_Window* newWindow = self.window;
