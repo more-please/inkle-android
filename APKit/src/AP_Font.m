@@ -38,10 +38,14 @@
 
 - (AP_Font *)fontWithSize:(CGFloat)fontSize
 {
-    AP_Font* result = [[AP_Font alloc] init];
-    result->_size = fontSize;
-    result->_font = _font;
-    return result;
+    if (fontSize == _size) {
+        return self;
+    } else {
+        AP_Font* result = [[AP_Font alloc] init];
+        result->_size = fontSize;
+        result->_font = _font;
+        return result;
+    }
 }
 
 - (NSString*) fontName

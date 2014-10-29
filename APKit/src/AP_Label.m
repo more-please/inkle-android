@@ -38,6 +38,8 @@
 
     AP_Font_Run* _hitTestRun;
     BOOL _hitTestInside;
+
+    CGFloat _fontScale; // Default 1.0, reduced if needed by adjustsFontSizeToFitWidth
 }
 
 - (void) labelCommonInit
@@ -55,6 +57,8 @@
     _urlRuns = [NSMutableArray array];
 
     _numberOfLines = 1;
+
+    _fontScale = 1.0;
 }
 
 - (id) init
@@ -169,7 +173,7 @@
 {
     [self textLayoutWithWidth:size.width];
     while (_numberOfLines > 0 && _formattedLineCount > _numberOfLines && _formattedSize.width > 0) {
-        size.width = MAX(size.width, _formattedSize.width) * 1.2;
+        size.width = MAX(size.width, _formattedSize.width) * 1.1;
         [self textLayoutWithWidth:size.width];
     }
     return _formattedSize;
@@ -335,6 +339,17 @@
         return;
     }
 
+    _fontScale = 1.0;
+    [self scaledTextLayoutWithWidth:width];
+
+    if (_adjustsFontSizeToFitWidth && _formattedSize.width > width) {
+        _fontScale = MAX(0.1, width / _formattedSize.width);
+        [self scaledTextLayoutWithWidth:width];
+    }
+}
+
+- (void) scaledTextLayoutWithWidth:(CGFloat)width
+{
     NSString* str = [_text string];
 
     INKAttributedStringParagraphStyle* defaultStyle = [INKAttributedStringParagraphStyle style];
@@ -357,6 +372,8 @@
         if (!font) {
             font = defaultFont;
         }
+        font = [font fontWithSize:(font.pointSize * _fontScale)];
+
         UIColor* color = [attrs objectForKey:kINKAttributedStringColorAttribute];
         if (!color) {
             color = defaultColor;
@@ -388,12 +405,14 @@
                 }
 
                 AP_Font_Run* nextLine;
-                AP_Font_Run* line = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
-                if (line.numChars == 0 && _atStartOfLine) {
-                    // Just split at the first place we can.
-                    line = [run splitAtWordBreakLeaving:&nextLine];
+                if (_numberOfLines != 1) {
+                    AP_Font_Run* line = [run splitAtWidth:(_layoutWidth + _currentStyle.tailIndent - _cursor.x) leaving:&nextLine];
+                    if (line.numChars == 0 && _atStartOfLine) {
+                        // Just split at the first place we can.
+                        line = [run splitAtWordBreakLeaving:&nextLine];
+                    }
+                    run = line;
                 }
-                run = line;
                 run.url = url;
 
                 if (run.numChars > 0) {
