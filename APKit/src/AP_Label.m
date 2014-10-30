@@ -177,9 +177,11 @@
         [self textLayoutWithWidth:size.width];
     }
     // If we auto-scaled to fit the given size, return our preferred size.
+    // Also add a little buffer to ensure we don't set the label to exactly
+    // this size, then find due to numerical error that it no longer fits.
     CGSize result = {
-        _formattedSize.width / _fontScale,
-        _formattedSize.height / _fontScale
+        _formattedSize.width / _fontScale + 0.1,
+        _formattedSize.height / _fontScale + 0.1
     };
     return result;
 }
