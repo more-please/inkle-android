@@ -109,6 +109,14 @@
     return nil;
 }
 
+- (UIInterfaceOrientation) interfaceOrientation
+{
+    CGSize s = [UIScreen mainScreen].bounds.size;
+    return (s.width > s.height)
+        ? UIInterfaceOrientationLandscapeLeft
+        : UIInterfaceOrientationPortrait;
+}
+
 - (void) updateGL:(float)dt {}
 
 @end
