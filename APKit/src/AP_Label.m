@@ -239,23 +239,29 @@
 
 - (void) setTextColor:(UIColor*)color
 {
-    _textColor = color;
-    [_text setTextColor:color];
-    [self setNeedsTextLayout];
+    if (!GLKVector4AllEqualToVector4(color.rgba, _textColor.rgba)) {
+        _textColor = color;
+        [_text setTextColor:color];
+        [self setNeedsTextLayout];
+    }
 }
 
 - (void) setTextAlignment:(NSTextAlignment)alignment
 {
-    _alignment = alignment;
-    [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(alignment)];
-    [self setNeedsTextLayout];
+    if (alignment != _alignment) {
+        _alignment = alignment;
+        [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(alignment)];
+        [self setNeedsTextLayout];
+    }
 }
 
 - (void) setLineSpacingAdjustment:(CGFloat)adjustment
 {
-    _lineSpacing = adjustment;
-    [_text setLineSpacingAdjustment:adjustment];
-    [self setNeedsTextLayout];
+    if (adjustment != _lineSpacing) {
+        _lineSpacing = adjustment;
+        [_text setLineSpacingAdjustment:adjustment];
+        [self setNeedsTextLayout];
+    }
 }
 
 - (void) setShadowColor:(UIColor*)color
@@ -356,6 +362,7 @@
 - (void) scaledTextLayoutWithWidth:(CGFloat)width
 {
     NSString* str = [_text string];
+//    NSLog(@"%@ layout w=%f {%@}", self, width, str);
 
     INKAttributedStringParagraphStyle* defaultStyle = [INKAttributedStringParagraphStyle style];
     AP_Font* defaultFont = [AP_Font systemFontOfSize:17];
