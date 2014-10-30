@@ -11,6 +11,9 @@
     NSMutableDictionary* _backgroundImage;
     NSMutableDictionary* _backgroundColor;
     BOOL _needsStateRefresh;
+
+    AP_Label* _titleLabel;
+    AP_ImageView* _imageView;
 }
 
 + (AP_Button*) buttonWithType:(UIButtonType)buttonType
@@ -62,6 +65,18 @@
         [self commonButtonInit];
     }
     return self;
+}
+
+- (AP_Label*) titleLabel
+{
+    [self refreshStateIfNeeded];
+    return _titleLabel;
+}
+
+- (AP_ImageView*) imageView
+{
+    [self refreshStateIfNeeded];
+    return _imageView;
 }
 
 - (void) layoutSubviews
