@@ -176,7 +176,12 @@
         size.width = MAX(size.width, _formattedSize.width) * 1.1;
         [self textLayoutWithWidth:size.width];
     }
-    return _formattedSize;
+    // If we auto-scaled to fit the given size, return our preferred size.
+    CGSize result = {
+        _formattedSize.width / _fontScale,
+        _formattedSize.height / _fontScale
+    };
+    return result;
 }
 
 - (void) setAttributedText:(NSAttributedString *)attributedText
@@ -342,7 +347,7 @@
     _fontScale = 1.0;
     [self scaledTextLayoutWithWidth:width];
 
-    if (_adjustsFontSizeToFitWidth && _formattedSize.width > width) {
+    if (_adjustsFontSizeToFitWidth && width > 0 && _formattedSize.width > width) {
         _fontScale = MAX(0.1, width / _formattedSize.width);
         [self scaledTextLayoutWithWidth:width];
     }
