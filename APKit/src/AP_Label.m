@@ -7,6 +7,7 @@
 
 #import "AP_Application.h"
 #import "AP_Check.h"
+#import "AP_Control.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
@@ -482,7 +483,15 @@
     [self textLayoutWithWidth:bounds.size.width];
     AP_CHECK(_formattedRuns, return);
 
-    if (_centerVertically || _numberOfLines == 1) {
+    // Attempt to replicate the behaviour of UIControl.contentVerticalAlignment.
+    // Apparently this "specifies the alignment of text or image within the receiver"
+    // but the docs don't explain about how it does this, except to say that the
+    // default is 'top'. It's actually 'centre', so fucking thanks for that, Apple.
+    // Let's just assume that any label whose immediate parent is a UIControl should
+    // be centered vertically. This is nasty but should work for our purposes.
+    BOOL stupidVerticalAlignmentHack = [self.superview isKindOfClass:[AP_Control class]];
+
+    if (_centerVertically || _numberOfLines == 1 || stupidVerticalAlignmentHack) {
         CGFloat yGap = bounds.size.height - _formattedSize.height;
         boundsToGL = CGAffineTransformTranslate(boundsToGL, 0, yGap / 2);
     }
