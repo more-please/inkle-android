@@ -33,11 +33,11 @@ static AP_Animation* g_CurrentAnimation = nil;
 {
     if (_animation != animation) {
         if (_animation) {
+            AP_Animation* oldAnimation = _animation;
             if (animation.options & UIViewAnimationOptionBeginFromCurrentState) {
-                [self leaveAnimation];
-            } else {
-                [_animation removeProp:self];
+                [self animationWasCancelled];
             }
+            [oldAnimation removeProp:self];
         }
         _animation = animation;
         if (_animation) {
