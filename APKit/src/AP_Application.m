@@ -44,4 +44,12 @@ static AP_Application* g_Application;
     AP_NOT_IMPLEMENTED;
 }
 
+- (UIInterfaceOrientation) statusBarOrientation
+{
+    CGSize s = [UIScreen mainScreen].bounds.size;
+    return (s.width > s.height)
+        ? UIInterfaceOrientationLandscapeLeft
+        : UIInterfaceOrientationPortrait;
+}
+
 @end

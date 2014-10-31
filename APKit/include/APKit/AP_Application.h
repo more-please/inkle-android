@@ -34,7 +34,7 @@
 
 // FIXME -- needs to be properly implemented!
 @property(nonatomic,readonly) AP_Window *keyWindow;
-@property(nonatomic) UIInterfaceOrientation statusBarOrientation;
+@property(nonatomic,readonly) UIInterfaceOrientation statusBarOrientation;
 
 - (BOOL) openURL:(NSURL*)url;
 - (BOOL) canOpenURL:(NSURL*)url;
