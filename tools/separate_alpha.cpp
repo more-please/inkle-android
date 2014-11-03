@@ -10,9 +10,9 @@
 void usage() {
     fprintf(stderr,
         "Turn an RGBA image into RGB, with the alpha channel appended horizontally.\n\n"
-        "Usage: separate_alpha -i in.png -o out.png\n\n"
-        "  -i, --infile: input file\n"
-        "  -o, --outfile: output file\n");
+        "Usage: separate_alpha [-i in.png] [-o out.png]\n\n"
+        "  -i, --infile: input file (default is stdin)\n"
+        "  -o, --outfile: output file (default is stdout)\n");
     fflush(stderr);
     exit(1);
 }
@@ -22,32 +22,26 @@ bool isFlag(const char* s, const char* flag1, const char* flag2) {
 }
 
 int main(int argc, const char* argv[]) {
-    const char* infile = NULL;
-    const char* outfile = NULL;
+    FILE* infile = stdin;
+    FILE* outfile = stdout;
     int width = 0, height = 0, bpp = 0;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
         if (isFlag(s, "-i", "--infile")) {
-            infile = argv[++i];
+            infile = fopen(argv[++i], "rb");
         } else if (isFlag(s, "-o", "--outfile")) {
-            outfile = argv[++i];
+            outfile = fopen(argv[++i], "wb");
         } else {
             fprintf(stderr, "Bad argument '%s'\n\n", s);
             usage();
         }
     }
-    if (!infile || !outfile) {
-        usage();
-    }
 
-    fprintf(stderr, "Reading %s\n", infile);
     int w, h, comp;
-    unsigned char* input = stbi_load(infile, &w, &h, &comp, 4);
+    unsigned char* input = stbi_load_from_file(infile, &w, &h, &comp, 4);
 
-    fprintf(stderr, "Fixing alpha...\n");
     fix_alpha(w, h, input);
 
-    fprintf(stderr, "Unpacking...\n");
     unsigned char* output = (unsigned char*) malloc(w * 2 * h * 3);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
@@ -60,7 +54,6 @@ int main(int argc, const char* argv[]) {
             }
         }
     }
-    fprintf(stderr, "Writing %s\n", outfile);
-    stbi_write_png(outfile, w * 2, h, 3, output, w * 6);
+    stbi_write_png_to_file(outfile, w * 2, h, 3, output, w * 6);
     return 0;
 }
