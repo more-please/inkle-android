@@ -1,0 +1,57 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "stb_image.h"
+#include "stb_image_resize.h"
+#include "stb_image_write.h"
+
+void usage() {
+    fprintf(stderr,
+        "Scale the input up (or slightly down) so its dimensions are exact powers of two.\n\n"
+        "Usage: power_of_two [-i in.png] [-o out.png]\n\n"
+        "  -i, --infile: input file (default is stdin)\n"
+        "  -o, --outfile: output file (default is stdout)\n");
+    fflush(stderr);
+    exit(1);
+}
+
+bool isFlag(const char* s, const char* flag1, const char* flag2) {
+    return strcmp(s, flag1) == 0 || strcmp(s, flag2) == 0;
+}
+
+int main(int argc, const char* argv[]) {
+    FILE* infile = stdin;
+    FILE* outfile = stdout;
+    int width = 0, height = 0, bpp = 0;
+    for (int i = 1; i < argc; ++i) {
+        const char* s = argv[i];
+        if (isFlag(s, "-i", "--infile")) {
+            infile = fopen(argv[++i], "rb");
+        } else if (isFlag(s, "-o", "--outfile")) {
+            outfile = fopen(argv[++i], "wb");
+        } else {
+            fprintf(stderr, "Bad argument '%s'\n\n", s);
+            usage();
+        }
+    }
+
+    int w, h, comp;
+    unsigned char* input = stbi_load_from_file(infile, &w, &h, &comp, 0);
+
+    int w2 = 1, h2 = 1;
+    double k = 1.1; // Allow images to be shrunk by this amount
+    while (k * w2 < w) w2 *= 2;
+    while (k * h2 < h) h2 *= 2;
+
+    unsigned char* output = (unsigned char*) malloc(w2 * h2 * comp);
+    int alpha_channel = STBIR_ALPHA_CHANNEL_NONE;
+    if (comp == 2) alpha_channel = 1;
+    if (comp == 4) alpha_channel = 3;
+    stbir_resize_uint8_srgb(input, w, h, w * comp, output, w2, h2, w2 * comp, comp, alpha_channel, 0);
+    
+    stbi_write_png_to_file(outfile, w2, h2, comp, output, w2 * comp);
+
+    return 0;
+}

@@ -7,14 +7,16 @@ CXX = clang++ -x c++ -O3 -std=c++11 -I./3rd-party/stb -I./3rd-party/imgtec.com
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
-	3rd-party/stb/stb_image_write.h \
 	3rd-party/stb/stb_image.h \
+	3rd-party/stb/stb_image_resize.h \
+	3rd-party/stb/stb_image_write.h \
 	3rd-party/stb/stb_truetype.h
 
 COMMON_SRCS = \
 	tools/file_scanner.cpp \
-	3rd-party/stb/stb_image_write.c \
 	3rd-party/stb/stb_image.c \
+	3rd-party/stb/stb_image_resize.c \
+	3rd-party/stb/stb_image_write.c \
 	3rd-party/stb/stb_truetype.c
 
 all: \
@@ -28,7 +30,9 @@ all: \
 		build/bin/bbox \
 		build/bin/png2ktx \
 		build/bin/pvr2png \
-		build/bin/swizzle
+		build/bin/swizzle \
+		build/bin/separate_alpha \
+		build/bin/power_of_two
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
@@ -79,9 +83,17 @@ build/bin/pvr2png: tools/pvr2png.cpp \
 	mkdir -p build/bin
 	$(CXX) tools/pvr2png.cpp 3rd-party/imgtec.com/PVRTDecompress.cpp $(COMMON_SRCS) -o build/bin/pvr2png
 
-build/bin/swizzle: tools/swizzle.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+build/bin/swizzle: tools/swizzle.cpp $(COMMON_SRCS) $(COMMON_HEADERS) tools/fix_alpha.h
 	mkdir -p build/bin
 	$(CXX) tools/swizzle.cpp $(COMMON_SRCS) -o build/bin/swizzle
+
+build/bin/separate_alpha: tools/separate_alpha.cpp $(COMMON_SRCS) $(COMMON_HEADERS) tools/fix_alpha.h
+	mkdir -p build/bin
+	$(CXX) tools/separate_alpha.cpp $(COMMON_SRCS) -o build/bin/separate_alpha
+
+build/bin/power_of_two: tools/power_of_two.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/power_of_two.cpp $(COMMON_SRCS) -o build/bin/power_of_two
 
 clean:
 	rm build/bin/*
