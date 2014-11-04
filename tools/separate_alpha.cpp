@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "fix_alpha.h"
+#include "read_entire_file.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -22,13 +23,13 @@ bool isFlag(const char* s, const char* flag1, const char* flag2) {
 }
 
 int main(int argc, const char* argv[]) {
-    FILE* infile = stdin;
+    const char* infile = NULL;
     FILE* outfile = stdout;
     int width = 0, height = 0, bpp = 0;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
         if (isFlag(s, "-i", "--infile")) {
-            infile = fopen(argv[++i], "rb");
+            infile = argv[++i];
         } else if (isFlag(s, "-o", "--outfile")) {
             outfile = fopen(argv[++i], "wb");
         } else {
@@ -37,8 +38,10 @@ int main(int argc, const char* argv[]) {
         }
     }
 
+    std::vector<unsigned char> file = read_entire_file(infile);
+
     int w, h, comp;
-    unsigned char* input = stbi_load_from_file(infile, &w, &h, &comp, 4);
+    unsigned char* input = stbi_load_from_memory(&file[0], file.size(), &w, &h, &comp, 4);
 
     fix_alpha(w, h, input);
 

@@ -7,6 +7,8 @@ CXX = clang++ -x c++ -O3 -std=c++11 -I./3rd-party/stb -I./3rd-party/imgtec.com
 
 COMMON_HEADERS = \
 	tools/file_scanner.h \
+	tools/fix_alpha.h \
+	tools/read_entire_file.h \
 	3rd-party/stb/stb_image.h \
 	3rd-party/stb/stb_image_resize.h \
 	3rd-party/stb/stb_image_write.h \
@@ -83,11 +85,11 @@ build/bin/pvr2png: tools/pvr2png.cpp \
 	mkdir -p build/bin
 	$(CXX) tools/pvr2png.cpp 3rd-party/imgtec.com/PVRTDecompress.cpp $(COMMON_SRCS) -o build/bin/pvr2png
 
-build/bin/swizzle: tools/swizzle.cpp $(COMMON_SRCS) $(COMMON_HEADERS) tools/fix_alpha.h
+build/bin/swizzle: tools/swizzle.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/swizzle.cpp $(COMMON_SRCS) -o build/bin/swizzle
 
-build/bin/separate_alpha: tools/separate_alpha.cpp $(COMMON_SRCS) $(COMMON_HEADERS) tools/fix_alpha.h
+build/bin/separate_alpha: tools/separate_alpha.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/separate_alpha.cpp $(COMMON_SRCS) -o build/bin/separate_alpha
 
