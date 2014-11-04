@@ -19,11 +19,11 @@ void sys(const string& cmd) {
 void usage() {
     fprintf(stderr,
         "Converts a .png file to .ktx format (with ETC1 compression)\n\n"
-        "Usage: png2ktx [-n] [-s] -i in.png -o out.ktx\n\n"
+        "Usage: png2ktx [-n] [-s] [-i in.png] [-o out.ktx]\n\n"
         "  -n, --nonperceptual: use non-perceptual error metric\n"
         "  -s, --slow: high-quality output\n"
-        "  -i, --infile: input file\n"
-        "  -o, --outfile: output file\n");
+        "  -i, --infile: input file (default is stdin)\n"
+        "  -o, --outfile: output file (default is stdout)\n");
     fflush(stderr);
     exit(1);
 }
@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]) {
     }
     ANDROID_DIR = ANDROID_DIR + "/../..";
 
-    const char* infile = NULL;
+    const char* infile = "-";
     const char* outfile = NULL;
     bool nonperceptual = false;
     bool slow = false;
@@ -62,9 +62,6 @@ int main(int argc, const char* argv[]) {
             usage();
         }
     }
-    if (!infile || !outfile) {
-        usage();
-    }
 
     string binDir = ANDROID_DIR + "/3rd-party/bin";
 
@@ -80,7 +77,12 @@ int main(int argc, const char* argv[]) {
         + " -s " + (slow ? "slow" : "fast")
         + " -c etc1 -mipmaps -ktx");
     sys("rm " + ppmFile);
-    sys("mv " + texFile + " " + outfile);
+    if (outfile) {
+        sys("mv " + texFile + " " + outfile);
+    } else {
+        sys("cat " + texFile);
+        sys("rm " + texFile);
+    }
     sys("rmdir " + tempDir);
     return 0;
 }
