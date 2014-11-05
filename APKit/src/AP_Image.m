@@ -15,14 +15,15 @@
 #import "NSObject+AP_KeepAlive.h"
 
 @interface AP_Image_Program : AP_GLProgram
-@property GLint transform;
-@property GLint stretch;
-@property GLint alpha;
-@property GLint tint;
-@property GLint texture;
-@property GLint edgePos;
-@property GLint stretchPos;
-@property GLint texCoord;
+@property (nonatomic) GLint transform;
+@property (nonatomic) GLint stretch;
+@property (nonatomic) GLint alpha;
+@property (nonatomic) GLint tint;
+@property (nonatomic) GLint texture;
+@property (nonatomic) GLint alphaTexture;
+@property (nonatomic) GLint edgePos;
+@property (nonatomic) GLint stretchPos;
+@property (nonatomic) GLint texCoord;
 @end
 
 @implementation AP_Image_Program
@@ -38,11 +39,20 @@ AP_BAN_EVIL_INIT
         _alpha = [self uniform:@"alpha"];
         _tint = [self uniform:@"tint"];
         _texture = [self uniform:@"texture"];
+        _alphaTexture = -1; // Lazy initialize
         _edgePos = [self attr:@"edgePos"];
         _stretchPos = [self attr:@"stretchPos"];
         _texCoord = [self attr:@"texCoord"];
     }
     return self;
+}
+
+- (GLint) alphaTexture
+{
+    if (_alphaTexture < 0) {
+        _alphaTexture = [self uniform:@"alphaTexture"];
+    }
+    return _alphaTexture;
 }
 
 @end
@@ -54,15 +64,11 @@ static const char* kVertex = AP_SHADER(
     attribute vec2 stretchPos;
     attribute vec2 texCoord;
     varying vec2 f_texCoord;
-    varying vec2 f_leftTexCoord;
-    varying vec2 f_rightTexCoord;
     void main() {
         vec2 pos = edgePos + stretch * stretchPos;
         vec3 tpos = transform * vec3(pos, 1.0);
         gl_Position = vec4(tpos, 1.0);
         f_texCoord = texCoord;
-        f_leftTexCoord = f_texCoord * vec2(0.5, 1.0);
-        f_rightTexCoord = f_leftTexCoord + vec2(0.5, 0.0);
     }
 );
 
@@ -92,19 +98,19 @@ static const char* kFragment3 = AP_SHADER(
     }
 );
 
-// RGB on the left, alpha on the right.
+// RGB and alpha in separate textures.
 static const char* kFragment4 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
     uniform sampler2D texture;
-    varying vec2 f_leftTexCoord;
-    varying vec2 f_rightTexCoord;
+    uniform sampler2D alphaTexture;
+    varying vec2 f_texCoord;
     void main() {
-        vec3 pixel = texture2D(texture, f_leftTexCoord).rgb;
+        vec3 pixel = texture2D(texture, f_texCoord).rgb;
         vec3 tinted = mix(pixel, tint.rgb, tint.a);
-        float pixelAlpha = texture2D(texture, f_rightTexCoord).g;
+        float pixelAlpha = texture2D(alphaTexture, f_texCoord).g;
         gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
-    }
+    }1
 );
 
 static AP_Image_Program* g_Prog2;
@@ -151,6 +157,7 @@ typedef struct VertexData {
 @implementation AP_Image {
     AP_Image_Program* _prog;
     AP_GLTexture* _texture;
+    AP_GLTexture* _alphaTexture;
     CGSize _size;
     NSMutableData* _quads;
     GLKVector4 _tint;
@@ -266,6 +273,7 @@ typedef struct VertexData {
 
         _prog = other->_prog;
         _texture = other->_texture;
+        _alphaTexture = other->_alphaTexture;
         _size = other->_size;
         _quads = other->_quads;
         _tint = other->_tint;
@@ -428,6 +436,7 @@ typedef struct VertexData {
         _assetName = other->_assetName;
         _prog = other->_prog;
         _texture = other->_texture;
+        _alphaTexture = other->_alphaTexture;
         _size = other->_size;
         _scale = other->_scale;
         _tint = other->_tint;
@@ -507,7 +516,6 @@ typedef struct VertexData {
         CGFloat iphoneArea = img->iphoneWidth * img->iphoneHeight;
         _scale = [AP_Window scaleForIPhone:(2.0 * ipadArea / iphoneArea) iPad:2.0];
 
-        NSLog(@"*** Image: %@ channels: %d size: %f x %f scale: %f", _assetName, img->channels, _size.width, _size.height, _scale);
         switch (img->channels) {
             case 2:
                 _prog = g_Prog2;
@@ -527,6 +535,12 @@ typedef struct VertexData {
         NSString* texName = [_assetName stringByAppendingString:@".ktx"];
         _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
         AP_CHECK(_texture, return nil);
+
+        if (img->channels == 4) {
+            NSString* alphaName = [_assetName stringByAppendingString:@".alpha.ktx"];
+            _alphaTexture = [AP_GLTexture textureNamed:alphaName maxSize:2.15];
+            AP_CHECK(_alphaTexture, return nil);
+        }
 
         RawQuad q;
         q.x = 0;
@@ -752,6 +766,11 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         transform.c, transform.d, 0,
         transform.tx, transform.ty, 1);
 
+    if (_alphaTexture) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, _alphaTexture.name);
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture.name);
 
@@ -760,6 +779,9 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     [e.indexBuffer bind];
 
     glUniform1i(_prog.texture, 0);
+    if (_alphaTexture) {
+        glUniform1i(_prog.alphaTexture, 1);
+    }
     glUniform1f(_prog.alpha, alpha);
     glUniformMatrix3fv(_prog.transform, 1, false, matrix.m);
     glUniform2f(_prog.stretch, stretchScale.width, stretchScale.height);
