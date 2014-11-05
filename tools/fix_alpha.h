@@ -7,10 +7,7 @@
 // Update the color of transparent pixels to be the average of nearby opaque pixels.
 // This fixes mip-mapping artifacts such as color fringing.
 void fix_alpha(int w, int h, unsigned char* data) {
-    if (w <= 1 || h <= 1) {
-        // Can't scale down any further, just ensure the alpha is non-zero.
-        data[3] = 255;
-    } else {
+    if (w > 1 && h > 1) {
         // Scale the image down by a factor of 2, summing each 2x2 pixel block.
         int w2 = (w+1) / 2;
         int h2 = (h+1) / 2;
