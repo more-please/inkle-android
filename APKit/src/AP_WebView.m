@@ -195,7 +195,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
         AP_Image* image = nil;
         if (src) {
-            image = [AP_Image imageWithContentsOfFileNamedAuto:src];
+            image = [AP_Image imageNamed:src];
         }
         if (image) {
             if (width) {

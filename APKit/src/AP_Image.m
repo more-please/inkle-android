@@ -53,81 +53,72 @@ static const char* kVertex = AP_SHADER(
     attribute vec2 edgePos;
     attribute vec2 stretchPos;
     attribute vec2 texCoord;
-    varying vec2 solidTexCoord;
-    varying vec2 alphaTexCoord;
+    varying vec2 f_texCoord;
+    varying vec2 f_leftTexCoord;
+    varying vec2 f_rightTexCoord;
     void main() {
         vec2 pos = edgePos + stretch * stretchPos;
         vec3 tpos = transform * vec3(pos, 1);
         gl_Position = vec4(tpos, 1);
-        solidTexCoord = texCoord;
-        alphaTexCoord = vec2(1.0 - texCoord.x, texCoord.y);
+        f_texCoord = texCoord;
+        f_leftTexCoord = f_texCoord * vec2(0.5, 1.0);
+        f_rightTexCoord = f_leftTexCoord + vec2(0.5, 0.0);
     }
 );
 
-static const char* kAlphaFragment = AP_SHADER(
+// Luminance-Alpha, swizzled into Red and Green respectively.
+static const char* kFragment2 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
-    varying vec2 solidTexCoord;
-    varying vec2 alphaTexCoord;
     uniform sampler2D texture;
+    varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = texture2D(texture, solidTexCoord, -1.0);
-        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
-        float pixelAlpha = texture2D(texture, alphaTexCoord).g;
-        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
-    }
-);
-
-static const char* kSolidFragment = AP_SHADER(
-    uniform float alpha;
-    uniform vec4 tint;
-    varying vec2 solidTexCoord;
-    uniform sampler2D texture;
-    void main() {
-        vec4 pixel = texture2D(texture, solidTexCoord, -1.0);
+        vec4 pixel = texture2D(texture, f_texCoord).gggr;
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
     }
 );
 
-// HACKY WORKAROUND for Vivante GPU bug -- it can't seem to do two texture
-// lookups with a bias. We bias towards the larger mipmap to sharpen the
-// image, and we need to do two lookups when there's an alpha channel.
-static const char* kVivanteAlphaFragment = AP_SHADER(
+// Normal RGB.
+static const char* kFragment3 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
-    varying vec2 solidTexCoord;
-    varying vec2 alphaTexCoord;
     uniform sampler2D texture;
+    varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = texture2D(texture, solidTexCoord);
-        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
-        float pixelAlpha = texture2D(texture, alphaTexCoord).g;
-        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
-    }
-);
-static const char* kVivanteSolidFragment = AP_SHADER(
-    uniform float alpha;
-    uniform vec4 tint;
-    varying vec2 solidTexCoord;
-    uniform sampler2D texture;
-    void main() {
-        vec4 pixel = texture2D(texture, solidTexCoord);
+        vec4 pixel = texture2D(texture, f_texCoord);
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
     }
 );
-// END OF HACK
 
-static AP_Image_Program* g_SolidProg;
-static AP_Image_Program* g_AlphaProg;
+// RGB on the left, alpha on the right.
+static const char* kFragment4 = AP_SHADER(
+    uniform float alpha;
+    uniform vec4 tint;
+    uniform sampler2D texture;
+    varying vec2 f_leftTexCoord;
+    varying vec2 f_rightTexCoord;
+    void main() {
+        vec4 pixel = texture2D(texture, f_leftTexCoord);
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        float pixelAlpha = texture2D(texture, f_rightTexCoord).g;
+        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
+    }
+);
 
-typedef struct Header {
-    int16_t width;
-    int16_t height;
-    int16_t numAlpha;
-    int16_t numSolid;
-} Header;
+static AP_Image_Program* g_Prog2;
+static AP_Image_Program* g_Prog3;
+static AP_Image_Program* g_Prog4;
+
+// Contents of the .img file
+typedef struct Img {
+    uint32_t channels;
+    uint32_t iphoneWidth;
+    uint32_t iphoneHeight;
+    uint32_t ipadWidth;
+    uint32_t ipadHeight;
+} Img;
 
 typedef struct RawQuad {
     int16_t x, y;
@@ -149,8 +140,7 @@ typedef struct VertexData {
 
 // This holds the actual GL data. It can vary depending on the tiling.
 @interface AP_Image_CacheEntry : NSObject
-@property(nonatomic) int numSolid;
-@property(nonatomic) int numAlpha;
+@property(nonatomic) int numQuads;
 @property(nonatomic,strong) AP_GLBuffer* arrayBuffer;
 @property(nonatomic,strong) AP_GLBuffer* indexBuffer;
 @end
@@ -159,39 +149,15 @@ typedef struct VertexData {
 @end
 
 @implementation AP_Image {
+    AP_Image_Program* _prog;
     AP_GLTexture* _texture;
     CGSize _size;
-    NSMutableData* _solidQuads;
-    NSMutableData* _alphaQuads;
+    NSMutableData* _quads;
     GLKVector4 _tint;
     CGAffineTransform _imageTransform;
 
     // Cache of (xTile, yTile) -> AP_Image_CacheEntry
     AP_StrongCache* _cache;
-}
-
-+ (AP_Image*) imageNamed:(NSString *)name
-{
-    AP_Image* result = [AP_Image imageNamed:name scale:2];
-    return result;
-}
-
-+ (AP_Image*) imageWithContentsOfFileNamedAuto:(NSString*)name
-{
-    // This is typically a 4x image for retina iPads (2048x1536 screen).
-    // Adjust the scale proportionately to the size of the screen.
-    // GL has been set up as if for a non-retina screen, so we include
-    // a 2x factor for that.
-    CGFloat scale = [AP_Window scaleForIPhone:4.0 iPad:2.0];
-    AP_Image* result = [AP_Image imageNamed:name scale:scale];
-    return result;
-}
-
-+ (AP_Image*) imageWithContentsOfFileNamed2x:(NSString*)name
-{
-    // This is a 2x image for retina iPhones or iPads.
-    AP_Image* result = [AP_Image imageNamed:name scale:2];
-    return result;
 }
 
 - (AP_Image*) CGImage
@@ -204,19 +170,13 @@ typedef struct VertexData {
     return [[AP_Image alloc] initWithCGImage:cgImage scale:scale orientation:orientation];
 }
 
-+ (AP_Image*) imageNamed:(NSString*)name scale:(CGFloat)scale
++ (AP_Image*) imageNamed:(NSString*)name
 {
     AP_CHECK(name, return nil);
-    NSString* img;
-    if ([name hasSuffix:@".png.img"]) {
-        img = name;
-    } else if ([name hasSuffix:@".png"] || [name hasSuffix:@".jpg"]) {
-        img = [name stringByAppendingString:@".img"];
-    } else {
-        img = [name stringByAppendingString:@".png.img"];
-    }
-
-    NSString* tex = [img stringByDeletingPathExtension];
+    name = [name stringByDeletingPathExtension];
+    NSString* img = [name stringByAppendingString:@".img"];
+    NSString* ktx = [name stringByAppendingString:@".ktx"];
+    NSString* png = [name stringByAppendingString:@".png"];
 
     static AP_WeakCache* g_ImageCache;
     if (!g_ImageCache) {
@@ -227,26 +187,24 @@ typedef struct VertexData {
     AP_Image* result = [g_ImageCache get:img withLoader:^{
         NSData* data = [AP_Bundle dataForResource:img ofType:nil];
         if (data) {
-            return [[AP_Image alloc] initWithName:img data:data scale:scale];
+            return [[AP_Image alloc] initWithName:name data:data];
         }
 
-        AP_GLTexture* texture = [AP_GLTexture textureNamed:tex maxSize:2.15];
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:ktx maxSize:2.15];
         if (texture) {
-            return [[AP_Image alloc] initWithName:img texture:texture scale:scale];
+            return [[AP_Image alloc] initWithName:name texture:texture];
         }
 
-        NSLog(@"Failed to load image: %@", tex);
+        texture = [AP_GLTexture textureNamed:png maxSize:2.15];
+        if (texture) {
+            return [[AP_Image alloc] initWithName:name texture:texture];
+        }
+
+        NSLog(@"Failed to load image: %@", name);
         return (AP_Image*)nil;
     }];
 
     AP_CHECK([result isKindOfClass:[AP_Image class]], abort());
-
-    if (result.scale != scale) {
-        // This can happen if the image was cached before the screen was rotated.
-        result = [[AP_Image alloc] initWithImage:result];
-        result->_scale = scale;
-    }
-
     return result;
 }
 
@@ -277,31 +235,21 @@ typedef struct VertexData {
         static BOOL initialized = NO;
         if (!initialized) {
             initialized = YES;
-
-            // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
-            NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
-            if ([vendor hasPrefix:@"Vivante"]) {
-                NSLog(@"Hmm, GL_VENDOR is %@", vendor);
-                NSLog(@"Due to a bug in Vivante's GPU the graphics may look slightly blurry, sorry.");
-                g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteSolidFragment];
-                g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kVivanteAlphaFragment];
-            } else {
-                g_SolidProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kSolidFragment];
-                g_AlphaProg = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kAlphaFragment];
-            }
+            g_Prog2 = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment2];
+            g_Prog3 = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment3];
+            g_Prog4 = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment4];
         }
-        AP_CHECK(g_SolidProg, abort());
-        AP_CHECK(g_AlphaProg, abort());
+        AP_CHECK(g_Prog2, abort());
+        AP_CHECK(g_Prog3, abort());
+        AP_CHECK(g_Prog4, abort());
 
+        _prog = g_Prog3;
         _insets = UIEdgeInsetsZero;
-
-        _solidQuads = [NSMutableData data];
-        _alphaQuads = [NSMutableData data];
-
-        _cache = [[AP_StrongCache alloc] initWithSize:20];
-
+        _quads = [NSMutableData data];
         _resizingMode = UIImageResizingModeTile;
         _imageTransform = CGAffineTransformIdentity;
+
+        _cache = [[AP_StrongCache alloc] initWithSize:20];
     }
     return self;
 }
@@ -316,10 +264,10 @@ typedef struct VertexData {
         _insets = other->_insets;
         _scale = other->_scale;
 
+        _prog = other->_prog;
         _texture = other->_texture;
         _size = other->_size;
-        _solidQuads = other->_solidQuads;
-        _alphaQuads = other->_alphaQuads;
+        _quads = other->_quads;
         _tint = other->_tint;
         _imageTransform = other->_imageTransform;
 
@@ -345,7 +293,7 @@ typedef struct VertexData {
     return other;
 }
 
-- (void) addRaw:(RawQuad)raw solid:(BOOL)solid
+- (void) addRaw:(RawQuad)raw
 {
     CGRect r = {
         raw.x,
@@ -357,10 +305,10 @@ typedef struct VertexData {
         raw.xTex / (CGFloat)_texture.width,
         raw.yTex / (CGFloat)_texture.height,
     };
-    [self addRect:r texPos:texPos solid:solid];
+    [self addRect:r texPos:texPos];
 }
 
-- (void) addStretchy:(StretchyQuad)quad solid:(BOOL)solid
+- (void) addStretchy:(StretchyQuad)quad
 {
     CGRect r = {
         quad.edge.origin.x + quad.stretch.origin.x,
@@ -369,10 +317,10 @@ typedef struct VertexData {
         quad.edge.size.height + quad.stretch.size.height,
     };
     CGPoint texPos = quad.tex.origin;
-    [self addRect:r texPos:texPos solid:solid];
+    [self addRect:r texPos:texPos];
 }
 
-- (void) addRect:(CGRect)r texPos:(CGPoint)texPos solid:(BOOL)solid
+- (void) addRect:(CGRect)r texPos:(CGPoint)texPos
 {
     // Depending on the edge insets, we may have to split
     // up each input quad into as many as nine pieces.
@@ -453,11 +401,7 @@ typedef struct VertexData {
             q.tex.size.width = (q.edge.size.width + q.stretch.size.width) / texWidth;
             q.tex.size.height = (q.edge.size.height + q.stretch.size.height) / texHeight;
 
-            if (solid) {
-                [_solidQuads appendBytes:&q length:sizeof(StretchyQuad)];
-            } else {
-                [_alphaQuads appendBytes:&q length:sizeof(StretchyQuad)];
-            }
+            [_quads appendBytes:&q length:sizeof(StretchyQuad)];
         }
     }
 }
@@ -484,6 +428,7 @@ typedef struct VertexData {
     self = [self init];
     if (self) {
         _assetName = other->_assetName;
+        _prog = other->_prog;
         _texture = other->_texture;
         _size = other->_size;
         _scale = other->_scale;
@@ -504,16 +449,10 @@ typedef struct VertexData {
 
         _insets = insets;
 
-        int numAlpha = other->_alphaQuads.length / sizeof(StretchyQuad);
-        const StretchyQuad* alphaQuads = (const StretchyQuad*) other->_alphaQuads.bytes;
-        for (int i = 0; i < numAlpha; i++) {
-            [self addStretchy:alphaQuads[i] solid:NO];
-        }
-
-        int numSolid = other->_solidQuads.length / sizeof(StretchyQuad);
-        const StretchyQuad* solidQuads = (const StretchyQuad*) other->_solidQuads.bytes;
-        for (int i = 0; i < numSolid; i++) {
-            [self addStretchy:solidQuads[i] solid:YES];
+        int numQuads = other->_quads.length / sizeof(StretchyQuad);
+        const StretchyQuad* quads = (const StretchyQuad*) other->_quads.bytes;
+        for (int i = 0; i < numQuads; i++) {
+            [self addStretchy:quads[i]];
         }
 
         // Speculative: is "other" being collected by ARC?
@@ -523,7 +462,7 @@ typedef struct VertexData {
     return self;
 }
 
-- (AP_Image*) initWithName:(NSString*)name texture:(AP_GLTexture*)texture scale:(CGFloat)scale
+- (AP_Image*) initWithName:(NSString*)name texture:(AP_GLTexture*)texture
 {
     AP_CHECK(name, return nil);
     AP_CHECK(texture, return nil);
@@ -531,9 +470,10 @@ typedef struct VertexData {
     self = [self init];
     if (self) {
         _assetName = name;
+        _prog = g_Prog3;
         _texture = texture;
         _size = CGSizeMake(_texture.width, _texture.height);
-        _scale = scale;
+        _scale = 2.0; // Assume retina texture
 
         RawQuad q;
         q.x = 0;
@@ -543,52 +483,61 @@ typedef struct VertexData {
         q.width = _texture.width;
         q.height = _texture.height;
 
-        [self addRaw:q solid:YES];
+        [self addRaw:q];
     }
 //    NSLog(@"Loaded image: %@", name);
     return self;
 }
 
-- (AP_Image*) initWithName:(NSString*)name data:(NSData*)data scale:(CGFloat)scale {
+- (AP_Image*) initWithName:(NSString*)name data:(NSData*)data {
     AP_CHECK(name, return nil);
     AP_CHECK(data, return nil);
 
-    AP_CHECK_EQ(sizeof(Header), 8, return nil);
-    AP_CHECK_EQ(sizeof(RawQuad), 12, return nil);
+    AP_CHECK_EQ(sizeof(Img), 20, return nil);
 
     self = [self init];
     if (self) {
-        _assetName = name;
-        _scale = scale;
+        _assetName = [name stringByDeletingPathExtension];
 
         // Load header
-        const uint8_t* bytes = data.bytes;
-        const Header* header = (const Header*) &bytes[0];
-        const RawQuad* quads = (const RawQuad*) (header + 1);
-        AP_CHECK_GE(data.length, sizeof(Header), return nil);
+        const Img* img = (const Img*) data.bytes;
 
         // Load metrics
-        int numQuads = header->numAlpha + header->numSolid;
-        _size = CGSizeMake(header->width, header->height);
+        _size = CGSizeMake(2.0 * img->ipadWidth, 2.0 * img->ipadHeight);
+
+        CGFloat ipadArea = img->ipadWidth * img->ipadHeight;
+        CGFloat iphoneArea = img->iphoneWidth * img->iphoneHeight;
+        _scale = [AP_Window scaleForIPhone:(2.0 * iphoneArea / ipadArea) iPad:2.0];
+
+        switch (img->channels) {
+            case 2:
+                _prog = g_Prog2;
+                break;
+            case 4:
+                _prog = g_Prog4;
+                break;
+            default:
+                NSLog(@"Warning! Unexpected image channel count: %d", img->channels);
+                // fall through
+            case 3:
+                _prog = g_Prog3;
+                break;
+        }
 
         // Load texture name
-        int texNameStart = sizeof(Header) + numQuads * sizeof(RawQuad);
-        int texNameLength = data.length - texNameStart - 1;
-        AP_CHECK_GE(texNameLength, 0, return nil);
-
-        // Load texture
-        const uint8_t* texNamePtr = &bytes[texNameStart];
-        NSString* texName = [[NSString alloc] initWithBytes:texNamePtr length:texNameLength encoding:NSUTF8StringEncoding];
+        NSString* texName = [_assetName stringByAppendingString:@".ktx"];
         _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
         AP_CHECK(_texture, return nil);
 
-        // Load quads
-        for (int i = 0; i < header->numAlpha; i++) {
-            [self addRaw:quads[i] solid:NO];
-        }
-        for (int i = header->numAlpha; i < numQuads; i++) {
-            [self addRaw:quads[i] solid:YES];
-        }
+        RawQuad q;
+        q.x = 0;
+        q.y = 0;
+        q.xTex = 0;
+        q.yTex = 0;
+        q.width = 2 * img->ipadWidth;
+        q.height = 2 * img->ipadHeight;
+
+        [self addRaw:q];
     }
 //    NSLog(@"Loaded image: %@", name);
     return self;
@@ -723,14 +672,10 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     int cacheKey = (xTile * 1000) + yTile;
     AP_Image_CacheEntry* e = [_cache get:@(cacheKey) withLoader:^{
         // Calculate how many quads we have. This depends on the tiling.
-        int numSolid = countTilesInQuads(_solidQuads, xTile, yTile);
-        int numAlpha = countTilesInQuads(_alphaQuads, xTile, yTile);
-        int numQuads = numSolid + numAlpha;
+        int numQuads = countTilesInQuads(_quads, xTile, yTile);
 
-        NSMutableData* data = [_alphaQuads mutableCopy];
-        [data appendData:_solidQuads];
-        const StretchyQuad* quads = (const StretchyQuad*)(data.bytes);
-        const StretchyQuad* maxQuad = quads + data.length / sizeof(StretchyQuad);
+        const StretchyQuad* quads = (const StretchyQuad*)(_quads.bytes);
+        const StretchyQuad* maxQuad = quads + _quads.length / sizeof(StretchyQuad);
 
         // Upload the quads as GL triangles.
         // For each quad, we need 4 vertices (24 bytes each) and 6 indices (2 bytes each).
@@ -794,8 +739,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
 
         // Pass the data to GL! Woohoo, we're done.
         AP_Image_CacheEntry* result = [[AP_Image_CacheEntry alloc] init];
-        result.numSolid = numSolid;
-        result.numAlpha = numAlpha;
+        result.numQuads = numQuads;
         result.arrayBuffer = [AP_GLBuffer bufferWithTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:vertexData];
         result.indexBuffer = [AP_GLBuffer bufferWithTarget:GL_ELEMENT_ARRAY_BUFFER usage:GL_STATIC_DRAW data:indexData];
         return result;
@@ -812,43 +756,24 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture.name);
 
-    [g_AlphaProg use];
+    [_prog use];
     [e.arrayBuffer bind];
     [e.indexBuffer bind];
 
-    glUniform1i(g_AlphaProg.texture, 0);
-    glUniform1f(g_AlphaProg.alpha, alpha);
-    glUniformMatrix3fv(g_AlphaProg.transform, 1, false, matrix.m);
-    glUniform2f(g_AlphaProg.stretch, stretchScale.width, stretchScale.height);
-    glUniform4fv(g_AlphaProg.tint, 1, _tint.v);
+    glUniform1i(_prog.texture, 0);
+    glUniform1f(_prog.alpha, alpha);
+    glUniformMatrix3fv(_prog.transform, 1, false, matrix.m);
+    glUniform2f(_prog.stretch, stretchScale.width, stretchScale.height);
+    glUniform4fv(_prog.tint, 1, _tint.v);
 
-    glEnableVertexAttribArray(g_AlphaProg.edgePos);
-    glEnableVertexAttribArray(g_AlphaProg.stretchPos);
-    glEnableVertexAttribArray(g_AlphaProg.texCoord);
-    glVertexAttribPointer(g_AlphaProg.edgePos, 2, GL_FLOAT, false, 24, 0);
-    glVertexAttribPointer(g_AlphaProg.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
-    glVertexAttribPointer(g_AlphaProg.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
+    glEnableVertexAttribArray(_prog.edgePos);
+    glEnableVertexAttribArray(_prog.stretchPos);
+    glEnableVertexAttribArray(_prog.texCoord);
+    glVertexAttribPointer(_prog.edgePos, 2, GL_FLOAT, false, 24, 0);
+    glVertexAttribPointer(_prog.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
+    glVertexAttribPointer(_prog.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
 
-    glDrawElements(GL_TRIANGLES, 6 * e.numAlpha, GL_UNSIGNED_SHORT, 0);
-
-    [g_SolidProg use];
-    [e.arrayBuffer bind];
-    [e.indexBuffer bind];
-
-    glUniform1i(g_SolidProg.texture, 0);
-    glUniform1f(g_SolidProg.alpha, alpha);
-    glUniformMatrix3fv(g_SolidProg.transform, 1, false, matrix.m);
-    glUniform2f(g_SolidProg.stretch, stretchScale.width, stretchScale.height);
-    glUniform4fv(g_SolidProg.tint, 1, _tint.v);
-
-    glEnableVertexAttribArray(g_SolidProg.edgePos);
-    glEnableVertexAttribArray(g_SolidProg.stretchPos);
-    glEnableVertexAttribArray(g_SolidProg.texCoord);
-    glVertexAttribPointer(g_SolidProg.edgePos, 2, GL_FLOAT, false, 24, 0);
-    glVertexAttribPointer(g_SolidProg.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
-    glVertexAttribPointer(g_SolidProg.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
-
-    glDrawElements(GL_TRIANGLES, 6 * e.numSolid, GL_UNSIGNED_SHORT, (void*)(12 * e.numAlpha));
+    glDrawElements(GL_TRIANGLES, 6 * e.numQuads, GL_UNSIGNED_SHORT, 0);
 
     [e.arrayBuffer unbind];
     [e.indexBuffer unbind];

@@ -47,11 +47,6 @@ static AP_Bundle* g_Bundle;
     if (item) {
         return item.data;
     }
-    NSLog(@"Not found, trying %@", fullName.lastPathComponent);
-    item = [PAK_Search item:fullName.lastPathComponent];
-    if (item) {
-        return item.data;
-    }
 #endif
     NSLog(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;

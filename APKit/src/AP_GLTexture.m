@@ -62,7 +62,6 @@ static NSMutableArray* s_deleteQueue = nil;
         return result;
     }];
 
-    AP_CHECK([result isKindOfClass:[AP_GLTexture class]], abort());
     return result;
 }
 

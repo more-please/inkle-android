@@ -20,9 +20,7 @@ typedef enum UIImageResizingMode {
 @property (nonatomic,readonly) CGFloat scale;
 @property (nonatomic) UIImageResizingMode resizingMode;
 
-+ (AP_Image*) imageNamed:(NSString*)assetName scale:(CGFloat)scale;
 + (AP_Image*) imageNamed:(NSString*)assetName;
-+ (AP_Image*) imageWithContentsOfFileNamedAuto:(NSString*)name;
 
 - (AP_Image*) imageWithWidth:(CGFloat)width;
 - (AP_Image*) imageScaledBy:(CGFloat)scale;
