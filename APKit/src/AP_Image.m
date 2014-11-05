@@ -58,8 +58,8 @@ static const char* kVertex = AP_SHADER(
     varying vec2 f_rightTexCoord;
     void main() {
         vec2 pos = edgePos + stretch * stretchPos;
-        vec3 tpos = transform * vec3(pos, 1);
-        gl_Position = vec4(tpos, 1);
+        vec3 tpos = transform * vec3(pos, 1.0);
+        gl_Position = vec4(tpos, 1.0);
         f_texCoord = texCoord;
         f_leftTexCoord = f_texCoord * vec2(0.5, 1.0);
         f_rightTexCoord = f_leftTexCoord + vec2(0.5, 0.0);
@@ -100,8 +100,8 @@ static const char* kFragment4 = AP_SHADER(
     varying vec2 f_leftTexCoord;
     varying vec2 f_rightTexCoord;
     void main() {
-        vec4 pixel = texture2D(texture, f_leftTexCoord);
-        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        vec3 pixel = texture2D(texture, f_leftTexCoord).rgb;
+        vec3 tinted = mix(pixel, tint.rgb, tint.a);
         float pixelAlpha = texture2D(texture, f_rightTexCoord).g;
         gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
     }
@@ -354,8 +354,6 @@ typedef struct VertexData {
     };
 
     AP_CHECK(_texture, return);
-    float texWidth = _texture.width;
-    float texHeight = _texture.height;
 
     StretchyQuad q;
     for (int i = 0; i < 3; i++) {
@@ -396,10 +394,10 @@ typedef struct VertexData {
                 q.edge.size.height = bottom - top;
             }
 
-            q.tex.origin.x = texPos.x + (q.edge.origin.x + q.stretch.origin.x - r.origin.x) / texWidth;
-            q.tex.origin.y = texPos.y + (q.edge.origin.y + q.stretch.origin.y - r.origin.y) / texHeight;
-            q.tex.size.width = (q.edge.size.width + q.stretch.size.width) / texWidth;
-            q.tex.size.height = (q.edge.size.height + q.stretch.size.height) / texHeight;
+            q.tex.origin.x = texPos.x + (q.edge.origin.x + q.stretch.origin.x - r.origin.x) / _size.width;
+            q.tex.origin.y = texPos.y + (q.edge.origin.y + q.stretch.origin.y - r.origin.y) / _size.height;
+            q.tex.size.width = (q.edge.size.width + q.stretch.size.width) / _size.width;
+            q.tex.size.height = (q.edge.size.height + q.stretch.size.height) / _size.height;
 
             [_quads appendBytes:&q length:sizeof(StretchyQuad)];
         }
@@ -507,8 +505,9 @@ typedef struct VertexData {
 
         CGFloat ipadArea = img->ipadWidth * img->ipadHeight;
         CGFloat iphoneArea = img->iphoneWidth * img->iphoneHeight;
-        _scale = [AP_Window scaleForIPhone:(2.0 * iphoneArea / ipadArea) iPad:2.0];
+        _scale = [AP_Window scaleForIPhone:(2.0 * ipadArea / iphoneArea) iPad:2.0];
 
+        NSLog(@"*** Image: %@ channels: %d size: %f x %f scale: %f", _assetName, img->channels, _size.width, _size.height, _scale);
         switch (img->channels) {
             case 2:
                 _prog = g_Prog2;
@@ -534,8 +533,8 @@ typedef struct VertexData {
         q.y = 0;
         q.xTex = 0;
         q.yTex = 0;
-        q.width = 2 * img->ipadWidth;
-        q.height = 2 * img->ipadHeight;
+        q.width = _size.width;
+        q.height = _size.height;
 
         [self addRaw:q];
     }

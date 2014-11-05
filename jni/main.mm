@@ -883,7 +883,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     sorcery.window.rootViewController = window; // Err, yes, well
 
     AP_Image* logo = [AP_Image imageNamed:@"Credits/globe.png"];
-//     logo = [logo imageScaledBy:0.75];
+    logo = [logo imageWithWidth:[AP_Window widthForIPhone:256 iPad:480]];
 
     AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
     view.frame = [[UIScreen mainScreen] bounds];
