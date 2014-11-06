@@ -11,7 +11,7 @@ using namespace std;
 string ANDROID_DIR = ".";
 
 void sys(const string& cmd) {
-    cerr << cmd << endl;
+//     cerr << cmd << endl;
     int status = system(cmd.c_str());
     assert(status == EXIT_SUCCESS);
 }
