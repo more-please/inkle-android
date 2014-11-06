@@ -110,7 +110,7 @@ static const char* kFragment4 = AP_SHADER(
         vec3 tinted = mix(pixel, tint.rgb, tint.a);
         float pixelAlpha = texture2D(alphaTexture, f_texCoord).g;
         gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
-    }1
+    }
 );
 
 static AP_Image_Program* g_Prog2;
