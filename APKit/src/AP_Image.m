@@ -512,9 +512,9 @@ typedef struct VertexData {
         // Load metrics
         _size = CGSizeMake(2.0 * img->ipadWidth, 2.0 * img->ipadHeight);
 
-        CGFloat ipadArea = img->ipadWidth * img->ipadHeight;
-        CGFloat iphoneArea = img->iphoneWidth * img->iphoneHeight;
-        _scale = [AP_Window scaleForIPhone:(2.0 * ipadArea / iphoneArea) iPad:2.0];
+        CGFloat ipadScale = sqrtf(img->ipadWidth * img->ipadHeight);
+        CGFloat iphoneScale = sqrtf(img->iphoneWidth * img->iphoneHeight);
+        _scale = [AP_Window scaleForIPhone:(2.0 * ipadScale / iphoneScale) iPad:2.0];
 
         switch (img->channels) {
             case 2:
