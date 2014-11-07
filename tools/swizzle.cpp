@@ -50,6 +50,8 @@ int main(int argc, const char* argv[]) {
     int w, h, comp;
     unsigned char* input = stbi_load_from_memory(&file[0], file.size(), &w, &h, &comp, 4);
 
+    fix_alpha(w, h, input);
+
     unsigned char* output = (unsigned char*) malloc(w * h * 4);
     for (int i = 0; i < (w * h * 4); i += 4) {
         unsigned char r = input[i], g = input[i+1], b = input[i+2], a = input[i+3];
