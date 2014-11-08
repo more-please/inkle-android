@@ -18,6 +18,8 @@
 #import <ck/ck.h>
 #import <ck/mixer.h>
 
+#import <unicode/udata.h>
+
 #import "AppDelegate.h"
 
 @interface ParseResult : NSObject
@@ -899,8 +901,15 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     // Without this, the splash screen gets leaked...?
     window.rootViewController = nil;
 
+    NSLog(@"Initializing ICU...");
+    NSData* icuDat = [NSBundle dataForResource:@"icudt51l.dat" ofType:nil];
+    UErrorCode icuErr = U_ZERO_ERROR;
+    udata_setCommonData(icuDat.bytes, &icuErr);
+    NSAssert(U_SUCCESS(icuErr), @"ICU error: %d", icuErr);
+
     // Finally, start the game!
 
+    NSLog(@"Starting game...");
     NSDictionary* options = [NSDictionary dictionary];
     [self.delegate application:self didFinishLaunchingWithOptions:options];
 }
