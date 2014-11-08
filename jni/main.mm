@@ -882,8 +882,8 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     sorcery.window = [[Real_UIWindow alloc] init];
     sorcery.window.rootViewController = window; // Err, yes, well
 
-    AP_Image* logo = [AP_Image imageNamed:@"Credits/globe.png"];
-    logo = [logo imageWithWidth:[AP_Window widthForIPhone:256 iPad:480]];
+    AP_Image* logo = [AP_Image imageNamed:@"80-days-logo"];
+    logo = [logo imageWithWidth:[AP_Window widthForIPhone:150 iPad:250]];
 
     AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
     view.frame = [[UIScreen mainScreen] bounds];
