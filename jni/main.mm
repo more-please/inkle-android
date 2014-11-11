@@ -19,6 +19,7 @@
 #import <ck/mixer.h>
 
 #import <unicode/udata.h>
+#import <unicode/uloc.h>
 
 #import "AppDelegate.h"
 
@@ -135,6 +136,9 @@ static JavaMethod kCanTweet = {
 };
 static JavaMethod kTweet = {
     "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kGetLocale = {
+    "getLocale", "()Ljava/lang/String;", NULL
 };
 
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
@@ -905,6 +909,11 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     NSData* icuDat = [NSBundle dataForResource:@"icudt51l.dat" ofType:nil];
     UErrorCode icuErr = U_ZERO_ERROR;
     udata_setCommonData(icuDat.bytes, &icuErr);
+    NSAssert(U_SUCCESS(icuErr), @"ICU error: %d", icuErr);
+
+    NSString* locale = [self javaStringMethod:&kGetLocale];
+    NSLog(@"Locale: %@", locale);
+    uloc_setDefault([locale cStringUsingEncoding:NSUTF8StringEncoding], &icuErr);
     NSAssert(U_SUCCESS(icuErr), @"ICU error: %d", icuErr);
 
     // Finally, start the game!
