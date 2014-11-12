@@ -21,6 +21,9 @@
 #import <unicode/udata.h>
 #import <unicode/uloc.h>
 
+#include <client/linux/handler/exception_handler.h>
+#include <client/linux/handler/minidump_descriptor.h>
+
 #import "AppDelegate.h"
 
 @interface ParseResult : NSObject
@@ -141,15 +144,40 @@ static JavaMethod kGetLocale = {
     "getLocale", "()Ljava/lang/String;", NULL
 };
 
+static void initBreakpad(JNIEnv*, jobject, jstring);
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
 static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
 static void parseFindResult(JNIEnv*, jobject, jint, jstring);
 
 static JNINativeMethod kNatives[] = {
+    { "initBreakpad", "(Ljava/lang/String;)V", (void *)&initBreakpad},
     { "parseCallResult", "(ILjava/lang/String;)V", (void *)&parseCallResult},
     { "parseSaveResult", "(IZ)V", (void *)&parseSaveResult},
     { "parseFindResult", "(ILjava/lang/String;)V", (void *)&parseFindResult},
 };
+
+static google_breakpad::ExceptionHandler* exceptionHandler;
+
+static bool breakback(
+    const google_breakpad::MinidumpDescriptor& descriptor,
+    void* context,
+    bool succeeded) {
+  NSLog(@"Breakpad dump path: %s\n", descriptor.path());
+  return succeeded;
+}
+
+void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
+    const char *path = env->GetStringUTFChars(filepath, 0);
+    google_breakpad::MinidumpDescriptor descriptor(path);
+    exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, breakback, NULL, true, -1);
+}
+
+extern "C" {
+JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
+        JNIEnv* env, jobject obj, jstring filepath) {
+    initBreakpad(env, obj, filepath);
+}
+} // "C"
 
 @implementation Main {
     struct android_app* _android;
