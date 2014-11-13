@@ -23,6 +23,8 @@
 - (BOOL) canTweet;
 - (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image;
 
+- (void) mailTo:(NSString*)to attachment:(NSString*)path;
+
 - (void) quit;
 
 - (JNIEnv*) jniEnv;
