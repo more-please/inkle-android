@@ -206,16 +206,20 @@ AP_BAN_EVIL_INIT;
     alertFrame.size.height += ySpace;
     alertFrame.size.width += 2 * xSpace;
 
+    BOOL verticalLayout = (_buttons.count > 2);
+    int hCount = verticalLayout ? 1 : _buttons.count;
+    int vCount = verticalLayout ? _buttons.count : 1;
+
     for (AP_Button* button in _buttons) {
         CGSize size = [button.titleLabel sizeThatFits:maxSize];
         buttonSize.height = MAX(buttonSize.height, size.height + 2 * ySpace);
         alertFrame.size.width = MAX(
             alertFrame.size.width,
-            _buttons.count * (size.width + 2 * xSpace));
+            hCount * (size.width + 2 * xSpace));
     }
-    buttonSize.width = alertFrame.size.width / _buttons.count;
 
-    alertFrame.size.height += buttonSize.height;
+    buttonSize.width = alertFrame.size.width / hCount;
+    alertFrame.size.height += vCount * buttonSize.height;
 
     // Now lay everything out
 
@@ -236,7 +240,11 @@ AP_BAN_EVIL_INIT;
     }
     for (AP_Button* button in _buttons) {
         button.frame = CGRectMake(pos.x, pos.y, buttonSize.width, buttonSize.height);
-        pos.x += buttonSize.width;
+        if (verticalLayout) {
+            pos.y += buttonSize.height;
+        } else {
+            pos.x += buttonSize.width;
+        }
     }
 }
 
