@@ -88,6 +88,12 @@ static UIApplication* g_Application;
     return NULL;
 }
 
+- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
+}
+
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
 {
     GLUE_NOT_IMPLEMENTED;
@@ -112,6 +118,17 @@ static UIApplication* g_Application;
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
 {
     GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) parseEnableAutomaticUser
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (jobject) parseCurrentUser;
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NULL;
 }
 
 - (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId

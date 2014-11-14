@@ -8,13 +8,13 @@
 
 + (void) enableAutomaticUser
 {
-    GLUE_NOT_IMPLEMENTED;
+    [[UIApplication sharedApplication] parseEnableAutomaticUser];
 }
 
 + (instancetype) currentUser
 {
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
+    jobject obj = [UIApplication sharedApplication].parseCurrentUser;
+    return [[PFUser alloc] initWithObj:obj];
 }
 
 @end

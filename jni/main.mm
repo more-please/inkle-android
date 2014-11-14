@@ -86,8 +86,11 @@ static JavaMethod kParseCallFunction = {
 static JavaMethod kParseNewObject = {
     "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
 };
+static JavaMethod kParseNewObjectId = {
+    "parseNewObjectId", "(Ljava/lang/String;Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
+};
 static JavaMethod kParseAddKey = {
-    "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/String;)V", NULL
+    "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/Object;)V", NULL
 };
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
@@ -96,10 +99,16 @@ static JavaMethod kParseNewQuery = {
     "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
 };
 static JavaMethod kParseWhereEqualTo = {
-    "parseWhereEqualTo", "(Lcom/parse/ParseQuery;Ljava/lang/String;Ljava/lang/String;)V", NULL
+    "parseWhereEqualTo", "(Lcom/parse/ParseQuery;Ljava/lang/String;Ljava/lang/Object;)V", NULL
 };
 static JavaMethod kParseFind = {
     "parseFind", "(ILcom/parse/ParseQuery;)V", NULL
+};
+static JavaMethod kParseEnableAutomaticUser = {
+    "parseEnableAutomaticUser", "()V", NULL
+};
+static JavaMethod kParseCurrentUser = {
+    "parseCurrentUser", "()Lcom/parse/ParseUser;", NULL
 };
 static JavaMethod kGaiTrackerWithTrackingId = {
     "gaiTrackerWithTrackingId", "(Ljava/lang/String;)Lcom/google/analytics/tracking/android/Tracker;", NULL
@@ -534,7 +543,7 @@ JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
 
     _env->PushLocalFrame(16);
     jstring jFunction = _env->NewStringUTF(function.UTF8String);
-    jstring jParams = [self jsonEncode:params];
+    jobject jParams = [self jsonEncode:params];
 
     _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
 
@@ -616,15 +625,39 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return result;
 }
 
-- (jstring) jsonEncode:(id)value
+- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId
 {
+    [self maybeInitJavaMethod:&kParseNewObjectId];
+
+    _env->PushLocalFrame(16);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
+    jstring jId = _env->NewStringUTF(objectId.UTF8String);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
+    result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (jobject) jsonEncode:(id)value
+{
+    if (!value) {
+        return NULL;
+    }
+    if ([value isKindOfClass:[PFObject class]]) {
+        // Send PFObjects without any encoding
+        PFObject* pf = (PFObject*) value;
+        return pf.jobj;
+    }
+
     NSString* valueStr;
     if ([value isKindOfClass:[NSString class]]) {
         // If it's a string, send it directly
         valueStr = (NSString*)value;
     } else {
         // Otherwise, encode as JSON.
-        NSError* error;
+        NSError* error = nil;
         NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
         if (error) {
             NSLog(@"JSON writer error: %@", error);
@@ -632,7 +665,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         }
         valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
     }
-    return valueStr ? _env->NewStringUTF(valueStr.UTF8String) : NULL;
+    return _env->NewStringUTF(valueStr.UTF8String);
 }
 
 - (id) jsonDecode:(ParseResult*)result error:(NSError**)error
@@ -653,7 +686,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     _env->PushLocalFrame(16);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jstring jValue = [self jsonEncode:value];
+    jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
 
@@ -680,7 +713,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     _env->PushLocalFrame(16);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jstring jValue = [self jsonEncode:value];
+    jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
 
@@ -724,6 +757,24 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         block(json, error);
     }
     [_parseFindBlocks removeObjectForKey:@(result.handle)];
+}
+
+- (void) parseEnableAutomaticUser
+{
+    [self javaVoidMethod:&kParseEnableAutomaticUser];
+}
+
+- (jobject) parseCurrentUser
+{
+    [self maybeInitJavaMethod:&kParseCurrentUser];
+
+    _env->PushLocalFrame(16);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
+    result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
 }
 
 - (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId

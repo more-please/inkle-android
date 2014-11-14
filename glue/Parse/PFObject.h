@@ -2,6 +2,8 @@
 
 #import "PFCommon.h"
 
+#import <jni.h>
+
 @interface PFObject : NSObject
 
 + (instancetype) objectWithClassName:(NSString*)className;
@@ -21,10 +23,13 @@
 - (void) removeObjectForKey:(NSString*)key;
 - (void) saveEventually:(PFBooleanResultBlock)callback;
 
-@property (nonatomic,strong) NSString* objectId;
+@property (nonatomic,readonly) jobject jobj;
+@property (nonatomic,strong,readonly) NSString* objectId;
 @property (nonatomic,strong,readonly) NSDate* updatedAt;
 
 + (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId;
+
+- (instancetype) initWithObj:(jobject)obj;
 
 @end
 

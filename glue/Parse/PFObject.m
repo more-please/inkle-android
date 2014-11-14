@@ -4,18 +4,16 @@
 
 #import "GlueCommon.h"
 
-@implementation PFObject {
-    jobject _obj;
-}
+@implementation PFObject
 
-- (id) initWithObj:(jobject)obj
+- (instancetype) initWithObj:(jobject)obj
 {
     if (!obj) {
         return nil;
     }
     self = [super init];
     if (self) {
-        _obj = obj;
+        _jobj = obj;
     }
     return self;
 }
@@ -26,9 +24,19 @@
     return [[PFObject alloc] initWithObj:obj];
 }
 
++ (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId
+{
+    jobject obj = [[UIApplication sharedApplication] parseNewObject:className objectId:objectId];
+    return [[PFObject alloc] initWithObj:obj];
+}
+
 - (void) setObject:(id)object forKey:(NSString*)key
 {
-    [[UIApplication sharedApplication] parseObject:_obj addKey:key value:object];
+    if (!object) {
+        NSLog(@"*** Tried to set null value for key: %@", key);
+        return;
+    }
+    [[UIApplication sharedApplication] parseObject:_jobj addKey:key value:object];
 }
 
 - (void) saveInBackground
@@ -38,7 +46,7 @@
 
 - (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block
 {
-    [[UIApplication sharedApplication] parseObject:_obj saveWithBlock:block];
+    [[UIApplication sharedApplication] parseObject:_jobj saveWithBlock:block];
 }
 
 - (id) objectForKey:(NSString*)key
@@ -82,19 +90,13 @@
     GLUE_NOT_IMPLEMENTED;
 }
 
-+ (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId
-{
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-}
-
 @end
 
 @implementation NSDictionary (PFObject)
 
 - (NSString*) objectId
 {
-    return self[@"__parse_objectId"];
+    return self[@"__parse_jobjectId"];
 }
 
 - (NSDate*) updatedAt

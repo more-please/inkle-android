@@ -37,12 +37,16 @@
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)parameters block:(PFIdResultBlock)block;
 
 - (jobject) parseNewObject:(NSString*)className;
+- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId;
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
 
 - (jobject) parseNewQuery:(NSString*)className;
 - (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)vaue;
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block;
+
+- (void) parseEnableAutomaticUser;
+- (jobject) parseCurrentUser;
 
 // Wrappers for Google Analytics
 // TODO: again, would be nice to decouple these from SorceryActivity...
