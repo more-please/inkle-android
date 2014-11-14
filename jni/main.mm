@@ -170,9 +170,11 @@ static bool breakback(
 }
 
 void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
+#ifndef DEBUG
     const char *path = env->GetStringUTFChars(filepath, 0);
     google_breakpad::MinidumpDescriptor descriptor(path);
     exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, breakback, NULL, true, -1);
+#endif
 }
 
 extern "C" {
