@@ -27,3 +27,14 @@
 + (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId;
 
 @end
+
+// Bit of a hack here: some Parse RPCs return PFObjects, but when they pass between
+// Java and Objective-C they get flattened into dictionaries. We'll therefore encode
+// the 'objectId' and 'updatedAt' properties as secret dictionary entries.
+
+@interface NSDictionary (PFObject)
+
+- (NSString*) objectId;
+- (NSDate*) updatedAt;
+
+@end

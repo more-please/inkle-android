@@ -89,3 +89,18 @@
 }
 
 @end
+
+@implementation NSDictionary (PFObject)
+
+- (NSString*) objectId
+{
+    return self[@"__parse_objectId"];
+}
+
+- (NSDate*) updatedAt
+{
+    NSNumber* n = self[@"__parse_updatedAt"];
+    return [NSDate dateWithTimeIntervalSince1970:n.doubleValue];
+}
+
+@end
