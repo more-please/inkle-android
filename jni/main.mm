@@ -81,7 +81,7 @@ static JavaMethod kParseInit = {
     "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kParseCallFunction = {
-    "parseCallFunction", "(ILjava/lang/String;)V", NULL
+    "parseCallFunction", "(ILjava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kParseNewObject = {
     "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
@@ -520,7 +520,7 @@ JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
     _env->PopLocalFrame(NULL);
 }
 
-- (void) parseCallFunction:(NSString*)function block:(PFIdResultBlock)block
+- (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
 {
     static int handle = 0;
     ++handle;
@@ -532,8 +532,9 @@ JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
 
     _env->PushLocalFrame(16);
     jstring jFunction = _env->NewStringUTF(function.UTF8String);
+    jstring jParams = [self jsonEncode:params];
 
-    _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction);
+    _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
 
     _env->PopLocalFrame(NULL);
 }
@@ -558,8 +559,9 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
     PFIdResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
     if (block) {
-        NSError* error = result.string ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        block(result.string, error);
+        NSError* error = nil;
+        id json = [self jsonDecode:result error:&error];
+        block(json, error);
     }
     [_parseCallBlocks removeObjectForKey:@(result.handle)];
 }
@@ -612,7 +614,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return result;
 }
 
-- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
+- (jstring) jsonEncode:(id)value
 {
     NSString* valueStr;
     if ([value isKindOfClass:[NSString class]]) {
@@ -624,15 +626,32 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
         if (error) {
             NSLog(@"JSON writer error: %@", error);
-            return;
+            return NULL;
         }
         valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
     }
+    return valueStr ? _env->NewStringUTF(valueStr.UTF8String) : NULL;
+}
+
+- (id) jsonDecode:(ParseResult*)result error:(NSError**)error
+{
+    if (result.string) {
+        NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
+        *error = nil;
+        return [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+    } else {
+        *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        return nil;
+    }
+}
+
+- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
+{
     [self maybeInitJavaMethod:&kParseAddKey];
 
     _env->PushLocalFrame(16);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jstring jValue = _env->NewStringUTF(valueStr.UTF8String);
+    jstring jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
 
@@ -655,25 +674,11 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)value
 {
-    NSString* valueStr;
-    if ([value isKindOfClass:[NSString class]]) {
-        // If it's a string, send it directly
-        valueStr = (NSString*)value;
-    } else {
-        // Otherwise, encode as JSON.
-        NSError* error;
-        NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
-        if (error) {
-            NSLog(@"JSON writer error: %@", error);
-            return;
-        }
-        valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
-    }
     [self maybeInitJavaMethod:&kParseWhereEqualTo];
 
     _env->PushLocalFrame(16);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jstring jValue = _env->NewStringUTF(valueStr.UTF8String);
+    jstring jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
 
@@ -713,13 +718,7 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     PFArrayResultBlock block = [_parseFindBlocks objectForKey:@(result.handle)];
     if (block) {
         NSError* error = nil;
-        id json = nil;
-        if (result.string) {
-            NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
-            json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-        } else {
-            error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        }
+        id json = [self jsonDecode:result error:&error];
         block(json, error);
     }
     [_parseFindBlocks removeObjectForKey:@(result.handle)];
