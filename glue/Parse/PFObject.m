@@ -96,7 +96,7 @@
 
 - (NSString*) objectId
 {
-    return self[@"__parse_jobjectId"];
+    return self[@"__parse_objectId"];
 }
 
 - (NSDate*) updatedAt
