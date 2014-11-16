@@ -4,6 +4,7 @@
 
 #import <jni.h>
 #import <errno.h>
+#import <unistd.h>
 
 #import <EGL/egl.h>
 #import <GLES2/gl2.h>
@@ -193,6 +194,26 @@ JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
 }
 } // "C"
 
+static int _NSLog_fd = -1;
+
+static double timeInSeconds() {
+    struct timespec t;
+    int result = clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
+}
+
+static void NSLog_handler(NSString* message) {
+    static double start = 0.0;
+    if (start == 0.0) {
+        start = timeInSeconds();
+    }
+    double dt = timeInSeconds() - start;
+    message = [NSString stringWithFormat:@"%.2lf %@", dt, message];
+    __android_log_print(ANDROID_LOG_INFO, "NSLog", "%s", message.UTF8String);
+    message = [message stringByAppendingString:@"\n"];
+    write(_NSLog_fd, message.UTF8String, message.length);
+}
+
 @implementation Main {
     struct android_app* _android;
 
@@ -266,6 +287,14 @@ JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
         [NSUserDefaults setDocumentsDir:self.documentsDir];
+
+        // Send NSLog to a file
+        NSString* logfile = [self.documentsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld.log", time(NULL)]];
+        _NSLog_fd = open(logfile.UTF8String, O_CREAT | O_WRONLY | O_APPEND, 644);
+        NSAssert(_NSLog_fd >= 0, @"Error opening log file: %s", strerror(errno));
+
+        NSLog(@"Logging to: %@", logfile);
+        _NSLog_printf_handler = NSLog_handler;
 
         _touches = [NSMutableDictionary dictionary];
 
