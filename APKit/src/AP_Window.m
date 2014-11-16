@@ -159,9 +159,14 @@ static inline CGFloat aspect(CGSize size) {
     if (self) {
         _clock = AP_TimeInSeconds();
         _fps = [[AP_FPSCounter alloc] init];
-        _fps.logInterval = 1;
         _profiler = [[AP_Profiler alloc] init];
+#ifdef DEBUG
+        _fps.logInterval = 1;
         _profiler.reportInterval = 5;
+#else
+        _fps.logInterval = 10;
+        _profiler.reportInterval = 60;
+#endif
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
 #ifdef ANDROID
