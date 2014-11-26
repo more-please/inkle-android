@@ -16,7 +16,7 @@ static NSMutableArray* s_deleteQueue = nil;
 {
     for (NSNumber* n in s_deleteQueue) {
         GLuint name = n.intValue;
-        glDeleteBuffers(1, &name);
+        _GL(DeleteBuffers, 1, &name);
     }
     s_deleteQueue = nil;
 }
@@ -42,7 +42,7 @@ static NSMutableArray* s_deleteQueue = nil;
 #endif
     self = [super init];
     if (self) {
-        glGenBuffers(1, &_name);
+        _GL(GenBuffers, 1, &_name);
         AP_CHECK(_name, return nil);
         _target = GL_ARRAY_BUFFER;
         _usage = GL_STATIC_DRAW;
@@ -57,12 +57,12 @@ static NSMutableArray* s_deleteQueue = nil;
 
 - (void) bind
 {
-    glBindBuffer(_target, _name);
+    _GL(BindBuffer, _target, _name);
 }
 
 - (void) unbind
 {
-    glBindBuffer(_target, 0);
+    _GL(BindBuffer, _target, 0);
 }
 
 - (void) bufferTarget:(GLenum)target usage:(GLenum)usage data:(NSData *)data
@@ -74,8 +74,8 @@ static NSMutableArray* s_deleteQueue = nil;
 {
     _target = target;
     _usage = usage;
-    glBindBuffer(_target, _name);
-    glBufferData(_target, size, data, _usage);
+    _GL(BindBuffer, _target, _name);
+    _GL(BufferData, _target, size, data, _usage);
     AP_CHECK_GL("glBufferData failed", return);
 
     s_totalMemoryUsage -= _memoryUsage;

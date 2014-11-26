@@ -25,7 +25,7 @@ static NSMutableArray* s_deleteQueue = nil;
 {
     for (NSNumber* n in s_deleteQueue) {
         GLuint name = n.intValue;
-        glDeleteTextures(1, &name);
+        _GL(DeleteTextures, 1, &name);
     }
     s_deleteQueue = nil;
 }
@@ -105,7 +105,7 @@ static NSMutableArray* s_deleteQueue = nil;
     if (self) {
         static GLint systemMaxTextureSize = 0;
         if (systemMaxTextureSize == 0) {
-            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
+            _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
         }
         _maxTextureSize = systemMaxTextureSize;
 #ifdef ANDROID
@@ -114,7 +114,7 @@ static NSMutableArray* s_deleteQueue = nil;
         CGFloat screenMaxTextureSize = screenSize * screens;
         _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
 #endif
-        glGenTextures(1, &_name);
+        _GL(GenTextures, 1, &_name);
         AP_CHECK(_name, return nil);
         _width = _height = 0;
         _minLevel = 0;
@@ -128,7 +128,7 @@ static NSMutableArray* s_deleteQueue = nil;
 
 - (void) bind
 {
-    glBindTexture(GL_TEXTURE_2D, _name);
+    _GL(BindTexture, GL_TEXTURE_2D, _name);
 }
 
 - (void) maybeUpdateWidth:(GLsizei)width height:(GLsizei)height level:(GLint)level
@@ -149,7 +149,7 @@ static NSMutableArray* s_deleteQueue = nil;
     [self maybeUpdateWidth:width height:height level:level];
 
     if (level >= _minLevel) {
-        glTexImage2D(GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, format, type, data);
+        _GL(TexImage2D, GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, format, type, data);
 
         switch (format) {
             case GL_LUMINANCE:
@@ -177,7 +177,7 @@ static NSMutableArray* s_deleteQueue = nil;
     [self maybeUpdateWidth:width height:height level:level];
 
     if (level >= _minLevel) {
-        glCompressedTexImage2D(GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, dataSize, data);
+        _GL(CompressedTexImage2D, GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, dataSize, data);
         _memoryUsage += dataSize;
     }
 }

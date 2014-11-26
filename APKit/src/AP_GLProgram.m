@@ -5,23 +5,23 @@
 static GLuint compileShader(const GLchar* ptr, GLenum type)
 {
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &ptr, NULL);
-    glCompileShader(shader);
+    _GL(ShaderSource, shader, 1, &ptr, NULL);
+    _GL(CompileShader, shader);
 
     GLint logLength;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+    _GL(GetShaderiv, shader, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
         GLchar *log = (GLchar *)malloc(logLength);
-        glGetShaderInfoLog(shader, logLength, &logLength, log);
+        _GL(GetShaderInfoLog, shader, logLength, &logLength, log);
         NSLog(@"Shader compile log:\n%s", log);
         free(log);
     }
 
     GLint status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    _GL(GetShaderiv, shader, GL_COMPILE_STATUS, &status);
     assert(status != 0);
     if (status == 0) {
-        glDeleteShader(shader);
+        _GL(DeleteShader, shader);
         return 0;
     }
 
@@ -31,18 +31,18 @@ static GLuint compileShader(const GLchar* ptr, GLenum type)
 static BOOL linkProgram(GLuint prog)
 {
     GLint status;
-    glLinkProgram(prog);
+    _GL(LinkProgram, prog);
 
     GLint logLength;
-    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &logLength);
+    _GL(GetProgramiv, prog, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
         GLchar *log = (GLchar *)malloc(logLength);
-        glGetProgramInfoLog(prog, logLength, &logLength, log);
+        _GL(GetProgramInfoLog, prog, logLength, &logLength, log);
         NSLog(@"Program link log:\n%s", log);
         free(log);
     }
 
-    glGetProgramiv(prog, GL_LINK_STATUS, &status);
+    _GL(GetProgramiv, prog, GL_LINK_STATUS, &status);
     if (status == 0) {
         return NO;
     }
@@ -71,8 +71,8 @@ AP_BAN_EVIL_INIT
 
         GLuint vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
         GLuint fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
-        glAttachShader(_name, vertexShader);
-        glAttachShader(_name, fragmentShader);
+        _GL(AttachShader, _name, vertexShader);
+        _GL(AttachShader, _name, fragmentShader);
         if (![self link]) {
             AP_LogError("Failed to link GL program");
             return nil;
@@ -84,7 +84,7 @@ AP_BAN_EVIL_INIT
 
 - (void) dealloc
 {
-    glDeleteProgram(_name);
+    _GL(DeleteProgram, _name);
 }
 
 - (GLuint) name
@@ -94,7 +94,7 @@ AP_BAN_EVIL_INIT
 
 - (void) use
 {
-    glUseProgram(_name);
+    _GL(UseProgram, _name);
 }
 
 - (GLint) attr:(NSString *)name
@@ -117,24 +117,24 @@ AP_BAN_EVIL_INIT
         return NO;
     }
     GLint count;
-    glGetProgramiv(_name, GL_ACTIVE_ATTRIBUTES, &count);
+    _GL(GetProgramiv, _name, GL_ACTIVE_ATTRIBUTES, &count);
     for (int i = 0; i < count; ++i) {
         char buffer[64];
         GLsizei length;
         GLint size;
         GLenum type;
-        glGetActiveAttrib(_name, i, sizeof(buffer), &length, &size, &type, buffer);
+        _GL(GetActiveAttrib, _name, i, sizeof(buffer), &length, &size, &type, buffer);
         GLint location = glGetAttribLocation(_name, buffer);
         NSString* attr = [[NSString alloc] initWithBytes:buffer length:length encoding:NSASCIIStringEncoding];
         _attrs[attr] = [NSNumber numberWithInt:location];
     }
-    glGetProgramiv(_name, GL_ACTIVE_UNIFORMS, &count);
+    _GL(GetProgramiv, _name, GL_ACTIVE_UNIFORMS, &count);
     for (int i = 0; i < count; ++i) {
         char buffer[64];
         GLsizei length;
         GLint size;
         GLenum type;
-        glGetActiveUniform(_name, i, sizeof(buffer), &length, &size, &type, buffer);
+        _GL(GetActiveUniform, _name, i, sizeof(buffer), &length, &size, &type, buffer);
         GLint location = glGetUniformLocation(_name, buffer);
         NSString* uniform = [[NSString alloc] initWithBytes:buffer length:length encoding:NSASCIIStringEncoding];
         _uniforms[uniform] = [NSNumber numberWithInt:location];

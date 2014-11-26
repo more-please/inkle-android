@@ -32,7 +32,7 @@
         frame.origin.y - bounds.origin.y,
     };
 
-    glViewport(
+    _GL(Viewport, 
         offset.x * scale,
         -offset.y * scale, // GL origin is at the bottom-left
         bounds.size.width * scale,
@@ -43,7 +43,7 @@
     [_delegate glkView:self drawWithAlpha:alpha];
 
     // Restore the normal viewport.
-    glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
+    _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
 }
 
 @end

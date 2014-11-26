@@ -2,6 +2,7 @@
 
 #import <OpenGLES/ES2/gl.h>
 
+#import "AP_Check.h"
 #import "AP_FPSCounter.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLTexture.h"
@@ -70,7 +71,7 @@ static CGRect g_ScissorRect;
     int y0 = (r.origin.y + 1) * scale.y;
     int x1 = x0 + MAX(0, r.size.width * scale.x);
     int y1 = y0 + MAX(0, r.size.height * scale.y);
-    glScissor(x0, y0, x1 - x0, y1 - y0);
+    _GL(Scissor, x0, y0, x1 - x0, y1 - y0);
 
     return previous;
 }
@@ -339,17 +340,17 @@ static inline CGFloat aspect(CGSize size) {
 
     [_profiler step:@"clear"];
 #ifdef ANDROID
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    _GL(BindFramebuffer, GL_FRAMEBUFFER, 0);
 #endif
-    glViewport(0, 0, bounds.size.width * scale, bounds.size.height * scale);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
+    _GL(Disable, GL_DEPTH_TEST);
+    _GL(Enable, GL_BLEND);
+    _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glDisable(GL_SCISSOR_TEST);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_SCISSOR_TEST);
+    _GL(Disable, GL_SCISSOR_TEST);
+    _GL(ClearColor, 0, 0, 0, 0);
+    _GL(Clear, GL_COLOR_BUFFER_BIT);
+    _GL(Enable, GL_SCISSOR_TEST);
 
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 

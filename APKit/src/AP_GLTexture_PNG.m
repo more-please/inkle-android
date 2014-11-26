@@ -46,17 +46,17 @@ AP_BAN_EVIL_INIT;
         [self texImage2dLevel:0 format:format width:w height:h type:GL_UNSIGNED_BYTE data:(const char*)bytes];
         stbi_image_free(bytes);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         // glGenerateMipmap() doesn't work properly on the Kindle Fire, bah!
         // It seems to work for LUMINANCE textures and square textures. Maybe
         // it's only broken for non-square textures? (e.g. gradients)
         // The only reliable fix may be to generate mipmaps manually.
 #if 0
-        glGenerateMipmap(GL_TEXTURE_2D);
+        _GL(GenerateMipmap, GL_TEXTURE_2D);
         self.memoryUsage = (4 * self.memoryUsage) / 3;
 #endif
 

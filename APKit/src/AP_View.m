@@ -998,12 +998,12 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             boundsToGL.tx, boundsToGL.ty, 1);
 
         [prog use];
-        glUniform4fv(color, 1, backgroundColor.v);
-        glUniformMatrix3fv(transform, 1, false, matrix.m);
-        glEnableVertexAttribArray(pos);
-        glVertexAttribPointer(pos, 2, GL_FLOAT, false, 0, 0);
+        _GL(Uniform4fv, color, 1, backgroundColor.v);
+        _GL(UniformMatrix3fv, transform, 1, false, matrix.m);
+        _GL(EnableVertexAttribArray, pos);
+        _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 0, 0);
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
 
         [buffer unbind];
     }

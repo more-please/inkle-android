@@ -767,34 +767,34 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         transform.tx, transform.ty, 1);
 
     if (_alphaTexture) {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, _alphaTexture.name);
+        _GL(ActiveTexture, GL_TEXTURE1);
+        _GL(BindTexture, GL_TEXTURE_2D, _alphaTexture.name);
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _texture.name);
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(BindTexture, GL_TEXTURE_2D, _texture.name);
 
     [_prog use];
     [e.arrayBuffer bind];
     [e.indexBuffer bind];
 
-    glUniform1i(_prog.texture, 0);
+    _GL(Uniform1i, _prog.texture, 0);
     if (_alphaTexture) {
-        glUniform1i(_prog.alphaTexture, 1);
+        _GL(Uniform1i, _prog.alphaTexture, 1);
     }
-    glUniform1f(_prog.alpha, alpha);
-    glUniformMatrix3fv(_prog.transform, 1, false, matrix.m);
-    glUniform2f(_prog.stretch, stretchScale.width, stretchScale.height);
-    glUniform4fv(_prog.tint, 1, _tint.v);
+    _GL(Uniform1f, _prog.alpha, alpha);
+    _GL(UniformMatrix3fv, _prog.transform, 1, false, matrix.m);
+    _GL(Uniform2f, _prog.stretch, stretchScale.width, stretchScale.height);
+    _GL(Uniform4fv, _prog.tint, 1, _tint.v);
 
-    glEnableVertexAttribArray(_prog.edgePos);
-    glEnableVertexAttribArray(_prog.stretchPos);
-    glEnableVertexAttribArray(_prog.texCoord);
-    glVertexAttribPointer(_prog.edgePos, 2, GL_FLOAT, false, 24, 0);
-    glVertexAttribPointer(_prog.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
-    glVertexAttribPointer(_prog.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
+    _GL(EnableVertexAttribArray, _prog.edgePos);
+    _GL(EnableVertexAttribArray, _prog.stretchPos);
+    _GL(EnableVertexAttribArray, _prog.texCoord);
+    _GL(VertexAttribPointer, _prog.edgePos, 2, GL_FLOAT, false, 24, 0);
+    _GL(VertexAttribPointer, _prog.stretchPos, 2, GL_FLOAT, false, 24, (void*)8);
+    _GL(VertexAttribPointer, _prog.texCoord, 2, GL_FLOAT, false, 24, (void*)16);
 
-    glDrawElements(GL_TRIANGLES, 6 * e.numQuads, GL_UNSIGNED_SHORT, 0);
+    _GL(DrawElements, GL_TRIANGLES, 6 * e.numQuads, GL_UNSIGNED_SHORT, 0);
 
     [e.arrayBuffer unbind];
     [e.indexBuffer unbind];

@@ -282,19 +282,19 @@ typedef struct VertexData {
 
         [_indexBuffer bind];
         [_arrayBuffer bind];
-        glEnableVertexAttribArray(pos);
-        glEnableVertexAttribArray(texCoord);
+        _GL(EnableVertexAttribArray, pos);
+        _GL(EnableVertexAttribArray, texCoord);
 
-        glActiveTexture(GL_TEXTURE0);
-        glUniform1i(texture, 0);
+        _GL(ActiveTexture, GL_TEXTURE0);
+        _GL(Uniform1i, texture, 0);
         [_fontData.texture bind];
 
-        glUniform4fv(color, 1, rgba.v);
-        glUniformMatrix3fv(transform, 1, false, matrix.m);
-        glVertexAttribPointer(pos, 2, GL_FLOAT, false, 16, 0);
-        glVertexAttribPointer(texCoord, 2, GL_FLOAT, false, 16, (void*)8);
+        _GL(Uniform4fv, color, 1, rgba.v);
+        _GL(UniformMatrix3fv, transform, 1, false, matrix.m);
+        _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 16, 0);
+        _GL(VertexAttribPointer, texCoord, 2, GL_FLOAT, false, 16, (void*)8);
 
-        glDrawElements(GL_TRIANGLES, 6 * (_end - _start), GL_UNSIGNED_SHORT, (void*)(_start * 6 * sizeof(GLushort)));
+        _GL(DrawElements, GL_TRIANGLES, 6 * (_end - _start), GL_UNSIGNED_SHORT, (void*)(_start * 6 * sizeof(GLushort)));
 
         [_indexBuffer unbind];
         [_arrayBuffer unbind];

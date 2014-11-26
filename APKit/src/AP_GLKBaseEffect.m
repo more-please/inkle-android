@@ -10,8 +10,8 @@
 
 - (BOOL) link
 {
-    glBindAttribLocation(self.name, AP_GLKVertexAttribPosition, "position");
-    glBindAttribLocation(self.name, AP_GLKVertexAttribTexCoord0, "texCoord0");
+    _GL(BindAttribLocation, self.name, AP_GLKVertexAttribPosition, "position");
+    _GL(BindAttribLocation, self.name, AP_GLKVertexAttribTexCoord0, "texCoord0");
     AP_CHECK_GL("Failed to bind GLKBaseEffect vertex attributes", return NO);
     
     if (![super link]) {
@@ -79,21 +79,21 @@
 
     [prog use];
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _texture2d0.name);
-    glUniform1i(texture, 0);
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(BindTexture, GL_TEXTURE_2D, _texture2d0.name);
+    _GL(Uniform1i, texture, 0);
     GLKVector4 c = {1, 1, 1, 1};
     if (_useConstantColor) {
         c = _constantColor;
     }
     c.a *= _alpha;
-    glUniform4fv(color, 1, &c.v[0]);
+    _GL(Uniform4fv, color, 1, &c.v[0]);
 
     GLKMatrix4 modelViewProjection = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    glUniformMatrix4fv(modelViewProjectionMatrix, 1, NO, modelViewProjection.m);
+    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, modelViewProjection.m);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 @end
