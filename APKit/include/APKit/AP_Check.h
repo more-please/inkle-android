@@ -51,4 +51,10 @@
         } \
     } while(0)
 
+#ifdef DEBUG
+#define _GL(cmd, ...) do { gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
+#else
+#define _GL(cmd, ...) gl ## cmd(__VA_ARGS__)
+#endif
+
 #define AP_NOT_IMPLEMENTED AP_LogError("Not implemented!")
