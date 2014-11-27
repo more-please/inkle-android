@@ -296,6 +296,9 @@ typedef struct VertexData {
 
         _GL(DrawElements, GL_TRIANGLES, 6 * (_end - _start), GL_UNSIGNED_SHORT, (void*)(_start * 6 * sizeof(GLushort)));
 
+        _GL(DisableVertexAttribArray, pos);
+        _GL(DisableVertexAttribArray, texCoord);
+
         [_indexBuffer unbind];
         [_arrayBuffer unbind];
     }

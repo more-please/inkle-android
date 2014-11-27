@@ -999,6 +999,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 0, (void*)data);
 
         _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+
+        _GL(DisableVertexAttribArray, pos);
     }
 }
 

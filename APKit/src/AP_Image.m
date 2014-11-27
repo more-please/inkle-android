@@ -796,6 +796,10 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
 
     _GL(DrawElements, GL_TRIANGLES, 6 * e.numQuads, GL_UNSIGNED_SHORT, 0);
 
+    _GL(DisableVertexAttribArray, _prog.edgePos);
+    _GL(DisableVertexAttribArray, _prog.stretchPos);
+    _GL(DisableVertexAttribArray, _prog.texCoord);
+
     [e.arrayBuffer unbind];
     [e.indexBuffer unbind];
 }
