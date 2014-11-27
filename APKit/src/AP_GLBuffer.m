@@ -72,7 +72,7 @@ static NSMutableArray* s_deleteQueue = nil;
 
 - (void) bufferTarget:(GLenum)target usage:(GLenum)usage data:(const void *)data size:(size_t)size
 {
-    NSLog(@"*** Buffering data: %p size: %d", data, size);
+//    NSLog(@"*** Buffering data: %p size: %d", data, size);
     _target = target;
     _usage = usage;
     _GL(BindBuffer, _target, _name);
