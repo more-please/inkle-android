@@ -944,7 +944,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     );
 
     static AP_GLProgram* prog;
-    static AP_GLBuffer* buffer;
     static GLint transform;
     static GLint pos;
     static GLint color;
@@ -953,7 +952,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     if (!initialized) {
         initialized = YES;
         prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
-        buffer = [[AP_GLBuffer alloc] init];
         transform = [prog uniform:@"transform"];
         pos = [prog attr:@"pos"];
         color = [prog uniform:@"color"];
@@ -978,7 +976,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     backgroundColor.a *= alpha;
     if (backgroundColor.a > 0) {
         AP_CHECK(prog, return);
-        AP_CHECK(buffer, return);
 
         CGRect r = self.inFlightBounds;
 //        NSLog(@"Rendering background %.2f,%.2f,%.2f, origin: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", backgroundColor.r, backgroundColor.g, backgroundColor.b, r.origin.x, r.origin.y, r.size.width, r.size.height, backgroundColor.a);
@@ -989,8 +986,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             r.origin.x + r.size.width, r.origin.y,
             r.origin.x + r.size.width, r.origin.y + r.size.height
         };
-        [buffer bind];
-        [buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_DYNAMIC_DRAW data:data size:sizeof(data)];
 
         GLKMatrix3 matrix = GLKMatrix3Make(
             boundsToGL.a, boundsToGL.b, 0,
@@ -1001,11 +996,9 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         _GL(Uniform4fv, color, 1, backgroundColor.v);
         _GL(UniformMatrix3fv, transform, 1, false, matrix.m);
         _GL(EnableVertexAttribArray, pos);
-        _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 0, 0);
+        _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 0, (void*)data);
 
         _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
-
-        [buffer unbind];
     }
 }
 
