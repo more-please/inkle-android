@@ -5,8 +5,6 @@
 #import <libxml/HTMLparser.h>
 #import <libxml/tree.h>
 
-#import "INKAttributedStringParagraphStyle.h"
-
 #import "AP_Bundle.h"
 #import "AP_Check.h"
 #import "AP_Image.h"
@@ -87,24 +85,24 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     }
 
     if (isTag(n, "strong")) {
-        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
         font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize];
         attrs = [attrs mutableCopy];
-        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+        [attrs setValue:font forKey:NSFontAttributeName];
     }
 
     if (isTag(n, "em")) {
-        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
         font = [AP_Font fontWithName:@"Baskerville-Italic" size:font.pointSize];
         attrs = [attrs mutableCopy];
-        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+        [attrs setValue:font forKey:NSFontAttributeName];
     }
 
     if (isTag(n, "a")) {
         // Hyperlinks in Holo blue: http://developer.android.com/design/style/color.html
         UIColor* color = [UIColor colorWithRed:0.2 green:0.71 blue:0.9 alpha:1];
         attrs = [attrs mutableCopy];
-        [attrs setValue:color forKey:kINKAttributedStringColorAttribute];
+        [attrs setValue:color forKey:NSForegroundColorAttributeName];
 
         NSString* href = nil;
         for (xmlAttr* a = n->properties; a; a = a->next) {
@@ -113,16 +111,16 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             }
         }
         if (href) {
-            [attrs setValue:href forKey:kINKAttributedStringUrlAttribute];
+            [attrs setValue:href forKey:AP_UrlAttributeName];
         }
     }
 
     // Hack -- just so happens there's only one <span> in credits.css
     if (isTag(n, "span")) {
-        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
         font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
         attrs = [attrs mutableCopy];
-        [attrs setValue:font forKey:kINKAttributedStringFontAttribute];
+        [attrs setValue:font forKey:NSFontAttributeName];
     }
 
     NSMutableAttributedString* buffer = [NSMutableAttributedString new];
@@ -145,7 +143,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
         CGFloat margin = [AP_Window iPhone:32 iPad:150 iPadLandscape:200];
 
-        INKAttributedStringParagraphStyle* style = [INKAttributedStringParagraphStyle style];
+        NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
         style.alignment = kCTTextAlignmentCenter;
         style.firstLineHeadIndent = margin;
         style.headIndent = margin;
@@ -168,9 +166,9 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         }
         
         attrs = @{
-            kINKAttributedStringColorAttribute:[attrs objectForKey:kINKAttributedStringColorAttribute],
-            kINKAttributedStringFontAttribute:[AP_Font fontWithName:font size:size],
-            kINKAttributedStringParagraphStyleAttribute:style
+            NSForegroundColorAttributeName:[attrs objectForKey:NSForegroundColorAttributeName],
+            NSFontAttributeName:[AP_Font fontWithName:font size:size],
+            NSParagraphStyleAttributeName:style
         };
 
         for (n = n->children; n; n = n->next) {
@@ -203,25 +201,25 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             }
 
             AP_Font* f = [AP_Font fontWithName:font size:size];
-            INKAttributedStringParagraphStyle* style = [INKAttributedStringParagraphStyle style];
-            style.alignment = kCTTextAlignmentCenter;
+            NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
+            style.alignment = NSTextAlignmentCenter;
             style.paragraphSpacing = 20;
             style.paragraphSpacingBefore = 20;
 
             [buffer appendAttributedString:[[NSAttributedString alloc]
                 initWithString:@"*"
                 attributes:@{
-                    kINKAttributedStringFontAttribute:f,
-                    kINKAttributedStringParagraphStyleAttribute:style,
-                    kINKAttributedStringImageAttribute:image,
+                    NSFontAttributeName:f,
+                    NSParagraphStyleAttributeName:style,
+                    AP_ImageAttributeName:image,
                 }
             ]];
 
             [buffer appendAttributedString:[[NSAttributedString alloc]
                 initWithString:@"\n"
                 attributes:@{
-                    kINKAttributedStringFontAttribute:f,
-                    kINKAttributedStringParagraphStyleAttribute:style,
+                    NSFontAttributeName:f,
+                    NSParagraphStyleAttributeName:style,
                 }
             ]];
         }
@@ -260,7 +258,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     xmlNode* root = xmlDocGetRootElement(doc);
 
     NSAttributedString* text = [self parseHtml:root attrs:@{
-        kINKAttributedStringColorAttribute:[UIColor whiteColor],
+        NSForegroundColorAttributeName:[UIColor whiteColor],
     }];
 
     xmlFreeDoc(doc);

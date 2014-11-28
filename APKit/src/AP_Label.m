@@ -2,9 +2,6 @@
 
 #import <UIKit/UIKit.h>
 
-#import "INKAttributedStringParagraphStyle.h"
-#import "NSAttributedString+Attributes.h"
-
 #import "AP_Application.h"
 #import "AP_Check.h"
 #import "AP_Control.h"
@@ -31,7 +28,7 @@
     CGPoint _cursor;
     NSMutableArray* _formattedRuns;
     NSMutableArray* _currentLineRuns;
-    INKAttributedStringParagraphStyle* _currentStyle;
+    NSParagraphStyle* _currentStyle;
     CGSize _formattedSize;
     int _formattedLineCount;
 
@@ -47,7 +44,7 @@
 {
     self.userInteractionEnabled = NO;
 
-    _text = [NSMutableAttributedString attributedStringWithString:@""];
+    _text = [[NSMutableAttributedString alloc] initWithString:@""];
     _font = [AP_Font systemFontOfSize:17];
     _alignment = NSTextAlignmentNatural;
     _lineSpacing = 0;
@@ -207,18 +204,24 @@
     }
     // Assume that if the text isn't styled, we want to center vertically like UILabel does.
     _centerVertically = YES;
-    _text = [NSMutableAttributedString attributedStringWithString:text];
-    [_text setFont:_font];
-    [_text setTextColor:_textColor];
-    [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(_alignment)];
-    [_text setLineSpacingAdjustment:_lineSpacing];
+    _text = [[NSMutableAttributedString alloc] initWithString:text];
+
+    NSRange r = NSMakeRange(0, _text.length);
+    [_text addAttribute:NSFontAttributeName value:_font range:r];
+    [_text addAttribute:NSForegroundColorAttributeName value:_textColor range:r];
+
+    NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
+    style.lineSpacing = _lineSpacing;
+    style.alignment = _alignment;
+    [_text addAttribute:NSParagraphStyleAttributeName value:style range:r];
+
     [self setNeedsTextLayout];
 }
 
 - (AP_Font*) font
 {
     if (_text.length > 0) {
-        return [_text attribute:kINKAttributedStringFontAttribute atIndex:0 effectiveRange:NULL];
+        return [_text attribute:NSFontAttributeName atIndex:0 effectiveRange:NULL];
     } else {
         return _font;
     }
@@ -226,15 +229,20 @@
 
 - (void) setFont:(AP_Font*)font
 {
-    _font = font;
-    [_text setFont:font];
-    [self setNeedsTextLayout];
+    if (font != _font) {
+        _font = font;
+
+        NSRange r = NSMakeRange(0, _text.length);
+        [_text addAttribute:NSFontAttributeName value:_font range:r];
+
+        [self setNeedsTextLayout];
+    }
 }
 
 - (UIColor*) textColor
 {
     if (_text.length > 0) {
-        return [_text attribute:kINKAttributedStringColorAttribute atIndex:0 effectiveRange:NULL];
+        return [_text attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:NULL];
     } else {
         return _textColor;
     }
@@ -244,7 +252,10 @@
 {
     if (!GLKVector4AllEqualToVector4(color.rgba, _textColor.rgba)) {
         _textColor = color;
-        [_text setTextColor:color];
+
+        NSRange r = NSMakeRange(0, _text.length);
+        [_text addAttribute:NSForegroundColorAttributeName value:_textColor range:r];
+
         [self setNeedsTextLayout];
     }
 }
@@ -253,7 +264,13 @@
 {
     if (alignment != _alignment) {
         _alignment = alignment;
-        [_text setTextAlignment:NSTextAlignmentToCTTextAlignment(alignment)];
+
+        NSRange r = NSMakeRange(0, _text.length);
+        NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
+        style.lineSpacing = _lineSpacing;
+        style.alignment = _alignment;
+        [_text addAttribute:NSParagraphStyleAttributeName value:style range:r];
+
         [self setNeedsTextLayout];
     }
 }
@@ -262,7 +279,13 @@
 {
     if (adjustment != _lineSpacing) {
         _lineSpacing = adjustment;
-        [_text setLineSpacingAdjustment:adjustment];
+
+        NSRange r = NSMakeRange(0, _text.length);
+        NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
+        style.lineSpacing = _lineSpacing;
+        style.alignment = _alignment;
+        [_text addAttribute:NSParagraphStyleAttributeName value:style range:r];
+
         [self setNeedsTextLayout];
     }
 }
@@ -294,19 +317,19 @@
         // Calculate x offset based on line length and alignment.
         CGFloat xGap = (_layoutWidth + _currentStyle.tailIndent) - _cursor.x;
         switch (_currentStyle.alignment) {
-            case kCTTextAlignmentRight:
+            case NSTextAlignmentRight:
                 offset.x = xGap;
                 break;
 
-            case kCTTextAlignmentCenter:
+            case NSTextAlignmentCenter:
                 offset.x = xGap / 2;
                 break;
 
-            case kCTTextAlignmentJustified:
+            case NSTextAlignmentJustified:
                 AP_NOT_IMPLEMENTED;
                 // fall through
-            case kCTTextAlignmentLeft:
-            case kCTTextAlignmentNatural:
+            case NSTextAlignmentLeft:
+            case NSTextAlignmentNatural:
             default:
                 offset.x = 0;
                 break;
@@ -315,7 +338,7 @@
         // Calculate y adjustment based on maximum ascent and line height.
         CGFloat maxAscent = 0;
         CGFloat maxLineHeight = 0;
-        CGFloat lineSpacing = _currentStyle.lineSpacingAdjustment;
+        CGFloat lineSpacing = _currentStyle.lineSpacing;
         for (AP_Font_Run* run in _currentLineRuns) {
             maxAscent = MAX(maxAscent, run.ascender);
             maxLineHeight = MAX(maxLineHeight, run.size.height);
@@ -367,7 +390,7 @@
     NSString* str = [_text string];
 //    NSLog(@"%@ layout w=%f {%@}", self, width, str);
 
-    INKAttributedStringParagraphStyle* defaultStyle = [INKAttributedStringParagraphStyle style];
+    NSParagraphStyle* defaultStyle = [NSParagraphStyle defaultParagraphStyle];
     AP_Font* defaultFont = [AP_Font systemFontOfSize:17];
     UIColor* defaultColor = [UIColor blackColor];
 
@@ -383,27 +406,27 @@
     [_text enumerateAttributesInRange:NSMakeRange(0, [_text length]) options:0 usingBlock:^(NSDictionary* attrs, NSRange range, BOOL* stop) {
 
         // Get the font, color and paragraph style.
-        AP_Font* font = [attrs objectForKey:kINKAttributedStringFontAttribute];
+        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
         if (!font) {
             font = defaultFont;
         }
         font = [font fontWithSize:(font.pointSize * _fontScale)];
 
-        UIColor* color = [attrs objectForKey:kINKAttributedStringColorAttribute];
+        UIColor* color = [attrs objectForKey:NSForegroundColorAttributeName];
         if (!color) {
             color = defaultColor;
         }
-        _currentStyle = [attrs objectForKey:kINKAttributedStringParagraphStyleAttribute];
+        _currentStyle = [attrs objectForKey:NSParagraphStyleAttributeName];
         if (!_currentStyle) {
             _currentStyle = defaultStyle;
         }
-        NSString* url = [attrs objectForKey:kINKAttributedStringUrlAttribute];
+        NSString* url = [attrs objectForKey:AP_UrlAttributeName];
 
         // Parse the characters.
         NSString* chars = [str substringWithRange:range];
         AP_Font_Run* run = [font runForString:chars];
         run.textColor = color;
-        run.image = [attrs objectForKey:kINKAttributedStringImageAttribute];
+        run.image = [attrs objectForKey:AP_ImageAttributeName];
 
         // Split at paragraph breaks, handle each paragraph separately.
         while (run.numChars > 0) {
