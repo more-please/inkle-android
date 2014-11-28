@@ -1047,6 +1047,59 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     [self.delegate application:self didFinishLaunchingWithOptions:options];
 }
 
+typedef struct {
+    EGLint attr;
+    const char* name;
+} EGLattr;
+
+#define ATTR(a) { a, #a }
+
+static EGLattr EGLattrs[] = {
+    ATTR(EGL_BUFFER_SIZE),
+    ATTR(EGL_ALPHA_SIZE),
+    ATTR(EGL_BLUE_SIZE),
+    ATTR(EGL_GREEN_SIZE),
+    ATTR(EGL_RED_SIZE),
+    ATTR(EGL_DEPTH_SIZE),
+    ATTR(EGL_STENCIL_SIZE),
+    ATTR(EGL_CONFIG_CAVEAT),
+    ATTR(EGL_CONFIG_ID),
+    ATTR(EGL_LEVEL),
+    ATTR(EGL_MAX_PBUFFER_HEIGHT),
+    ATTR(EGL_MAX_PBUFFER_PIXELS),
+    ATTR(EGL_MAX_PBUFFER_WIDTH),
+    ATTR(EGL_NATIVE_RENDERABLE),
+    ATTR(EGL_NATIVE_VISUAL_ID),
+    ATTR(EGL_NATIVE_VISUAL_TYPE),
+    ATTR(EGL_SAMPLES),
+    ATTR(EGL_SAMPLE_BUFFERS),
+    ATTR(EGL_SURFACE_TYPE),
+    ATTR(EGL_TRANSPARENT_TYPE),
+    ATTR(EGL_TRANSPARENT_BLUE_VALUE),
+    ATTR(EGL_TRANSPARENT_GREEN_VALUE),
+    ATTR(EGL_TRANSPARENT_RED_VALUE),
+    ATTR(EGL_BIND_TO_TEXTURE_RGB),
+    ATTR(EGL_BIND_TO_TEXTURE_RGBA),
+    ATTR(EGL_MIN_SWAP_INTERVAL),
+    ATTR(EGL_MAX_SWAP_INTERVAL),
+    ATTR(EGL_LUMINANCE_SIZE),
+    ATTR(EGL_ALPHA_MASK_SIZE),
+    ATTR(EGL_COLOR_BUFFER_TYPE),
+    ATTR(EGL_RENDERABLE_TYPE),
+    ATTR(EGL_CONFORMANT),
+    ATTR(EGL_NONE),
+};
+
+- (void) dumpConfig:(EGLConfig)c
+{
+    for (int i = 0; EGLattrs[i].attr != EGL_NONE; ++i) {
+        EGLattr& a = EGLattrs[i];
+        EGLint value;
+        eglGetConfigAttrib(_display, c, a.attr, &value);
+        NSLog(@"%s: %d", a.name, value);
+    }
+}
+
 - (void) maybeInitGL
 {
     if (_display == EGL_NO_DISPLAY) {
@@ -1055,28 +1108,38 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         _display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         eglInitialize(_display, 0, 0);
 
-        // Here specify the attributes of the desired configuration.
-        // Below, we select an EGLConfig with at least 8 bits per color
-        // component compatible with on-screen windows
         const EGLint attribs[] = {
                 EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
                 EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                // EGL_BLUE_SIZE, 8,
-                // EGL_GREEN_SIZE, 8,
-                // EGL_RED_SIZE, 8,
+                // The original Kindle Fire gives us a config with broken
+                // alpha if we request 24-bit colour. However, some other
+                // devices give us 16-bit configs if we don't specify any
+                // constraints! Therefore, request 16-bit colour at a minimum
+                // (if there's a 32-bit config it should be sorted first).
+                EGL_BLUE_SIZE, 5,
+                EGL_GREEN_SIZE, 6,
+                EGL_RED_SIZE, 5,
                 EGL_NONE
         };
+
         EGLint numConfigs;
 
-        // Here, the application chooses the configuration it desires. In this
-        // sample, we have a very simplified selection process, where we pick
-        // the first EGLConfig that matches our criteria
+//        static EGLConfig configs[500];
+//        eglChooseConfig(_display, attribs, configs, 500, &numConfigs);
+//        for (int i = 0; i < numConfigs; ++i) {
+//            NSLog(@"EGL config %d of %d:", i, numConfigs);
+//            [self dumpConfig:configs[i]];
+//            NSLog(@"----");
+//        }
+
         eglChooseConfig(_display, attribs, &_config, 1, &numConfigs);
+        [self dumpConfig:_config];
 
         const EGLint contextAttribs[] = {
             EGL_CONTEXT_CLIENT_VERSION, 2,
             EGL_NONE
         };
+
         _context = eglCreateContext(_display, _config, NULL, contextAttribs);
     }
 }
