@@ -6,6 +6,7 @@
 #import "AP_Layer.h"
 #import "AP_Utils.h"
 #import "NSObject+AP_KeepAlive.h"
+#import "NSObject+AP_RoundRect.h"
 
 #ifdef ANDROID
 static inline CGPoint CGRectGetCenter(CGRect rect)
@@ -927,36 +928,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
-    static const char* kVertex = AP_SHADER(
-        uniform mat3 transform;
-        attribute vec2 pos;
-        void main() {
-            vec3 tpos = transform * vec3(pos, 1);
-            gl_Position = vec4(tpos, 1);
-        }
-    );
-
-    static const char* kFragment = AP_SHADER(
-        uniform vec4 color;
-        void main() {
-            gl_FragColor = color;
-        }
-    );
-
-    static AP_GLProgram* prog;
-    static GLint transform;
-    static GLint pos;
-    static GLint color;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
-        transform = [prog uniform:@"transform"];
-        pos = [prog attr:@"pos"];
-        color = [prog uniform:@"color"];
-    }
-
     GLKVector4 backgroundColor = _animatedBackgroundColor.inFlight;
     static BOOL s_debugViewBorders = NO;
     if (s_debugViewBorders) {
@@ -975,32 +946,14 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 #endif
     backgroundColor.a *= alpha;
     if (backgroundColor.a > 0) {
-        AP_CHECK(prog, return);
-
         CGRect r = self.inFlightBounds;
-//        NSLog(@"Rendering background %.2f,%.2f,%.2f, origin: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", backgroundColor.r, backgroundColor.g, backgroundColor.b, r.origin.x, r.origin.y, r.size.width, r.size.height, backgroundColor.a);
-
-        float data[8] = {
-            r.origin.x, r.origin.y,
-            r.origin.x, r.origin.y + r.size.height,
-            r.origin.x + r.size.width, r.origin.y,
-            r.origin.x + r.size.width, r.origin.y + r.size.height
-        };
-
-        GLKMatrix3 matrix = GLKMatrix3Make(
-            boundsToGL.a, boundsToGL.b, 0,
-            boundsToGL.c, boundsToGL.d, 0,
-            boundsToGL.tx, boundsToGL.ty, 1);
-
-        [prog use];
-        _GL(Uniform4fv, color, 1, backgroundColor.v);
-        _GL(UniformMatrix3fv, transform, 1, false, matrix.m);
-        _GL(EnableVertexAttribArray, pos);
-        _GL(VertexAttribPointer, pos, 2, GL_FLOAT, false, 0, (void*)data);
-
-        _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
-
-        _GL(DisableVertexAttribArray, pos);
+        [self roundRectWithSize:r.size
+            transform:boundsToGL
+            penColor:backgroundColor
+            fillColor:backgroundColor
+            pen:0
+            corner:self.layer.cornerRadius
+        ];
     }
 }
 
