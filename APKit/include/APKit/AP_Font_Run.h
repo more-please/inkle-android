@@ -25,7 +25,7 @@
 
 @property(nonatomic,readonly) CGRect frame;
 
-- (AP_Font_Run*) initWithData:(AP_Font_Data*)data pointSize:(CGFloat)pointSize glyphs:(unsigned char*)glyphs length:(size_t)length;
+- (AP_Font_Run*) initWithData:(AP_Font_Data*)data pointSize:(CGFloat)pointSize kerning:(CGFloat)kerning glyphs:(unsigned char*)glyphs length:(size_t)length;
 
 - (AP_Font_Run*) splitAtWidth:(CGFloat)width leaving:(AP_Font_Run**)leftover;
 - (AP_Font_Run*) splitAtLineBreakLeaving:(AP_Font_Run**)leftover;

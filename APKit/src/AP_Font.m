@@ -33,18 +33,18 @@ AP_Font_Data* fontDataNamed(NSString* name) {
     return self.fontData.header->leading * (self.pointSize / self.fontData.header->emSize);
 }
 
-- (AP_Font_Run*) runForString:(NSString*)string
+- (AP_Font_Run*) runForString:(NSString*)string kerning:(CGFloat)kerning
 {
     size_t length = [string length];
     unichar* buffer = malloc(length * sizeof(unichar));
     AP_CHECK(buffer, return nil);
     [string getCharacters:buffer range:NSMakeRange(0, length)];
-    AP_Font_Run* result = [self runForChars:buffer size:length];
+    AP_Font_Run* result = [self runForChars:buffer size:length kerning:kerning];
     free(buffer);
     return result;
 }
 
-- (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size
+- (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size kerning:(CGFloat)kerning
 {
     unsigned char* buffer = malloc(size);
     AP_CHECK(buffer, return nil);
@@ -68,7 +68,7 @@ AP_Font_Data* fontDataNamed(NSString* name) {
     }
     AP_CHECK(dest <= buffer + size, abort());
 
-    AP_Font_Run* result = [[AP_Font_Run alloc] initWithData:f pointSize:self.pointSize glyphs:buffer length:(dest - buffer)];
+    AP_Font_Run* result = [[AP_Font_Run alloc] initWithData:f pointSize:self.pointSize kerning:kerning glyphs:buffer length:(dest - buffer)];
     free(buffer);
     return result;
 }

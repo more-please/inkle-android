@@ -14,6 +14,7 @@
     AP_GLBuffer* _arrayBuffer;
     AP_GLBuffer* _indexBuffer;
     GLKVector4 _textColor;
+    CGFloat _kerning;
 
     AP_Font_Data* _fontData;
     NSData* _runData;
@@ -38,6 +39,7 @@ typedef struct VertexData {
     self = [super init];
     if (self) {
         // Copy common stuff. (TODO: maybe put this in a shared object?)
+        _kerning = run->_kerning;
         _ascender = run->_ascender;
         _descender = run->_descender;
         _lineHeight = run->_lineHeight;
@@ -59,10 +61,11 @@ typedef struct VertexData {
     return self;
 }
 
-- (AP_Font_Run*) initWithData:(AP_Font_Data*)data pointSize:(CGFloat)pointSize glyphs:(unsigned char*)glyphs length:(size_t)length
+- (AP_Font_Run*) initWithData:(AP_Font_Data*)data pointSize:(CGFloat)pointSize kerning:(CGFloat)kerning glyphs:(unsigned char*)glyphs length:(size_t)length
 {
     self = [super init];
     if (self) {
+        _kerning = kerning;
         _fontData = data;
 
         NSMutableData* runData = [NSMutableData dataWithLength:((length + 1) * sizeof(float) + length * sizeof(unsigned char))];
@@ -109,7 +112,7 @@ typedef struct VertexData {
             xPos += (g->advance * pointSize) / emSize;
             if ((i+1) < length) {
                 int16_t kerning = [data kerningForGlyph1:glyphs[i] glyph2:glyphs[i+1]];
-                xPos += (kerning * pointSize) / emSize;
+                xPos += (kerning * pointSize) / emSize + _kerning;
             }
 
             GLushort index = i * 4;

@@ -15,7 +15,7 @@
 @property(nonatomic,readonly) CGFloat lineHeight;
 @property(nonatomic,readonly) CGFloat leading;
 
-- (AP_Font_Run*) runForString:(NSString*)string;
-- (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size;
+- (AP_Font_Run*) runForString:(NSString*)string kerning:(CGFloat)kerning;
+- (AP_Font_Run*) runForChars:(unichar*)chars size:(size_t)size kerning:(CGFloat)kerning;
 
 @end

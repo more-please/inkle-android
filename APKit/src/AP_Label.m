@@ -412,6 +412,8 @@
         }
         font = [font fontWithSize:(font.pointSize * _fontScale)];
 
+        NSNumber* kerning = [attrs objectForKey:NSKernAttributeName];
+
         UIColor* color = [attrs objectForKey:NSForegroundColorAttributeName];
         if (!color) {
             color = defaultColor;
@@ -424,7 +426,7 @@
 
         // Parse the characters.
         NSString* chars = [str substringWithRange:range];
-        AP_Font_Run* run = [font runForString:chars];
+        AP_Font_Run* run = [font runForString:chars kerning:kerning.floatValue];
         run.textColor = color;
         run.image = [attrs objectForKey:AP_ImageAttributeName];
 
