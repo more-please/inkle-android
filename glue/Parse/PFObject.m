@@ -90,6 +90,11 @@
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (NSString*) objectId
+{
+    return [[UIApplication sharedApplication] parseObjectId:_jobj];
+}
+
 @end
 
 @implementation NSDictionary (PFObject)

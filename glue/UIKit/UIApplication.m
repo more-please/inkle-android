@@ -94,6 +94,12 @@ static UIApplication* g_Application;
     return NULL;
 }
 
+- (NSString*) parseObjectId:(jobject)obj
+{
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+}
+
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
 {
     GLUE_NOT_IMPLEMENTED;

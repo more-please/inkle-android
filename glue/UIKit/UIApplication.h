@@ -38,6 +38,7 @@
 
 - (jobject) parseNewObject:(NSString*)className;
 - (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId;
+- (NSString*) parseObjectId:(jobject)jobj;
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block;

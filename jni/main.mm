@@ -90,6 +90,9 @@ static JavaMethod kParseNewObject = {
 static JavaMethod kParseNewObjectId = {
     "parseNewObjectId", "(Ljava/lang/String;Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
 };
+static JavaMethod kParseObjectId = {
+    "parseObjectId", "(Lcom/parse/ParseObject;)Ljava/lang/String;", NULL
+};
 static JavaMethod kParseAddKey = {
     "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/Object;)V", NULL
 };
@@ -682,6 +685,24 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
     result = _env->NewGlobalRef(result);
+
+    _env->PopLocalFrame(NULL);
+    return result;
+}
+
+- (NSString*) parseObjectId:(jobject)obj
+{
+    [self maybeInitJavaMethod:&kParseObjectId];
+
+    _env->PushLocalFrame(16);
+
+    jstring str = (jstring) _env->CallObjectMethod(_instance, kParseObjectId.method, obj);
+    NSString* result = nil;
+    if (str) {
+        const char* c = _env->GetStringUTFChars(str, NULL);
+        result = [NSString stringWithCString:c];
+        _env->ReleaseStringUTFChars(str, c);
+    }
 
     _env->PopLocalFrame(NULL);
     return result;
