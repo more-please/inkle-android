@@ -238,9 +238,7 @@ static void NSLog_handler(NSString* message) {
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
 
-    NSMutableDictionary* _parseCallBlocks; // Map of int -> PFStringResultBlock
-    NSMutableDictionary* _parseSaveBlocks; // Map of int -> PFBooleanResultBlock
-    NSMutableDictionary* _parseFindBlocks; // Map of int -> PFArrayResultBlock
+    NSMutableDictionary* _parseBlocks; // Map of int -> block
 
     jobject _gaiDefaultTracker;
     NSArray* _pakNamesCache;
@@ -316,9 +314,7 @@ static void NSLog_handler(NSString* message) {
         _obbPath = [self javaStringMethod:&kGetExpansionFilePath];
         AP_CHECK(_obbPath, return nil);
 
-        _parseCallBlocks = [NSMutableDictionary dictionary];
-        _parseSaveBlocks = [NSMutableDictionary dictionary];
-        _parseFindBlocks = [NSMutableDictionary dictionary];
+        _parseBlocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -553,6 +549,23 @@ static void NSLog_handler(NSString* message) {
     return [self javaIntMethod:&kVersionCode];
 }
 
+- (int) parsePushBlock:(id)block
+{
+    static int handle = 0;
+    ++handle;
+    if (block) {
+        [_parseBlocks setObject:block forKey:@(handle)];
+    }
+    return handle;
+}
+
+- (id) parsePopBlock:(int)handle
+{
+    id result = [_parseBlocks objectForKey:@(handle)];
+    [_parseBlocks removeObjectForKey:@(handle)];
+    return result;
+}
+
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
 {
     [self maybeInitJavaMethod:&kParseInit];
@@ -568,11 +581,7 @@ static void NSLog_handler(NSString* message) {
 
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
 {
-    static int handle = 0;
-    ++handle;
-    if (block) {
-        [_parseCallBlocks setObject:block forKey:@(handle)];
-    }
+    int handle = [self parsePushBlock:block];
 
     [self maybeInitJavaMethod:&kParseCallFunction];
 
@@ -603,22 +612,17 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 - (void) parseCallResult:(ParseResult*)result
 {
     // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
-    PFIdResultBlock block = [_parseCallBlocks objectForKey:@(result.handle)];
+    PFIdResultBlock block = [self parsePopBlock:result.handle];
     if (block) {
         NSError* error = nil;
         id json = [self jsonDecode:result error:&error];
         block(json, error);
     }
-    [_parseCallBlocks removeObjectForKey:@(result.handle)];
 }
 
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
 {
-    static int handle = 0;
-    ++handle;
-    if (block) {
-        [_parseSaveBlocks setObject:block forKey:@(handle)];
-    }
+    int handle = [self parsePushBlock:block];
 
     [self maybeInitJavaMethod:&kParseSave];
     _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
@@ -638,12 +642,11 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 - (void) parseSaveResult:(ParseResult*)result
 {
     // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
-    PFBooleanResultBlock block = [_parseSaveBlocks objectForKey:@(result.handle)];
+    PFBooleanResultBlock block = [self parsePopBlock:result.handle];
     if (block) {
         NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
         block(result.boolean, nil);
     }
-    [_parseSaveBlocks removeObjectForKey:@(result.handle)];
 }
 
 - (jobject) parseNewObject:(NSString*)className
@@ -757,12 +760,7 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
 {
-    static int handle = 0;
-    ++handle;
-    if (block) {
-        [_parseFindBlocks setObject:block forKey:@(handle)];
-    }
-
+    int handle = [self parsePushBlock:block];
     [self maybeInitJavaMethod:&kParseFind];
     _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
 }
@@ -785,13 +783,12 @@ static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 - (void) parseFindResult:(ParseResult*)result
 {
     // NSLog(@"parseFindResult handle:%d string:%@", result.handle, result.string);
-    PFArrayResultBlock block = [_parseFindBlocks objectForKey:@(result.handle)];
+    PFArrayResultBlock block = [self parsePopBlock:result.handle];
     if (block) {
         NSError* error = nil;
         id json = [self jsonDecode:result error:&error];
         block(json, error);
     }
-    [_parseFindBlocks removeObjectForKey:@(result.handle)];
 }
 
 - (void) parseEnableAutomaticUser
