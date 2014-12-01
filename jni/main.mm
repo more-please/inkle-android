@@ -96,6 +96,9 @@ static JavaMethod kParseAddKey = {
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
 };
+static JavaMethod kParseFetch = {
+    "parseFetch", "(ILcom/parse/ParseObject;)V", NULL
+};
 static JavaMethod kParseNewQuery = {
     "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
 };
@@ -161,15 +164,13 @@ static JavaMethod kMaybeGetURL = {
 };
 
 static void initBreakpad(JNIEnv*, jobject, jstring);
-static void parseCallResult(JNIEnv*, jobject, jint, jstring);
-static void parseSaveResult(JNIEnv*, jobject, jint, jboolean);
-static void parseFindResult(JNIEnv*, jobject, jint, jstring);
+static void parseObjResult(JNIEnv*, jobject, jint, jstring);
+static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
 
 static JNINativeMethod kNatives[] = {
     { "initBreakpad", "(Ljava/lang/String;)V", (void *)&initBreakpad},
-    { "parseCallResult", "(ILjava/lang/String;)V", (void *)&parseCallResult},
-    { "parseSaveResult", "(IZ)V", (void *)&parseSaveResult},
-    { "parseFindResult", "(ILjava/lang/String;)V", (void *)&parseFindResult},
+    { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
+    { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
 };
 
 static google_breakpad::ExceptionHandler* exceptionHandler;
@@ -566,6 +567,53 @@ static void NSLog_handler(NSString* message) {
     return result;
 }
 
+static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    ParseResult* result = [[ParseResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    // NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(parseObjResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseObjResult:(ParseResult*)result
+{
+    // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
+    PFIdResultBlock block = [self parsePopBlock:result.handle];
+    if (block) {
+        NSError* error = nil;
+        id json = [self jsonDecode:result error:&error];
+        block(json, error);
+    }
+}
+
+static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
+    ParseResult* result = [[ParseResult alloc] init];
+    result.handle = i;
+    result.boolean = b;
+
+    // NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
+    [g_Main performSelectorOnMainThread:@selector(parseBoolResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseBoolResult:(ParseResult*)result
+{
+    // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
+    PFBooleanResultBlock block = [self parsePopBlock:result.handle];
+    if (block) {
+        NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        block(result.boolean, nil);
+    }
+}
+
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
 {
     [self maybeInitJavaMethod:&kParseInit];
@@ -594,30 +642,12 @@ static void NSLog_handler(NSString* message) {
     _env->PopLocalFrame(NULL);
 }
 
-static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
-    ParseResult* result = [[ParseResult alloc] init];
-    result.handle = i;
-    if (s) {
-        const char* c = env->GetStringUTFChars(s, NULL);
-        result.string = [NSString stringWithCString:c];
-        env->ReleaseStringUTFChars(s, c);
-    }
-
-    // NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
-    [g_Main performSelectorOnMainThread:@selector(parseCallResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) parseCallResult:(ParseResult*)result
+- (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
 {
-    // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
-    PFIdResultBlock block = [self parsePopBlock:result.handle];
-    if (block) {
-        NSError* error = nil;
-        id json = [self jsonDecode:result error:&error];
-        block(json, error);
-    }
+    int handle = [self parsePushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseFetch];
+    _env->CallVoidMethod(_instance, kParseFetch.method, handle, obj);
 }
 
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
@@ -626,27 +656,6 @@ static void parseCallResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
     [self maybeInitJavaMethod:&kParseSave];
     _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
-}
-
-static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
-    ParseResult* result = [[ParseResult alloc] init];
-    result.handle = i;
-    result.boolean = b;
-
-    // NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
-    [g_Main performSelectorOnMainThread:@selector(parseSaveResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) parseSaveResult:(ParseResult*)result
-{
-    // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
-    PFBooleanResultBlock block = [self parsePopBlock:result.handle];
-    if (block) {
-        NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        block(result.boolean, nil);
-    }
 }
 
 - (jobject) parseNewObject:(NSString*)className
@@ -763,32 +772,6 @@ static void parseSaveResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     int handle = [self parsePushBlock:block];
     [self maybeInitJavaMethod:&kParseFind];
     _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
-}
-
-static void parseFindResult(JNIEnv* env, jobject obj, jint i, jstring s) {
-    ParseResult* result = [[ParseResult alloc] init];
-    result.handle = i;
-    if (s) {
-        const char* c = env->GetStringUTFChars(s, NULL);
-        result.string = [NSString stringWithCString:c];
-        env->ReleaseStringUTFChars(s, c);
-    }
-
-    // NSLog(@"Posting parseFindResult handle:%d string:%@", result.handle, result.string);
-    [g_Main performSelectorOnMainThread:@selector(parseFindResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) parseFindResult:(ParseResult*)result
-{
-    // NSLog(@"parseFindResult handle:%d string:%@", result.handle, result.string);
-    PFArrayResultBlock block = [self parsePopBlock:result.handle];
-    if (block) {
-        NSError* error = nil;
-        id json = [self jsonDecode:result error:&error];
-        block(json, error);
-    }
 }
 
 - (void) parseEnableAutomaticUser

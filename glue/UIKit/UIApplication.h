@@ -40,6 +40,7 @@
 - (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId;
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
+- (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block;
 
 - (jobject) parseNewQuery:(NSString*)className;
 - (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)vaue;

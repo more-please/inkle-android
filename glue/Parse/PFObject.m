@@ -77,7 +77,7 @@
 
 - (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block
 {
-    GLUE_NOT_IMPLEMENTED;
+    [[UIApplication sharedApplication] parseObject:_jobj fetchWithBlock:block];
 }
 
 - (void) removeObjectForKey:(NSString*)key
