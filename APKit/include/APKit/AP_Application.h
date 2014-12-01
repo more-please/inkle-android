@@ -11,6 +11,8 @@
 
 - (BOOL) application:(AP_Application*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions;
 
+- (BOOL) application:(AP_Application *)application openURL:(NSURL*)url sourceApplication:(NSString*)sourceApplication annotation:(id)annotation;
+
 @property (nonatomic,strong) Real_UIWindow* window;
 
 #if 0 // Sorcery-specific?

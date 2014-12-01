@@ -156,6 +156,9 @@ static JavaMethod kMailTo = {
 static JavaMethod kGetLocale = {
     "getLocale", "()Ljava/lang/String;", NULL
 };
+static JavaMethod kMaybeGetURL = {
+    "maybeGetURL", "()Ljava/lang/String;", NULL
+};
 
 static void initBreakpad(JNIEnv*, jobject, jstring);
 static void parseCallResult(JNIEnv*, jobject, jint, jstring);
@@ -291,10 +294,12 @@ static void NSLog_handler(NSString* message) {
         // Send NSLog to a file
         NSString* logfile = [self.documentsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld.log", time(NULL)]];
         _NSLog_fd = open(logfile.UTF8String, O_CREAT | O_WRONLY | O_APPEND, 644);
-        NSAssert(_NSLog_fd >= 0, @"Error opening log file: %s", strerror(errno));
-
-        NSLog(@"Logging to: %@", logfile);
-        _NSLog_printf_handler = NSLog_handler;
+        if (_NSLog_fd < 0) {
+            NSLog(@"*** Error opening log file: %s", strerror(errno));
+        } else {
+            NSLog(@"Logging to: %@", logfile);
+            _NSLog_printf_handler = NSLog_handler;
+        }
 
         _touches = [NSMutableDictionary dictionary];
 
@@ -481,11 +486,12 @@ static void NSLog_handler(NSString* message) {
     _env->PushLocalFrame(16);
 
     jstring str = (jstring) _env->CallObjectMethod(_instance, m->method);
-    AP_CHECK(str, return nil);
-    const char* c = _env->GetStringUTFChars(str, NULL);
-    NSString* result = [NSString stringWithCString:c];
-    _env->ReleaseStringUTFChars(str, c);
-
+    NSString* result = nil;
+    if (str) {
+        const char* c = _env->GetStringUTFChars(str, NULL);
+        result = [NSString stringWithCString:c];
+        _env->ReleaseStringUTFChars(str, c);
+    }
     _env->PopLocalFrame(NULL);
     return result;
 }
@@ -1275,6 +1281,22 @@ static EGLattr EGLattrs[] = {
     }
 }
 
+- (void) maybeDisplayURL
+{
+    if (!self.delegate) {
+        // App isn't initialized yet
+    }
+
+    NSString* urlStr = [self javaStringMethod:&kMaybeGetURL];
+    if (urlStr) {
+        NSURL* url = [NSURL URLWithString:urlStr];
+        if (url) {
+            NSLog(@"Opening URL: %@", url);
+            [self.delegate application:self openURL:url sourceApplication:nil annotation:nil];
+        }
+    }
+}
+
 - (Real_UITouch*) touchForPointerID:(int32_t)pointerID x:(float)x y:(float)y
 {
     NSNumber* n = [NSNumber numberWithInt:pointerID];
@@ -1523,6 +1545,9 @@ void android_main(struct android_app* android) {
                 // Let's just poll it every frame.
                 [g_Main updateScreenSize];
                 [g_Main updateGL:gotInput];
+
+                // Check whether we need to display a URL.
+                [g_Main maybeDisplayURL];
             }
         }
     }
