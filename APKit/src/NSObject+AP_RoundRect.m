@@ -21,8 +21,10 @@ static const char* kCommonVertex = AP_SHADER(
         vec2 yScreen = (transform * (pos + dy) - transform * (pos - dy)).xy;
         float xPix = length(xScreen * 0.5 * screenSize);
         float yPix = length(yScreen * 0.5 * screenSize);
-        f_innerPos = pos.xy - 0.5;
-        f_outerPos = f_innerPos * (1.0 + 2.0 / vec2(xPix, yPix));
+        vec2 p = pos.xy - 0.5;
+        vec2 k = p / vec2(xPix, yPix);
+        f_innerPos = p - k;
+        f_outerPos = p + k;
     }
 );
 
