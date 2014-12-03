@@ -362,10 +362,13 @@ static void NSLog_handler(NSString* message) {
         // There's no API for iterating over asset directories.
         // We'll just have to hard-code the directory names, bah!
         const char* dirNames[] = {
+            // Sorcery! sounds
             "AudioLoops",
             "AudioShuffles",
             "CommonAudioLoops",
             "CommonAudioShuffles",
+            // Eighty days
+            "AudioSoundScapeSamples",
             NULL
         };
         NSMutableArray* cache = [NSMutableArray array];
