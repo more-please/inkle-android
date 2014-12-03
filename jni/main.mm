@@ -291,6 +291,10 @@ static void NSLog_handler(NSString* message) {
 
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
+#ifdef DEBUG
+        // In debug builds, use /sdcard/Downloads for all files for easier hacking
+        self.documentsDir = self.publicDocumentsDir;
+#endif
         [NSUserDefaults setDocumentsDir:self.documentsDir];
 
         // Send NSLog to a file
