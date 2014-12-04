@@ -426,6 +426,12 @@
 
         // Parse the characters.
         NSString* chars = [str substringWithRange:range];
+
+        AP_TextTransform t = [attrs objectForKey:AP_TextTransformAttributeName];
+        if (t) {
+            chars = t(chars);
+        }
+
         AP_Font_Run* run = [font runForString:chars kerning:kerning.floatValue];
         run.textColor = color;
         run.image = [attrs objectForKey:AP_ImageAttributeName];

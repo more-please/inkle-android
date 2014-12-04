@@ -12,6 +12,9 @@ extern NSString* const NSForegroundColorAttributeName;
 // Iain additions
 extern NSString* const AP_UrlAttributeName;
 extern NSString* const AP_ImageAttributeName;
+extern NSString* const AP_TextTransformAttributeName;
+
+typedef NSString* (^AP_TextTransform)(NSString*);
 
 @interface NSParagraphStyle : NSObject
 

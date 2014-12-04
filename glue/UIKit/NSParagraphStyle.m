@@ -9,6 +9,7 @@ NSString* const NSForegroundColorAttributeName = @"NSForegroundColor";
 
 NSString* const AP_UrlAttributeName = @"AP_Url";
 NSString* const AP_ImageAttributeName = @"AP_Image";
+NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
 
 @implementation NSParagraphStyle
 
