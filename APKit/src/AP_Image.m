@@ -211,7 +211,6 @@ typedef struct VertexData {
         return (AP_Image*)nil;
     }];
 
-    AP_CHECK([result isKindOfClass:[AP_Image class]], abort());
     return result;
 }
 
