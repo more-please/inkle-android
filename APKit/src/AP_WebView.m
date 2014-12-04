@@ -85,6 +85,8 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             attributes:attrs];
     }
 
+#if 0
+    // Sorcery! styles. TODO: extract this into game-specific code.
     if (isTag(n, "strong")) {
         AP_Font* font = [attrs objectForKey:NSFontAttributeName];
         font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize];
@@ -98,6 +100,21 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         attrs = [attrs mutableCopy];
         [attrs setValue:font forKey:NSFontAttributeName];
     }
+
+    // Hack -- just so happens there's only one <span> in credits.css
+    if (isTag(n, "span")) {
+        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
+        font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
+        attrs = [attrs mutableCopy];
+        [attrs setValue:font forKey:NSFontAttributeName];
+    }
+#else
+    // 80 Days styles
+    if (isTags(n, "strong", "b", "em", "i", NULL)) {
+        attrs = [attrs mutableCopy];
+        [attrs setValue:[UIColor whiteColor] forKey:NSForegroundColorAttributeName];
+    }
+#endif
 
     if (isTag(n, "a")) {
         // Hyperlinks in Holo blue: http://developer.android.com/design/style/color.html
@@ -116,14 +133,6 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         }
     }
 
-    // Hack -- just so happens there's only one <span> in credits.css
-    if (isTag(n, "span")) {
-        AP_Font* font = [attrs objectForKey:NSFontAttributeName];
-        font = [AP_Font fontWithName:@"Baskerville-Bold" size:font.pointSize * 1.2];
-        attrs = [attrs mutableCopy];
-        [attrs setValue:font forKey:NSFontAttributeName];
-    }
-
     NSMutableAttributedString* buffer = [NSMutableAttributedString new];
     for (n = n->children; n; n = n->next) {
         NSAttributedString* s = [self parseText:n attrs:attrs];
@@ -140,17 +149,22 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     NSString* font = @"Baskerville";
     CGFloat size = 16;
 
-    if (isTags(n, "p", "h1", "h2", "h3", NULL)) {
+    if (isTags(n, "a", "br", "p", "h1", "h2", "h3", "h4", NULL)) {
 
         CGFloat margin = [AP_Window iPhone:32 iPad:150 iPadLandscape:200];
+        CGFloat kerning = 0;
 
         NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
         style.alignment = kCTTextAlignmentCenter;
         style.firstLineHeadIndent = margin;
         style.headIndent = margin;
         style.tailIndent = -margin;
-        style.paragraphSpacing = 5;
+        style.paragraphSpacingBefore = 4;
 
+        UIColor* color = [attrs objectForKey:NSForegroundColorAttributeName];
+        AP_TextTransform textTransform = nil;
+#if 0
+        // Sorcery! styles. TODO: extract this into game-specific code.
         if (isTags(n, "h1", "h2", NULL)) {
             font = @"Baskerville-Bold";
             style.paragraphSpacingBefore = [AP_Window scaleForIPhone:45 iPad:90];
@@ -165,19 +179,48 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             style.paragraphSpacingBefore = 10;
             size = 16;
         }
-        
-        attrs = @{
-            NSForegroundColorAttributeName:[attrs objectForKey:NSForegroundColorAttributeName],
-            NSFontAttributeName:[AP_Font fontWithName:font size:size],
-            NSParagraphStyleAttributeName:style
-        };
+#else
+        // 80 Days styles.
+        font = @"Futura-CondensedMedium";
+        size = 18;
 
-        for (n = n->children; n; n = n->next) {
-            NSAttributedString* s = [self parseText:n attrs:attrs];
-            [buffer appendAttributedString:s];
+        if (isTag(n, "h1")) {
+            style.paragraphSpacingBefore = 50;
+            size = 72;
+        } else if (isTag(n, "h3")) {
+            style.paragraphSpacingBefore = 50;
+            kerning = 2;
+            font = @"Futura-Medium";
+            size = 14;
+            textTransform = ^(NSString* s) { return [s uppercaseString]; };
+        } else if (isTag(n, "h4")) {
+            color = [UIColor colorWithWhite:0xA0 / 255.0 alpha:1.0];
+        } else if (isTag(n, "p")) {
+            size = 12;
+            font = @"Futura-Medium";
+            color = [UIColor colorWithWhite:0x70 / 255.0 alpha:1.0];
         }
 
-        NSAttributedString* end = [[NSAttributedString alloc] initWithString:@"\n" attributes:attrs];
+        // Font sizes seem really small, boost them
+        size *= 1.25;
+#endif
+
+        attrs = @{
+            NSForegroundColorAttributeName:color,
+            NSFontAttributeName:[AP_Font fontWithName:font size:size],
+            NSParagraphStyleAttributeName:style,
+            NSKernAttributeName:@(kerning)
+        };
+
+        if (textTransform) {
+            attrs = [attrs mutableCopy];
+            [attrs setValue:textTransform forKey:AP_TextTransformAttributeName];
+        }
+
+        NSAttributedString* s = [self parseText:n attrs:attrs];
+        [buffer appendAttributedString:s];
+
+        NSAttributedString* end = [[NSAttributedString alloc] initWithString:@" \n" attributes:attrs];
         [buffer appendAttributedString:end];
 
     } else if (isTag(n, "img")) {
@@ -204,7 +247,6 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             // The image path is relative to the HTML source file.
             NSString* dir = [_indexHtml stringByDeletingLastPathComponent];
             NSString* path = [dir stringByAppendingPathComponent:src];
-            NSLog(@"*** Loading image src=%@, path=%@", src, path);
             image = [AP_Image imageNamed:path];
         }
         if (image) {
@@ -215,8 +257,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             AP_Font* f = [AP_Font fontWithName:font size:size];
             NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
             style.alignment = NSTextAlignmentCenter;
-            style.paragraphSpacing = 20;
-            style.paragraphSpacingBefore = 20;
+            style.paragraphSpacing = 8;
 
             [buffer appendAttributedString:[[NSAttributedString alloc]
                 initWithString:@"*"
@@ -291,13 +332,13 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     [super layoutSubviews];
 
     if (_label) {
-        CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
+        CGFloat margin = [AP_Window scaleForIPhone:25 iPad:50];
 
         CGSize viewSize = _scrollView.frame.size;
         CGSize textSize = [_label sizeThatFits:viewSize];
         textSize.width = viewSize.width;
 
-        _scrollView.contentSize = CGSizeMake(textSize.width, textSize.height + 4 * margin);
+        _scrollView.contentSize = CGSizeMake(textSize.width, textSize.height + 2 * margin);
         _label.frame = CGRectMake(0, margin, textSize.width, textSize.height);
     }
 }
