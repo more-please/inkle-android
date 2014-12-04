@@ -13,6 +13,7 @@
 
 @implementation AP_WebView {
     AP_Label* _label;
+    NSString* _indexHtml;
 }
 
 AP_BAN_EVIL_INIT;
@@ -193,7 +194,18 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
         AP_Image* image = nil;
         if (src) {
-            image = [AP_Image imageNamed:src];
+            // Strip off any @-suffix, we don't use those on Android.
+            for (NSUInteger i = 0; i < src.length; ++i) {
+                if ([src characterAtIndex:i] == '@') {
+                    src = [src substringToIndex:i];
+                    break;
+                }
+            }
+            // The image path is relative to the HTML source file.
+            NSString* dir = [_indexHtml stringByDeletingLastPathComponent];
+            NSString* path = [dir stringByAppendingPathComponent:src];
+            NSLog(@"*** Loading image src=%@, path=%@", src, path);
+            image = [AP_Image imageNamed:path];
         }
         if (image) {
             if (width) {
@@ -252,7 +264,9 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     if ([_delegate respondsToSelector:@selector(webViewDidStartLoad:)]) {
         [_delegate webViewDidStartLoad:self];
     }
-    
+
+    _indexHtml = name;
+
     NSData* data = [AP_Bundle dataForResource:name ofType:nil];
     xmlDoc* doc = htmlReadMemory((const char*)data.bytes, data.length, name.cString, NULL, 0);
     xmlNode* root = xmlDocGetRootElement(doc);
