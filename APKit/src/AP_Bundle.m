@@ -41,7 +41,7 @@ static AP_Bundle* g_Bundle;
         }
         fullName = [name stringByAppendingString:ext];
     }
-    NSLog(@"Loading resource: %@", fullName);
+//    NSLog(@"Loading resource: %@", fullName);
 #ifdef ANDROID
     PAK_Item* item = [PAK_Search item:fullName];
     if (item) {
@@ -80,11 +80,11 @@ static AP_Bundle* g_Bundle;
 - (NSDictionary*) infoDictionary
 {
     if (!_info) {
-        NSLog(@"Loading info dictionary...");
+//        NSLog(@"Loading info dictionary...");
         NSData* data = [AP_Bundle dataForResource:@"Info" ofType:@"plist"];
         _info = [NSDictionary dictionaryWithPlistData:data];
         AP_CHECK(_info, return nil);
-        NSLog(@"Loading info dictionary... Done.");
+//        NSLog(@"Loading info dictionary... Done.");
     }
     return _info;
 }
@@ -92,7 +92,7 @@ static AP_Bundle* g_Bundle;
 - (id) objectForInfoDictionaryKey:(NSString*)key
 {
     id result = [[self infoDictionary] objectForKey:key];
-    NSLog(@"objectForInfoDictionaryKey:%@ -> %@", key, result);
+//    NSLog(@"objectForInfoDictionaryKey:%@ -> %@", key, result);
     return result;
 }
 
