@@ -53,7 +53,7 @@ static const char* kCircleFragment = AP_SHADER(
     }
 );
 
-static const char* kRoundRectFragment = AP_SHADER(
+static const char* kStrokedRoundRectFragment = AP_SHADER(
     uniform vec4 fillColor;
     uniform vec4 penColor;
     uniform vec2 corner;
@@ -112,6 +112,46 @@ static const char* kRoundRectFragment = AP_SHADER(
     }
 );
 
+static const char* kFilledRoundRectFragment = AP_SHADER(
+    uniform vec4 color;
+    uniform vec2 corner;
+
+    varying vec2 f_outerPos;
+    varying vec2 f_innerPos;
+
+    const vec2 zero = vec2(0.0, 0.0);
+
+    float alphaForDistances(float inner, float outer) {
+        float lo = min(inner, outer);
+        float hi = max(inner, outer);
+        return clamp((0.5 - lo) / (hi - lo), 0.0, 1.0);
+    }
+
+    vec2 focus(vec2 c) {
+        vec2 c2 = c * c;
+        return sqrt(max(zero, vec2(c2.x - c2.y, c2.y - c2.x)));
+    }
+
+    float distanceForPoint(vec2 p) {
+        p = abs(p) - 0.5 + corner;
+        vec2 f = focus(corner);
+        vec2 pLo = min(p - f, zero);
+        vec2 pHi = max(p, zero);
+        float rectDist = max(pLo.x, pLo.y);
+        float ellipseDist = 0.5 * (distance(pHi, f) + distance(pHi, -f)) - max(corner.x, corner.y);
+        return 0.5 + rectDist + ellipseDist;
+    }
+
+    float alphaForEdge(vec2 inner, vec2 outer) {
+        return alphaForDistances(distanceForPoint(inner), distanceForPoint(outer));
+    }
+
+    void main() {
+        float a = alphaForEdge(f_innerPos, f_outerPos);
+        gl_FragColor = vec4(color.rgb, color.a * a);
+    }
+);
+
 static const char* kRectFragment = AP_SHADER(
     uniform vec4 color;
     void main() {
@@ -135,7 +175,10 @@ static const char* kRectFragment = AP_SHADER(
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_prog = [[AP_GLProgram alloc] initWithVertex:kCommonVertex fragment:kCircleFragment];
+        s_prog = [[AP_GLProgram alloc]
+            initWithVertex:kCommonVertex
+            fragment:kCircleFragment
+        ];
         s_screenSize = [s_prog uniform:@"screenSize"];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
@@ -193,6 +236,10 @@ static const char* kRectFragment = AP_SHADER(
         [self rectWithSize:size transform:transform color:fillColor];
         return;
     }
+    if (pen <= 0) {
+        [self roundRectWithSize:size transform:transform color:fillColor corner:corner];
+        return;
+    }
 
     static AP_GLProgram* s_prog;
     static AP_GLBuffer* s_buffer;
@@ -207,7 +254,10 @@ static const char* kRectFragment = AP_SHADER(
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_prog = [[AP_GLProgram alloc] initWithVertex:kCommonVertex fragment:kRoundRectFragment];
+        s_prog = [[AP_GLProgram alloc]
+            initWithVertex:kCommonVertex
+            fragment:kStrokedRoundRectFragment
+        ];
         s_screenSize = [s_prog uniform:@"screenSize"];
         s_transform = [s_prog uniform:@"transform"];
         s_fillColor = [s_prog uniform:@"fillColor"];
@@ -260,6 +310,79 @@ static const char* kRectFragment = AP_SHADER(
     [s_buffer unbind];
 }
 
+- (void) roundRectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)color
+    corner:(CGFloat)corner
+{
+    if (corner <= 0) {
+        [self rectWithSize:size transform:transform color:color];
+        return;
+    }
+
+    static AP_GLProgram* s_prog;
+    static AP_GLBuffer* s_buffer;
+    static GLint s_screenSize;
+    static GLint s_transform;
+    static GLint s_color;
+    static GLint s_corner;
+    static GLint s_pos;
+
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        s_prog = [[AP_GLProgram alloc]
+            initWithVertex:kCommonVertex
+            fragment:kFilledRoundRectFragment
+        ];
+        s_screenSize = [s_prog uniform:@"screenSize"];
+        s_transform = [s_prog uniform:@"transform"];
+        s_color = [s_prog uniform:@"color"];
+        s_corner = [s_prog uniform:@"corner"];
+        s_pos = [s_prog attr:@"pos"];
+
+        s_buffer = [[AP_GLBuffer alloc] init];
+        [s_buffer bind];
+
+        // Unit square around (0.5,0.5) in homogenous 2D coordinates
+        float k = 0.01; // Outset slightly to avoid gaps at the edges.
+        float data[12] = {
+            0-k, 0-k, 1,
+            0-k, 1+k, 1,
+            1+k, 0-k, 1,
+            1+k, 1+k, 1,
+        };
+        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
+    }
+
+    AP_CHECK(s_prog, return);
+    AP_CHECK(s_buffer, return);
+
+    CGSize screenSize = [AP_Window screenSize];
+    CGFloat scale = [AP_Window screenScale];
+
+    GLKMatrix3 matrix = GLKMatrix3Make(
+        transform.a * size.width,  transform.b * size.width,  0,
+        transform.c * size.height, transform.d * size.height, 0,
+        transform.tx,              transform.ty,              1);
+
+    [s_buffer bind];
+    [s_prog use];
+
+    _GL(Uniform4fv, s_color, 1, color.v);
+    _GL(Uniform2f, s_corner, corner / size.width, corner / size.height);
+    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
+    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
+
+    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+
+    _GL(DisableVertexAttribArray, s_pos);
+
+    [s_buffer unbind];
+}
+
 - (void) rectWithSize:(CGSize)size
     transform:(CGAffineTransform)transform
     color:(GLKVector4)color
@@ -274,7 +397,10 @@ static const char* kRectFragment = AP_SHADER(
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_prog = [[AP_GLProgram alloc] initWithVertex:kCommonVertex fragment:kRectFragment];
+        s_prog = [[AP_GLProgram alloc]
+            initWithVertex:kCommonVertex
+            fragment:kRectFragment
+        ];
         s_screenSize = [s_prog uniform:@"screenSize"];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];

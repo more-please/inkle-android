@@ -15,6 +15,11 @@
     pen:(CGFloat)pen
     corner:(CGFloat)corner;
 
+- (void) roundRectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)fillColor
+    corner:(CGFloat)corner;
+
 - (void) rectWithSize:(CGSize)size
     transform:(CGAffineTransform)transform
     color:(GLKVector4)color;
