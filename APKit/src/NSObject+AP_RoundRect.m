@@ -138,11 +138,12 @@ static const char* kRoundRectFragment = AP_SHADER(
         [s_buffer bind];
 
         // Unit square around (0.5,0.5) in homogenous 2D coordinates
+        float k = 0.01; // Outset slightly to avoid gaps at the edges.
         float data[12] = {
-            0, 0, 1,
-            0, 1, 1,
-            1, 0, 1,
-            1, 1, 1,
+            0-k, 0-k, 1,
+            0-k, 1+k, 1,
+            1+k, 0-k, 1,
+            1+k, 1+k, 1,
         };
         [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
     }
@@ -207,11 +208,12 @@ static const char* kRoundRectFragment = AP_SHADER(
         [s_buffer bind];
 
         // Unit square around (0.5,0.5) in homogenous 2D coordinates
+        float k = 0.01; // Outset slightly to avoid gaps at the edges.
         float data[12] = {
-            0, 0, 1,
-            0, 1, 1,
-            1, 0, 1,
-            1, 1, 1,
+            0-k, 0-k, 1,
+            0-k, 1+k, 1,
+            1+k, 0-k, 1,
+            1+k, 1+k, 1,
         };
         [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
     }
