@@ -112,6 +112,13 @@ static const char* kRoundRectFragment = AP_SHADER(
     }
 );
 
+static const char* kRectFragment = AP_SHADER(
+    uniform vec4 color;
+    void main() {
+        gl_FragColor = color;
+    }
+);
+
 @implementation NSObject (AP_RoundRect)
 
 - (void) circleWithSize:(CGSize)size
@@ -182,6 +189,11 @@ static const char* kRoundRectFragment = AP_SHADER(
     pen:(CGFloat)pen
     corner:(CGFloat)corner
 {
+    if (pen <= 0 && corner <= 0) {
+        [self rectWithSize:size transform:transform color:fillColor];
+        return;
+    }
+
     static AP_GLProgram* s_prog;
     static AP_GLBuffer* s_buffer;
     static GLint s_screenSize;
@@ -236,6 +248,66 @@ static const char* kRoundRectFragment = AP_SHADER(
     _GL(Uniform4fv, s_penColor, 1, penColor.v);
     _GL(Uniform2f, s_corner, corner / size.width, corner / size.height);
     _GL(Uniform2f, s_pen, pen / size.width, pen / size.height);
+    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
+    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
+
+    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+
+    _GL(DisableVertexAttribArray, s_pos);
+
+    [s_buffer unbind];
+}
+
+- (void) rectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)color
+{
+    static AP_GLProgram* s_prog;
+    static AP_GLBuffer* s_buffer;
+    static GLint s_screenSize;
+    static GLint s_transform;
+    static GLint s_color;
+    static GLint s_pos;
+
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        s_prog = [[AP_GLProgram alloc] initWithVertex:kCommonVertex fragment:kRectFragment];
+        s_screenSize = [s_prog uniform:@"screenSize"];
+        s_transform = [s_prog uniform:@"transform"];
+        s_color = [s_prog uniform:@"color"];
+        s_pos = [s_prog attr:@"pos"];
+
+        s_buffer = [[AP_GLBuffer alloc] init];
+        [s_buffer bind];
+
+        // Unit square around (0.5,0.5) in homogenous 2D coordinates
+        float data[12] = {
+            0, 0, 1,
+            0, 1, 1,
+            1, 0, 1,
+            1, 1, 1,
+        };
+        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
+    }
+
+    AP_CHECK(s_prog, return);
+    AP_CHECK(s_buffer, return);
+
+    CGSize screenSize = [AP_Window screenSize];
+    CGFloat scale = [AP_Window screenScale];
+
+    GLKMatrix3 matrix = GLKMatrix3Make(
+        transform.a * size.width,  transform.b * size.width,  0,
+        transform.c * size.height, transform.d * size.height, 0,
+        transform.tx,              transform.ty,              1);
+
+    [s_buffer bind];
+    [s_prog use];
+
+    _GL(Uniform4fv, s_color, 1, color.v);
     _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
     _GL(EnableVertexAttribArray, s_pos);

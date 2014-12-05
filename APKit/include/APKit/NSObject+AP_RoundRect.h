@@ -15,4 +15,8 @@
     pen:(CGFloat)pen
     corner:(CGFloat)corner;
 
+- (void) rectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)color;
+
 @end
