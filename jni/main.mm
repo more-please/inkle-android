@@ -1114,6 +1114,38 @@ static EGLattr EGLattrs[] = {
     }
 }
 
+const EGLint highQualityAttribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        // Definitely want 24-bit colour.
+        EGL_BLUE_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_RED_SIZE, 8,
+        // We want 4x MSAA, but only if it's fast.
+        EGL_SAMPLES, 4,
+        EGL_CONFIG_CAVEAT, EGL_NONE,
+        EGL_NONE
+};
+
+const EGLint lowQualityAttribs[] = {
+        // As above, without MSAA.
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        // The original Kindle Fire gives us a config with broken
+        // alpha if we request 24-bit colour. However, some other
+        // devices give us 16-bit configs if we don't specify any
+        // constraints! Therefore, request 16-bit colour at a minimum
+        // (if there's a 32-bit config it should be sorted first).
+        EGL_BLUE_SIZE, 5,
+        EGL_GREEN_SIZE, 6,
+        EGL_RED_SIZE, 5,
+        // (Although... some devices like the Nexus 4 don't sort
+        // their configs properly so we still end up with 16-bit
+        // colour. Arrrgh! Well, the N4 can use the high-quality
+        // config, so we should never hit that case in practice.)
+        EGL_NONE
+};
+
 - (void) maybeInitGL
 {
     if (_display == EGL_NO_DISPLAY) {
@@ -1121,20 +1153,6 @@ static EGLattr EGLattrs[] = {
 
         _display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         eglInitialize(_display, 0, 0);
-
-        const EGLint attribs[] = {
-                EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                // The original Kindle Fire gives us a config with broken
-                // alpha if we request 24-bit colour. However, some other
-                // devices give us 16-bit configs if we don't specify any
-                // constraints! Therefore, request 16-bit colour at a minimum
-                // (if there's a 32-bit config it should be sorted first).
-                EGL_BLUE_SIZE, 5,
-                EGL_GREEN_SIZE, 6,
-                EGL_RED_SIZE, 5,
-                EGL_NONE
-        };
 
         EGLint numConfigs;
 
@@ -1146,7 +1164,20 @@ static EGLattr EGLattrs[] = {
 //            NSLog(@"----");
 //        }
 
-        eglChooseConfig(_display, attribs, &_config, 1, &numConfigs);
+        EGLBoolean success = eglChooseConfig(_display, highQualityAttribs, &_config, 1, &numConfigs);
+        if (!success || numConfigs < 1) {
+            NSLog(@"Couldn't find high-quality EGL config, using low-quality");
+            success = eglChooseConfig(_display, lowQualityAttribs, &_config, 1, &numConfigs);
+        }
+        if (!success || numConfigs < 1) {
+            NSLog(@"Couldn't find low-quality EGL config! Aborting, sorry");
+            abort();
+        }
+        EGLint err = eglGetError();
+        if (err != EGL_SUCCESS) {
+            NSLog(@"*** EGL error: %x", err);
+        }
+
         [self dumpConfig:_config];
 
         const EGLint contextAttribs[] = {
