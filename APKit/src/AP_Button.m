@@ -345,12 +345,16 @@
     UIControlState state = self.highlighted ? UIControlStateHighlighted : UIControlStateNormal;
     AP_Image* image = [self backgroundImageForState:state];
     if (image) {
+        // Display the image at its natural size, centered.
+        // That seems to be the default in UIKit.
         CGRect bounds = self.inFlightBounds;
+        CGSize size = image.size;
         CGAffineTransform t = CGAffineTransformTranslate(
             boundsToGL,
-            bounds.origin.x, bounds.origin.y);
-
-        [image renderGLWithSize:bounds.size transform:t alpha:alpha];
+            bounds.origin.x + (bounds.size.width - size.width)/2,
+            bounds.origin.y + (bounds.size.height - size.height)/2
+        );
+        [image renderGLWithSize:size transform:t alpha:alpha];
     }
 }
 
