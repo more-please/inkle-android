@@ -32,11 +32,16 @@
     _imageView.autoresizingMask = -1;
     _imageView.contentMode = UIViewContentModeScaleToFill;
 
+    _backgroundImageView = [[AP_ImageView alloc] initWithFrame:self.bounds];
+    _backgroundImageView.autoresizingMask = -1;
+    _backgroundImageView.contentMode = UIViewContentModeScaleToFill;
+
     _titleEdgeInsets = UIEdgeInsetsZero;
     _imageEdgeInsets = UIEdgeInsetsZero;
     _showsTouchWhenHighlighted = NO;
     _adjustsImageWhenHighlighted = YES;
 
+    [self addSubview:_backgroundImageView];
     [self addSubview:_titleLabel];
     [self addSubview:_imageView];
 
@@ -98,6 +103,8 @@
 
     _imageView.frame = imageFrame;
     _titleLabel.frame = labelFrame;
+
+    _backgroundImageView.frame = bounds;
 }
 
 - (void) layoutWithBounds:(CGRect)bounds imageFrame:(CGRect*)imageFrame labelFrame:(CGRect*)labelFrame
@@ -328,6 +335,8 @@
         [_imageView setImage:[self imageForState:state]];
         [self setBackgroundColor:[self backgroundColorForState:state]];
 
+        [_backgroundImageView setImage:[self backgroundImageForState:state]];
+
         _needsStateRefresh = NO;
     }
 }
@@ -336,26 +345,6 @@
 {
     [super updateGL:dt];
     [self refreshStateIfNeeded];
-}
-
-- (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
-{
-    [super renderWithBoundsToGL:boundsToGL alpha:alpha];
-
-    UIControlState state = self.highlighted ? UIControlStateHighlighted : UIControlStateNormal;
-    AP_Image* image = [self backgroundImageForState:state];
-    if (image) {
-        // Display the image at its natural size, centered.
-        // That seems to be the default in UIKit.
-        CGRect bounds = self.inFlightBounds;
-        CGSize size = image.size;
-        CGAffineTransform t = CGAffineTransformTranslate(
-            boundsToGL,
-            bounds.origin.x + (bounds.size.width - size.width)/2,
-            bounds.origin.y + (bounds.size.height - size.height)/2
-        );
-        [image renderGLWithSize:size transform:t alpha:alpha];
-    }
 }
 
 @end

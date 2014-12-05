@@ -28,7 +28,8 @@
 - (UIColor*)backgroundColorForState:(UIControlState)state;
 
 @property(nonatomic,readonly) AP_Label* titleLabel;
-@property(nonatomic,readonly) AP_ImageView *imageView;
+@property(nonatomic,readonly) AP_ImageView* imageView;
+@property(nonatomic,readonly) AP_ImageView* backgroundImageView;
 
 @property(nonatomic) UIEdgeInsets titleEdgeInsets; // default is UIEdgeInsetsZero
 @property(nonatomic) UIEdgeInsets imageEdgeInsets; // default is UIEdgeInsetsZero
