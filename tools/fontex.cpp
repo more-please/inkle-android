@@ -24,8 +24,18 @@ struct Range {
 static const Range kRanges[] = {
     { 10, 10 }, // Newline
     { 32, 126 }, // Basic ASCII
+    { 192, 255 }, // Latin-1
+
+    // Extra characters found in 80days.inkcontent
     { 163, 163 }, // Pound sign
-    { 192, 255 }, // Accented letters
+    { 167, 167 }, // Section sign
+    { 256, 257 }, // A/a with macron
+    { 333, 333 }, // o with macron
+    { 339, 339 }, // oe
+    { 363, 363 }, // u with macron
+    { 537, 537 }, // s with comma below
+
+    // Misc extras
     { 0x00a9, 0x00a9 }, // (c)
     { 0x2018, 0x2019 }, // Single quotes
     { 0x201c, 0x201d }, // Double quotes
