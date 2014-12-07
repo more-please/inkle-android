@@ -176,7 +176,7 @@ static JNINativeMethod kNatives[] = {
     { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
 };
 
-static google_breakpad::ExceptionHandler* exceptionHandler;
+static google_breakpad::ExceptionHandler* s_exceptionHandler;
 
 static bool breakback(
     const google_breakpad::MinidumpDescriptor& descriptor,
@@ -190,7 +190,7 @@ void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
 #ifndef DEBUG
     const char *path = env->GetStringUTFChars(filepath, 0);
     google_breakpad::MinidumpDescriptor descriptor(path);
-    exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, breakback, NULL, true, -1);
+    s_exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, breakback, NULL, true, -1);
 #endif
 }
 
@@ -1561,6 +1561,9 @@ void android_main(struct android_app* android) {
                     [g_Main teardownGL];
                     [g_Main teardownJava];
                     // Despite telling us we're shutting down, the system doesn't kill us, so...
+                    if (s_exceptionHandler) {
+                        delete s_exceptionHandler;
+                    }
                     exit(EXIT_SUCCESS);
                     return;
                 }
