@@ -10,14 +10,10 @@
 
 @property (nonatomic,readonly) NSString* assetName;
 @property (nonatomic,readonly) GLuint name;
+@property (nonatomic,readonly) GLenum textureTarget;
 @property (nonatomic,readonly) int width;
 @property (nonatomic,readonly) int height;
 @property (nonatomic) int memoryUsage;
-
-- (instancetype) initMaxSize:(CGFloat)screens;
-
-- (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data;
-- (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize;
 
 - (void) bind;
 
@@ -35,5 +31,10 @@
 + (int) totalMemoryUsage;
 
 + (void) processDeleteQueue;
+
+// Internal methods
+
+- (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data;
+- (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize;
 
 @end

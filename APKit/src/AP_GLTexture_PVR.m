@@ -38,12 +38,7 @@ typedef struct _PVRTexHeader
 	uint32_t numSurfs;
 } PVRTexHeader;
 
-@implementation AP_GLTexture_PVR
-
-+ (AP_GLTexture*) withData:(NSData*)data
-{
-    return [[AP_GLTexture_PVR alloc] initWithData:data];
-}
+@implementation AP_GLTexture (PVR)
 
 + (BOOL) isPVR:(NSData *)data
 {
@@ -62,78 +57,72 @@ typedef struct _PVRTexHeader
     return YES;
 }
 
-AP_BAN_EVIL_INIT;
-
-- (AP_GLTexture_PVR*) initWithData:(NSData *)data
+- (BOOL) loadPVR:(NSData *)data
 {
-    AP_CHECK([AP_GLTexture_PVR isPVR:data], return nil);
+    const PVRTexHeader* header = (const PVRTexHeader *)[data bytes];
     
-    self = [super init];
-    if (self) {
-        const PVRTexHeader* header = (const PVRTexHeader *)[data bytes];
-        
-        GLenum format;
-        uint32_t bpp;
+    GLenum format;
+    uint32_t bpp;
 
-        uint32_t formatFlags = CFSwapInt32LittleToHost(header->flags) & PVR_TEXTURE_FLAG_TYPE_MASK;
+    uint32_t formatFlags = CFSwapInt32LittleToHost(header->flags) & PVR_TEXTURE_FLAG_TYPE_MASK;
+    if (formatFlags == kPVRTextureFlagTypePVRTC_4) {
+        format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+        bpp = 4;
+    } else if (formatFlags == kPVRTextureFlagTypePVRTC_2) {
+        format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+        bpp = 2;
+    } else {
+        AP_LogError("Unknown PVR format flag: %d", formatFlags);
+        return NO;
+    }
+    
+    uint32_t width = CFSwapInt32LittleToHost(header->width);
+    uint32_t height = CFSwapInt32LittleToHost(header->height);
+    uint32_t dataLength = CFSwapInt32LittleToHost(header->dataLength);
+
+    const char* bytes = ((const char *)[data bytes]) + sizeof(PVRTexHeader);
+
+    uint32_t dataOffset = 0;
+    int level;
+    for (level = 0; dataOffset < dataLength; ++level) {
+        uint32_t blockSize, widthBlocks, heightBlocks, dataSize;
+
         if (formatFlags == kPVRTextureFlagTypePVRTC_4) {
-            format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
-            bpp = 4;
-        } else if (formatFlags == kPVRTextureFlagTypePVRTC_2) {
-            format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
-            bpp = 2;
+            blockSize = 4 * 4; // Pixel by pixel block size for 4bpp
+            widthBlocks = width / 4;
+            heightBlocks = height / 4;
         } else {
-            AP_LogError("Unknown PVR format flag: %d", formatFlags);
-            return nil;
+            blockSize = 8 * 4; // Pixel by pixel block size for 2bpp
+            widthBlocks = width / 8;
+            heightBlocks = height / 4;
         }
         
-        uint32_t width = CFSwapInt32LittleToHost(header->width);
-        uint32_t height = CFSwapInt32LittleToHost(header->height);
-        uint32_t dataLength = CFSwapInt32LittleToHost(header->dataLength);
-
-        const char* bytes = ((const char *)[data bytes]) + sizeof(PVRTexHeader);
-
-        uint32_t dataOffset = 0;
-        int level;
-        for (level = 0; dataOffset < dataLength; ++level) {
-            uint32_t blockSize, widthBlocks, heightBlocks, dataSize;
-
-            if (formatFlags == kPVRTextureFlagTypePVRTC_4) {
-                blockSize = 4 * 4; // Pixel by pixel block size for 4bpp
-                widthBlocks = width / 4;
-                heightBlocks = height / 4;
-            } else {
-                blockSize = 8 * 4; // Pixel by pixel block size for 2bpp
-                widthBlocks = width / 8;
-                heightBlocks = height / 4;
-            }
-            
-            // Clamp to minimum number of blocks
-            if (widthBlocks < 2) {
-                widthBlocks = 2;
-            }
-            if (heightBlocks < 2) {
-                heightBlocks = 2;
-            }
-
-            dataSize = widthBlocks * heightBlocks * ((blockSize  * bpp) / 8);
-
-            [self compressedTexImage2dLevel:level format:format width:width height:height data:(bytes + dataOffset) dataSize:dataSize];
-            
-            dataOffset += dataSize;
-            
-            width = MAX(width >> 1, 1);
-            height = MAX(height >> 1, 1);
+        // Clamp to minimum number of blocks
+        if (widthBlocks < 2) {
+            widthBlocks = 2;
+        }
+        if (heightBlocks < 2) {
+            heightBlocks = 2;
         }
 
-        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        if (level > 1) {
-            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        } else {
-            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        }
-	}
-    return self;
+        dataSize = widthBlocks * heightBlocks * ((blockSize  * bpp) / 8);
+
+        [self compressedTexImage2dLevel:level format:format width:width height:height data:(bytes + dataOffset) dataSize:dataSize];
+        
+        dataOffset += dataSize;
+        
+        width = MAX(width >> 1, 1);
+        height = MAX(height >> 1, 1);
+    }
+
+    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (level > 1) {
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    } else {
+        _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+
+    return YES;
 }
 
 @end

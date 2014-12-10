@@ -11,15 +11,21 @@
 #import "AP_Window.h"
 
 @implementation AP_GLTexture {
-    GLuint _name;
-    int _width;
-    int _height;
     int _minLevel;
     int _maxTextureSize;
+    int _face;
 }
 
 static int s_totalMemoryUsage = 0;
 static NSMutableArray* s_deleteQueue = nil;
+static AP_WeakCache* s_textureCache = nil;
+
++ (void) initialize
+{
+    if (!s_textureCache) {
+        s_textureCache = [[AP_WeakCache alloc] init];
+    }
+}
 
 + (void) processDeleteQueue
 {
@@ -40,28 +46,43 @@ static NSMutableArray* s_deleteQueue = nil;
     [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
 }
 
+- (BOOL) loadData:(NSData*)data
+{
+    int oldMemoryUsage = _memoryUsage;
+    BOOL success;
+    if ([AP_GLTexture isPVR:data]) {
+        success = [self loadPVR:data];
+    } else if ([AP_GLTexture isKTX:data]) {
+        success = [self loadKTX:data];
+    } else if ([AP_GLTexture isPNG:data]) {
+        success = [self loadPNG:data];
+    } else {
+        NSLog(@"Texture is in unknown format!");
+        success = NO;
+    }
+    if (success) {
+        s_totalMemoryUsage += (_memoryUsage - oldMemoryUsage);
+    }
+    return success;
+}
+
 + (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens
 {
-    static AP_WeakCache* g_TextureCache;
-    if (!g_TextureCache) {
-        g_TextureCache = [[AP_WeakCache alloc] init];
-    }
-    AP_CHECK(g_TextureCache, return nil);
-
-    AP_GLTexture* result = [g_TextureCache get:name withLoader:^{
+    AP_CHECK(s_textureCache, return nil);
+    AP_GLTexture* result = [s_textureCache get:name withLoader:^{
         NSData* data = [AP_Bundle dataForResource:name ofType:nil];
-        AP_GLTexture* result = [AP_GLTexture textureWithData:data maxSize:screens];
-        if (result) {
-            result->_assetName = name;
-            int bytes = result->_memoryUsage;
-            s_totalMemoryUsage += bytes;
-            NSLog(@"Loaded %@ (%d bytes)", name, bytes);
-        } else {
-            NSLog(@"Failed to load texture: %@", name);
-        }
-        return result;
+        return [AP_GLTexture textureWithName:name data:data maxSize:screens];
     }];
 
+    if (!result) {
+        NSLog(@"Failed to load texture: %@", name);
+        return nil;
+    }
+
+    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    NSLog(@"Loaded %@ (%d bytes)", name, result.memoryUsage);
     return result;
 }
 
@@ -71,17 +92,13 @@ static NSMutableArray* s_deleteQueue = nil;
     return [AP_GLTexture textureWithData:data maxSize:screens];
 }
 
-+ (AP_GLTexture*) textureWithData:(NSData*)data maxSize:(CGFloat)screens
++ (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data maxSize:(CGFloat)screens
 {
     AP_CHECK(data, return nil);
-    if ([AP_GLTexture_PVR isPVR:data]) {
-        return [AP_GLTexture_PVR withData:data];
-    } else if ([AP_GLTexture_KTX isKTX:data]) {
-        return [AP_GLTexture_KTX withData:data maxSize:screens];
-    } else if ([AP_GLTexture_PNG isPNG:data]) {
-        return [AP_GLTexture_PNG withData:data];
+    AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name maxSize:screens];
+    if ([result loadData:data]) {
+        return result;
     } else {
-        NSLog(@"Texture is in unknown format!");
         return nil;
     }
 }
@@ -91,18 +108,18 @@ static NSMutableArray* s_deleteQueue = nil;
     return s_totalMemoryUsage;
 }
 
-- (AP_GLTexture*) init
-{
-    return [self initMaxSize:4];
-}
-
-- (AP_GLTexture*) initMaxSize:(CGFloat)screens
+- (AP_GLTexture*) initWithName:(NSString*)name maxSize:(CGFloat)screens
 {
 #ifndef ANDROID
     AP_CHECK([EAGLContext currentContext], return nil);
 #endif
     self = [super init];
     if (self) {
+        _assetName = name;
+        _width = _height = 0;
+        _minLevel = 0;
+        _textureTarget = GL_TEXTURE_2D;
+
         static GLint systemMaxTextureSize = 0;
         if (systemMaxTextureSize == 0) {
             _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
@@ -116,15 +133,9 @@ static NSMutableArray* s_deleteQueue = nil;
 #endif
         _GL(GenTextures, 1, &_name);
         AP_CHECK(_name, return nil);
-        _width = _height = 0;
-        _minLevel = 0;
     }
     return self;
 }
-
-- (GLuint) name { return _name; }
-- (int) width { return _width; }
-- (int) height { return _height; }
 
 - (void) bind
 {
@@ -149,7 +160,7 @@ static NSMutableArray* s_deleteQueue = nil;
     [self maybeUpdateWidth:width height:height level:level];
 
     if (level >= _minLevel) {
-        _GL(TexImage2D, GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, format, type, data);
+        _GL(TexImage2D, _textureTarget, level - _minLevel, format, width, height, 0, format, type, data);
 
         switch (format) {
             case GL_LUMINANCE:
@@ -177,7 +188,7 @@ static NSMutableArray* s_deleteQueue = nil;
     [self maybeUpdateWidth:width height:height level:level];
 
     if (level >= _minLevel) {
-        _GL(CompressedTexImage2D, GL_TEXTURE_2D, level - _minLevel, format, width, height, 0, dataSize, data);
+        _GL(CompressedTexImage2D, _textureTarget, level - _minLevel, format, width, height, 0, dataSize, data);
         _memoryUsage += dataSize;
     }
 }
