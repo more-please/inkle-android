@@ -34,7 +34,8 @@ all: \
 		build/bin/pvr2png \
 		build/bin/swizzle \
 		build/bin/separate_alpha \
-		build/bin/power_of_two
+		build/bin/power_of_two \
+		build/bin/rotate
 
 build/bin/pak: tools/pak.cpp tools/package_writer.cpp tools/package_writer.h $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
@@ -96,6 +97,10 @@ build/bin/separate_alpha: tools/separate_alpha.cpp $(COMMON_SRCS) $(COMMON_HEADE
 build/bin/power_of_two: tools/power_of_two.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
 	mkdir -p build/bin
 	$(CXX) tools/power_of_two.cpp $(COMMON_SRCS) -o build/bin/power_of_two
+
+build/bin/rotate: tools/rotate.cpp $(COMMON_SRCS) $(COMMON_HEADERS)
+	mkdir -p build/bin
+	$(CXX) tools/rotate.cpp $(COMMON_SRCS) -o build/bin/rotate
 
 clean:
 	rm build/bin/*
