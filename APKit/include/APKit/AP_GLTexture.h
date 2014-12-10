@@ -11,6 +11,7 @@
 @property (nonatomic,readonly) NSString* assetName;
 @property (nonatomic,readonly) GLuint name;
 @property (nonatomic,readonly) GLenum textureTarget;
+@property (nonatomic,readonly) BOOL cube;
 @property (nonatomic,readonly) int width;
 @property (nonatomic,readonly) int height;
 @property (nonatomic) int memoryUsage;
@@ -26,6 +27,8 @@
 
 + (AP_GLTexture*) textureWithData:(NSData*)data maxSize:(CGFloat)screens;
 + (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens;
+
++ (AP_GLTexture*) cubeTextureNamed:(NSString*)name maxSize:(CGFloat)screens;
 
 // Estimated total memory usage for all textures.
 + (int) totalMemoryUsage;

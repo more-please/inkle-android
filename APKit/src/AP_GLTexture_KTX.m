@@ -3,6 +3,7 @@
 #import <CoreFoundation/CoreFoundation.h>
 
 #import "AP_Check.h"
+#import "AP_Window.h"
 
 // See http://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 
@@ -41,8 +42,22 @@ typedef struct Header
     return 0 == memcmp(header->magic, kMagic, 12);
 }
 
-- (BOOL) loadKTX:(NSData*)data
+- (BOOL) loadKTX:(NSData*)data maxSize:(CGFloat)screens
 {
+    static GLint systemMaxTextureSize = 0;
+    static GLint systemMaxCubeTextureSize = 0;
+    if (systemMaxTextureSize == 0) {
+        _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
+        _GL(GetIntegerv, GL_MAX_CUBE_MAP_TEXTURE_SIZE, &systemMaxCubeTextureSize);
+    }
+    GLint maxTextureSize = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
+#ifdef ANDROID
+    CGSize s = [AP_Window screenSize];
+    CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
+    CGFloat screenMaxTextureSize = screenSize * screens;
+    maxTextureSize = MIN(maxTextureSize, screenMaxTextureSize);
+#endif
+
     const Header* header = (const Header*)[data bytes];
 
     // The header has an endianness flag, how weird.
@@ -83,7 +98,8 @@ typedef struct Header
     AP_CHECK(maxBytes > bytes, return NO);
 
     int numLevels = MAX(1, read32(header->numberOfMipmapLevels));
-    for (int level = 0; level < numLevels; ++level) {
+    int level = 0;
+    for (int i = 0; i < numLevels; ++i) {
         AP_CHECK((bytes + 4) <= maxBytes, return NO);
         int dataSize = read32(*(uint32_t*) bytes);
         bytes += 4;
@@ -91,12 +107,17 @@ typedef struct Header
         AP_CHECK(dataSize > 0, return NO);
         AP_CHECK((bytes + dataSize) <= maxBytes, return NO);
 
-        if (type == 0) {
-            [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
+        if ((i+1 < numLevels) && (width > maxTextureSize || height > maxTextureSize)) {
+            NSLog(@"Skipping mipmap level %d (width %d, height %d, max %d)", i, width, height, maxTextureSize);
         } else {
-            [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
+            if (type == 0) {
+                [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
+            } else {
+                [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
+            }
+            ++level;
+            AP_CHECK_GL("Failed to upload texture", return NO);
         }
-        AP_CHECK_GL("Failed to upload texture", return NO);
 
         if (read32(header->numberOfMipmapLevels) == 0) {
             _GL(GenerateMipmap, self.name);
@@ -112,7 +133,7 @@ typedef struct Header
     }
 
     _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if (numLevels > 1) {
+    if (level > 1) {
         _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     } else {
         _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

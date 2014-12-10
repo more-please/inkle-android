@@ -11,6 +11,6 @@
 
 + (BOOL) isKTX:(NSData*)data;
 
-- (BOOL) loadKTX:(NSData*)data;
+- (BOOL) loadKTX:(NSData*)data maxSize:(CGFloat)screens;
 
 @end

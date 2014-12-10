@@ -11,8 +11,6 @@
 #import "AP_Window.h"
 
 @implementation AP_GLTexture {
-    int _minLevel;
-    int _maxTextureSize;
     int _face;
 }
 
@@ -46,14 +44,14 @@ static AP_WeakCache* s_textureCache = nil;
     [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
 }
 
-- (BOOL) loadData:(NSData*)data
+- (BOOL) loadData:(NSData*)data maxSize:(CGFloat)screens
 {
     int oldMemoryUsage = _memoryUsage;
     BOOL success;
     if ([AP_GLTexture isPVR:data]) {
         success = [self loadPVR:data];
     } else if ([AP_GLTexture isKTX:data]) {
-        success = [self loadKTX:data];
+        success = [self loadKTX:data maxSize:screens];
     } else if ([AP_GLTexture isPNG:data]) {
         success = [self loadPNG:data];
     } else {
@@ -86,6 +84,49 @@ static AP_WeakCache* s_textureCache = nil;
     return result;
 }
 
++ (AP_GLTexture*) cubeTextureNamed:(NSString*)name maxSize:(CGFloat)screens
+{
+    AP_CHECK(s_textureCache, return nil);
+    AP_GLTexture* result = [s_textureCache get:name withLoader:^{
+        NSString* faceExt[6] = {
+            @"front", // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+            @"back", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+            @"up", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+            @"down", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+            @"right", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+            @"left"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+        };
+        NSString* base = [name stringByDeletingPathExtension];
+        NSString* ext = name.pathExtension;
+
+        AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name target:GL_TEXTURE_CUBE_MAP];
+        for (int f = 0; f < 6; ++f) {
+            result->_face = f;
+            NSString* faceName = [NSString stringWithFormat:@"%@-%@.%@", base, faceExt[f], ext];
+            NSData* data = [AP_Bundle dataForResource:faceName ofType:nil];
+            if (!data) {
+                NSLog(@"Missing cube face: %@", faceName);
+                result = nil;
+                break;
+            }
+            if (![result loadData:data maxSize:screens]) {
+                NSLog(@"Failed to load face: %@", faceName);
+                result = nil;
+                break;
+            }
+        }
+        return result;
+    }];
+
+    if (!result) {
+        NSLog(@"Failed to load cube texture: %@", name);
+        return nil;
+    }
+
+    NSLog(@"Loaded %@ (cube, %d bytes)", name, result.memoryUsage);
+    return result;
+}
+
 + (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens
 {
     NSData* data = [NSData dataWithContentsOfMappedFile:path];
@@ -95,8 +136,8 @@ static AP_WeakCache* s_textureCache = nil;
 + (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data maxSize:(CGFloat)screens
 {
     AP_CHECK(data, return nil);
-    AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name maxSize:screens];
-    if ([result loadData:data]) {
+    AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name target:GL_TEXTURE_2D];
+    if ([result loadData:data maxSize:screens]) {
         return result;
     } else {
         return nil;
@@ -108,7 +149,7 @@ static AP_WeakCache* s_textureCache = nil;
     return s_totalMemoryUsage;
 }
 
-- (AP_GLTexture*) initWithName:(NSString*)name maxSize:(CGFloat)screens
+- (AP_GLTexture*) initWithName:(NSString*)name target:(GLenum)target
 {
 #ifndef ANDROID
     AP_CHECK([EAGLContext currentContext], return nil);
@@ -117,80 +158,67 @@ static AP_WeakCache* s_textureCache = nil;
     if (self) {
         _assetName = name;
         _width = _height = 0;
-        _minLevel = 0;
-        _textureTarget = GL_TEXTURE_2D;
+        _textureTarget = target;
 
-        static GLint systemMaxTextureSize = 0;
-        if (systemMaxTextureSize == 0) {
-            _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
-        }
-        _maxTextureSize = systemMaxTextureSize;
-#ifdef ANDROID
-        CGSize s = [AP_Window screenSize];
-        CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-        CGFloat screenMaxTextureSize = screenSize * screens;
-        _maxTextureSize = MIN(systemMaxTextureSize, screenMaxTextureSize);
-#endif
         _GL(GenTextures, 1, &_name);
         AP_CHECK(_name, return nil);
     }
     return self;
 }
 
-- (void) bind
+- (BOOL) cube
 {
-    _GL(BindTexture, GL_TEXTURE_2D, _name);
+    return _textureTarget == GL_TEXTURE_CUBE_MAP;
 }
 
-- (void) maybeUpdateWidth:(GLsizei)width height:(GLsizei)height level:(GLint)level
+- (void) bind
 {
-    if (level == 0) {
-        _width = width;
-        _height = height;
-    }
-    if (width > _maxTextureSize || height > _maxTextureSize) {
-//        NSLog(@"Mipmap level %d is too big (%d x %d, max texture size: %d)", level, width, height, _maxTextureSize);
-        _minLevel = MAX(_minLevel, level + 1);
-    }
+    _GL(BindTexture, _textureTarget, _name);
 }
 
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data
 {
     [self bind];
-    [self maybeUpdateWidth:width height:height level:level];
 
-    if (level >= _minLevel) {
-        _GL(TexImage2D, _textureTarget, level - _minLevel, format, width, height, 0, format, type, data);
+    if (level == 0) {
+        _width = width;
+        _height = height;
+    }
 
-        switch (format) {
-            case GL_LUMINANCE:
-                _memoryUsage += width * height;
-                break;
-            case GL_LUMINANCE_ALPHA:
-                _memoryUsage += 2 * width * height;
-                break;
-            case GL_RGB:
-                _memoryUsage += 3 * width * height;
-                break;
-            case GL_RGBA:
-                _memoryUsage += 4 * width * height;
-                break;
-            default:
-                NSLog(@"Unknown texture format: %d", format);
-                break;
-        }
+    GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
+    _GL(TexImage2D, target, level, format, width, height, 0, format, type, data);
+
+    switch (format) {
+        case GL_LUMINANCE:
+            _memoryUsage += width * height;
+            break;
+        case GL_LUMINANCE_ALPHA:
+            _memoryUsage += 2 * width * height;
+            break;
+        case GL_RGB:
+            _memoryUsage += 3 * width * height;
+            break;
+        case GL_RGBA:
+            _memoryUsage += 4 * width * height;
+            break;
+        default:
+            NSLog(@"Unknown texture format: %d", format);
+            break;
     }
 }
 
 - (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize
 {
     [self bind];
-    [self maybeUpdateWidth:width height:height level:level];
 
-    if (level >= _minLevel) {
-        _GL(CompressedTexImage2D, _textureTarget, level - _minLevel, format, width, height, 0, dataSize, data);
-        _memoryUsage += dataSize;
+    if (level == 0) {
+        _width = width;
+        _height = height;
     }
+
+    GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
+    _GL(CompressedTexImage2D, target, level, format, width, height, 0, dataSize, data);
+    _memoryUsage += dataSize;
 }
 
 @end

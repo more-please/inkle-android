@@ -36,8 +36,8 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
     [self texImage2dLevel:0 format:format width:w height:h type:GL_UNSIGNED_BYTE data:(const char*)bytes];
     stbi_image_free(bytes);
 
-    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     // glGenerateMipmap() doesn't work properly on the Kindle Fire, bah!
     // It seems to work for LUMINANCE textures and square textures. Maybe
