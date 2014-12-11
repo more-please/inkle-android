@@ -77,9 +77,6 @@ static AP_WeakCache* s_textureCache = nil;
         return nil;
     }
 
-    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
     NSLog(@"Loaded %@ (%d bytes)", name, result.memoryUsage);
     return result;
 }
@@ -162,6 +159,10 @@ static AP_WeakCache* s_textureCache = nil;
 
         _GL(GenTextures, 1, &_name);
         AP_CHECK(_name, return nil);
+
+        _GL(BindTexture, _textureTarget, _name);
+        _GL(TexParameteri, _textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        _GL(TexParameteri, _textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
     return self;
 }
