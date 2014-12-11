@@ -582,7 +582,7 @@ static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     result.handle = i;
     if (s) {
         const char* c = env->GetStringUTFChars(s, NULL);
-        result.string = [NSString stringWithCString:c];
+        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
         env->ReleaseStringUTFChars(s, c);
     }
 
@@ -726,10 +726,10 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         return pf.jobj;
     }
 
-    NSString* valueStr;
     if ([value isKindOfClass:[NSString class]]) {
         // If it's a string, send it directly
-        valueStr = (NSString*)value;
+        NSString* valueStr = (NSString*)value;
+        return _env->NewStringUTF(valueStr.UTF8String);
     } else {
         // Otherwise, encode as JSON.
         NSError* error = nil;
@@ -738,17 +738,19 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             NSLog(@"JSON writer error: %@", error);
             return NULL;
         }
-        valueStr = [[NSString alloc] initWithData:valueData encoding:NSUTF8StringEncoding];
+        return _env->NewStringUTF((const char*)valueData.bytes);
     }
-    return _env->NewStringUTF(valueStr.UTF8String);
 }
 
 - (id) jsonDecode:(ParseResult*)result error:(NSError**)error
 {
     if (result.string) {
+//        NSLog(@"Decoding JSON: %@", result.string);
         NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
         *error = nil;
-        return [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+        id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+//        NSLog(@"Result: %@", json);
+        return json;
     } else {
         *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
         return nil;
