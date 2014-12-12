@@ -6,6 +6,7 @@
 #import "AP_Button.h"
 #import "AP_Check.h"
 #import "AP_Label.h"
+#import "AP_Layer.h"
 #import "AP_Window.h"
 
 @implementation AP_AlertView {
@@ -41,35 +42,34 @@ AP_BAN_EVIL_INIT;
         [self addSubview:_vignette];
 
         _alert = [[AP_View alloc] init];
-        _alert.backgroundColor = [UIColor colorWithWhite:1 alpha:1];
+        _alert.backgroundColor = [UIColor colorWithWhite:0.25 alpha:1];
+        _alert.layer.cornerRadius = 14;
         [self addSubview:_alert];
 
-        _alert = [[AP_View alloc] init];
-        _alert.backgroundColor = [UIColor colorWithWhite:1 alpha:1];
-        [self addSubview:_alert];
-
-        AP_Font* bold = [AP_Font fontWithName:@"Helvetica-Bold" size:20];
-        AP_Font* plain = [AP_Font fontWithName:@"Helvetica" size:17];
+        AP_Font* headerFont = [AP_Font fontWithName:@"Futura-Medium" size:20];
+        AP_Font* bodyFont = [AP_Font fontWithName:@"Futura-Medium" size:17];
+        AP_Font* buttonFont = [AP_Font fontWithName:@"Futura-CondensedMedium" size:20];
 
         if (title) {
             _header = [[AP_Label alloc] init];
-            _header.font = bold;
+            _header.font = headerFont;
             _header.text = title;
             _header.textAlignment = NSTextAlignmentCenter;
+            _header.textColor = [UIColor whiteColor];
             [_alert addSubview:_header];
         }
         
         if (message) {
             _body = [[AP_Label alloc] init];
-            _body.font = plain;
+            _body.font = bodyFont;
             _body.text = message;
             _body.textAlignment = NSTextAlignmentCenter;
+            _body.textColor = [UIColor colorWithWhite:0.75 alpha:1];
             _body.numberOfLines = 0;
             [_alert addSubview:_body];
         }
         
         NSMutableArray* buttonNames = [NSMutableArray array];
-        [buttonNames addObject:cancelButtonTitle];
 
         va_list args;
         va_start(args, otherButtonTitles);
@@ -79,26 +79,40 @@ AP_BAN_EVIL_INIT;
         }
         va_end(args);
 
+        if (buttonNames.count < 2) {
+            // 2 or fewer buttons in total, put Cancel on the left.
+            [buttonNames insertObject:cancelButtonTitle atIndex:0];
+        } else {
+            // 3 or more buttons, put Cancel at the bottom.
+            [buttonNames addObject:cancelButtonTitle];
+        }
+
         // See http://developer.android.com/design/style/color.html
         UIColor* lightBlue = [UIColor colorWithRed:(0x33 / 255.0) green:(0xb5 / 255.0) blue:(0xe5 / 255.0) alpha:1];
         UIColor* darkBlue = [UIColor colorWithRed:(0x00 / 255.0) green:(0x99 / 255.0) blue:(0xcc / 255.0) alpha:1];
         UIColor* white = [UIColor whiteColor];
-        UIColor* blank = [UIColor colorWithWhite:0 alpha:0];
+        UIColor* black = [UIColor blackColor];
+        UIColor* empty = [UIColor colorWithWhite:0 alpha:0];
 
         _buttons = [NSMutableArray array];
         for (NSString* name in buttonNames) {
             AP_Button* button = [[AP_Button alloc] init];
-            button.titleLabel.font = bold;
+            button.titleLabel.font = buttonFont;
+            button.titleLabel.shadowOffset = CGSizeMake(0, 1);
+
             [button setTitle:name forState:UIControlStateNormal];
             [button addTarget:self action:@selector(buttonPressed:) forControlEvents:UIControlEventTouchUpInside];
 
-            [button setTitleShadowColor:blank forState:UIControlStateNormal];
+            [button setTitleColor:white forState:UIControlStateNormal];
+            [button setTitleShadowColor:black forState:UIControlStateNormal];
 
-            [button setTitleColor:lightBlue forState:UIControlStateNormal];
-            [button setTitleColor:white forState:UIControlStateHighlighted];
+            [button setTitleColor:empty forState:UIControlStateHighlighted];
+            [button setTitleShadowColor:white forState:UIControlStateHighlighted];
 
-            [button setBackgroundColor:blank forState:UIControlStateNormal];
+            [button setBackgroundColor:empty forState:UIControlStateNormal];
             [button setBackgroundColor:darkBlue forState:UIControlStateHighlighted];
+
+            button.layer.cornerRadius = 14;
 
             [_buttons addObject:button];
             [_alert addSubview:button];
@@ -173,7 +187,7 @@ AP_BAN_EVIL_INIT;
 - (void) layoutSubviews
 {
     CGRect screenRect = self.bounds;
-    _vignette.frame= screenRect;
+    _vignette.frame = screenRect;
 
     CGSize maxSize = {
         [AP_Window iPhone:250 iPad:350 iPadLandscape:400],
