@@ -1,5 +1,6 @@
 #import "AP_ScrollView.h"
 
+#import "AP_AnimatedProperty.h"
 #import "AP_Check.h"
 #import "AP_GestureRecognizer.h"
 #import "AP_Window.h"
@@ -10,6 +11,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 #endif
 
 @implementation AP_ScrollView {
+    AP_AnimatedSize* _animatedContentSize;
     AP_PanGestureRecognizer* _gesture;
     BOOL _inGesture;
     CGPoint _previousTranslation;
@@ -21,12 +23,53 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 {
     self = [super initWithFrame:frame];
     if (self) {
+        self.allowSubviewHitTestOutsideBounds = YES;
+        _animatedContentSize = [[AP_AnimatedSize alloc] initWithName:@"contentSize" view:self];
         _decelerationRate = UIScrollViewDecelerationRateNormal;
         _gesture = [[AP_PanGestureRecognizer alloc] initWithTarget:self action:@selector(pan)];
         [self addGestureRecognizer:_gesture];
     }
     return self;
 }
+
+// --------------------
+// For CustomScrollView
+
+- (void) setContentSize:(CGSize)contentSize offset:(CGPoint)offset
+{
+    self.contentSize = contentSize;
+    self.contentOffset = offset;
+}
+
+- (void) setHorizontal:(BOOL)horizontal
+{
+    self.directionalLockEnabled = horizontal;
+}
+
+- (int) pageIndex
+{
+    CGPoint pos = self.contentOffset;
+    CGSize size = self.bounds.size;
+    if (_directionalLockEnabled) {
+        return roundf(pos.x / size.width);
+    } else {
+        return roundf(pos.y / size.height);
+    }
+}
+
+- (void) setPageIndex:(int)i
+{
+    CGPoint pos = self.contentOffset;
+    CGSize size = self.bounds.size;
+    if (_directionalLockEnabled) {
+        pos.x = i * size.width;
+    } else {
+        pos.y = i * size.height;
+    }
+    self.contentOffset = pos;
+}
+
+// --------------------
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
 {
@@ -104,10 +147,19 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     }
 }
 
+- (CGSize) contentSize
+{
+    return _animatedContentSize.dest;
+}
+
 - (void) setContentSize:(CGSize)contentSize
 {
+    if (CGSizeEqualToSize(contentSize, _animatedContentSize.dest)) {
+        return;
+    }
+
     CGPoint offset = self.contentOffset;
-    _contentSize = contentSize;
+    _animatedContentSize.dest = contentSize;
 
     CGPoint maxOffset = self.maxContentOffset;
     self.contentOffset = CGPointMake(
@@ -122,9 +174,10 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 {
     [super layoutSubviews];
 
+    CGSize contentSize = self.contentSize;
     CGSize size = self.bounds.size;
-    _gesture.preventHorizontalMovement = (_contentSize.width <= size.width);
-    _gesture.preventVerticalMovement = (_contentSize.height <= size.height);
+    _gesture.preventHorizontalMovement = (contentSize.width <= size.width);
+    _gesture.preventVerticalMovement = (contentSize.height <= size.height);
 }
 
 - (void) pan
@@ -171,13 +224,14 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
 
     CGPoint pos = self.contentOffset;
     CGSize size = self.bounds.size;
+    CGSize contentSize = self.contentSize;
 
     if (_velocity.x != 0 || _velocity.y != 0) {
         pos.x += _velocity.x;
         pos.y += _velocity.y;
 
-        pos.x = MAX(0, MIN(_contentSize.width - size.width, pos.x));
-        pos.y = MAX(0, MIN(_contentSize.height - size.height, pos.y));
+        pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
+        pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));
 
         self.contentOffset = pos;
     }

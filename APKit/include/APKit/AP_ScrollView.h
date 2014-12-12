@@ -42,4 +42,9 @@
 
 - (void)scrollToBottom; // Scroll slowly to the bottom
 
+// For CustomScrollView
+- (void) setContentSize:(CGSize)contentSize offset:(CGPoint)offset;
+- (void) setHorizontal:(BOOL)horizontal;
+@property (nonatomic, assign) int pageIndex;
+
 @end
