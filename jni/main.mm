@@ -27,13 +27,13 @@
 
 #import "AppDelegate.h"
 
-@interface ParseResult : NSObject
+@interface AsyncResult : NSObject
 @property(nonatomic) int handle;
 @property(nonatomic,strong) NSString* string;
 @property(nonatomic) BOOL boolean;
 @end
 
-@implementation ParseResult
+@implementation AsyncResult
 @end
 
 @interface Main : AP_Application <PAK_Reader>
@@ -156,6 +156,9 @@ static JavaMethod kCanTweet = {
 static JavaMethod kTweet = {
     "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
+static JavaMethod kShareJourney = {
+    "shareJourney", "(Ljava/lang/String;I)V", NULL
+};
 static JavaMethod kMailTo = {
     "mailTo", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
@@ -169,11 +172,13 @@ static JavaMethod kMaybeGetURL = {
 static void initBreakpad(JNIEnv*, jobject, jstring);
 static void parseObjResult(JNIEnv*, jobject, jint, jstring);
 static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
+static void shareJourneyResult(JNIEnv*, jobject, jint, jstring);
 
 static JNINativeMethod kNatives[] = {
     { "initBreakpad", "(Ljava/lang/String;)V", (void *)&initBreakpad},
     { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
     { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
+    { "shareJourneyResult", "(ILjava/lang/String;)V", (void *)&shareJourneyResult},
 };
 
 static google_breakpad::ExceptionHandler* s_exceptionHandler;
@@ -242,7 +247,7 @@ static void NSLog_handler(NSString* message) {
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
 
-    NSMutableDictionary* _parseBlocks; // Map of int -> block
+    NSMutableDictionary* _blocks; // Map of int -> block
 
     jobject _gaiDefaultTracker;
     NSArray* _pakNamesCache;
@@ -322,7 +327,7 @@ static void NSLog_handler(NSString* message) {
         _obbPath = [self javaStringMethod:&kGetExpansionFilePath];
         AP_CHECK(_obbPath, return nil);
 
-        _parseBlocks = [NSMutableDictionary dictionary];
+        _blocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -560,25 +565,27 @@ static void NSLog_handler(NSString* message) {
     return [self javaIntMethod:&kVersionCode];
 }
 
-- (int) parsePushBlock:(id)block
+- (int) pushBlock:(id)block
 {
     static int handle = 0;
     ++handle;
     if (block) {
-        [_parseBlocks setObject:block forKey:@(handle)];
+        [_blocks setObject:block forKey:@(handle)];
     }
     return handle;
 }
 
-- (id) parsePopBlock:(int)handle
+- (id) popBlock:(int)handle
 {
-    id result = [_parseBlocks objectForKey:@(handle)];
-    [_parseBlocks removeObjectForKey:@(handle)];
+    id result = [_blocks objectForKey:@(handle)];
+    if (result) {
+        [_blocks removeObjectForKey:@(handle)];
+    }
     return result;
 }
 
 static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
-    ParseResult* result = [[ParseResult alloc] init];
+    AsyncResult* result = [[AsyncResult alloc] init];
     result.handle = i;
     if (s) {
         const char* c = env->GetStringUTFChars(s, NULL);
@@ -592,10 +599,10 @@ static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         waitUntilDone:NO];
 }
 
-- (void) parseObjResult:(ParseResult*)result
+- (void) parseObjResult:(AsyncResult*)result
 {
     // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
-    PFIdResultBlock block = [self parsePopBlock:result.handle];
+    PFIdResultBlock block = [self popBlock:result.handle];
     if (block) {
         NSError* error = nil;
         id json = [self jsonDecode:result error:&error];
@@ -604,7 +611,7 @@ static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 }
 
 static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
-    ParseResult* result = [[ParseResult alloc] init];
+    AsyncResult* result = [[AsyncResult alloc] init];
     result.handle = i;
     result.boolean = b;
 
@@ -614,10 +621,10 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         waitUntilDone:NO];
 }
 
-- (void) parseBoolResult:(ParseResult*)result
+- (void) parseBoolResult:(AsyncResult*)result
 {
     // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
-    PFBooleanResultBlock block = [self parsePopBlock:result.handle];
+    PFBooleanResultBlock block = [self popBlock:result.handle];
     if (block) {
         NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
         block(result.boolean, nil);
@@ -639,7 +646,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
 {
-    int handle = [self parsePushBlock:block];
+    int handle = [self pushBlock:block];
 
     [self maybeInitJavaMethod:&kParseCallFunction];
 
@@ -654,7 +661,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
 {
-    int handle = [self parsePushBlock:block];
+    int handle = [self pushBlock:block];
 
     [self maybeInitJavaMethod:&kParseFetch];
     _env->CallVoidMethod(_instance, kParseFetch.method, handle, obj);
@@ -662,7 +669,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
 {
-    int handle = [self parsePushBlock:block];
+    int handle = [self pushBlock:block];
 
     [self maybeInitJavaMethod:&kParseSave];
     _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
@@ -738,11 +745,14 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
             NSLog(@"JSON writer error: %@", error);
             return NULL;
         }
-        return _env->NewStringUTF((const char*)valueData.bytes);
+        const char zero = 0;
+        NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];        
+        [nullTerminated appendBytes:&zero length:1];
+        return _env->NewStringUTF((const char*)nullTerminated.bytes);
     }
 }
 
-- (id) jsonDecode:(ParseResult*)result error:(NSError**)error
+- (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
 {
     if (result.string) {
 //        NSLog(@"Decoding JSON: %@", result.string);
@@ -799,7 +809,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
 {
-    int handle = [self parsePushBlock:block];
+    int handle = [self pushBlock:block];
     [self maybeInitJavaMethod:&kParseFind];
     _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
 }
@@ -946,6 +956,43 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
 
     _env->PopLocalFrame(NULL);
+}
+
+- (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
+{
+    [self maybeInitJavaMethod:&kShareJourney];
+
+    int handle = [self pushBlock:block];
+
+    _env->PushLocalFrame(16);
+    jstring s = existingName ? _env->NewStringUTF(existingName.UTF8String) : NULL;
+    _env->CallVoidMethod(_instance, kShareJourney.method, s, handle);
+
+    _env->PopLocalFrame(NULL);
+}
+
+static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    AsyncResult* result = [[AsyncResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    NSLog(@"Posting shareJourneyResult handle:%d result:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(shareJourneyResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) shareJourneyResult:(AsyncResult*)result
+{
+    NSLog(@"shareJourneyResult handle:%d value:%@", result.handle, result.string);
+    NameResultBlock block = [self popBlock:result.handle];
+    if (block) {
+        block(result.string);
+    }
 }
 
 - (void) mailTo:(NSString*)to attachment:(NSString*)path

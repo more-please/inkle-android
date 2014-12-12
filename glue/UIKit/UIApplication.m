@@ -44,6 +44,12 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+    block(nil);
+}
+
 - (void) mailTo:(NSString*)to attachment:(NSString*)path
 {
     GLUE_NOT_IMPLEMENTED;

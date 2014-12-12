@@ -23,6 +23,10 @@
 - (BOOL) canTweet;
 - (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image;
 
+// Rather specific to 80 Days...
+typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == cancel
+- (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block;
+
 - (void) mailTo:(NSString*)to attachment:(NSString*)path;
 
 - (void) quit;
