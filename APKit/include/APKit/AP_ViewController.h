@@ -36,6 +36,9 @@
 
 @property(nonatomic,copy) NSString *title;  // Localized title for use by a parent controller.
 
+// Android-specific additions
+- (BOOL) goBack; // Return YES if the event was handled.
+
 // FIXME
 - (void) presentViewController:(AP_ViewController*)viewControllerToPresent animated:(BOOL)flag completion:(void(^)(void))completion;
 // The completion handler, if provided, will be invoked after the dismissed controller's viewDidDisappear: callback is invoked.

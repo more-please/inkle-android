@@ -17,6 +17,11 @@
     return self;
 }
 
+- (BOOL) goBack
+{
+    return [self.view goBack];
+}
+
 - (AP_View*) view
 {
     if (!_view) {

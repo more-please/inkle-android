@@ -120,6 +120,8 @@
 // Iain addition: allow hit test to return subviews outside my bounds.
 @property(nonatomic) BOOL allowSubviewHitTestOutsideBounds;
 
+- (BOOL) goBack; // Return YES if the event was handled.
+
 // ----------------------------------------------------------------------
 // Internal stuff
 

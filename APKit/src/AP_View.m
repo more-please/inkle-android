@@ -712,6 +712,20 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     [protectSelf self];
 }
 
+- (BOOL) goBack
+{
+    BOOL result = NO;
+    ++_iterating;
+    for (AP_View* view in _subviews) {
+        if ([view goBack]) {
+            result = YES;
+            break;
+        }
+    }
+    --_iterating;
+    return result;
+}
+
 //------------------------------------------------------------------------------------
 #pragma mark - Layout
 //------------------------------------------------------------------------------------

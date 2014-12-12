@@ -1416,7 +1416,7 @@ const EGLint lowQualityAttribs[] = {
         && AKeyEvent_getKeyCode(event) == AKEYCODE_BACK
         && AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP) {
         // FIXME
-        return NO; // [self.delegate goBack];
+        return [self.delegate goBack];
     }
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {

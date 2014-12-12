@@ -71,6 +71,8 @@ AP_BAN_EVIL_INIT;
         
         NSMutableArray* buttonNames = [NSMutableArray array];
 
+        [buttonNames addObject:cancelButtonTitle];
+
         va_list args;
         va_start(args, otherButtonTitles);
         for (NSString* arg = otherButtonTitles; arg; arg = va_arg(args, NSString*))
@@ -78,14 +80,6 @@ AP_BAN_EVIL_INIT;
             [buttonNames addObject:arg];
         }
         va_end(args);
-
-        if (buttonNames.count < 2) {
-            // 2 or fewer buttons in total, put Cancel on the left.
-            [buttonNames insertObject:cancelButtonTitle atIndex:0];
-        } else {
-            // 3 or more buttons, put Cancel at the bottom.
-            [buttonNames addObject:cancelButtonTitle];
-        }
 
         // See http://developer.android.com/design/style/color.html
         UIColor* lightBlue = [UIColor colorWithRed:(0x33 / 255.0) green:(0xb5 / 255.0) blue:(0xe5 / 255.0) alpha:1];
@@ -150,18 +144,10 @@ AP_BAN_EVIL_INIT;
         _alert.alpha = 1;
         _alert.transform = CGAffineTransformIdentity;
     }];
-
-// FIXME!
-//     [[AP_Application sharedApplication].delegate addBackCloseBlock:^() {
-//         [self backButtonPressed];
-//     }];
 }
 
 - (void) hide
 {
-// FIXME!
-//     [[AP_Application sharedApplication].delegate removeLastBackButtonBlock];
-
     [AP_View animateWithDuration:0.25 animations:^{
         self.transform = CGAffineTransformMakeScale(0.25, 0.25);
         _vignette.transform = CGAffineTransformMakeScale(4, 4);
@@ -178,10 +164,11 @@ AP_BAN_EVIL_INIT;
     [_delegate alertView:self clickedButtonAtIndex:i];
 }
 
-- (void) backButtonPressed
+- (BOOL) goBack
 {
     [self hide];
     [_delegate alertView:self clickedButtonAtIndex:0];
+    return YES;
 }
 
 - (void) layoutSubviews
@@ -252,7 +239,15 @@ AP_BAN_EVIL_INIT;
         pos.y += bodySize.height;
         pos.y += ySpace / 2;
     }
-    for (AP_Button* button in _buttons) {
+
+    NSMutableArray* buttons = [_buttons mutableCopy];
+    if (buttons.count > 2) {
+        // Move cancel button to the end
+        AP_Button* cancel = [buttons objectAtIndex:0];
+        [buttons removeObjectAtIndex:0];
+        [buttons addObject:cancel];
+    }
+    for (AP_Button* button in buttons) {
         button.frame = CGRectMake(pos.x, pos.y, buttonSize.width, buttonSize.height);
         if (verticalLayout) {
             pos.y += buttonSize.height;
