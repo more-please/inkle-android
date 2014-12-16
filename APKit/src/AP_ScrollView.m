@@ -84,7 +84,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 - (void)scrollToBottom
 {
-    [self.animatedBoundsOrigin cancelAnimation];
+    [self.animatedBoundsOrigin leaveAnimation];
     CGPoint bottom = {
         MAX(0, self.contentSize.width - self.bounds.size.width),
         MAX(0, self.contentSize.height - self.bounds.size.height)
@@ -183,7 +183,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 - (void) pan
 {
     if (_gesture.state == UIGestureRecognizerStateBegan) {
-        [self.animatedBoundsOrigin cancelAnimation];
+        [self.animatedBoundsOrigin leaveAnimation];
         _inGesture = YES;
         _previousTranslation = [_gesture translationInView:nil];
         _nextTranslation = _previousTranslation;
