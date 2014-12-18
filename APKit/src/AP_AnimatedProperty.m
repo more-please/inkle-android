@@ -49,6 +49,7 @@ static AP_Animation* g_CurrentAnimation = nil;
 - (void) leaveAnimation
 {
     [_animation removeProp:self];
+    _animation = nil;
 }
 
 - (void) cancelAnimation
