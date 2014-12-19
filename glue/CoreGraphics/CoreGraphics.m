@@ -10,6 +10,14 @@ const CGRect CGRectNull = {{INFINITY, INFINITY}, {0, 0}};
 const CGAffineTransform CGAffineTransformIdentity = { 1, 0, 0, 1, 0, 0 };
 
 CGPoint CGPointFromString(NSString* s) {
+    if (!s) {
+        NSLog(@"*** null input to CGPointFromString");
+        return CGPointZero;
+    }
+    if (![s isKindOfClass:String.class]) {
+        NSLog(@"*** CGPointFromString expected String but received: %@", s);
+        return CGPointZero;
+    }
     NSPoint ns = NSPointFromString(s);
     CGPoint cg = { ns.x, ns.y };
     return cg;
