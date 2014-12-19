@@ -733,23 +733,17 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         return pf.jobj;
     }
 
-    if ([value isKindOfClass:[NSString class]]) {
-        // If it's a string, send it directly
-        NSString* valueStr = (NSString*)value;
-        return _env->NewStringUTF(valueStr.UTF8String);
-    } else {
-        // Otherwise, encode as JSON.
-        NSError* error = nil;
-        NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
-        if (error) {
-            NSLog(@"JSON writer error: %@", error);
-            return NULL;
-        }
-        const char zero = 0;
-        NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];        
-        [nullTerminated appendBytes:&zero length:1];
-        return _env->NewStringUTF((const char*)nullTerminated.bytes);
+    // Otherwise, encode as JSON.
+    NSError* error = nil;
+    NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
+    if (error) {
+        NSLog(@"JSON writer error: %@", error);
+        return NULL;
     }
+    const char zero = 0;
+    NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];
+    [nullTerminated appendBytes:&zero length:1];
+    return _env->NewStringUTF((const char*)nullTerminated.bytes);
 }
 
 - (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
