@@ -49,7 +49,13 @@
 
 @end
 
+// Fires on touchBegan, so it feels faster
 @interface AP_TapGestureRecognizer : AP_GestureRecognizer
+@property (nonatomic) int numberOfTapsRequired;       // Default is 1. The number of taps required to match
+@end
+
+// Fires on touchEnded, so it's more reliable
+@interface AP_TapUpGestureRecognizer : AP_GestureRecognizer
 @property (nonatomic) int numberOfTapsRequired;       // Default is 1. The number of taps required to match
 @end
 

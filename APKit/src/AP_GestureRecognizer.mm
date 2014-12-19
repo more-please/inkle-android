@@ -268,6 +268,54 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 
 @end
 
+@implementation AP_TapUpGestureRecognizer {
+    CGPoint _origin;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    // Only count the initial touch(es)
+    if (self.touches.count == 0) {
+        for (AP_Touch* t in touches) {
+            [self addTouch:t];
+        }
+        _origin = [self locationInView:self.view];
+    }
+}
+
+- (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > self.maxTapDistance) {
+        [self reset];
+    }
+}
+
+- (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
+{
+    [self checkForStaleTouches:event];
+
+    CGPoint p = [self locationInView:self.view];
+    if (distance(p, _origin) > self.maxTapDistance) {
+        [self reset];
+        return;
+    }
+    for (AP_Touch* t in self.touches) {
+        if (t.phase != UITouchPhaseEnded) {
+            [super touchesEnded:touches withEvent:event];
+            return;
+        }
+    }
+    [self fireWithState:UIGestureRecognizerStateEnded];
+    [self reset];
+}
+
+@end
+
 @implementation AP_LongPressGestureRecognizer {
     CGPoint _origin;
     NSTimer* _timer;
