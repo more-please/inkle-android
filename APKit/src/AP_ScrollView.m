@@ -24,6 +24,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     self = [super initWithFrame:frame];
     if (self) {
         self.allowSubviewHitTestOutsideBounds = YES;
+        _enabled = YES;
         _animatedContentSize = [[AP_AnimatedSize alloc] initWithName:@"contentSize" view:self];
         _decelerationRate = UIScrollViewDecelerationRateNormal;
         _gesture = [[AP_PanGestureRecognizer alloc] initWithTarget:self action:@selector(pan)];
@@ -182,7 +183,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 - (void) pan
 {
-    if (_gesture.state == UIGestureRecognizerStateBegan) {
+    if (_enabled && _gesture.state == UIGestureRecognizerStateBegan) {
         [self.animatedBoundsOrigin leaveAnimation];
         _inGesture = YES;
         _previousTranslation = [_gesture translationInView:nil];
@@ -190,7 +191,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
         if ([_delegate respondsToSelector:@selector(scrollViewWillBeginDragging:)]) {
             [_delegate scrollViewWillBeginDragging:self];
         }
-    } else if (_gesture.state == UIGestureRecognizerStateChanged) {
+    } else if (_enabled && _gesture.state == UIGestureRecognizerStateChanged) {
         _nextTranslation = [_gesture translationInView:nil];
     } else {
         _inGesture = NO;

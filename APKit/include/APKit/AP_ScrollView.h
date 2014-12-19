@@ -46,5 +46,6 @@
 - (void) setContentSize:(CGSize)contentSize offset:(CGPoint)offset;
 - (void) setHorizontal:(BOOL)horizontal;
 @property (nonatomic, assign) int pageIndex;
+@property (nonatomic, assign) BOOL enabled;
 
 @end
