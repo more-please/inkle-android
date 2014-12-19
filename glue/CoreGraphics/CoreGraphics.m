@@ -14,7 +14,7 @@ CGPoint CGPointFromString(NSString* s) {
         NSLog(@"*** null input to CGPointFromString");
         return CGPointZero;
     }
-    if (![s isKindOfClass:String.class]) {
+    if (![s isKindOfClass:NSString.class]) {
         NSLog(@"*** CGPointFromString expected String but received: %@", s);
         return CGPointZero;
     }
