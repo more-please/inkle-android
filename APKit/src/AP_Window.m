@@ -434,6 +434,9 @@ static BOOL isActive(AP_GestureRecognizer* g) {
                 }
             }
         }
+        if (v.blockGestures) {
+            break;
+        }
     }
 }
 

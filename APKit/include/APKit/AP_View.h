@@ -120,6 +120,9 @@
 // Iain addition: allow hit test to return subviews outside my bounds.
 @property(nonatomic) BOOL allowSubviewHitTestOutsideBounds;
 
+// Prevent touches in this view from firing gesture recognizers in lower views.
+@property(nonatomic) BOOL blockGestures;
+
 - (BOOL) goBack; // Return YES if the event was handled.
 
 // ----------------------------------------------------------------------
