@@ -1098,7 +1098,8 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     udata_setCommonData(icuDat.bytes, &icuErr);
     NSAssert(U_SUCCESS(icuErr), @"ICU error: %d", icuErr);
 
-    NSString* locale = [self javaStringMethod:&kGetLocale];
+    // Hard-code the local to en_GB, as some others use characters we don't support.
+    NSString* locale = @"en_GB"; // [self javaStringMethod:&kGetLocale];
     NSLog(@"Locale: %@", locale);
     uloc_setDefault([locale cStringUsingEncoding:NSUTF8StringEncoding], &icuErr);
     NSAssert(U_SUCCESS(icuErr), @"ICU error: %d", icuErr);
