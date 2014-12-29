@@ -183,11 +183,16 @@ static JNINativeMethod kNatives[] = {
 
 static google_breakpad::ExceptionHandler* s_exceptionHandler;
 
-static bool breakback(
+static bool breakpadFilter(void* context) {
+    // Only create a minidump if the exception handler is installed.
+    // Hopefully this will avoid creating "crash logs" for background shutdowns.
+    return s_exceptionHandler != NULL;
+}
+
+static bool breakpadMinidump(
     const google_breakpad::MinidumpDescriptor& descriptor,
     void* context,
     bool succeeded) {
-  NSLog(@"Breakpad dump path: %s\n", descriptor.path());
   return succeeded;
 }
 
@@ -195,7 +200,13 @@ void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
 #ifndef DEBUG
     const char *path = env->GetStringUTFChars(filepath, 0);
     google_breakpad::MinidumpDescriptor descriptor(path);
-    s_exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, breakback, NULL, true, -1);
+    s_exceptionHandler = new google_breakpad::ExceptionHandler(
+        descriptor,
+        breakpadFilter,
+        breakpadMinidump,
+        NULL, // callback context
+        true, // always write minidump
+        -1);  // in-process minidump
 #endif
 }
 
@@ -351,6 +362,10 @@ static void NSLog_handler(NSString* message) {
 
 - (void) quit
 {
+    if (s_exceptionHandler) {
+        delete s_exceptionHandler;
+        s_exceptionHandler = NULL;
+    }
     [self javaVoidMethod:&kPleaseFinish];
 }
 
@@ -1601,13 +1616,14 @@ void android_main(struct android_app* android) {
 
                 // Check if we are exiting.
                 if (android->destroyRequested != 0) {
-                    CkShutdown();
-                    [g_Main teardownGL];
-                    [g_Main teardownJava];
                     // Despite telling us we're shutting down, the system doesn't kill us, so...
                     if (s_exceptionHandler) {
                         delete s_exceptionHandler;
+                        s_exceptionHandler = NULL;
                     }
+                    CkShutdown();
+                    [g_Main teardownGL];
+                    [g_Main teardownJava];
                     exit(EXIT_SUCCESS);
                     return;
                 }
