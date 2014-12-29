@@ -279,9 +279,9 @@ static void NSLog_handler(NSString* message) {
         CkConfig config(_env, _android->activity->clazz);
         config.useJavaAudio = true; // OpenSLES is totally broken.
         // Nice big audio buffers, to prevent any glitches.
-        config.audioUpdateMs = 20;
-        config.streamBufferMs = 2000;
-        config.streamFileUpdateMs = 400;
+        config.audioUpdateMs = 50;
+        config.streamBufferMs = 3000;
+        config.streamFileUpdateMs = 600;
         int success = CkInit(&config);
         AP_CHECK(success, return nil);
 
