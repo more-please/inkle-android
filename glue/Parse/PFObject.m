@@ -85,9 +85,9 @@
     GLUE_NOT_IMPLEMENTED;
 }
 
-- (void) saveEventually:(PFBooleanResultBlock)callback
+- (void) saveEventually:(PFBooleanResultBlock)block
 {
-    GLUE_NOT_IMPLEMENTED;
+    [[UIApplication sharedApplication] parseObject:_jobj saveEventuallyWithBlock:block];
 }
 
 - (NSString*) objectId

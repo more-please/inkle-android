@@ -45,6 +45,7 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 - (NSString*) parseObjectId:(jobject)jobj;
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
+- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block;
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block;
 
 - (jobject) parseNewQuery:(NSString*)className;

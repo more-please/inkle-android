@@ -116,6 +116,11 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
 {
     GLUE_NOT_IMPLEMENTED;

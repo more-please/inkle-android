@@ -99,6 +99,9 @@ static JavaMethod kParseAddKey = {
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
 };
+static JavaMethod kParseSaveEventually = {
+    "parseSaveEventually", "(ILcom/parse/ParseObject;)V", NULL
+};
 static JavaMethod kParseFetch = {
     "parseFetch", "(ILcom/parse/ParseObject;)V", NULL
 };
@@ -688,6 +691,14 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     [self maybeInitJavaMethod:&kParseSave];
     _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
+}
+
+- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseSaveEventually];
+    _env->CallVoidMethod(_instance, kParseSaveEventually.method, handle, obj);
 }
 
 - (jobject) parseNewObject:(NSString*)className
