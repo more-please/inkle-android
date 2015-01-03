@@ -72,7 +72,7 @@
 
 - (void) refreshInBackgroundWithBlock:(PFObjectResultBlock)block
 {
-    GLUE_NOT_IMPLEMENTED;
+    [[UIApplication sharedApplication] parseObject:_jobj refreshWithBlock:block];
 }
 
 - (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block

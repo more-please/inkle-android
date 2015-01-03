@@ -105,6 +105,9 @@ static JavaMethod kParseSaveEventually = {
 static JavaMethod kParseFetch = {
     "parseFetch", "(ILcom/parse/ParseObject;)V", NULL
 };
+static JavaMethod kParseRefresh = {
+    "parseRefresh", "(ILcom/parse/ParseObject;)V", NULL
+};
 static JavaMethod kParseNewQuery = {
     "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
 };
@@ -683,6 +686,14 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     [self maybeInitJavaMethod:&kParseFetch];
     _env->CallVoidMethod(_instance, kParseFetch.method, handle, obj);
+}
+
+- (void) parseObject:(jobject)obj refreshWithBlock:(PFObjectResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseRefresh];
+    _env->CallVoidMethod(_instance, kParseRefresh.method, handle, obj);
 }
 
 - (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
