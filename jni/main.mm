@@ -96,6 +96,9 @@ static JavaMethod kParseObjectId = {
 static JavaMethod kParseAddKey = {
     "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/Object;)V", NULL
 };
+static JavaMethod kParseRemoveKey = {
+    "parseRemoveKey", "(Lcom/parse/ParseObject;Ljava/lang/String;)V", NULL
+};
 static JavaMethod kParseSave = {
     "parseSave", "(ILcom/parse/ParseObject;)V", NULL
 };
@@ -807,6 +810,18 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
+
+    _env->PopLocalFrame(NULL);
+}
+
+- (void) parseObject:(jobject)obj removeKey:(NSString*)key
+{
+    [self maybeInitJavaMethod:&kParseRemoveKey];
+
+    _env->PushLocalFrame(16);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+
+    _env->CallVoidMethod(_instance, kParseRemoveKey.method, obj, jKey);
 
     _env->PopLocalFrame(NULL);
 }

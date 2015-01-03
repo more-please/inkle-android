@@ -82,7 +82,7 @@
 
 - (void) removeObjectForKey:(NSString*)key
 {
-    GLUE_NOT_IMPLEMENTED;
+    [[UIApplication sharedApplication] parseObject:_jobj removeKey:key];
 }
 
 - (void) saveEventually:(PFBooleanResultBlock)block

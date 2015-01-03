@@ -14,10 +14,9 @@
 - (void) saveInBackground;
 - (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block;
 
-- (id)objectForKeyedSubscript:(NSString*)key;
-- (void)setObject:(id)object forKeyedSubscript:(NSString*)key;
+- (id) objectForKeyedSubscript:(NSString*)key;
+- (void) setObject:(id)object forKeyedSubscript:(NSString*)key;
 
-// To be implemented...
 - (void) refreshInBackgroundWithBlock:(PFObjectResultBlock)block;
 - (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block;
 - (void) removeObjectForKey:(NSString*)key;
