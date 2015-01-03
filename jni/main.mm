@@ -5,6 +5,7 @@
 #import <jni.h>
 #import <errno.h>
 #import <unistd.h>
+#import <sys/statfs.h>
 
 #import <EGL/egl.h>
 #import <GLES2/gl2.h>
@@ -246,6 +247,20 @@ static void NSLog_handler(NSString* message) {
     write(_NSLog_fd, message.UTF8String, message.length);
 }
 
+static void logStatfs(NSString* path) {
+    if (path) {
+        struct statfs s;
+        int result = statfs(path.UTF8String, &s);
+        if (result == 0) {
+            float total = float(s.f_blocks) * float(s.f_bsize) / (1024.0 * 1024.0);
+            float avail = float(s.f_bavail) * float(s.f_bsize) / (1024.0 * 1024.0);
+            NSLog(@"statfs(%@): total %.1f MB, avail %.1f MB (%.1f%%)", path, total, avail, 100.0 * avail / total);
+        } else {
+            NSLog(@"*** statfs(%@) returned error: %s", path, strerror(errno));
+        }
+    }
+}
+
 @implementation Main {
     struct android_app* _android;
 
@@ -346,6 +361,10 @@ static void NSLog_handler(NSString* message) {
         // Locate the OBB.
         _obbPath = [self javaStringMethod:&kGetExpansionFilePath];
         AP_CHECK(_obbPath, return nil);
+
+        logStatfs(self.documentsDir);
+        logStatfs(self.publicDocumentsDir);
+        logStatfs(_obbPath);
 
         _blocks = [NSMutableDictionary dictionary];
     }
