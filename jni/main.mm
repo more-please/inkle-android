@@ -2,6 +2,8 @@
 #import <APKit/APKit.h>
 #import <PAK/PAK.h>
 
+#import <map>
+
 #import <jni.h>
 #import <errno.h>
 #import <unistd.h>
@@ -23,8 +25,8 @@
 #import <unicode/udata.h>
 #import <unicode/uloc.h>
 
-#include <client/linux/handler/exception_handler.h>
-#include <client/linux/handler/minidump_descriptor.h>
+#import <client/linux/handler/exception_handler.h>
+#import <client/linux/handler/minidump_descriptor.h>
 
 #import "AppDelegate.h"
 
@@ -489,7 +491,7 @@ static void logStatfs(NSString* path) {
 
 - (BOOL) canDraw
 {
-    return _surface != EGL_NO_SURFACE;
+    return _inForeground && _surface != EGL_NO_SURFACE;
 }
 
 - (void) maybeInitJavaMethod:(JavaMethod*)m
@@ -1306,9 +1308,9 @@ const EGLint lowQualityAttribs[] = {
 
 - (void) maybeInitSurface
 {
-    if (_surface == EGL_NO_SURFACE) {
-        [self maybeInitGL];
+    [self maybeInitGL];
 
+    if (_surface == EGL_NO_SURFACE && _android->window) {
         NSLog(@"Initializing EGL surface...");
 
         // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
@@ -1369,6 +1371,12 @@ const EGLint lowQualityAttribs[] = {
         eglDestroySurface(_display, _surface);
         _surface = EGL_NO_SURFACE;
     }
+
+    // Not much we can do with errors here, but let's at least log it and clear it.
+    EGLint err = eglGetError();
+    if (err != EGL_SUCCESS) {
+        NSLog(@"*** EGL error: %x", err);
+    }
 }
 
 - (void) teardownGL
@@ -1392,12 +1400,20 @@ const EGLint lowQualityAttribs[] = {
 
 - (void) updateGL:(BOOL)byForceIfNecessary
 {
-    if (_surface == EGL_NO_SURFACE) {
+    if (_display == EGL_NO_DISPLAY) {
         // No display yet.
         return;
     }
+
     if (!self.delegate) {
         // App isn't initialized -- draw a loading screen?
+        return;
+    }
+
+    [self maybeInitSurface];
+
+    if (_surface == EGL_NO_SURFACE) {
+        // No surface, can't draw
         return;
     }
 
@@ -1414,23 +1430,34 @@ const EGLint lowQualityAttribs[] = {
     _idleCount = 0;
 
     if (byForceIfNecessary || !vc.paused) {
-        eglMakeCurrent(_display, _surface, _surface, _context);
-        [vc draw];
-        glFlush();
-        eglSwapBuffers(_display, _surface);
+        BOOL killSurface = NO;
 
-        EGLint err = eglGetError();
-        if (err != EGL_SUCCESS) {
-            // Some errors are transient, bah. We can't try tearing down
-            // and rebuilding the surface because we might be in the background.
-            // Cleanly restarting the entire game might be good, but it's tricky.
-            // Just log the error to help diagnose visual glitches, I guess.
-            NSLog(@"*** EGL error: %x", err);
+        if (!eglMakeCurrent(_display, _surface, _surface, _context)) {
+            NSLog(@"*** eglMakeCurrent failed!");
+            killSurface = YES;
+        } else {
+            [vc draw];
+            glFlush();
+            eglSwapBuffers(_display, _surface);
         }
 
-        GLenum err2 = glGetError();
-        if (err2 != GL_NO_ERROR) {
-            NSLog(@"*** GL error: %x", err2);
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            NSLog(@"*** GL error: %x", err);
+        }
+
+        EGLint err2 = eglGetError();
+        if (err2 != EGL_SUCCESS) {
+            NSLog(@"*** EGL error: %x", err2);
+            // Some devices with bad GL drivers seem to raise EGL_BAD_SURFACE
+            // more or less randomly. On the Galaxy Tab 3 10.1 the whole device
+            // can eventually lock up. Try tearing down and lazily recreating the
+            // surface to see if that helps.
+            killSurface = YES;
+        }
+
+        if (killSurface) {
+            [self teardownSurface];
         }
     }
 }
@@ -1599,7 +1626,7 @@ const EGLint lowQualityAttribs[] = {
 
         case APP_CMD_WINDOW_RESIZED:
         case APP_CMD_CONFIG_CHANGED:
-            [self updateScreenSize];
+            [self teardownSurface];
             break;
 
         case APP_CMD_GAINED_FOCUS:
@@ -1616,7 +1643,34 @@ static int32_t handleInputEvent(struct android_app* app, AInputEvent* event) {
 }
 
 static void handleAppCmd(struct android_app* app, int32_t cmd) {
-    NSLog(@"handleAppCmd: %d", cmd);
+
+    static std::map<int, const char*> s_cmds;
+    if (s_cmds.empty()) {
+#define ADD_CMD(c) s_cmds[c] = #c
+        ADD_CMD(APP_CMD_INPUT_CHANGED);
+        ADD_CMD(APP_CMD_INIT_WINDOW);
+        ADD_CMD(APP_CMD_TERM_WINDOW);
+        ADD_CMD(APP_CMD_WINDOW_RESIZED);
+        ADD_CMD(APP_CMD_WINDOW_REDRAW_NEEDED);
+        ADD_CMD(APP_CMD_CONTENT_RECT_CHANGED);
+        ADD_CMD(APP_CMD_GAINED_FOCUS);
+        ADD_CMD(APP_CMD_LOST_FOCUS);
+        ADD_CMD(APP_CMD_CONFIG_CHANGED);
+        ADD_CMD(APP_CMD_LOW_MEMORY);
+        ADD_CMD(APP_CMD_START);
+        ADD_CMD(APP_CMD_RESUME);
+        ADD_CMD(APP_CMD_SAVE_STATE);
+        ADD_CMD(APP_CMD_PAUSE);
+        ADD_CMD(APP_CMD_STOP);
+        ADD_CMD(APP_CMD_DESTROY);
+#undef ADD_CMD
+    }
+    const char* name = s_cmds[cmd];
+    if (!name) {
+        name = "UNKNOWN";
+    }
+    NSLog(@"handleAppCmd: %d (%s)", cmd, name);
+
     AP_CHECK(g_Main, return);
     [g_Main handleAppCmd:cmd];
 }
@@ -1686,6 +1740,8 @@ void android_main(struct android_app* android) {
             }
 
             CkUpdate();
+
+            [g_Main maybeInitSurface];
 
             if (g_Main.canDraw) {
                 // Run Objective-C timers.
