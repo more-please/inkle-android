@@ -2,6 +2,16 @@
 
 @implementation NSMutableAttributedString (Attributes)
 
++ (instancetype) attributedStringWithString:(NSString*)string
+{
+    return [[NSMutableAttributedString alloc] initWithString:string];
+}
+
++ (instancetype) attributedStringWithAttributedString:(NSAttributedString*)attrStr
+{
+    return [[NSMutableAttributedString alloc] initWithAttributedString:attrStr];
+}
+
 - (void) setFont:(UIFont*)font
 {
     NSRange r = NSMakeRange(0, self.length);

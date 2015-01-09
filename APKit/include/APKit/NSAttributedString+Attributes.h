@@ -6,6 +6,9 @@
 
 @interface NSMutableAttributedString (Attributes)
 
++ (instancetype) attributedStringWithString:(NSString*)string;
++ (instancetype) attributedStringWithAttributedString:(NSAttributedString*)attrStr;
+
 - (void) setFont:(UIFont*)font;
 - (void) setFont:(UIFont*)font range:(NSRange)range;
 
