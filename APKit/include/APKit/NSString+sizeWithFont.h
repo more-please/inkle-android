@@ -4,7 +4,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <UIKit/UIKit.h>
 
-@interface NSString (AP_Label_Text)
+@interface NSString (sizeWithFont)
 
 - (CGSize) sizeWithFont:(UIFont*)font constrainedToSize:(CGSize)size; // Uses NSLineBreakModeWordWrap
 - (CGSize) sizeWithFont:(UIFont*)font;

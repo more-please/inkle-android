@@ -1,8 +1,8 @@
-#import "AP_Label_Text.h"
+#import "NSString+sizeWithFont.h"
 
 #import "AP_Label.h"
 
-@implementation NSString (AP_Label_Text)
+@implementation NSString (sizeWithFont)
 
 - (CGSize) sizeWithFont:(UIFont*)font constrainedToSize:(CGSize)size
 {

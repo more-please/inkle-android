@@ -43,9 +43,11 @@
 #import "AP_GLTexture.h"
 #import "AP_Profiler.h"
 
+#import "NSAttributedString+Attributes.h"
 #import "NSDictionary+AP_InitWithData.h"
 #import "NSObject+AP_PerformBlock.h"
 #import "NSObject+AP_RoundRect.h"
+#import "NSString+sizeWithFont.h"
 
 #define UIActivityIndicatorView        AP_ActivityIndicatorView
 #define UIActivityViewController       AP_ActivityViewController
