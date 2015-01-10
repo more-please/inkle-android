@@ -43,6 +43,8 @@
 #import "AP_GLTexture.h"
 #import "AP_Profiler.h"
 
+#import "APKit_main.h"
+
 #import "NSAttributedString+Attributes.h"
 #import "NSDictionary+AP_InitWithData.h"
 #import "NSObject+AP_PerformBlock.h"

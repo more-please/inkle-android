@@ -1,5 +1,4 @@
 #import <Foundation/Foundation.h>
-#import <APKit/APKit.h>
 #import <PAK/PAK.h>
 
 #import <map>
@@ -28,7 +27,9 @@
 #import <client/linux/handler/exception_handler.h>
 #import <client/linux/handler/minidump_descriptor.h>
 
-#import "AppDelegate.h"
+#import "APKit.h"
+
+#import "APKit_main.h"
 
 @interface AsyncResult : NSObject
 @property(nonatomic) int handle;
@@ -1131,16 +1132,16 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     [PAK_Search add:self];
 
     NSLog(@"Let's get started!");
-    AppDelegate* sorcery = [[AppDelegate alloc] init];
-    self.delegate = sorcery;
+    id<AP_ApplicationDelegate> delegate = AP_GetDelegate();
+    self.delegate = delegate;
 
     // Splash screen
 
     [self updateScreenSize];
 
     AP_Window* window = [[AP_Window alloc] init];
-    sorcery.window = [[Real_UIWindow alloc] init];
-    sorcery.window.rootViewController = window; // Err, yes, well
+    delegate.window = [[Real_UIWindow alloc] init];
+    delegate.window.rootViewController = window; // Err, yes, well
 
     AP_Image* logo = [AP_Image imageNamed:@"80-days-logo"];
     logo = [logo imageWithWidth:[AP_Window widthForIPhone:150 iPad:250]];
