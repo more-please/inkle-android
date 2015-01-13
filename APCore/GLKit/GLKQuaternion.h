@@ -10,7 +10,7 @@ union _GLKQuaternion
     struct { GLKVector3 v; float s; };
     struct { float x, y, z, w; };
     float q[4];
-} __attribute__((aligned(16)));
+};
 typedef union _GLKQuaternion GLKQuaternion;    
 
 extern const GLKQuaternion GLKQuaternionIdentity; 

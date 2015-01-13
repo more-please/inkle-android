@@ -8,7 +8,7 @@ union _GLKVector4
     struct { float r, g, b, a; };
     struct { float s, t, p, q; };
     float v[4];
-} __attribute__((aligned(16)));
+};
 typedef union _GLKVector4 GLKVector4;
 
 static inline GLKVector4 GLKVector4Make(float x, float y, float z, float w) {

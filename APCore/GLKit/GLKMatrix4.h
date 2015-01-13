@@ -16,7 +16,7 @@ union _GLKMatrix4
         float m30, m31, m32, m33;
     };
     float m[16];
-} __attribute__((aligned(16)));
+};
 typedef union _GLKMatrix4 GLKMatrix4;
 
 extern const GLKMatrix4 GLKMatrix4Identity;

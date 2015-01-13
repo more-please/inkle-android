@@ -6,6 +6,7 @@ struct CGPoint {
   CGFloat x;
   CGFloat y;
 };
+
 typedef struct CGPoint CGPoint;
 
 struct CGSize {

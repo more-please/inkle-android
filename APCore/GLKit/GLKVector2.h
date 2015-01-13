@@ -6,7 +6,7 @@ union _GLKVector2 {
     struct { float x, y; };
     struct { float s, t; };
     float v[2];
-} __attribute__((aligned(8)));
+};
 typedef union _GLKVector2 GLKVector2;
 
 static inline GLKVector2 GLKVector2Make(float x, float y) {
