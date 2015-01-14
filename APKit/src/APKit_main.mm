@@ -306,7 +306,7 @@ static void logStatfs(NSString* path) {
         // Initialize JVM on this thread.
         JavaVMAttachArgs args = {
             JNI_VERSION_1_4,
-            "Sorcery",
+            "inkle",
             NULL
         };
         jint result = _vm->AttachCurrentThread(&_env, &args);
@@ -350,13 +350,15 @@ static void logStatfs(NSString* path) {
             _NSLog_printf_handler = NSLog_handler;
         }
 
-        _touches = [NSMutableDictionary dictionary];
+        NSLog(@"Architecture: %s", INKLE_ARCH);
 
         // Check whether we're running on a low-end device.
         if ([self javaBoolMethod:&kIsCrappyDevice]) {
             NSLog(@"*** Running on a low-end device.");
             self.isCrappyDevice = YES;
         }
+
+        _touches = [NSMutableDictionary dictionary];
 
         // Initialize non-OBB assets.
         _assetManager = [self getAssets];
