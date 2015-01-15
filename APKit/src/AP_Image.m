@@ -197,17 +197,19 @@ typedef struct VertexData {
             return [[AP_Image alloc] initWithName:name data:data];
         }
 
-        AP_GLTexture* texture = [AP_GLTexture textureNamed:ktx maxSize:2.15];
-        if (texture) {
-            return [[AP_Image alloc] initWithName:name texture:texture];
-        }
+        AP_GLTexture* texture;
 
         texture = [AP_GLTexture textureNamed:png maxSize:2.15];
         if (texture) {
             return [[AP_Image alloc] initWithName:name texture:texture];
         }
 
-        NSLog(@"Failed to load image: %@", name);
+        texture = [AP_GLTexture textureNamed:ktx maxSize:2.15];
+        if (texture) {
+            return [[AP_Image alloc] initWithName:name texture:texture];
+        }
+
+        NSLog(@"*** Failed to load image: %@", name);
         return (AP_Image*)nil;
     }];
 
@@ -530,15 +532,26 @@ typedef struct VertexData {
                 break;
         }
 
-        // Load texture name
-        NSString* texName = [_assetName stringByAppendingString:@".ktx"];
+        // Load texture name. Look for a .png first.
+        NSString* texName = [_assetName stringByAppendingString:@".png"];
         _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
-        AP_CHECK(_texture, return nil);
+        if (_texture) {
+            // PNG has alpha, so we don't need the separate-alpha shader.
+            if (img->channels == 4) {
+                _prog = g_Prog3;
+            }
+        } else {
+            // No PNG, look for a KTX file.
+            NSString* texName = [_assetName stringByAppendingString:@".ktx"];
+            _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
+            AP_CHECK(_texture, return nil);
 
-        if (img->channels == 4) {
-            NSString* alphaName = [_assetName stringByAppendingString:@".alpha.ktx"];
-            _alphaTexture = [AP_GLTexture textureNamed:alphaName maxSize:2.15];
-            AP_CHECK(_alphaTexture, return nil);
+            // KTX needs separate alpha.
+            if (img->channels == 4) {
+                NSString* alphaName = [_assetName stringByAppendingString:@".alpha.ktx"];
+                _alphaTexture = [AP_GLTexture textureNamed:alphaName maxSize:2.15];
+                AP_CHECK(_alphaTexture, return nil);
+            }
         }
 
         RawQuad q;

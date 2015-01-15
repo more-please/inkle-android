@@ -48,7 +48,7 @@ static AP_Bundle* g_Bundle;
         return item.data;
     }
 #endif
-    NSLog(@"*** Failed to load resource:%@ ofType:%@", name, ext);
+//     NSLog(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;
 }
 

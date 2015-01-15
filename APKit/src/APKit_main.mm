@@ -224,7 +224,7 @@ void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
 }
 
 extern "C" {
-JNIEXPORT void JNICALL Java_com_inkle_sorcery_SorceryActivity_initBreakpad(
+JNIEXPORT void JNICALL Java_com_inkle_common_InkleActivity_initBreakpad(
         JNIEnv* env, jobject obj, jstring filepath) {
     initBreakpad(env, obj, filepath);
 }
@@ -323,7 +323,7 @@ static void logStatfs(NSString* path) {
         int success = CkInit(&config);
         AP_CHECK(success, return nil);
 
-        // Get SorceryActivity and its methods.
+        // Get InkleActivity and its methods.
         _instance = _env->NewGlobalRef(_android->activity->clazz);
         AP_CHECK(_instance, return nil);
 
@@ -387,7 +387,7 @@ static void logStatfs(NSString* path) {
 {
     NSDate* now = [NSDate date];
     if (_autoQuitTime && [now laterDate:_autoQuitTime] == now) {
-        NSLog(@"*** Sorcery! is idle in the background. Auto-quitting to save memory.");
+        NSLog(@"*** Game is idle in the background. Auto-quitting to save memory.");
         _autoQuitTime = nil;
         [self quit];
     }
@@ -453,7 +453,7 @@ static void logStatfs(NSString* path) {
 {
     AAsset* asset = AAssetManager_open(_assetManager, path.UTF8String, AASSET_MODE_STREAMING);
     if (!asset) {
-        NSLog(@"Failed to open asset: %@", path);
+//         NSLog(@"Failed to open asset: %@", path);
         return nil;
     }
 

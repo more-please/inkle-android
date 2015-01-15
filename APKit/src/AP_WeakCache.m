@@ -30,7 +30,9 @@
     id result = entry.value;
     if (!result) {
         result = loader();
-        AP_CHECK(result, return nil);
+        if (!result) {
+            return nil;
+        }
         entry = [[AP_WeakCache_Entry alloc] init];
         entry.key = key;
         entry.value = result;

@@ -73,7 +73,7 @@ static AP_WeakCache* s_textureCache = nil;
     }];
 
     if (!result) {
-        NSLog(@"Failed to load texture: %@", name);
+//         NSLog(@"Failed to load texture: %@", name);
         return nil;
     }
 
@@ -132,7 +132,9 @@ static AP_WeakCache* s_textureCache = nil;
 
 + (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data maxSize:(CGFloat)screens
 {
-    AP_CHECK(data, return nil);
+    if (!data) {
+        return nil;
+    }
     AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name target:GL_TEXTURE_2D];
     if ([result loadData:data maxSize:screens]) {
         return result;
