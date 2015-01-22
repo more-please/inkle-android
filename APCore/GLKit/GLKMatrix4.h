@@ -36,6 +36,27 @@ static inline GLKMatrix4 GLKMatrix4Make(
     return result;
 }
 
+static inline GLKMatrix4 GLKMatrix4MakeOrtho(
+    float left, float right,
+    float bottom, float top,
+    float nearZ, float farZ)
+{
+    float ral = right + left;
+    float rsl = right - left;
+    float tab = top + bottom;
+    float tsb = top - bottom;
+    float fan = farZ + nearZ;
+    float fsn = farZ - nearZ;
+
+    GLKMatrix4 result = {
+        2.0f / rsl, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / tsb, 0.0f, 0.0f,
+        0.0f, 0.0f, -2.0f / fsn, 0.0f,
+        -ral / rsl, -tab / tsb, -fan / fsn, 1.0f
+    };
+    return result;
+}
+
 static inline GLKMatrix4 GLKMatrix4Multiply(GLKMatrix4 lhs, GLKMatrix4 rhs)
 {
 #if defined(__ARM_NEON__)
@@ -66,27 +87,27 @@ static inline GLKMatrix4 GLKMatrix4Multiply(GLKMatrix4 lhs, GLKMatrix4 rhs)
     return *(GLKMatrix4 *)&m;
 #else
     GLKMatrix4 m;
-    
+
     m.m[0]  = lhs.m[0] * rhs.m[0]  + lhs.m[4] * rhs.m[1]  + lhs.m[8] * rhs.m[2]   + lhs.m[12] * rhs.m[3];
 	m.m[4]  = lhs.m[0] * rhs.m[4]  + lhs.m[4] * rhs.m[5]  + lhs.m[8] * rhs.m[6]   + lhs.m[12] * rhs.m[7];
 	m.m[8]  = lhs.m[0] * rhs.m[8]  + lhs.m[4] * rhs.m[9]  + lhs.m[8] * rhs.m[10]  + lhs.m[12] * rhs.m[11];
 	m.m[12] = lhs.m[0] * rhs.m[12] + lhs.m[4] * rhs.m[13] + lhs.m[8] * rhs.m[14]  + lhs.m[12] * rhs.m[15];
-    
+
 	m.m[1]  = lhs.m[1] * rhs.m[0]  + lhs.m[5] * rhs.m[1]  + lhs.m[9] * rhs.m[2]   + lhs.m[13] * rhs.m[3];
 	m.m[5]  = lhs.m[1] * rhs.m[4]  + lhs.m[5] * rhs.m[5]  + lhs.m[9] * rhs.m[6]   + lhs.m[13] * rhs.m[7];
 	m.m[9]  = lhs.m[1] * rhs.m[8]  + lhs.m[5] * rhs.m[9]  + lhs.m[9] * rhs.m[10]  + lhs.m[13] * rhs.m[11];
 	m.m[13] = lhs.m[1] * rhs.m[12] + lhs.m[5] * rhs.m[13] + lhs.m[9] * rhs.m[14]  + lhs.m[13] * rhs.m[15];
-    
+
 	m.m[2]  = lhs.m[2] * rhs.m[0]  + lhs.m[6] * rhs.m[1]  + lhs.m[10] * rhs.m[2]  + lhs.m[14] * rhs.m[3];
 	m.m[6]  = lhs.m[2] * rhs.m[4]  + lhs.m[6] * rhs.m[5]  + lhs.m[10] * rhs.m[6]  + lhs.m[14] * rhs.m[7];
 	m.m[10] = lhs.m[2] * rhs.m[8]  + lhs.m[6] * rhs.m[9]  + lhs.m[10] * rhs.m[10] + lhs.m[14] * rhs.m[11];
 	m.m[14] = lhs.m[2] * rhs.m[12] + lhs.m[6] * rhs.m[13] + lhs.m[10] * rhs.m[14] + lhs.m[14] * rhs.m[15];
-    
+
 	m.m[3]  = lhs.m[3] * rhs.m[0]  + lhs.m[7] * rhs.m[1]  + lhs.m[11] * rhs.m[2]  + lhs.m[15] * rhs.m[3];
 	m.m[7]  = lhs.m[3] * rhs.m[4]  + lhs.m[7] * rhs.m[5]  + lhs.m[11] * rhs.m[6]  + lhs.m[15] * rhs.m[7];
 	m.m[11] = lhs.m[3] * rhs.m[8]  + lhs.m[7] * rhs.m[9]  + lhs.m[11] * rhs.m[10] + lhs.m[15] * rhs.m[11];
 	m.m[15] = lhs.m[3] * rhs.m[12] + lhs.m[7] * rhs.m[13] + lhs.m[11] * rhs.m[14] + lhs.m[15] * rhs.m[15];
-    
+
     return m;
 #endif
 }
@@ -107,17 +128,17 @@ static inline GLKVector4 GLKMatrix4MultiplyVector4(GLKMatrix4 matrixLeft, GLKVec
 #if defined(__ARM_NEON__)
     float32x4x4_t iMatrix = *(float32x4x4_t *)&matrixLeft;
     float32x4_t v;
-    
+
     iMatrix.val[0] = vmulq_n_f32(iMatrix.val[0], (float32_t)vectorRight.v[0]);
     iMatrix.val[1] = vmulq_n_f32(iMatrix.val[1], (float32_t)vectorRight.v[1]);
     iMatrix.val[2] = vmulq_n_f32(iMatrix.val[2], (float32_t)vectorRight.v[2]);
     iMatrix.val[3] = vmulq_n_f32(iMatrix.val[3], (float32_t)vectorRight.v[3]);
-    
+
     iMatrix.val[0] = vaddq_f32(iMatrix.val[0], iMatrix.val[1]);
     iMatrix.val[2] = vaddq_f32(iMatrix.val[2], iMatrix.val[3]);
-    
+
     v = vaddq_f32(iMatrix.val[0], iMatrix.val[2]);
-    
+
     return *(GLKVector4 *)&v;
 #else
     GLKVector4 v = { matrixLeft.m[0] * vectorRight.v[0] + matrixLeft.m[4] * vectorRight.v[1] + matrixLeft.m[8] * vectorRight.v[2] + matrixLeft.m[12] * vectorRight.v[3],
@@ -169,7 +190,7 @@ static inline GLKMatrix4 GLKMatrix4MakeRotation(float radians, float x, float y,
     float cos = cosf(radians);
     float cosp = 1.0f - cos;
     float sin = sinf(radians);
-    
+
     GLKMatrix4 m = { cos + cosp * v.v[0] * v.v[0],
                      cosp * v.v[0] * v.v[1] + v.v[2] * sin,
                      cosp * v.v[0] * v.v[2] - v.v[1] * sin,
@@ -194,12 +215,12 @@ static inline GLKMatrix4 GLKMatrix4Scale(GLKMatrix4 matrix, float sx, float sy, 
 #if defined(__ARM_NEON__)
     float32x4x4_t iMatrix = *(float32x4x4_t *)&matrix;
     float32x4x4_t m;
-    
+
     m.val[0] = vmulq_n_f32(iMatrix.val[0], (float32_t)sx);
     m.val[1] = vmulq_n_f32(iMatrix.val[1], (float32_t)sy);
     m.val[2] = vmulq_n_f32(iMatrix.val[2], (float32_t)sz);
     m.val[3] = iMatrix.val[3];
-    
+
     return *(GLKMatrix4 *)&m;
 #else
     GLKMatrix4 m = { matrix.m[0] * sx, matrix.m[1] * sx, matrix.m[2] * sx, matrix.m[3] * sx,
@@ -212,17 +233,17 @@ static inline GLKMatrix4 GLKMatrix4Scale(GLKMatrix4 matrix, float sx, float sy, 
 
 static inline GLKMatrix4 GLKMatrix4MakeWithQuaternion(GLKQuaternion quaternion) {
     quaternion = GLKQuaternionNormalize(quaternion);
-    
+
     float x = quaternion.q[0];
     float y = quaternion.q[1];
     float z = quaternion.q[2];
     float w = quaternion.q[3];
-    
+
     float _2x = x + x;
     float _2y = y + y;
     float _2z = z + z;
     float _2w = w + w;
-    
+
     GLKMatrix4 m = { 1.0f - _2y * y - _2z * z,
                      _2x * y + _2w * z,
                      _2x * z - _2w * y,
@@ -239,7 +260,7 @@ static inline GLKMatrix4 GLKMatrix4MakeWithQuaternion(GLKQuaternion quaternion) 
                      0.0f,
                      0.0f,
                      1.0f };
-    
+
     return m;
 }
 

@@ -15,10 +15,10 @@ extern const NSString* kCFBundleVersionKey;
 // Looks for the given resource in the .pak file(s), if any, then the main bundle.
 + (NSData*) dataForResource:(NSString *)name ofType:(NSString *)ext;
 
-+ (AP_Bundle*) mainBundle;
-
 // Like pathsForResources, but returns the bundle-relative resource name.
-- (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
++ (NSArray*) namesForResourcesOfType:(NSString*)ext inDirectory:(NSString*)dir;
+
++ (AP_Bundle*) mainBundle;
 
 - (NSDictionary*) infoDictionary;
 - (id) objectForInfoDictionaryKey:(NSString*)key;

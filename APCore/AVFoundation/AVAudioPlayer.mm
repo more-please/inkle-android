@@ -12,7 +12,7 @@
     NSTimer* _timer;
 }
 
-- (id) initWithResource:(NSString*)path
+- (id) initWithResource:(NSString*)path error:(NSError**)err
 {
     self = [super init];
     if (self) {

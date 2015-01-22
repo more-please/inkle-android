@@ -65,7 +65,7 @@ static AP_Bundle* g_Bundle;
 #endif
 
 #ifdef ANDROID
-- (NSArray*) namesForResourcesOfType:(NSString *)ext inDirectory:(NSString *)dir
++ (NSArray*) namesForResourcesOfType:(NSString *)ext inDirectory:(NSString *)dir
 {
     NSMutableArray* results = [NSMutableArray array];
     for (NSString* name in [PAK_Search names]) {

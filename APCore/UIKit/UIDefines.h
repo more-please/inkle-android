@@ -74,14 +74,14 @@ UIPageViewControllerTransitionStyle;
 
 typedef enum UIGestureRecognizerState {
     UIGestureRecognizerStatePossible,   // the recognizer has not yet recognized its gesture, but may be evaluating touch events. this is the default state
-    
+
     UIGestureRecognizerStateBegan,      // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop
     UIGestureRecognizerStateChanged,    // the recognizer has received touches recognized as a change to the gesture. the action method will be called at the next turn of the run loop
     UIGestureRecognizerStateEnded,      // the recognizer has received touches recognized as the end of the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to UIGestureRecognizerStatePossible
     UIGestureRecognizerStateCancelled,  // the recognizer has received touches resulting in the cancellation of the gesture. the action method will be called at the next turn of the run loop. the recognizer will be reset to UIGestureRecognizerStatePossible
-    
+
     UIGestureRecognizerStateFailed,     // the recognizer has received a touch sequence that can not be recognized as the gesture. the action method will not be called and the recognizer will be reset to UIGestureRecognizerStatePossible
-    
+
     // Discrete Gestures – gesture recognizers that recognize a discrete event but do not report changes (for example, a tap) do not transition through the Began and Changed states and can not fail or be cancelled
     UIGestureRecognizerStateRecognized = UIGestureRecognizerStateEnded // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to UIGestureRecognizerStatePossible
 }
@@ -107,7 +107,7 @@ typedef enum UIViewAnimationOptions {
     UIViewAnimationOptionAllowAnimatedContent      = 1 <<  7, // animate contents (applies to transitions only)
     UIViewAnimationOptionShowHideTransitionViews   = 1 <<  8, // flip to/from hidden state instead of adding/removing
     UIViewAnimationOptionOverrideInheritedOptions  = 1 <<  9, // do not inherit any options or animation type
-    
+
     UIViewAnimationOptionCurveEaseInOut            = 0 << 16, // default
     UIViewAnimationOptionCurveEaseIn               = 1 << 16,
     UIViewAnimationOptionCurveEaseOut              = 2 << 16,
@@ -215,7 +215,7 @@ typedef enum UIButtonType {
 //    UIButtonTypeInfoLight,
 //    UIButtonTypeInfoDark,
 //    UIButtonTypeContactAdd,
-//    
+//
 //    UIButtonTypeRoundedRect = UIButtonTypeSystem,   // Deprecated, use UIButtonTypeSystem instead
 }
 UIButtonType;
@@ -226,6 +226,13 @@ typedef enum NSTextAlignment {
     NSTextAlignmentCenter    = 2,    // Visually centered
     NSTextAlignmentJustified = 3,    // Fully-justified. The last line in a paragraph is natural-aligned.
     NSTextAlignmentNatural   = 4,    // Indicates the default alignment for script
+
+    // Deprecated aliases of the above
+    UITextAlignmentLeft      = NSTextAlignmentLeft,
+    UITextAlignmentRight     = NSTextAlignmentRight,
+    UITextAlignmentCenter    = NSTextAlignmentCenter,
+    UITextAlignmentJustified = NSTextAlignmentJustified,
+    UITextAlignmentNatural   = NSTextAlignmentNatural
 }
 NSTextAlignment;
 
@@ -235,7 +242,15 @@ typedef enum NSLineBreakMode {		/* What to do with long lines */
     NSLineBreakByClipping,		/* Simply clip */
     NSLineBreakByTruncatingHead,	/* Truncate at head of line: "...wxyz" */
     NSLineBreakByTruncatingTail,	/* Truncate at tail of line: "abcd..." */
-    NSLineBreakByTruncatingMiddle	/* Truncate middle of line:  "ab...yz" */
+    NSLineBreakByTruncatingMiddle,	/* Truncate middle of line:  "ab...yz" */
+
+    // Deprecated aliases of the above
+    UILineBreakModeWordWrap = NSLineBreakByWordWrapping,
+    UILineBreakModeCharacterWrap = NSLineBreakByCharWrapping,
+    UILineBreakModeClip = NSLineBreakByClipping,
+    UILineBreakModeHeadTruncation = NSLineBreakByTruncatingHead,
+    UILineBreakModeTailTruncation = NSLineBreakByTruncatingTail,
+    UILineBreakModeMiddleTruncation = NSLineBreakByTruncatingMiddle
 }
 NSLineBreakMode;
 

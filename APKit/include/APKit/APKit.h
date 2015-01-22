@@ -49,6 +49,7 @@
 #import "NSDictionary+AP_InitWithData.h"
 #import "NSObject+AP_PerformBlock.h"
 #import "NSObject+AP_RoundRect.h"
+#import "NSObject+debugDescription.h"
 #import "NSString+sizeWithFont.h"
 
 #define UIActivityIndicatorView        AP_ActivityIndicatorView

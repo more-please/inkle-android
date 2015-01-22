@@ -8,6 +8,8 @@ typedef GLKVector4 CGColorRef;
 
 extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 
+@class AP_Image;
+
 @interface UIColor : NSObject
 
 + (UIColor*) whiteColor;
@@ -19,6 +21,9 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 + (UIColor*) blueColor;
 + (UIColor*) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha;
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+
+// Not implemented yet
++ (UIColor*) colorWithPatternImage:(AP_Image*)pattern;
 
 @property(nonatomic,readonly) CGColorRef CGColor;
 

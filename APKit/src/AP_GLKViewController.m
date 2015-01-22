@@ -1,5 +1,6 @@
 #import "AP_GLKViewController.h"
 
+#import "AP_Check.h"
 #import "AP_Window.h"
 
 @implementation AP_GLKViewController
@@ -22,6 +23,12 @@
 - (void) glkView:(AP_GLKView *)view drawInRect:(CGRect)rect
 {
     // Nothing
+}
+
+- (float) timeSinceLastUpdate
+{
+    AP_NOT_IMPLEMENTED;
+    return 0;
 }
 
 @end

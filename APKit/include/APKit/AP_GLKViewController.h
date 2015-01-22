@@ -13,4 +13,9 @@
  */
 @property (nonatomic, getter=isPaused) BOOL paused;
 
+@property (nonatomic, readonly) float timeSinceLastUpdate;
+
+// Ignored on Android -- we always just run as fast as possible.
+@property (nonatomic) NSInteger preferredFramesPerSecond;
+
 @end

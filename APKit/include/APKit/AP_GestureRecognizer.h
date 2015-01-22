@@ -20,7 +20,7 @@
 
 @property(nonatomic,weak) id<AP_GestureRecognizerDelegate> delegate;
 @property(nonatomic,getter=isEnabled) BOOL enabled;
-@property(nonatomic,readonly) UIGestureRecognizerState state;
+@property(nonatomic) UIGestureRecognizerState state;
 @property(nonatomic,readonly,weak) AP_View* view;
 @property(nonatomic) BOOL cancelsTouchesInView;
 

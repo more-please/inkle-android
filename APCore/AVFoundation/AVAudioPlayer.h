@@ -18,7 +18,7 @@
 @property(nonatomic) int numberOfLoops;
 @property(nonatomic,readonly) NSTimeInterval duration;
 
-- (id) initWithResource:(NSString*)resource;
+- (id) initWithResource:(NSString*)resource error:(NSError**)err;
 
 - (BOOL) prepareToPlay;
 - (BOOL) play;

@@ -27,6 +27,7 @@ typedef NSString* (^AP_TextTransform)(NSString*);
 @property(nonatomic) CGFloat tailIndent;
 @property(nonatomic) CGFloat paragraphSpacing;
 @property(nonatomic) CGFloat paragraphSpacingBefore;
+@property(nonatomic) NSLineBreakMode lineBreakMode;
 
 + (NSParagraphStyle*) defaultParagraphStyle;
 

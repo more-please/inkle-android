@@ -7,5 +7,6 @@
 @interface AP_GLKEffectPropertyTexture : NSObject
 
 @property (nonatomic) GLuint name;
+@property (nonatomic, assign) GLboolean enabled;
 
 @end

@@ -1,5 +1,7 @@
 #import "UIColor.h"
 
+#import "GlueCommon.h"
+
 size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return 4;
 }
@@ -86,6 +88,13 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     UIColor* result = [[UIColor alloc] init];
     result->_rgba = rgba;
     return result;
+}
+
+// Not implemented yet
++ (UIColor*) colorWithPatternImage:(AP_Image*)pattern
+{
+    GLUE_NOT_IMPLEMENTED;
+    return [UIColor colorWithRed:1.0f green:0.3f blue:1.0f alpha:0.75f];
 }
 
 - (CGColorRef) CGColor
