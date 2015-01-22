@@ -220,6 +220,12 @@ typedef enum UIButtonType {
 }
 UIButtonType;
 
+typedef enum UIStatusBarStyle {
+    UIStatusBarStyleDefault,
+    UIStatusBarStyleLightContent,
+}
+UIStatusBarStyle;
+
 typedef enum NSTextAlignment {
     NSTextAlignmentLeft      = 0,    // Visually left aligned
     NSTextAlignmentRight     = 1,    // Visually right aligned
