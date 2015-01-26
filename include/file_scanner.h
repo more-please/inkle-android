@@ -1,5 +1,4 @@
-#ifndef file_scanner_h
-#define file_scanner_h
+#pragma once
 
 #include <set>
 #include <string>
@@ -7,15 +6,21 @@
 
 class FileScanner {
 public:
-    bool verbose;
-    bool stripDirectories;
+    bool verbose {};
+    bool stripDirectories {};
 
-    FileScanner(const std::vector<std::string>& includes, const std::vector<std::string>& excludes);
+    FileScanner(const std::vector<std::string>& includes, const std::vector<std::string>& excludes)
+        : _includes(includes)
+        , _excludes(excludes)
+    {}
 
     typedef std::pair<std::string, std::string> base_name;
 
     void addFileOrDir(const std::string& base, const std::string& name);
-    std::set<base_name> getFiles();
+
+    std::set<base_name> getFiles() const {
+        return _files;
+    }
 
 private:
     void addDir(const std::string& base, const std::string& name);
@@ -25,5 +30,3 @@ private:
     std::vector<std::string> _excludes;
     std::set<base_name> _files;
 };
-
-#endif // file_scanner_h

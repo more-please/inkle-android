@@ -1,5 +1,4 @@
-#ifndef read_entire_file_h
-#define read_entire_file_h
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -18,5 +17,3 @@ inline std::vector<unsigned char> read_entire_file(const char* filename) {
             std::istreambuf_iterator<char>());
     }
 }
-
-#endif // read_entire_file_h

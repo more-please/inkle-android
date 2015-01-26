@@ -46,13 +46,6 @@ bool globMatch(const string& glob, const string& c) {
     return globMatch(glob.c_str(), c.c_str());
 }
 
-FileScanner::FileScanner(const vector<string>& includes, const vector<string>& excludes)
-    : _includes(includes)
-    , _excludes(excludes)
-    , verbose(false)
-    , stripDirectories(false)
-{}
-
 void FileScanner::addFileOrDir(const string& base, const string& name) {
     string filename = join(base, name);
     struct stat s;
@@ -62,10 +55,6 @@ void FileScanner::addFileOrDir(const string& base, const string& name) {
     } else {
         addFile(base, name);
     }
-}
-
-set<FileScanner::base_name> FileScanner::getFiles() {
-    return _files;
 }
 
 void FileScanner::addDir(const string& base, const string& name) {

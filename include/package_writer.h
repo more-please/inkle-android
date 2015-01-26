@@ -1,5 +1,4 @@
-#ifndef package_writer_h
-#define package_writer_h
+#pragma once
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,5 +58,3 @@ private:
     };
     std::vector<FileInfo> _info;
 };
-
-#endif // package_writer_h

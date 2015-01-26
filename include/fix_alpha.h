@@ -1,5 +1,4 @@
-#ifndef fix_alpha_h
-#define fix_alpha_h
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -61,5 +60,3 @@ void fix_alpha(int w, int h, unsigned char* data) {
         }
     }
 }
-
-#endif
