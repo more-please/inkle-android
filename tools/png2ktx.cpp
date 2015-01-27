@@ -40,7 +40,7 @@ int main(int argc, const char* argv[]) {
             break;
         }
     }
-    ANDROID_DIR = ANDROID_DIR + "/../..";
+    ANDROID_DIR = ANDROID_DIR + "/..";
 
     const char* infile = "-";
     const char* outfile = NULL;

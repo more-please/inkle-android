@@ -595,7 +595,7 @@ int main(int argc, const char* argv[]) {
             break;
         }
     }
-    ANDROID_DIR = ANDROID_DIR + "/../..";
+    ANDROID_DIR = ANDROID_DIR + "/..";
 
     bool verbose = false;
     string formatStr;
