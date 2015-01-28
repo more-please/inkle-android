@@ -99,7 +99,7 @@
     if (result) {
         NSLog(@"Loaded expansion file: %@", filename);
     } else {
-        NSLog(@"Failed to load expansion file: %s", strerror(errno));
+        NSLog(@"Failed to load expansion file: %@ error: %s", filename, strerror(errno));
     }
     return result;
 }
