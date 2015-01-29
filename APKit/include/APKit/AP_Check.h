@@ -58,4 +58,11 @@
 #define _GL(cmd, ...) gl ## cmd(__VA_ARGS__)
 #endif
 
-#define AP_NOT_IMPLEMENTED AP_LogError("Not implemented!")
+#define AP_NOT_IMPLEMENTED \
+    do { \
+        static int count = 0; \
+        if (count < 5) { \
+            ++count; \
+            AP_LogError("Not implemented!"); \
+        } \
+    } while(0)
