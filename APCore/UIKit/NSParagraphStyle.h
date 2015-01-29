@@ -16,7 +16,7 @@ extern NSString* const AP_TextTransformAttributeName;
 
 typedef NSString* (^AP_TextTransform)(NSString*);
 
-@interface NSParagraphStyle : NSObject
+@interface NSParagraphStyle : NSObject <NSCopying, NSMutableCopying>
 
 // These should really be readonly, but overriding them in
 // the mutable subclass is a pain. Let's just cheat.

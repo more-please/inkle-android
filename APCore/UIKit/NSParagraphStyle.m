@@ -22,6 +22,25 @@ NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
     return s_default;
 }
 
+- (id) copyWithZone:(NSZone*)zone
+{
+    return [self mutableCopyWithZone:zone];
+}
+
+- (id) mutableCopyWithZone:(NSZone*)zone
+{
+    NSParagraphStyle* other = [[NSMutableParagraphStyle alloc] init];
+    other->_lineSpacing = _lineSpacing;
+    other->_alignment = _alignment;
+    other->_firstLineHeadIndent = _firstLineHeadIndent;
+    other->_headIndent = _headIndent;
+    other->_tailIndent = _tailIndent;
+    other->_paragraphSpacing = _paragraphSpacing;
+    other->_paragraphSpacingBefore = _paragraphSpacingBefore;
+    other->_lineBreakMode = _lineBreakMode;
+    return other;
+}
+
 @end
 
 @implementation NSMutableParagraphStyle
