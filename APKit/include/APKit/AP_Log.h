@@ -2,8 +2,12 @@
 
 #import <Foundation/Foundation.h>
 
-#define AP_LogError(...) AP_LogError_(__FILE__, __LINE__, __VA_ARGS__)
-#define AP_LogFatal(...) AP_LogError_(__FILE__, __LINE__, __VA_ARGS__)
+#include <string.h>
+
+#define AP_FILE (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+#define AP_LogError(...) AP_LogError_(AP_FILE, __LINE__, __VA_ARGS__)
+#define AP_LogFatal(...) AP_LogError_(AP_FILE, __LINE__, __VA_ARGS__)
 
 #ifdef __cplusplus
 extern "C" {
