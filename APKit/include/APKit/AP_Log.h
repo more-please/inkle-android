@@ -9,6 +9,13 @@
 #define AP_LogError(...) AP_LogError_(AP_FILE, __LINE__, __VA_ARGS__)
 #define AP_LogFatal(...) AP_LogError_(AP_FILE, __LINE__, __VA_ARGS__)
 
+// DLOG() logs in debug builds only
+#ifdef NDEBUG
+#define DLOG(...)
+#else
+#define DLOG(...) NSLog(__VA_ARGS__)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

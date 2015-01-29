@@ -451,6 +451,7 @@ static void logStatfs(NSString* path) {
 
 - (PAK_Item*) pakItem:(NSString*)path
 {
+    AP_CHECK(path, return nil);
     AAsset* asset = AAssetManager_open(_assetManager, path.UTF8String, AASSET_MODE_STREAMING);
     if (!asset) {
 //         NSLog(@"Failed to open asset: %@", path);
