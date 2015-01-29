@@ -938,6 +938,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) updateGL:(float)dt
 {
+    _timeSinceLastUpdate = dt;
 }
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha

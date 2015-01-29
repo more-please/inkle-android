@@ -25,10 +25,4 @@
     // Nothing
 }
 
-- (float) timeSinceLastUpdate
-{
-    AP_NOT_IMPLEMENTED;
-    return 0;
-}
-
 @end

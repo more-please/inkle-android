@@ -122,6 +122,9 @@
         : UIInterfaceOrientationPortrait;
 }
 
-- (void) updateGL:(float)dt {}
+- (void) updateGL:(float)dt
+{
+    _timeSinceLastUpdate = dt;
+}
 
 @end

@@ -36,6 +36,8 @@
 
 @property(nonatomic,copy) NSString *title;  // Localized title for use by a parent controller.
 
+@property(nonatomic,readonly) float timeSinceLastUpdate;
+
 // Android-specific additions
 - (BOOL) goBack; // Return YES if the event was handled.
 

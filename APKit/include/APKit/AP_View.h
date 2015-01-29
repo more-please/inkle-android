@@ -132,6 +132,8 @@
 
 @property(nonatomic,weak) AP_ViewController* viewDelegate;
 
+@property(nonatomic,readonly) float timeSinceLastUpdate;
+
 - (void) updateGL:(float)dt;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
