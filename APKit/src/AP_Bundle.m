@@ -43,14 +43,14 @@ static AP_Bundle* g_Bundle;
         fullName = [fullName stringByDeletingPathExtension];
         fullName = [fullName stringByAppendingPathExtension:@"json"];
     }
-    DLOG(@"Loading resource: %@", fullName);
+//     DLOG(@"Loading resource: %@", fullName);
 #ifdef ANDROID
     PAK_Item* item = [PAK_Search item:fullName];
     if (item) {
         return item.data;
     }
 #endif
-    DLOG(@"*** Failed to load resource:%@ ofType:%@", name, ext);
+//     DLOG(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;
 }
 
