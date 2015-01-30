@@ -420,14 +420,19 @@ typedef struct VertexData {
     insets.right = (_size.width / _scale) - leftCapWidth - 1;
     insets.top = topCapHeight;
     insets.bottom = (_size.height / _scale) - topCapHeight - 1;
-    AP_Image* result = [self resizableImageWithCapInsets:insets];
-    result->_resizingMode = UIImageResizingModeStretch;
-    return result;
+    return [self resizableImageWithCapInsets:insets resizingMode:UIImageResizingModeStretch];
 }
 
 - (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets
 {
     return [[AP_Image alloc] initWithImage:self insets:capInsets];
+}
+
+- (AP_Image*) resizableImageWithCapInsets:(UIEdgeInsets)capInsets resizingMode:(UIImageResizingMode)mode
+{
+    AP_Image* result = [self resizableImageWithCapInsets:capInsets];
+    result->_resizingMode = mode;
+    return result;
 }
 
 - (AP_Image*) initWithImage:(AP_Image*)other insets:(UIEdgeInsets)insets
