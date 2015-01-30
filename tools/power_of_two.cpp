@@ -44,7 +44,7 @@ int main(int argc, const char* argv[]) {
     int w, h, comp;
     unsigned char* input = stbi_load_from_memory(&file[0], file.size(), &w, &h, &comp, 0);
 
-    int w2 = 1, h2 = 1;
+    int w2 = 4, h2 = 4;
     double k = 1.25; // Allow images to be shrunk by this amount
     while (k * w2 < w) w2 *= 2;
     while (k * h2 < h) h2 *= 2;
