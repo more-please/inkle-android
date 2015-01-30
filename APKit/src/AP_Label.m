@@ -55,7 +55,7 @@
 
     _urlRuns = [NSMutableArray array];
 
-    _numberOfLines = 1;
+    _numberOfLines = 0;
 
     _fontScale = 1.0;
 }
