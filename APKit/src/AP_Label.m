@@ -31,6 +31,7 @@
     NSParagraphStyle* _currentStyle;
     CGSize _formattedSize;
     int _formattedLineCount;
+    int _formattedParagraphs;
 
     NSMutableArray* _urlRuns;
 
@@ -170,9 +171,11 @@
 - (CGSize) sizeThatFits:(CGSize)size
 {
     [self textLayoutWithWidth:size.width];
-    while (_numberOfLines > 0 && _formattedLineCount > _numberOfLines && _formattedSize.width > 0) {
-        size.width = MAX(size.width, _formattedSize.width) * 1.1;
-        [self textLayoutWithWidth:size.width];
+    if (_numberOfLines > 0) {
+        while (_formattedParagraphs <= _numberOfLines && _formattedLineCount > _numberOfLines && _formattedSize.width > 0) {
+            size.width = MAX(size.width, _formattedSize.width) * 1.1;
+            [self textLayoutWithWidth:size.width];
+        }
     }
     // If we auto-scaled to fit the given size, return our preferred size.
     // Also add a little buffer to ensure we don't set the label to exactly
@@ -402,6 +405,7 @@
     _cursor = CGPointZero;
     _formattedSize = CGSizeZero;
     _formattedLineCount = 0;
+    _formattedParagraphs = 0;
 
     [_text enumerateAttributesInRange:NSMakeRange(0, [_text length]) options:0 usingBlock:^(NSDictionary* attrs, NSRange range, BOOL* stop) {
 
@@ -438,6 +442,8 @@
 
         // Split at paragraph breaks, handle each paragraph separately.
         while (run.numChars > 0) {
+            ++_formattedParagraphs;
+
             AP_Font_Run* nextParagraph;
             run = [run splitAtLineBreakLeaving:&nextParagraph];
 
