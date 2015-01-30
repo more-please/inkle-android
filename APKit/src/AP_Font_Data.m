@@ -43,7 +43,7 @@ typedef struct LigatureLHS {
 
     AP_Font_Data* result = [g_FontDataCache objectForKey:name];
     if (!result) {
-        NSData* data = [AP_Bundle dataForResource:name ofType:@".font"];
+        NSData* data = [AP_Bundle dataForResource:name ofType:@"font"];
         result = [[AP_Font_Data alloc] initWithName:name data:data];
         AP_CHECK(result, return nil);
         [g_FontDataCache setObject:result forKey:name];

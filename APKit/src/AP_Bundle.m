@@ -36,10 +36,12 @@ static AP_Bundle* g_Bundle;
 {
     NSString* fullName = name;
     if (ext) {
-        if (![ext hasPrefix:@"."]) {
-            ext = [@"." stringByAppendingString:ext];
-        }
-        fullName = [name stringByAppendingString:ext];
+        fullName = [fullName stringByAppendingPathExtension:ext];
+    }
+    // Always use 'json', not 'minjson'
+    if ([fullName.pathExtension isEqualToString:@"minjson"]) {
+        fullName = [fullName stringByDeletingPathExtension];
+        fullName = [fullName stringByAppendingPathExtension:@"json"];
     }
     DLOG(@"Loading resource: %@", fullName);
 #ifdef ANDROID
