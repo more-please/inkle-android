@@ -51,6 +51,20 @@
     [_actions addObject:ack];
 }
 
+- (void) removeTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents
+{
+    NSMutableArray* newActions = [NSMutableArray array];
+    for (AP_Control_Action* ack in _actions) {
+        if (ack.target == target && ack.action == action) {
+            ack.events &= ~controlEvents;
+        }
+        if (ack.events) {
+            [newActions addObject:ack];
+        }
+    }
+    _actions = newActions;
+}
+
 - (void) dispatch:(UIControlEvents)mask event:(AP_Event*)event
 {
     if (!self.isUserInteractionEnabled) {
