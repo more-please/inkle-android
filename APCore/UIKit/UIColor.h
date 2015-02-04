@@ -22,8 +22,9 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 + (UIColor*) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha;
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
 
-// Not implemented yet
+// WTF, Apple. In what way is this a Color?
 + (UIColor*) colorWithPatternImage:(AP_Image*)pattern;
+@property(nonatomic,readonly,strong) AP_Image* pattern;
 
 @property(nonatomic,readonly) CGColorRef CGColor;
 

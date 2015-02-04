@@ -41,7 +41,7 @@ static AP_Application* g_Application;
 
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types
 {
-    AP_NOT_IMPLEMENTED;
+    // AP_NOT_IMPLEMENTED;
 }
 
 - (UIInterfaceOrientation) statusBarOrientation

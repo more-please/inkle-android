@@ -90,11 +90,11 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return result;
 }
 
-// Not implemented yet
 + (UIColor*) colorWithPatternImage:(AP_Image*)pattern
 {
-    GLUE_NOT_IMPLEMENTED;
-    return [UIColor colorWithRed:1.0f green:0.3f blue:1.0f alpha:0.75f];
+    UIColor* result = [UIColor colorWithRed:1.0f green:0.3f blue:1.0f alpha:0.75f];
+    result->_pattern = pattern;
+    return result;
 }
 
 - (CGColorRef) CGColor
@@ -108,6 +108,10 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 }
 
 - (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha {
+    if (_pattern) {
+        NSLog(@"*** Tried to get color components from a pattern");
+        return NO;
+    }
     *red = _rgba.r;
     *green = _rgba.g;
     *blue = _rgba.b;
@@ -116,6 +120,10 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 }
 
 - (UIColor*) colorWithAlphaComponent:(CGFloat)alpha {
+    if (_pattern) {
+        NSLog(@"*** Tried to set alpha of a pattern");
+        return nil;
+    }
     GLKVector4 rgba = _rgba;
     rgba.a = alpha;
     return [UIColor colorWithRgba:rgba];

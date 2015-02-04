@@ -3,6 +3,7 @@
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
+#import "AP_Image.h"
 #import "AP_Layer.h"
 #import "AP_Utils.h"
 #import "NSObject+AP_KeepAlive.h"
@@ -19,6 +20,8 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
     __weak AP_Window* _window;
     BOOL _needsLayout;
     BOOL _needsDisplay;
+
+    AP_Image* _backgroundImage;
 
     NSMutableArray* _animatedProperties;
 
@@ -145,7 +148,11 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 
 - (UIColor*) backgroundColor
 {
-    return AP_VectorToColor(_animatedBackgroundColor.dest);
+    if (_backgroundImage) {
+        return [UIColor colorWithPatternImage:_backgroundImage];
+    } else {
+        return AP_VectorToColor(_animatedBackgroundColor.dest);
+    }
 }
 
 - (void) setBounds:(CGRect)bounds
@@ -206,7 +213,13 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 
 - (void) setBackgroundColor:(UIColor*)color
 {
-    _animatedBackgroundColor.dest = AP_ColorToVector(color);
+    if (color.pattern) {
+        _backgroundImage = color.pattern;
+        _animatedBackgroundColor.dest = GLKVector4Make(0, 0, 0, 0);
+    } else {
+        _backgroundImage = nil;
+        _animatedBackgroundColor.dest = AP_ColorToVector(color);
+    }
 }
 
 + (void) animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations
@@ -943,13 +956,25 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
+    if (_backgroundImage) {
+        CGRect bounds = self.inFlightBounds;
+        CGSize size = _backgroundImage.size;
+        for (float x = 0; x < bounds.size.width; x += size.width) {
+            for (float y = 0; y < bounds.size.height; y += size.height) {
+                CGAffineTransform t = CGAffineTransformTranslate(
+                    boundsToGL, x, y);
+                [_backgroundImage renderGLWithSize:size transform:t alpha:alpha];
+            }
+        }
+    }
+
     GLKVector4 backgroundColor = _animatedBackgroundColor.inFlight;
+#if 0
     static BOOL s_debugViewBorders = NO;
     if (s_debugViewBorders) {
         // Highlight all views in red, for debugging...
         backgroundColor = GLKVector4Make(1, 0, 0, 0.1);
     }
-#if 0
     if ([self.window isHitTestView:self]) {
         backgroundColor.r = 1;
         backgroundColor.a = MAX(0.25, backgroundColor.a);
