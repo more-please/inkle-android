@@ -2,6 +2,18 @@
 
 #import "GlueCommon.h"
 
+#import <Foundation/Foundation.h>
+
+NSArray* NSSearchPathForDirectoriesInDomains(
+    NSSearchPathDirectory directoryKey,
+    NSSearchPathDomainMask domainMask,
+    BOOL expandTilde)
+{
+    // Ignore all the stupid parameters and just return the documents dir.
+    NSString* result = [UIApplication sharedApplication].documentsDir;
+    return [NSArray arrayWithObjects:result, nil];
+}
+
 @implementation UIApplication
 
 static UIApplication* g_Application;
