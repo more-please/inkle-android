@@ -182,8 +182,6 @@ typedef struct VertexData {
     AP_CHECK(name, return nil);
     name = [name stringByDeletingPathExtension];
     NSString* img = [name stringByAppendingString:@".img"];
-    NSString* ktx = [name stringByAppendingString:@".ktx"];
-    NSString* png = [name stringByAppendingString:@".png"];
 
     static AP_WeakCache* g_ImageCache;
     if (!g_ImageCache) {
@@ -197,14 +195,7 @@ typedef struct VertexData {
             return [[AP_Image alloc] initWithName:name data:data];
         }
 
-        AP_GLTexture* texture;
-
-        texture = [AP_GLTexture textureNamed:png maxSize:2.15];
-        if (texture) {
-            return [[AP_Image alloc] initWithName:name texture:texture];
-        }
-
-        texture = [AP_GLTexture textureNamed:ktx maxSize:2.15];
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:name maxSize:2.15];
         if (texture) {
             return [[AP_Image alloc] initWithName:name texture:texture];
         }
