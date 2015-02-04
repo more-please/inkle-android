@@ -67,20 +67,21 @@ static AP_WeakCache* s_textureCache = nil;
 + (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens
 {
     AP_CHECK(name, return nil);
-    name = [name stringByDeletingPathExtension];
-    NSString* png = [name stringByAppendingString:@".png"];
-    NSString* ktx = [name stringByAppendingString:@".ktx"];
-
     AP_CHECK(s_textureCache, return nil);
     AP_GLTexture* result = [s_textureCache get:name withLoader:^{
         NSData* data = nil;
-        if (!data) {
-            data = [AP_Bundle dataForResource:png ofType:nil];
+        if (name.pathExtension.length > 0) {
+            // Name has a path extension, load this exact texture
+            data = [AP_Bundle dataForResource:name ofType:nil];
+        } else {
+            // No path extension, try both .png and .ktx
+            if (!data) {
+                data = [AP_Bundle dataForResource:name ofType:@"png"];
+            }
+            if (!data) {
+                data = [AP_Bundle dataForResource:name ofType:@"ktx"];
+            }
         }
-        if (!data) {
-            data = [AP_Bundle dataForResource:ktx ofType:nil];
-        }
-
         if (data) {
             return [AP_GLTexture textureWithName:name data:data maxSize:screens];
         }
