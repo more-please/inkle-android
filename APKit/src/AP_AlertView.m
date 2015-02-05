@@ -46,9 +46,15 @@ AP_BAN_EVIL_INIT;
         _alert.layer.cornerRadius = 14;
         [self addSubview:_alert];
 
+#ifdef SORCERY
+        AP_Font* headerFont = [AP_Font fontWithName:@"Helvetica" size:20];
+        AP_Font* bodyFont = [AP_Font fontWithName:@"Helvetica" size:17];
+        AP_Font* buttonFont = [AP_Font fontWithName:@"Helvetica-Bold" size:20];
+#else
         AP_Font* headerFont = [AP_Font fontWithName:@"Futura-Medium" size:20];
         AP_Font* bodyFont = [AP_Font fontWithName:@"Futura-Medium" size:17];
         AP_Font* buttonFont = [AP_Font fontWithName:@"Futura-CondensedMedium" size:20];
+#endif
 
         if (title) {
             _header = [[AP_Label alloc] init];
