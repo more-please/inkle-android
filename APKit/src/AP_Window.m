@@ -352,6 +352,9 @@ static inline CGFloat aspect(CGSize size) {
     _GL(Clear, GL_COLOR_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);
 
+    // Make sure we notice if somebody enables depth-testing!
+    _GL(DepthFunc, GL_NEVER);
+
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
