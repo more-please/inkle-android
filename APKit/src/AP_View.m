@@ -234,12 +234,22 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 
 + (void) animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay options:(UIViewAnimationOptions)options animations:(void (^)(void))animations completion:(void (^)(BOOL))completion
 {
-    AP_Animation* animation = [[AP_Animation alloc] initWithDuration:duration delay:delay options:options completion:completion];
+    if (delay + duration > 0) {
+        AP_Animation* animation = [[AP_Animation alloc] initWithDuration:duration delay:delay options:options completion:completion];
 
-    AP_Animation* oldAnimation = [AP_AnimatedProperty currentAnimation];
-    [AP_AnimatedProperty setCurrentAnimation:animation];
-    animations();
-    [AP_AnimatedProperty setCurrentAnimation:oldAnimation];
+        AP_Animation* oldAnimation = [AP_AnimatedProperty currentAnimation];
+        [AP_AnimatedProperty setCurrentAnimation:animation];
+        animations();
+        [AP_AnimatedProperty setCurrentAnimation:oldAnimation];
+    } else {
+        // Zero-length animation, just do it immediately.
+        [self withoutAnimation:^{
+            animations();
+            if (completion) {
+                completion(YES);
+            }
+        }];
+    }
 }
 
 + (void) debugAnimationWithTag:(NSString*)tag
