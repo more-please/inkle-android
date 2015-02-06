@@ -704,6 +704,11 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) visitWithBlock:(void(^)(AP_View*))block
 {
+    AP_View* mask = self.layer.mask.view;
+    if (mask) {
+        [mask visitWithBlock:block];
+    }
+
     id protectSelf = self;
     AP_CHECK(block, return);
     block(self);
@@ -980,11 +985,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     GLKVector4 backgroundColor = _animatedBackgroundColor.inFlight;
 #if 0
-    static BOOL s_debugViewBorders = NO;
-    if (s_debugViewBorders) {
-        // Highlight all views in red, for debugging...
-        backgroundColor = GLKVector4Make(1, 0, 0, 0.1);
-    }
+    // Highlight all views in red, for debugging...
+    backgroundColor = GLKVector4Make(1, 0, 0, 0.1);
     if ([self.window isHitTestView:self]) {
         backgroundColor.r = 1;
         backgroundColor.a = MAX(0.25, backgroundColor.a);
@@ -1067,6 +1069,31 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     boundsToGL = CGAffineTransformConcat(boundsToGL, originToFrameCenter);
     boundsToGL = CGAffineTransformConcat(boundsToGL, frameToGL);
 
+    AP_View* maskView = self.layer.mask.view;
+    if (maskView) {
+        // Render the mask into the stencil buffer.
+        _GL(Enable, GL_STENCIL_TEST);
+
+        // Write a '1' for pixels that should be visible.
+        // TODO: if there are multiple masks, each should use its own stencil value.
+        _GL(StencilFunc, GL_ALWAYS, 1, 0xff);
+        _GL(StencilOp, GL_KEEP, GL_REPLACE, GL_REPLACE);
+        _GL(StencilMask, 0xff);
+        _GL(ColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+        BOOL oldUseMask = [AP_GLProgram useMask:YES];
+
+        [maskView renderSelfAndChildrenWithFrameToGL:boundsToGL alpha:1];
+
+        [AP_GLProgram useMask:oldUseMask];
+
+        // Now re-enable color output, but only draw where the stencil is 1.
+        _GL(StencilFunc, GL_EQUAL, 1, 0xff);
+        _GL(StencilOp, GL_KEEP, GL_KEEP, GL_KEEP);
+        _GL(ColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    }
+
     // Skip drawing if we're entirely off-screen.
     CGRect glBounds;
     glBounds.origin = boundsOrigin;
@@ -1107,6 +1134,11 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     if (shouldScissor) {
         [AP_Window setScissorRect:oldScissorRect];
+    }
+
+    if (maskView) {
+        // Stop stenciling.
+        _GL(Disable, GL_STENCIL_TEST);
     }
 }
 

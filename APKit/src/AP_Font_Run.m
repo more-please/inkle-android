@@ -246,7 +246,8 @@ typedef struct VertexData {
         uniform sampler2D texture;
         void main() {
             float alpha = texture2D(texture, _texCoord).r;
-            gl_FragColor = vec4(color.rgb, color.a * alpha);
+            vec4 c = vec4(color.rgb, color.a * alpha);
+            OUTPUT(c);
         }
     );
 

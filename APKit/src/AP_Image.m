@@ -81,7 +81,8 @@ static const char* kFragment2 = AP_SHADER(
     void main() {
         vec4 pixel = texture2D(texture, f_texCoord).gggr;
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
-        gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
+        vec4 c = vec4(tinted.rgb, pixel.a * alpha);
+        OUTPUT(c);
     }
 );
 
@@ -94,7 +95,8 @@ static const char* kFragment3 = AP_SHADER(
     void main() {
         vec4 pixel = texture2D(texture, f_texCoord);
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
-        gl_FragColor = vec4(tinted.rgb, pixel.a * alpha);
+        vec4 c = vec4(tinted.rgb, pixel.a * alpha);
+        OUTPUT(c);
     }
 );
 
@@ -109,7 +111,8 @@ static const char* kFragment4 = AP_SHADER(
         vec3 pixel = texture2D(texture, f_texCoord).rgb;
         vec3 tinted = mix(pixel, tint.rgb, tint.a);
         float pixelAlpha = texture2D(alphaTexture, f_texCoord).g;
-        gl_FragColor = vec4(tinted.rgb, pixelAlpha * alpha);
+        vec4 c = vec4(tinted.rgb, pixelAlpha * alpha);
+        OUTPUT(c);
     }
 );
 

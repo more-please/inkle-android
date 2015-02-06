@@ -349,7 +349,8 @@ static inline CGFloat aspect(CGSize size) {
 
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(ClearColor, 0, 0, 0, 0);
-    _GL(Clear, GL_COLOR_BUFFER_BIT);
+    _GL(ClearStencil, 0);
+    _GL(Clear, GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);
 
     // Make sure we notice if somebody enables depth-testing!

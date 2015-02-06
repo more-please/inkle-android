@@ -2,10 +2,27 @@
 
 #import "AP_Check.h"
 
-static GLuint compileShader(const GLchar* ptr, GLenum type)
+#define AP_COMMON_PREFIX \
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
+    "precision highp float;\n" \
+    "#else\n" \
+    "precision mediump float;\n" \
+    "#endif\n"
+
+#define AP_MASK_PREFIX AP_COMMON_PREFIX \
+    "#define OUTPUT(x) if ((x).a > 0) gl_FragColor = (x); else discard\n"
+
+#define AP_NORMAL_PREFIX AP_COMMON_PREFIX \
+    "#define OUTPUT(x) gl_FragColor = (x)\n"
+
+static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
 {
     GLuint shader = glCreateShader(type);
-    _GL(ShaderSource, shader, 1, &ptr, NULL);
+    const GLchar* src[2] = {
+        mask ? AP_MASK_PREFIX : AP_NORMAL_PREFIX,
+        ptr,
+    };
+    _GL(ShaderSource, shader, 2, src, NULL);
     _GL(CompileShader, shader);
 
     GLint logLength;
@@ -54,11 +71,17 @@ static BOOL linkProgram(GLuint prog)
     GLuint _name;
     NSMutableDictionary* _attrs;
     NSMutableDictionary* _uniforms;
+    AP_GLProgram* _maskProg;
 }
 
 AP_BAN_EVIL_INIT
 
 - (AP_GLProgram*) initWithVertex:(const char *)vertex fragment:(const char *)fragment
+{
+    return [self initWithVertex:vertex fragment:fragment mask:NO];
+}
+
+- (AP_GLProgram*) initWithVertex:(const char *)vertex fragment:(const char *)fragment mask:(BOOL)mask
 {
 #ifndef ANDROID
     AP_CHECK([EAGLContext currentContext], return nil);
@@ -68,9 +91,13 @@ AP_BAN_EVIL_INIT
         _name = glCreateProgram();
         _attrs = [NSMutableDictionary dictionary];
         _uniforms = [NSMutableDictionary dictionary];
+        if (!mask) {
+            // I am not a mask, therefore I need to create one
+            _maskProg = [[AP_GLProgram alloc] initWithVertex:vertex fragment:fragment mask:YES];
+        }
 
-        GLuint vertexShader = compileShader(vertex, GL_VERTEX_SHADER);
-        GLuint fragmentShader = compileShader(fragment, GL_FRAGMENT_SHADER);
+        GLuint vertexShader = compileShader(mask, vertex, GL_VERTEX_SHADER);
+        GLuint fragmentShader = compileShader(mask, fragment, GL_FRAGMENT_SHADER);
         _GL(AttachShader, _name, vertexShader);
         _GL(AttachShader, _name, fragmentShader);
         if (![self link]) {
@@ -92,9 +119,22 @@ AP_BAN_EVIL_INIT
     return _name;
 }
 
+static BOOL _g_useMask = NO;
+
++ (BOOL) useMask:(BOOL)newValue;
+{
+    BOOL oldValue = _g_useMask;
+    _g_useMask = newValue;
+    return oldValue;
+}
+
 - (void) use
 {
-    _GL(UseProgram, _name);
+    if (_g_useMask && _maskProg) {
+        _GL(UseProgram, _maskProg->_name);
+    } else {
+        _GL(UseProgram, _name);
+    }
 }
 
 - (GLint) attr:(NSString *)name

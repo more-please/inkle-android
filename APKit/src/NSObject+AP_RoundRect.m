@@ -49,7 +49,8 @@ static const char* kCircleFragment = AP_SHADER(
 
     void main() {
         float a = alphaForEdge(f_innerPos, f_outerPos);
-        gl_FragColor = vec4(color.rgb, color.a * a);
+        vec4 c = vec4(color.rgb, color.a * a);
+        OUTPUT(c);
     }
 );
 
@@ -108,7 +109,8 @@ static const char* kStrokedRoundRectFragment = AP_SHADER(
         float a1 = alphaForEdge(f_innerPos, f_outerPos);
         float a2 = alphaForEdgeWithPen(f_innerPos, f_outerPos);
         vec4 ink = mix(penColor, fillColor, a2);
-        gl_FragColor = vec4(ink.rgb, ink.a * a1);
+        vec4 c = vec4(ink.rgb, ink.a * a1);
+        OUTPUT(c);
     }
 );
 
@@ -148,14 +150,16 @@ static const char* kFilledRoundRectFragment = AP_SHADER(
 
     void main() {
         float a = alphaForEdge(f_innerPos, f_outerPos);
-        gl_FragColor = vec4(color.rgb, color.a * a);
+        vec4 c = vec4(color.rgb, color.a * a);
+        OUTPUT(c);
     }
 );
 
 static const char* kRectFragment = AP_SHADER(
     uniform vec4 color;
     void main() {
-        gl_FragColor = color;
+        vec4 c = color;
+        OUTPUT(c);
     }
 );
 

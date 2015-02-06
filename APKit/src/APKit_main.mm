@@ -1242,6 +1242,8 @@ const EGLint highQualityAttribs[] = {
         EGL_BLUE_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_RED_SIZE, 8,
+        // Need an 8-bit stencil for layer masks
+        EGL_STENCIL_SIZE, 8,
         // We want 4x MSAA, but only if it's fast.
         EGL_SAMPLES, 4,
         EGL_CONFIG_CAVEAT, EGL_NONE,
@@ -1260,6 +1262,8 @@ const EGLint lowQualityAttribs[] = {
         EGL_BLUE_SIZE, 5,
         EGL_GREEN_SIZE, 6,
         EGL_RED_SIZE, 5,
+        // Need an 8-bit stencil for layer masks
+        EGL_STENCIL_SIZE, 8,
         // (Although... some devices like the Nexus 4 don't sort
         // their configs properly so we still end up with 16-bit
         // colour. Arrrgh! Well, the N4 can use the high-quality
@@ -1277,13 +1281,13 @@ const EGLint lowQualityAttribs[] = {
 
         EGLint numConfigs;
 
-//        static EGLConfig configs[500];
-//        eglChooseConfig(_display, attribs, configs, 500, &numConfigs);
-//        for (int i = 0; i < numConfigs; ++i) {
-//            NSLog(@"EGL config %d of %d:", i, numConfigs);
-//            [self dumpConfig:configs[i]];
-//            NSLog(@"----");
-//        }
+//         static EGLConfig configs[500];
+//         eglChooseConfig(_display, lowQualityAttribs, configs, 500, &numConfigs);
+//         for (int i = 0; i < numConfigs; ++i) {
+//             NSLog(@"EGL config %d of %d:", i, numConfigs);
+//             [self dumpConfig:configs[i]];
+//             NSLog(@"----");
+//         }
 
         EGLBoolean success = eglChooseConfig(_display, highQualityAttribs, &_config, 1, &numConfigs);
         if (!success || numConfigs < 1) {

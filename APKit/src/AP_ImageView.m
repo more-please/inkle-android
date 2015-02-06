@@ -144,17 +144,7 @@
 
 //        NSLog(@"Rendering %@, pos: %.0f,%.0f size: %.0f,%.0f alpha: %.2f", image.assetName, pos.x, pos.y, size.width, size.height, alpha);
 
-        AP_View* maskView = self.layer.mask.view;
-        if (maskView) {
-            // In most cases the mask is an opaque white view, so just clip to its bounds.
-            CGRect maskRect = [maskView convertInFlightRect:maskView.inFlightBounds toView:nil];
-            CGRect scissorRect = CGRectApplyAffineTransform(maskRect, boundsToGL);
-            CGRect oldScissor = [AP_Window overlayScissorRect:scissorRect];
-            [image renderGLWithSize:size transform:t alpha:alpha];
-            [AP_Window setScissorRect:oldScissor];
-        } else {
-            [image renderGLWithSize:size transform:t alpha:alpha];
-        }
+        [image renderGLWithSize:size transform:t alpha:alpha];
     }
 }
 
