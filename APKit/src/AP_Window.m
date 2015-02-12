@@ -213,7 +213,7 @@ static inline CGFloat aspect(CGSize size) {
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     self.preferredFramesPerSecond = 30;
 
     GLKView *view = (GLKView *)self.view;
@@ -310,6 +310,12 @@ static inline CGFloat aspect(CGSize size) {
     }
 
     [_profiler step:@"update"];
+
+    // Make sure we don't scissor any offscreen rendering
+    _GL(Disable, GL_SCISSOR_TEST);
+    _GL(Disable, GL_DEPTH_TEST);
+    _GL(Enable, GL_BLEND);
+
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
     if (_rootViewController) {
