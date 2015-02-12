@@ -46,6 +46,9 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 // As above, but scale the value appropriately if we're in landscape mode.
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape;
 
+// As above, but with an iPhone 6 value too
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape iPhone6:(CGFloat)i6;
+
 - (BOOL) isHitTestView:(AP_View*)view;
 - (BOOL) isGestureView:(AP_View*)view;
 
