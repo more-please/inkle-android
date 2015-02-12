@@ -216,7 +216,7 @@ private:
 
 @end
 
-@implementation AP_TapGestureRecognizer {
+@implementation AP_TapDownGestureRecognizer {
     NSTimeInterval _tapTime;
     CGPoint _tapPoint;
     int _tapCount;
@@ -268,7 +268,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 
 @end
 
-@implementation AP_TapUpGestureRecognizer {
+@implementation AP_TapGestureRecognizer {
     CGPoint _origin;
 }
 
@@ -565,7 +565,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     CGPoint lastTranslation = CGPointZero;
     NSTimeInterval lastTranslationTime;
     _buffer.getAtTime(t, lastTranslation, lastTranslationTime);
-    
+
     float dt = t - lastTranslationTime;
     if (dt > 0) {
         return CGPointMake(
