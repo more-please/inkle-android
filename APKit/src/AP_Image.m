@@ -448,7 +448,7 @@ typedef struct VertexData {
             insets.left /= scale;
             insets.right /= scale;
         }
-        if (insets.top + insets.bottom + 1 > _size.height) {
+        if (insets.top + insets.bottom + 1 > (_size.height / _scale)) {
             CGFloat scale = (insets.top + insets.bottom + 1) / (_size.height / _scale);
             insets.top /= scale;
             insets.bottom /= scale;
