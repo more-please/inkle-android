@@ -1146,8 +1146,13 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     delegate.window = [[Real_UIWindow alloc] init];
     delegate.window.rootViewController = window; // Err, yes, well
 
+#ifdef SORCERY
+    AP_Image* logo = [AP_Image imageNamed:@"sorcery-title"];
+    logo = [logo imageScaledBy:0.75];
+#else
     AP_Image* logo = [AP_Image imageNamed:@"80-days-logo"];
     logo = [logo imageWithWidth:[AP_Window widthForIPhone:150 iPad:250]];
+#endif
 
     AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
     view.frame = [[UIScreen mainScreen] bounds];
