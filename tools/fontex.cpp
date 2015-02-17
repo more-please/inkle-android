@@ -52,7 +52,7 @@ struct Alias {
 
 static const Alias kAliases[] = {
     // Sorcery spellbook characters
-    { 964, 'd' },
+    { 948, 'd' },
     { 966, 'f' },
     { 3947, 'm' },
     { 3913, 'g' },
