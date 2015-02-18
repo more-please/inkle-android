@@ -32,7 +32,7 @@
 @property(nonatomic) BOOL centerVertically;
 @property(nonatomic) BOOL adjustsFontSizeToFitWidth;
 @property(nonatomic) NSInteger numberOfLines;
-@property(nonatomic) CGFloat minimumFontSize;
+@property(nonatomic) CGFloat minimumScaleFactor;
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 

@@ -58,6 +58,7 @@
     _numberOfLines = 0;
 
     _fontScale = 1.0;
+    _minimumScaleFactor = 0.01;
 }
 
 - (id) init
@@ -310,13 +311,21 @@
     AP_CHECK(mode == NSLineBreakByWordWrapping, return);
 }
 
+- (void) setMinimumScaleFactor:(CGFloat)minimumScaleFactor
+{
+    if (_minimumScaleFactor != minimumScaleFactor) {
+        _minimumScaleFactor = minimumScaleFactor;
+        [self setNeedsTextLayout];
+    }
+}
+
 - (void) finishCurrentLine
 {
     if (!_atStartOfLine) {
         _formattedSize.width = MAX(_formattedSize.width, _cursor.x - _currentStyle.tailIndent);
 
         CGPoint offset;
-        
+
         // Calculate x offset based on line length and alignment.
         CGFloat xGap = (_layoutWidth + _currentStyle.tailIndent) - _cursor.x;
         switch (_currentStyle.alignment) {
@@ -383,7 +392,7 @@
     [self scaledTextLayoutWithWidth:width];
 
     if (_adjustsFontSizeToFitWidth && width > 0 && _formattedSize.width > width) {
-        _fontScale = MAX(0.1, width / _formattedSize.width);
+        _fontScale = MAX(_minimumScaleFactor, width / _formattedSize.width);
         [self scaledTextLayoutWithWidth:width];
     }
 }
