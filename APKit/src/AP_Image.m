@@ -447,11 +447,15 @@ typedef struct VertexData {
             CGFloat scale = (insets.left + insets.right + 1) / (_size.width / _scale);
             insets.left /= scale;
             insets.right /= scale;
+            // Tiling makes no sense here, stretch instead
+            _resizingMode = UIImageResizingModeStretch;
         }
         if (insets.top + insets.bottom + 1 > (_size.height / _scale)) {
             CGFloat scale = (insets.top + insets.bottom + 1) / (_size.height / _scale);
             insets.top /= scale;
             insets.bottom /= scale;
+            // Tiling makes no sense here, stretch instead
+            _resizingMode = UIImageResizingModeStretch;
         }
 
         _insets = insets;
