@@ -19,6 +19,7 @@
 #import <android_native_app_glue.h>
 
 #import <ck/ck.h>
+#import <ck/customfile.h>
 #import <ck/mixer.h>
 
 #import <unicode/udata.h>
@@ -264,6 +265,66 @@ static void logStatfs(NSString* path) {
     }
 }
 
+class PakSound : public CkCustomFile
+{
+    NSString* _name;
+    NSData* _data;
+    const char* _ptr;
+    int _len;
+    int _pos;
+
+public:
+    PakSound(const char* name) {
+        _name = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
+        _data = [NSBundle dataForResource:_name ofType:nil];
+        _ptr = (const char*) _data.bytes;
+        _len = _data.length;
+        _pos = 0;
+    }
+
+    /** Returns true if the file was successfully opened. */
+    virtual bool isValid() const {
+        return _ptr;
+    }
+
+    /** Read from the file.  Returns number of bytes actually read. */
+    virtual int read(void* buf, int bytes) {
+//         NSLog(@"Reading %d bytes at %d from %@", bytes, _pos, _name);
+        if (_pos + bytes > _len) {
+            bytes = _len - _pos;
+        }
+        memcpy(buf, _ptr + _pos, bytes);
+        _pos += bytes;
+        return bytes;
+    }
+
+    /** Returns the size of the file. */
+    virtual int getSize() const {
+        return _len;
+    }
+
+    /** Sets the read position in the file. */
+    virtual void setPos(int pos) {
+//         NSLog(@"Setting pos to %d in %@", pos, _name);
+        if (pos < 0) {
+            pos = 0;
+        }
+        if (pos > _len) {
+            pos = _len;
+        }
+        _pos = pos;
+    }
+
+    /** Returns the read position in the file. */
+    virtual int getPos() const {
+        return _pos;
+    }
+
+    static CkCustomFile* customFileFunc(const char* path, void* data) {
+        return new PakSound(path);
+    }
+};
+
 @implementation Main {
     struct android_app* _android;
 
@@ -313,16 +374,6 @@ static void logStatfs(NSString* path) {
         AP_CHECK(result == JNI_OK, return nil);
         AP_CHECK(_env, return nil);
 
-        // Initialize Cricket Audio
-        CkConfig config(_env, _android->activity->clazz);
-        config.useJavaAudio = true; // OpenSLES is totally broken.
-        // Nice big audio buffers, to prevent any glitches.
-        config.audioUpdateMs = 50;
-        config.streamBufferMs = 3000;
-        config.streamFileUpdateMs = 600;
-        int success = CkInit(&config);
-        AP_CHECK(success, return nil);
-
         // Get InkleActivity and its methods.
         _instance = _env->NewGlobalRef(_android->activity->clazz);
         AP_CHECK(_instance, return nil);
@@ -358,8 +409,6 @@ static void logStatfs(NSString* path) {
             self.isCrappyDevice = YES;
         }
 
-        _touches = [NSMutableDictionary dictionary];
-
         // Initialize non-OBB assets.
         _assetManager = [self getAssets];
 
@@ -371,6 +420,62 @@ static void logStatfs(NSString* path) {
         logStatfs(self.publicDocumentsDir);
         logStatfs(_obbPath);
 
+        PAK* pak;
+
+        AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
+        if (pakAsset) {
+            NSLog(@"Mapping OBB...");
+            if (AAsset_isAllocated(pakAsset)) {
+                NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
+                NSLog(@"This is wasting a lot of memory.");
+            }
+
+            void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
+            NSAssert(ptr, @"AAsset_getBuffer failed!");
+
+            off_t size = AAsset_getLength(pakAsset);
+            NSAssert(size, @"AAsset_getLength failed!");
+
+            NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
+            NSAssert(data, @"dataWithBytesNoCopy failed!");
+
+            pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
+
+        } else {
+            // Using Google Play-style expansion files.
+            // This means there may be a patch file.
+            NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
+            if (patch) {
+                pak = [PAK pakWithMemoryMappedFile:patch];
+                [PAK_Search add:pak];
+            }
+
+            pak = [PAK pakWithMemoryMappedFile:_obbPath];
+
+            // A cheat: assume all the sounds are in the OBB, so we
+            // don't have to bother checking assets (which are very slow).
+            _pakNamesCache = [NSArray array];
+        }
+
+        NSAssert(pak, @"Can't find .pak file");
+        [PAK_Search add:pak];
+
+        // Add ourselves as a backup resource bundle (APK assets)
+        [PAK_Search add:self];
+
+        // Initialize Cricket Audio
+        CkConfig config(_env, _android->activity->clazz);
+        config.useJavaAudio = true; // OpenSLES is totally broken.
+        // Nice big audio buffers, to prevent any glitches.
+        config.audioUpdateMs = 50;
+        config.streamBufferMs = 3000;
+        config.streamFileUpdateMs = 600;
+        int success = CkInit(&config);
+        AP_CHECK(success, return nil);
+
+        CkSetCustomFileHandler(PakSound::customFileFunc, NULL);
+
+        _touches = [NSMutableDictionary dictionary];
         _blocks = [NSMutableDictionary dictionary];
     }
     return self;
@@ -1088,51 +1193,6 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         // Already initialized
         return;
     }
-
-    PAK* pak;
-
-    AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
-    if (pakAsset) {
-        NSLog(@"Mapping OBB...");
-        if (AAsset_isAllocated(pakAsset)) {
-            NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
-            NSLog(@"This is wasting a lot of memory.");
-        }
-
-        void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
-        NSAssert(ptr, @"AAsset_getBuffer failed!");
-
-        off_t size = AAsset_getLength(pakAsset);
-        NSAssert(size, @"AAsset_getLength failed!");
-
-        NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-        NSAssert(data, @"dataWithBytesNoCopy failed!");
-
-        pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
-
-    } else {
-        // Using Google Play-style expansion files.
-        // This means there may be a patch file.
-        NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
-        if (patch) {
-            pak = [PAK pakWithMemoryMappedFile:patch];
-            [PAK_Search add:pak];
-        }
-
-        pak = [PAK pakWithMemoryMappedFile:_obbPath];
-
-        // A cheat: assume all the sounds are in the OBB, so we
-        // don't have to bother checking assets (which are very slow).
-        _pakNamesCache = [NSArray array];
-    }
-
-    NSAssert(pak, @"Can't find .pak file");
-    [PAK_Search add:pak];
-
-    // TODO: could potentially look for a patch file too
-
-    // Add ourselves as a backup resource bundle (APK assets)
-    [PAK_Search add:self];
 
     NSLog(@"Let's get started!");
     id<AP_ApplicationDelegate> delegate = AP_GetDelegate();

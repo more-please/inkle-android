@@ -19,17 +19,7 @@
         // Audio file type is always .cks
         path = [[path stringByDeletingPathExtension] stringByAppendingString:@".cks"];
         _name = [path lastPathComponent];
-        PAK_Item* item = [PAK_Search item:path];
-        if (!item) {
-            NSLog(@"Couldn't find asset for sound: %@", path);
-            return nil;
-        }
-        _sound = CkSound::newStreamSound(
-            item.path.cString,
-            item.isAsset ? kCkPathType_Asset : kCkPathType_FileSystem,
-            item.offset,
-            item.length,
-            path.pathExtension.cString);
+        _sound = CkSound::newStreamSound(path.cString);
         if (!_sound || _sound->isFailed()) {
             return nil;
         }
