@@ -284,7 +284,7 @@ static inline CGAffineTransform toParent(AP_View* v) {
 
     // Bounds center -> (0, 0)
     t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
-    
+
     // Bounds origin -> (0, 0)
     t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
 
@@ -306,7 +306,7 @@ static inline CGAffineTransform toParentInFlight(AP_View* v) {
 
     // Bounds center -> (0, 0)
     t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
-    
+
     // Bounds origin -> (0, 0)
     t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
 
@@ -623,7 +623,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     if (willChangeWindow) {
         [view didMoveToWindow];
     }
-    
+
     if (willAppear) {
         [view visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewDidAppear:NO];
@@ -740,17 +740,20 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     [protectSelf self];
 }
 
-- (BOOL) goBack
+- (BOOL) handleAndroidBackButton
 {
     BOOL result = NO;
-    ++_iterating;
-    for (AP_View* view in _subviews) {
-        if ([view goBack]) {
-            result = YES;
-            break;
+    if (!self.hidden && self.alpha > 0) {
+        ++_iterating;
+        // Iterate in reverse, to ensure the topmost back button gets first dibs.
+        for (AP_View* view in [_subviews reverseObjectEnumerator]) {
+            if ([view handleAndroidBackButton]) {
+                result = YES;
+                break;
+            }
         }
+        --_iterating;
     }
-    --_iterating;
     return result;
 }
 
@@ -818,7 +821,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             CGFloat rightMargin = CGRectGetMaxX(oldBounds) - CGRectGetMaxX(r);
             CGFloat topMargin = CGRectGetMinY(r) - CGRectGetMinY(oldBounds);
             CGFloat bottomMargin = CGRectGetMaxY(oldBounds) - CGRectGetMaxY(r);
-            
+
             CGFloat flexibleWidth = 0;
             CGFloat widthCount = 0;
             if (mask & UIViewAutoresizingFlexibleLeftMargin) {
@@ -849,7 +852,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
                     r.size.width += delta.width / widthCount;
                 }
             }
-            
+
             CGFloat flexibleHeight = 0;
             CGFloat heightCount = 0;
             if (mask & UIViewAutoresizingFlexibleTopMargin) {

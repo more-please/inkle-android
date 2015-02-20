@@ -39,7 +39,7 @@
 @property(nonatomic,readonly) float timeSinceLastUpdate;
 
 // Android-specific additions
-- (BOOL) goBack; // Return YES if the event was handled.
+- (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
 
 // FIXME
 - (void) presentViewController:(AP_ViewController*)viewControllerToPresent animated:(BOOL)flag completion:(void(^)(void))completion;

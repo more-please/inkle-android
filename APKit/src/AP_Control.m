@@ -99,9 +99,13 @@
     return result;
 }
 
-- (BOOL) goBack
+- (BOOL) handleAndroidBackButton
 {
-    return [self dispatch:_backControlEvents event:nil];
+    if (_androidBackButtonEvents && !self.hidden && self.alpha > 0) {
+        return [self dispatch:_androidBackButtonEvents event:nil];
+    } else {
+        return NO;
+    }
 }
 
 - (BOOL) isTracking

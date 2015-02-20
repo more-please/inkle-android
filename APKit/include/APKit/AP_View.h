@@ -123,7 +123,7 @@
 // Prevent touches in this view from firing gesture recognizers in lower views.
 @property(nonatomic) BOOL blockGestures;
 
-- (BOOL) goBack; // Return YES if the event was handled.
+- (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
 
 // ----------------------------------------------------------------------
 // Internal stuff

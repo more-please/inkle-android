@@ -15,6 +15,6 @@
 @property(nonatomic,readonly,getter=isTracking) BOOL tracking;
 
 // Android addition: fire these events when the back button is pressed.
-@property(nonatomic) UIControlEvents backControlEvents;
+@property(nonatomic) UIControlEvents androidBackButtonEvents;
 
 @end
