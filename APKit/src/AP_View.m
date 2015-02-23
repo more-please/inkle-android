@@ -1077,9 +1077,17 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         // Render the mask into the stencil buffer.
         _GL(Enable, GL_STENCIL_TEST);
 
-        // Write a '1' for pixels that should be visible.
-        // TODO: if there are multiple masks, each should use its own stencil value.
-        _GL(StencilFunc, GL_ALWAYS, 1, 0xff);
+        // Continually rotate the stencil value. It's cleared to zero
+        // each frame, so each view needs a different non-zero value.
+        // This static variable will work for up to 255 masked views.
+        // That's enough for anyone, right? :)
+        static int stencil = 0;
+        stencil = (stencil + 1) % 256;
+        if (stencil == 0) {
+            ++stencil;
+        }
+
+        _GL(StencilFunc, GL_ALWAYS, stencil, 0xff);
         _GL(StencilOp, GL_KEEP, GL_REPLACE, GL_REPLACE);
         _GL(StencilMask, 0xff);
         _GL(ColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -1091,7 +1099,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [AP_GLProgram useMask:oldUseMask];
 
         // Now re-enable color output, but only draw where the stencil is 1.
-        _GL(StencilFunc, GL_EQUAL, 1, 0xff);
+        _GL(StencilFunc, GL_EQUAL, stencil, 0xff);
         _GL(StencilOp, GL_KEEP, GL_KEEP, GL_KEEP);
         _GL(ColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
