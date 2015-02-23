@@ -12,6 +12,8 @@
 
 #import "AP_ViewController.h"
 
+typedef void (^AfterFrameBlock)();
+
 extern NSString* const AP_ScreenSizeChangedNotification;
 
 // Plays the role of a UIWindow containing UIViews.
@@ -51,5 +53,7 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 
 - (BOOL) isHitTestView:(AP_View*)view;
 - (BOOL) isGestureView:(AP_View*)view;
+
++ (void) performAfterFrame:(AfterFrameBlock)block;
 
 @end

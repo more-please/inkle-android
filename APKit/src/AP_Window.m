@@ -160,6 +160,27 @@ static inline CGFloat aspect(CGSize size) {
     return result;
 }
 
+static NSMutableArray* s_afterFrameBlocks;
+
++ (void) performAfterFrame:(AfterFrameBlock)block
+{
+    if (!s_afterFrameBlocks) {
+        s_afterFrameBlocks = [NSMutableArray array];
+    }
+    [s_afterFrameBlocks addObject:block];
+}
+
++ (void) runAfterFrameHooks
+{
+    NSArray* blocks = s_afterFrameBlocks;
+    s_afterFrameBlocks = nil;
+    if (blocks) {
+        for (AfterFrameBlock block in blocks) {
+            block();
+        }
+    }
+}
+
 - (AP_Window*) init
 {
     self = [super init];
@@ -391,6 +412,8 @@ static inline CGFloat aspect(CGSize size) {
     }
 
     [_profiler step:@"other"];
+
+    [AP_Window runAfterFrameHooks];
 }
 
 //------------------------------------------------------------------------------------

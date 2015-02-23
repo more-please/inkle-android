@@ -2,6 +2,7 @@
 
 #import "AP_Check.h"
 #import "AP_Utils.h"
+#import "AP_Window.h"
 #import "NSObject+AP_KeepAlive.h"
 
 @implementation AP_AnimatedProperty
@@ -25,6 +26,9 @@ static AP_Animation* g_CurrentAnimation = nil;
         _name = name;
         _view = view;
         [_view animatedPropertyWasAdded:self];
+        [AP_Window performAfterFrame:^{
+            _hasBeenSet = YES;
+        }];
     }
     return self;
 }
@@ -80,6 +84,11 @@ static AP_Animation* g_CurrentAnimation = nil;
     _animation = nil;
 }
 
+- (NSString*) description
+{
+    return _name;
+}
+
 @end
 
 
@@ -110,9 +119,10 @@ static AP_Animation* g_CurrentAnimation = nil;
         _dest = dest;
         [self.view setNeedsDisplay];
     }
-    if (!self.animation) {
+    if (!self.hasBeenSet || !self.animation) {
         _src = _inFlight = dest;
     }
+    self.hasBeenSet = YES;
 }
 
 - (void) leaveAnimation
@@ -171,9 +181,10 @@ static AP_Animation* g_CurrentAnimation = nil;
         _dest = dest;
         [self.view setNeedsDisplay];
     }
-    if (!self.animation) {
+    if (!self.hasBeenSet || !self.animation) {
         _src = _inFlight = dest;
     }
+    self.hasBeenSet = YES;
 }
 
 - (void) leaveAnimation
@@ -232,9 +243,10 @@ static AP_Animation* g_CurrentAnimation = nil;
         _dest = dest;
         [self.view setNeedsDisplay];
     }
-    if (!self.animation) {
+    if (!self.hasBeenSet || !self.animation) {
         _src = _inFlight = dest;
     }
+    self.hasBeenSet = YES;
 }
 
 - (void) leaveAnimation
@@ -289,9 +301,10 @@ static AP_Animation* g_CurrentAnimation = nil;
         _dest = dest;
         [self.view setNeedsDisplay];
     }
-    if (!self.animation) {
+    if (!self.hasBeenSet || !self.animation) {
         _src = _inFlight = dest;
     }
+    self.hasBeenSet = YES;
 }
 
 - (void) leaveAnimation
@@ -348,9 +361,10 @@ static AP_Animation* g_CurrentAnimation = nil;
         _dest = dest;
         [self.view setNeedsDisplay];
     }
-    if (!self.animation) {
+    if (!self.hasBeenSet || !self.animation) {
         _src = _inFlight = dest;
     }
+    self.hasBeenSet = YES;
 }
 
 - (void) leaveAnimation

@@ -12,6 +12,7 @@
 @property(nonatomic,readonly,strong) NSString* name;
 @property(nonatomic,readonly,weak) AP_View* view;
 @property(nonatomic,strong) AP_Animation* animation;
+@property(nonatomic) BOOL hasBeenSet;
 
 - (instancetype) initWithName:(NSString*)name view:(AP_View*)view;
 

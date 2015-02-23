@@ -491,9 +491,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         }];
     }
     if (oldWindow && !window) {
-        for (AP_AnimatedProperty* prop in _animatedProperties) {
-            [prop leaveAnimation];
-        }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
         }];
@@ -644,9 +641,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
-        for (AP_AnimatedProperty* prop in _animatedProperties) {
-            [prop leaveAnimation];
-        }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
         }];
