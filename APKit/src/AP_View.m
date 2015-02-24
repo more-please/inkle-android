@@ -736,18 +736,25 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (BOOL) handleAndroidBackButton
 {
-    BOOL result = NO;
-    if (!self.hidden && self.alpha > 0) {
-        ++_iterating;
-        // Iterate in reverse, to ensure the topmost back button gets first dibs.
-        for (AP_View* view in [_subviews reverseObjectEnumerator]) {
-            if ([view handleAndroidBackButton]) {
-                result = YES;
-                break;
-            }
-        }
-        --_iterating;
+    if (self.hidden || self.alpha <= 0) {
+        return NO;
     }
+
+    AP_ViewController* controller = _viewDelegate;
+    if (controller && [controller handleAndroidBackButton]) {
+        return YES;
+    }
+
+    BOOL result = NO;
+    ++_iterating;
+    // Iterate in reverse, to ensure the topmost back button gets first dibs.
+    for (AP_View* view in [_subviews reverseObjectEnumerator]) {
+        if ([view handleAndroidBackButton]) {
+            result = YES;
+            break;
+        }
+    }
+    --_iterating;
     return result;
 }
 
