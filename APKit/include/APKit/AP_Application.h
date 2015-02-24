@@ -30,7 +30,6 @@
 
 @property(nonatomic,strong) id<AP_ApplicationDelegate> delegate;
 
-// FIXME -- needs to be properly implemented!
 @property(nonatomic,readonly) AP_Window *keyWindow;
 @property(nonatomic,readonly) UIInterfaceOrientation statusBarOrientation;
 

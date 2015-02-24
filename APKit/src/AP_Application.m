@@ -52,4 +52,11 @@ static AP_Application* g_Application;
         : UIInterfaceOrientationPortrait;
 }
 
+- (AP_Window*) keyWindow
+{
+    // Nasty! This is a hangover from the original version that
+    // ran on iOS inside a GLKViewController...
+    return (AP_Window*) _delegate.window.rootViewController;
+}
+
 @end
