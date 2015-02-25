@@ -174,7 +174,7 @@ static JavaMethod kShareJourney = {
     "shareJourney", "(Ljava/lang/String;I)V", NULL
 };
 static JavaMethod kMailTo = {
-    "mailTo", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
+    "mailTo", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kGetLocale = {
     "getLocale", "()Ljava/lang/String;", NULL
@@ -1171,14 +1171,15 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     }
 }
 
-- (void) mailTo:(NSString*)to attachment:(NSString*)path
+- (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path
 {
     [self maybeInitJavaMethod:&kMailTo];
 
     _env->PushLocalFrame(16);
     jstring s1 = to ? _env->NewStringUTF(to.UTF8String) : NULL;
-    jstring s2 = path ? _env->NewStringUTF(path.UTF8String) : NULL;
-    _env->CallVoidMethod(_instance, kMailTo.method, s1, s2);
+    jstring s2 = message ? _env->NewStringUTF(message.UTF8String) : NULL;
+    jstring s3 = path ? _env->NewStringUTF(path.UTF8String) : NULL;
+    _env->CallVoidMethod(_instance, kMailTo.method, s1, s2, s3);
 
     _env->PopLocalFrame(NULL);
 }
