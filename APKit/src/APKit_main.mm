@@ -2,6 +2,7 @@
 #import <PAK/PAK.h>
 
 #import <map>
+#import <vector>
 
 #import <jni.h>
 #import <errno.h>
@@ -1299,41 +1300,56 @@ static EGLattr EGLattrs[] = {
         eglGetConfigAttrib(_display, c, a.attr, &value);
         NSLog(@"%s: %d", a.name, value);
     }
+    NSLog(@"Score: %.0f", [self scoreConfig:c]);
 }
 
-const EGLint highQualityAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        // Definitely want 24-bit colour.
-        EGL_BLUE_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_RED_SIZE, 8,
-        // Need an 8-bit stencil for layer masks
-        EGL_STENCIL_SIZE, 8,
-        // We want 4x MSAA, but only if it's fast.
-        EGL_SAMPLES, 4,
-        EGL_CONFIG_CAVEAT, EGL_NONE,
-        EGL_NONE
-};
+- (double) scoreConfig:(EGLConfig)c
+{
+    EGLint red, green, blue, alpha, stencil, depth, samples;
 
-const EGLint lowQualityAttribs[] = {
-        // As above, without MSAA.
+    eglGetConfigAttrib(_display, c, EGL_RED_SIZE, &red);
+    eglGetConfigAttrib(_display, c, EGL_GREEN_SIZE, &green);
+    eglGetConfigAttrib(_display, c, EGL_BLUE_SIZE, &blue);
+    eglGetConfigAttrib(_display, c, EGL_ALPHA_SIZE, &alpha);
+    eglGetConfigAttrib(_display, c, EGL_STENCIL_SIZE, &stencil);
+    eglGetConfigAttrib(_display, c, EGL_DEPTH_SIZE, &depth);
+    eglGetConfigAttrib(_display, c, EGL_SAMPLES, &samples);
+
+    const double BAD = 0;
+
+    // We'll multiply the score each round, so the most important checks come first.
+    double score = 1;
+
+    // Preferably no alpha, because it barely works on the Kindle Fire.
+    score = 100 * score - alpha;
+
+    // More RGB is better
+    score = 100 * score + red + green + blue;
+
+    // MSAA is nice (but more than 4x is overkill)
+    if (samples > 4) {
+        return BAD;
+    }
+    score = 100 * score + samples;
+
+    // Must have at least 16-bit depth (but less is better)
+    if (depth < 16) {
+        return BAD;
+    }
+    score = 100 * score - depth;
+
+    // Must have at least 4-bit stencil (but less is better)
+    if (stencil < 4) {
+        return BAD;
+    }
+    score = 100 * score - stencil;
+
+    return score;
+}
+
+const EGLint basicAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        // The original Kindle Fire gives us a config with broken
-        // alpha if we request 24-bit colour. However, some other
-        // devices give us 16-bit configs if we don't specify any
-        // constraints! Therefore, request 16-bit colour at a minimum
-        // (if there's a 32-bit config it should be sorted first).
-        EGL_BLUE_SIZE, 5,
-        EGL_GREEN_SIZE, 6,
-        EGL_RED_SIZE, 5,
-        // Need an 8-bit stencil for layer masks
-        EGL_STENCIL_SIZE, 8,
-        // (Although... some devices like the Nexus 4 don't sort
-        // their configs properly so we still end up with 16-bit
-        // colour. Arrrgh! Well, the N4 can use the high-quality
-        // config, so we should never hit that case in practice.)
         EGL_NONE
 };
 
@@ -1346,29 +1362,34 @@ const EGLint lowQualityAttribs[] = {
         eglInitialize(_display, 0, 0);
 
         EGLint numConfigs;
-
-//         static EGLConfig configs[500];
-//         eglChooseConfig(_display, lowQualityAttribs, configs, 500, &numConfigs);
-//         for (int i = 0; i < numConfigs; ++i) {
-//             NSLog(@"EGL config %d of %d:", i, numConfigs);
-//             [self dumpConfig:configs[i]];
-//             NSLog(@"----");
-//         }
-
-        EGLBoolean success = eglChooseConfig(_display, highQualityAttribs, &_config, 1, &numConfigs);
-        if (!success || numConfigs < 1) {
-            NSLog(@"Couldn't find high-quality EGL config, using low-quality");
-            success = eglChooseConfig(_display, lowQualityAttribs, &_config, 1, &numConfigs);
-        }
-        if (!success || numConfigs < 1) {
-            NSLog(@"Couldn't find low-quality EGL config! Aborting, sorry");
+        eglChooseConfig(_display, basicAttribs, NULL, 0, &numConfigs);
+        NSLog(@"There are %d ES2-capable screen configs", numConfigs);
+        if (numConfigs <= 0) {
             abort();
         }
-        EGLint err = eglGetError();
-        if (err != EGL_SUCCESS) {
-            NSLog(@"*** EGL error: %x", err);
+
+        std::vector<EGLConfig> configs(numConfigs);
+        eglChooseConfig(_display, basicAttribs, &configs[0], numConfigs, &numConfigs);
+#if 1
+        NSLog(@"----------------");
+        for (int i = 0; i < numConfigs; ++i) {
+            [self dumpConfig:configs[i]];
+            NSLog(@"----------------");
+        }
+#endif
+
+        int bestConfig = 0;
+        double bestScore = [self scoreConfig:configs[0]];
+        for (int i = 1; i < numConfigs; ++i) {
+            double score = [self scoreConfig:configs[i]];
+            if (score > bestScore) {
+                bestScore = score;
+                bestConfig = i;
+            }
         }
 
+        _config = configs[bestConfig];
+        NSLog(@"Selected config:");
         [self dumpConfig:_config];
 
         const EGLint contextAttribs[] = {
