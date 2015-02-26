@@ -1375,7 +1375,8 @@ const EGLint basicAttribs[] = {
 
         std::vector<EGLConfig> configs(numConfigs);
         eglChooseConfig(_display, basicAttribs, &configs[0], numConfigs, &numConfigs);
-#if 1
+
+#ifdef DEBUG
         NSLog(@"----------------");
         for (int i = 0; i < numConfigs; ++i) {
             [self dumpConfig:configs[i]];
