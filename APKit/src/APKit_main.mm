@@ -1326,11 +1326,16 @@ static EGLattr EGLattrs[] = {
     // More RGB is better
     score = 100 * score + red + green + blue;
 
-    // MSAA is nice (but more than 4x is overkill)
+#ifdef SORCERY
+    // For Sorcery, MSAA isn't worth the performance hit -- less is better.
+    score = 100 * score - samples;
+#else
+    // For Eighty Days, MSAA is nice (but more than 4x is overkill)
     if (samples > 4) {
         return BAD;
     }
     score = 100 * score + samples;
+#endif
 
     // Must have at least 16-bit depth (but less is better)
     if (depth < 16) {
