@@ -77,6 +77,12 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return [UIColor colorWithRgba:rgba];
 }
 
++ (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue
+{
+    GLKVector4 rgba = {red, green, blue, 1.0};
+    return [UIColor colorWithRgba:rgba];
+}
+
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha
 {
     GLKVector4 rgba = {red, green, blue, alpha};
