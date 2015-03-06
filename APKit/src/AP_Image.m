@@ -296,6 +296,13 @@ typedef struct VertexData {
     return other;
 }
 
+- (AP_Image*) imageWithScale:(CGFloat)scale
+{
+    AP_Image* other = [[AP_Image alloc] initWithImage:self];
+    other->_scale = scale;
+    return other;
+}
+
 - (void) addRaw:(RawQuad)raw
 {
     CGRect r = {
