@@ -377,17 +377,16 @@ static NSMutableArray* s_afterFrameBlocks;
 #endif
     _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
     _GL(Disable, GL_DEPTH_TEST);
+    _GL(DepthFunc, GL_LESS);
     _GL(Enable, GL_BLEND);
     _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(ClearColor, 0, 0, 0, 0);
+    _GL(ClearDepthf, 1);
     _GL(ClearStencil, 0);
-    _GL(Clear, GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    _GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);
-
-    // Make sure we notice if somebody enables depth-testing!
-    _GL(DepthFunc, GL_NEVER);
 
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 
