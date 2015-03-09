@@ -256,7 +256,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
         }
         NSTimeInterval t = event.timestamp;
         CGPoint p = [self locationInView:self.view];
-        if ((t - _tapTime > kDoubleTapTime) || distance(p, _tapPoint) > self.maxTapDistance) {
+        if ((t - _tapTime >= kDoubleTapTime) || distance(p, _tapPoint) >= self.maxTapDistance) {
             _tapCount = 0;
         }
         ++_tapCount;
@@ -302,7 +302,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
     }
 }
@@ -312,7 +312,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -358,7 +358,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 {
     if (timer == _timer) {
         CGPoint p = [self locationInView:self.view];
-        if (distance(p, _origin) <= self.maxTapDistance) {
+        if (distance(p, _origin) < self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         } else {
             [self reset];
@@ -371,7 +371,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
     }
 }
@@ -381,7 +381,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -611,7 +611,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     CGPoint translation = [self addTranslation:t];
 
     if (self.state == UIGestureRecognizerStatePossible) {
-        if (length(translation) > self.maxTapDistance) {
+        if (length(translation) >= self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         }
     } else {
