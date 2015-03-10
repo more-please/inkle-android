@@ -185,6 +185,36 @@ static inline GLKMatrix4 GLKMatrix4MakeScale(float sx, float sy, float sz) {
     return m;
 }
 
+static inline GLKMatrix4 GLKMatrix4MakeXRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { 1.0f, 0.0f, 0.0f, 0.0f,
+                     0.0f, cos, sin, 0.0f,
+                     0.0f, -sin, cos, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
+static inline GLKMatrix4 GLKMatrix4MakeYRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { cos, 0.0f, -sin, 0.0f,
+                     0.0f, 1.0f, 0.0f, 0.0f,
+                     sin, 0.0f, cos, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
+static inline GLKMatrix4 GLKMatrix4MakeZRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { cos, sin, 0.0f, 0.0f,
+                     -sin, cos, 0.0f, 0.0f,
+                     0.0f, 0.0f, 1.0f, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
 static inline GLKMatrix4 GLKMatrix4MakeRotation(float radians, float x, float y, float z) {
     GLKVector3 v = GLKVector3Normalize(GLKVector3Make(x, y, z));
     float cos = cosf(radians);
@@ -244,6 +274,21 @@ static inline GLKMatrix4 GLKMatrix4Scale(GLKMatrix4 matrix, float sx, float sy, 
 
 static inline GLKMatrix4 GLKMatrix4Rotate(GLKMatrix4 matrix, float radians, float x, float y, float z) {
     GLKMatrix4 rm = GLKMatrix4MakeRotation(radians, x, y, z);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateX(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeXRotation(radians);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateY(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeYRotation(radians);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateZ(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeZRotation(radians);
     return GLKMatrix4Multiply(matrix, rm);
 }
 
