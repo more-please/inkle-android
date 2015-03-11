@@ -1196,6 +1196,19 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         return;
     }
 
+    [self maybeInitSurface];
+
+    if (_surface == EGL_NO_SURFACE) {
+        // No surface, can't draw
+        return;
+    }
+
+    if (!eglMakeCurrent(_display, _surface, _surface, _context)) {
+        NSLog(@"*** eglMakeCurrent failed!");
+        [self teardownSurface];
+        return;
+    }
+
     NSLog(@"Let's get started!");
     id<AP_ApplicationDelegate> delegate = AP_GetDelegate();
     self.delegate = delegate;
@@ -1429,8 +1442,6 @@ const EGLint basicAttribs[] = {
             abort();
         }
     }
-
-    [self updateScreenSize];
 }
 
 - (void) updateScreenSize
@@ -1705,14 +1716,6 @@ const EGLint basicAttribs[] = {
             // engine->app->savedStateSize = sizeof(struct saved_state);
             break;
 
-        case APP_CMD_INIT_WINDOW:
-            // The window is being shown, get it ready.
-            if (_android->window) {
-                [self maybeInitSurface];
-                [self maybeInitApp];
-            }
-            break;
-
         case APP_CMD_WINDOW_REDRAW_NEEDED:
             if (_android->window) {
                 [self updateGL:YES];
@@ -1729,6 +1732,7 @@ const EGLint basicAttribs[] = {
             [self teardownSurface];
             break;
 
+        case APP_CMD_INIT_WINDOW:
         case APP_CMD_GAINED_FOCUS:
         case APP_CMD_LOST_FOCUS:
             break;
@@ -1844,6 +1848,8 @@ void android_main(struct android_app* android) {
             [g_Main maybeInitSurface];
 
             if (g_Main.canDraw) {
+                [g_Main maybeInitApp];
+
                 // Run Objective-C timers.
                 NSDate* now = [NSDate date];
                 NSDate* nextTimer;
