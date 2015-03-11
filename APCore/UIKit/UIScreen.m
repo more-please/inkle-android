@@ -29,6 +29,10 @@
 
 - (void) setBounds:(CGRect)bounds applicationFrame:(CGRect)frame scale:(CGFloat)scale
 {
+    if (bounds.size.width <= 0 || bounds.size.height <= 0 || scale <= 0) {
+        NSLog(@"*** Ignoring invalid screen size: %f %f scale: %f", bounds.size.width, bounds.size.height, scale);
+        return;
+    }
     _bounds = bounds;
     _applicationFrame = frame;
     _scale = scale;
