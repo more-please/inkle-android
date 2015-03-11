@@ -192,8 +192,8 @@ static NSMutableArray* s_afterFrameBlocks;
         _fps.logInterval = 1;
         _profiler.reportInterval = 5;
 #else
-        _fps.logInterval = 10;
-        _profiler.reportInterval = 60;
+        _fps.logInterval = 5;
+        _profiler.reportInterval = 30;
 #endif
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
@@ -342,6 +342,7 @@ static NSMutableArray* s_afterFrameBlocks;
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(Disable, GL_DEPTH_TEST);
     _GL(Enable, GL_BLEND);
+    _GL(Disable, GL_DITHER);
 
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
@@ -380,6 +381,8 @@ static NSMutableArray* s_afterFrameBlocks;
     _GL(DepthFunc, GL_LESS);
     _GL(Enable, GL_BLEND);
     _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    _GL(Disable, GL_DITHER);
 
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(ClearColor, 0, 0, 0, 0);
