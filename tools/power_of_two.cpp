@@ -15,7 +15,9 @@ void usage() {
         "Usage: power_of_two [-i in.png] [-o out.png]\n\n"
         "  -i, --infile: input file (default is stdin)\n"
         "  -o, --outfile: output file (default is stdout)\n"
-        "  -m, --max: maximum size (default 4096)\n");
+        "  -m, --max: maximum size (default 4096)\n"
+        "  -g, --gamma-correct-alpha: alpha channel is gamma-corrected\n"
+        "  -p, --premultiplied-alpha: use premultiplied alpha\n");
     fflush(stderr);
     exit(1);
 }
@@ -27,7 +29,7 @@ bool isFlag(const char* s, const char* flag1, const char* flag2) {
 int main(int argc, const char* argv[]) {
     const char* infile = NULL;
     FILE* outfile = stdout;
-    int width = 0, height = 0, bpp = 0, maxsize = 4096;
+    int maxsize = 4096, premultiplied = 0, gamma_correct = 0;
     for (int i = 1; i < argc; ++i) {
         const char* s = argv[i];
         if (isFlag(s, "-i", "--infile")) {
@@ -36,6 +38,10 @@ int main(int argc, const char* argv[]) {
             outfile = fopen(argv[++i], "wb");
         } else if (isFlag(s, "-m", "--max")) {
             maxsize = atoi(argv[++i]);
+        } else if (isFlag(s, "-p", "--premultiplied-alpha")) {
+            premultiplied = 1;
+        } else if (isFlag(s, "-g", "--gamma-correct-alpha")) {
+            gamma_correct = 1;
         } else {
             fprintf(stderr, "Bad argument '%s'\n\n", s);
             usage();
@@ -61,10 +67,19 @@ int main(int argc, const char* argv[]) {
         output = input;
     } else {
         output = (unsigned char*) malloc(w2 * h2 * comp);
+
         int alpha_channel = STBIR_ALPHA_CHANNEL_NONE;
         if (comp == 2) alpha_channel = 1;
         if (comp == 4) alpha_channel = 3;
-        stbir_resize_uint8_srgb(input, w, h, w * comp, output, w2, h2, w2 * comp, comp, alpha_channel, 0);
+
+        int flags = 0;
+        if (premultiplied) flags |= STBIR_FLAG_ALPHA_PREMULTIPLIED;
+        if (gamma_correct) flags |= STBIR_FLAG_ALPHA_USES_COLORSPACE;
+
+        stbir_resize_uint8_srgb(
+            input, w, h, w * comp,
+            output, w2, h2, w2 * comp, comp, alpha_channel,
+            flags);
     }
 
     stbi_write_png_to_file(outfile, w2, h2, comp, output, w2 * comp);
