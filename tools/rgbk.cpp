@@ -63,7 +63,7 @@ int main(int argc, const char* argv[]) {
         *destPtr++ = *ink++;
     }
 
-    fprintf(stderr, "Writing output\n");
+//     fprintf(stderr, "Writing output\n");
     stbi_write_png_to_file(outfile, w, h, 4, output, w * 4);
     return 0;
 }

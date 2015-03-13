@@ -243,7 +243,7 @@ void separate_ink(
 {
     const Image input((const Rgb*) rgbSrc, w, h);
 
-    fprintf(stderr, "Zeroing out pixels with at least one neighbour within threshold\n");
+//     fprintf(stderr, "Zeroing out pixels with at least one neighbour within threshold\n");
     Image scratch(w, h);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
@@ -255,7 +255,7 @@ void separate_ink(
         }
     }
 
-    fprintf(stderr, "Filling in zero pixels\n");
+//     fprintf(stderr, "Filling in zero pixels\n");
     Image bg(w, h);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
@@ -263,7 +263,7 @@ void separate_ink(
         }
     }
 
-    fprintf(stderr, "Extracting foreground pixels\n");
+//     fprintf(stderr, "Extracting foreground pixels\n");
     unsigned char* fg = (unsigned char*) calloc(w, h);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
