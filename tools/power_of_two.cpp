@@ -35,7 +35,7 @@ int main(int argc, const char* argv[]) {
         } else if (isFlag(s, "-o", "--outfile")) {
             outfile = fopen(argv[++i], "wb");
         } else if (isFlag(s, "-m", "--max")) {
-            maxsize = atoi(s);
+            maxsize = atoi(argv[++i]);
         } else {
             fprintf(stderr, "Bad argument '%s'\n\n", s);
             usage();
