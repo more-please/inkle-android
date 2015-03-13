@@ -86,11 +86,9 @@ typedef struct Header
     int width = read32(header->pixelWidth);
     int height = read32(header->pixelHeight);
 
-    // We currently support compressed textures and UNSIGNED_BYTE textures.
     GLenum type = read32(header->glType);
     uint32_t typeSize = read32(header->glTypeSize);
-    AP_CHECK(typeSize == 0 || typeSize == 1, return NO);
-    AP_CHECK(type == 0 || type == GL_UNSIGNED_BYTE, return NO);
+    AP_CHECK(typeSize >= 0 && typeSize < 4, return NO);
 
     // We don't support array textures or cube textures.
     int numArrayElements = MAX(1, read32(header->numberOfArrayElements));
@@ -129,7 +127,7 @@ typedef struct Header
         }
 
         if (read32(header->numberOfMipmapLevels) == 0) {
-            _GL(GenerateMipmap, self.name);
+            _GL(GenerateMipmap, self.textureTarget);
             AP_CHECK_GL("Failed to generate mipmaps", return NO);
             self.memoryUsage += dataSize / 3;
         }

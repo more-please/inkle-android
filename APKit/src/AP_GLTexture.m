@@ -211,6 +211,7 @@ static AP_WeakCache* s_textureCache = nil;
     _GL(TexImage2D, target, level, format, width, height, 0, format, type, data);
 
     switch (format) {
+        case GL_ALPHA:
         case GL_LUMINANCE:
             _memoryUsage += width * height;
             break;
@@ -218,10 +219,30 @@ static AP_WeakCache* s_textureCache = nil;
             _memoryUsage += 2 * width * height;
             break;
         case GL_RGB:
-            _memoryUsage += 3 * width * height;
+            switch (type) {
+                case GL_UNSIGNED_BYTE:
+                    _memoryUsage += 3 * width * height;
+                    break;
+                case GL_UNSIGNED_SHORT_5_6_5:
+                    _memoryUsage += 2 * width * height;
+                default:
+                    NSLog(@"Unknown GL_RGB texture type: %d", type);
+                    break;
+            }
             break;
         case GL_RGBA:
-            _memoryUsage += 4 * width * height;
+            switch (type) {
+                case GL_UNSIGNED_BYTE:
+                    _memoryUsage += 4 * width * height;
+                    break;
+                case GL_UNSIGNED_SHORT_4_4_4_4:
+                case GL_UNSIGNED_SHORT_5_5_5_1:
+                    _memoryUsage += 2 * width * height;
+                    break;
+                default:
+                    NSLog(@"Unknown GL_RGBA texture type: %d", type);
+                    break;
+            }
             break;
         default:
             NSLog(@"Unknown texture format: %d", format);
