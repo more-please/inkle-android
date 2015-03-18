@@ -25,7 +25,7 @@
 - (CGFloat) statusBarHeight
 {
     CGFloat result = _applicationFrame.origin.y - _bounds.origin.y;
-    NSLog(@"*** statusBarHeight: %f", result);
+//     NSLog(@"*** statusBarHeight: %f", result);
     return result;
 }
 
