@@ -138,6 +138,7 @@ static LigatureRHS g_ZeroLigature;
     NSNumber* key = [NSNumber numberWithUnsignedShort:c];
     NSNumber* result = [_charMap objectForKey:key];
     if (!result && c != '?') {
+        NSLog(@"*** Font '%@' has no glyph for codepoint: %d", _name, c);
         return [self glyphForChar:'?'];
     }
     AP_CHECK(result, return 0);

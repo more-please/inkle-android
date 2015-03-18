@@ -58,6 +58,9 @@ static const Alias kAliases[] = {
     { 3913, 'g' },
     { 3941, 'p' },
 
+    // Non-breaking space
+    { 160, 32 },
+
     { 0, 0 }
 };
 
