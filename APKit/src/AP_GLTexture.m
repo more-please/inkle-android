@@ -70,27 +70,33 @@ static AP_WeakCache* s_textureCache = nil;
     AP_CHECK(s_textureCache, return nil);
     AP_GLTexture* result = [s_textureCache get:name withLoader:^{
         NSData* data = nil;
-        if (name.pathExtension.length > 0) {
+        NSString* assetName = name;
+        if (assetName.pathExtension.length > 0) {
             // Name has a path extension, load this exact texture
-            data = [AP_Bundle dataForResource:name ofType:nil];
+            data = [AP_Bundle dataForResource:assetName ofType:nil];
         } else {
             // No path extension, try both .png and .ktx
             if (!data) {
-                data = [AP_Bundle dataForResource:name ofType:@"png"];
+                assetName = [name stringByAppendingPathExtension:@"png"];
+                data = [AP_Bundle dataForResource:assetName ofType:nil];
             }
             if (!data) {
-                data = [AP_Bundle dataForResource:name ofType:@"ktx"];
+                assetName = [name stringByAppendingPathExtension:@"ktx"];
+                data = [AP_Bundle dataForResource:assetName ofType:nil];
             }
         }
+        AP_GLTexture* result = nil;
         if (data) {
-            return [AP_GLTexture textureWithName:name data:data maxSize:screens];
+            result = [AP_GLTexture textureWithName:assetName data:data maxSize:screens];
         }
-        NSLog(@"*** Failed to load texture: %@", name);
-        return (AP_GLTexture*)nil;
+        if (result) {
+            NSLog(@"Loaded %@ (%d bytes)", assetName, result.memoryUsage);
+        }
+        return result;
     }];
 
-    if (result) {
-        NSLog(@"Loaded %@ (%d bytes)", name, result.memoryUsage);
+    if (!result) {
+        NSLog(@"*** Failed to load texture: %@", name);
     }
     return result;
 }
