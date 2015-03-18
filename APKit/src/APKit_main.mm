@@ -621,9 +621,25 @@ public:
     }
 }
 
+class PushLocalFrame {
+    JNIEnv* _env;
+public:
+    PushLocalFrame(JNIEnv* env) : _env(env) {
+        _env->PushLocalFrame(16);
+    }
+    ~PushLocalFrame() {
+        if (_env->ExceptionOccurred()) {
+            _env->ExceptionDescribe();
+            _env->ExceptionClear();
+        }
+        _env->PopLocalFrame(NULL);
+    }
+};
+
 - (void) javaVoidMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
+    PushLocalFrame frame(_env);
     _env->CallVoidMethod(_instance, m->method);
 }
 
@@ -631,12 +647,9 @@ public:
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jstr = _env->NewStringUTF(s.UTF8String);
     _env->CallVoidMethod(_instance, m->method, jstr);
-
-    _env->PopLocalFrame(NULL);
-
 }
 
 - (BOOL) javaBoolMethod:(JavaMethod*)m
@@ -657,7 +670,7 @@ public:
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring str = (jstring) _env->CallObjectMethod(_instance, m->method);
     NSString* result = nil;
@@ -666,7 +679,6 @@ public:
         result = [NSString stringWithCString:c];
         _env->ReleaseStringUTFChars(str, c);
     }
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -674,23 +686,18 @@ public:
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jfloatArray arr = (jfloatArray) _env->CallObjectMethod(_instance, m->method);
-    if (_env->ExceptionOccurred()) {
-        _env->ExceptionDescribe();
-        _env->ExceptionClear();
-        return NO;
-    }
     AP_CHECK(arr, return NO);
     AP_CHECK(_env->GetArrayLength(arr) == size, return NO);
+
     jfloat* f = _env->GetFloatArrayElements(arr, NULL);
     for (int i = 0; i < size; ++i) {
         ptr[i] = f[i];
     }
     _env->ReleaseFloatArrayElements(arr, f, 0);
 
-    _env->PopLocalFrame(NULL);
     return YES;
 }
 
@@ -708,12 +715,12 @@ public:
 {
     [self maybeInitJavaMethod:&kFindClass];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
+
     jstring str = _env->NewStringUTF(name.UTF8String);
     jclass result = (jclass) _env->CallObjectMethod(_instance, kFindClass.method, str);
     result = (jclass) _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -797,13 +804,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseInit];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
     jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
@@ -812,13 +817,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     [self maybeInitJavaMethod:&kParseCallFunction];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jFunction = _env->NewStringUTF(function.UTF8String);
     jobject jParams = [self jsonEncode:params];
 
     _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
@@ -857,13 +860,12 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseNewObject];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
     result = _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -871,14 +873,13 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseNewObjectId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
     jstring jId = _env->NewStringUTF(objectId.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
     result = _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -886,7 +887,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseObjectId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring str = (jstring) _env->CallObjectMethod(_instance, kParseObjectId.method, obj);
     NSString* result = nil;
@@ -895,8 +896,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         result = [NSString stringWithCString:c];
         _env->ReleaseStringUTFChars(str, c);
     }
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -943,38 +942,32 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseAddKey];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
     jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseObject:(jobject)obj removeKey:(NSString*)key
 {
     [self maybeInitJavaMethod:&kParseRemoveKey];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseRemoveKey.method, obj, jKey);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (jobject) parseNewQuery:(NSString*)className
 {
     [self maybeInitJavaMethod:&kParseNewQuery];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewQuery.method, jName);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -982,13 +975,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseWhereEqualTo];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
     jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
@@ -1007,12 +998,10 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseCurrentUser];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -1020,7 +1009,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kGaiTrackerWithTrackingId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(trackingId.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kGaiTrackerWithTrackingId.method, jName);
@@ -1029,7 +1018,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         _gaiDefaultTracker = result;
     }
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -1045,7 +1033,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kBoxLong];
     [self maybeInitJavaMethod:&kGaiEvent];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring jCategory = _env->NewStringUTF(category.UTF8String);
     jstring jAction = _env->NewStringUTF(label.UTF8String);
@@ -1057,39 +1045,33 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     jobject result = _env->CallObjectMethod(_instance, kGaiEvent.method, jCategory, jAction, jLabel, jValue);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
 - (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value
 {
     [self maybeInitJavaMethod:&kGaiTrackerSet];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring jParam = _env->NewStringUTF(param.UTF8String);
     jstring jValue = _env->NewStringUTF(value.UTF8String);
     _env->CallVoidMethod(_instance, kGaiTrackerSet.method, tracker, jParam, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) gaiTracker:(jobject)tracker send:(jobject)params
 {
     [self maybeInitJavaMethod:&kGaiTrackerSend];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     _env->CallVoidMethod(_instance, kGaiTrackerSend.method, tracker, params);
     _env->DeleteGlobalRef(params);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (AAssetManager*) getAssets
 {
     [self maybeInitJavaMethod:&kGetAssets];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jobject obj = _env->CallObjectMethod(_instance, kGetAssets.method);
     obj = _env->NewGlobalRef(obj);
@@ -1099,7 +1081,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         abort();
     }
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -1133,13 +1114,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kTweet];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s1 = text ? _env->NewStringUTF(text.UTF8String) : NULL;
     jstring s2 = url ? _env->NewStringUTF(url.UTF8String) : NULL;
     jstring s3 = image ? _env->NewStringUTF(image.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
@@ -1148,11 +1127,9 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     int handle = [self pushBlock:block];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s = existingName ? _env->NewStringUTF(existingName.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kShareJourney.method, s, handle);
-
-    _env->PopLocalFrame(NULL);
 }
 
 static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
@@ -1183,13 +1160,11 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 {
     [self maybeInitJavaMethod:&kMailTo];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s1 = to ? _env->NewStringUTF(to.UTF8String) : NULL;
     jstring s2 = message ? _env->NewStringUTF(message.UTF8String) : NULL;
     jstring s3 = path ? _env->NewStringUTF(path.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kMailTo.method, s1, s2, s3);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) maybeInitApp
