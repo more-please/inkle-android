@@ -252,6 +252,13 @@ static void NSLog_handler(NSString* message) {
     write(_NSLog_fd, message.UTF8String, message.length);
 }
 
+static void NSLog_flush(NSString* message) {
+    if (_NSLog_fd >= 0) {
+        NSLog_handler(message);
+        fsync(_NSLog_fd);
+    }
+}
+
 static void logStatfs(NSString* path) {
     if (path) {
         struct statfs s;
@@ -1838,7 +1845,10 @@ void android_main(struct android_app* android) {
                     CkShutdown();
                     [g_Main teardownGL];
                     [g_Main teardownJava];
-                    exit(EXIT_SUCCESS);
+                    // Call _exit() rather than exit() to avoid running C++ destructors.
+                    // I've been seeing some audio-related shutdown crashes.
+                    NSLog_flush(@"_exit(EXIT_SUCCESS)");
+                    _exit(EXIT_SUCCESS);
                     return;
                 }
             }
