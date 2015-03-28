@@ -1222,6 +1222,10 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
 
     [self updateGL:YES];
 
+    // Lollipop seems to reject the first frame, because the window is the wrong size...?
+    // Just sending another frame seems to do the trick.
+    [self updateGL:YES];
+
     // Without this, the splash screen gets leaked...?
     window.rootViewController = nil;
 
