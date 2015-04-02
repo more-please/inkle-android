@@ -8,7 +8,7 @@
 
 - (id) initWithActivityIndicatorStyle:(UIActivityIndicatorViewStyle)style;
 
-@property UIActivityIndicatorViewStyle activityIndicatorViewStyle; // default is UIActivityIndicatorViewStyleWhite
+@property(nonatomic) UIActivityIndicatorViewStyle activityIndicatorViewStyle; // default is UIActivityIndicatorViewStyleWhite
 
 @property(nonatomic,readonly) BOOL isAnimating;
 

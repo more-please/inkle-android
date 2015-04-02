@@ -21,9 +21,9 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 
 @interface AP_Window : Real_GLKViewController
 
-@property (readonly) CGRect bounds;
+@property (nonatomic,readonly) CGRect bounds;
 
-@property AP_ViewController* rootViewController;
+@property (nonatomic,strong) AP_ViewController* rootViewController;
 
 - (void) resetAllGestures;
 

@@ -5,7 +5,7 @@
 
 @interface AP_GLBuffer : NSObject
 
-@property (readonly) GLuint name;
+@property (nonatomic,readonly) GLuint name;
 
 - (void) bind;
 - (void) bufferTarget:(GLenum) target usage:(GLenum)usage data:(NSData*)data;
