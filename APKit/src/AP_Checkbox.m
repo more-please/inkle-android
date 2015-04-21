@@ -13,7 +13,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         _box = [[AP_ImageView alloc] initWithImage:[AP_Image imageNamed:@"checkbox.png"]];
-        _tick = [[AP_ImageView alloc] initWithImage:[AP_Image imageNamed:@"checkbox.png"]];
+        _tick = [[AP_ImageView alloc] initWithImage:[AP_Image imageNamed:@"tick.png"]];
 
         [self addSubview:_box];
         [self addSubview:_tick];
@@ -40,27 +40,22 @@
     _box.frame = boxRect;
     _tick.frame = boxRect;
 
-    const CGAffineTransform grow = CGAffineTransformMakeScale(1.5, 1.5);
-    const CGAffineTransform shrink = CGAffineTransformMakeScale(0.1, 0.1);
-
-    _box.transform = self.isHighlighted ? grow : CGAffineTransformIdentity;
     _box.alpha = self.isEnabled ? 1 : 0.5;
 
-    if (self.isSelected) {
-        _tick.transform = CGAffineTransformMakeRotation(2);
+    if (self.isHighlighted) {
+        _tick.alpha = 0.5;
+    } else if (self.isSelected) {
         _tick.alpha = self.isEnabled ? 1 : 0.5;
     } else {
-        _tick.transform = shrink;
         _tick.alpha = 0;
     }
-    _tick.backgroundColor = [UIColor colorWithRed:1 green:0.3 blue:0.2 alpha:0.5];
 }
 
 - (void) setSelected:(BOOL)selected
 {
     [super setSelected:selected];
     [self setNeedsLayout];
-    [AP_View animateWithDuration:2.0f delay:0
+    [AP_View animateWithDuration:0.1f delay:0
         options:UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState
         animations:^{
             [self layoutIfNeeded];
@@ -73,7 +68,7 @@
 {
     [super setHighlighted:highlighted];
     [self setNeedsLayout];
-    [AP_View animateWithDuration:2.0f delay:0
+    [AP_View animateWithDuration:0.1f delay:0
         options:UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState
         animations:^{
             [self layoutIfNeeded];
