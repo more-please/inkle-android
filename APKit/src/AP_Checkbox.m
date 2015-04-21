@@ -14,9 +14,11 @@
     if (self) {
         _box = [[AP_ImageView alloc] initWithImage:[AP_Image imageNamed:@"checkbox.png"]];
         _tick = [[AP_ImageView alloc] initWithImage:[AP_Image imageNamed:@"tick.png"]];
+        _icon = [[AP_ImageView alloc] init];
 
         [self addSubview:_box];
         [self addSubview:_tick];
+        [self addSubview:_icon];
     }
     return self;
 }
@@ -24,7 +26,7 @@
 - (CGSize) sizeThatFits:(CGSize)size
 {
     CGSize boxSize = _box.image.size;
-    return CGSizeMake(MIN(boxSize.width, size.width), boxSize.height);
+    return CGSizeMake(MIN(2 * boxSize.width, size.width), boxSize.height);
 }
 
 - (void) layoutSubviews
@@ -49,6 +51,11 @@
     } else {
         _tick.alpha = 0;
     }
+
+    CGRect imageRect = boxRect;
+    imageRect.origin.x += boxRect.size.width;
+    _icon.frame = imageRect;
+    _icon.alpha = self.isEnabled ? 1 : 0.5;
 }
 
 - (void) setSelected:(BOOL)selected
