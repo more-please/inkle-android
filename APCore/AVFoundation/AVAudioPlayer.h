@@ -2,6 +2,17 @@
 
 #import <Foundation/Foundation.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// If set to YES, audio should be muted.
+extern NSString* const AP_UserDefault_Mute;
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 @class AVAudioPlayer;
 
 @protocol AVAudioPlayerDelegate <NSObject>

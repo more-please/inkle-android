@@ -42,7 +42,7 @@ static NSUserDefaults* g_Defaults = nil;
         }
         _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
 
-        _timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
+        _timer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
     }
     return self;
 }
@@ -63,7 +63,9 @@ static NSUserDefaults* g_Defaults = nil;
 
 - (void) saveDictionary:(NSDictionary*)data
 {
+    NSLog(@"Writing %@...", _path);
     BOOL success = [data writeToFile:_path atomically:YES];
+    NSLog(@"Writing %@... Done!", _path);
     if (!success) {
         NSLog(@"Failed to save NSUserDefaults to path: %@", _path);
     }
@@ -96,6 +98,7 @@ static NSUserDefaults* g_Defaults = nil;
 {
     NSNumber* number = [NSNumber numberWithBool:value];
     [_contents setObject:number forKey:defaultName];
+    _dirty = YES;
 }
 
 - (NSInteger) integerForKey:(NSString*)defaultName
@@ -108,6 +111,7 @@ static NSUserDefaults* g_Defaults = nil;
 {
     NSNumber* number = [NSNumber numberWithInteger:value];
     [_contents setObject:number forKey:defaultName];
+    _dirty = YES;
 }
 
 - (NSString*) stringForKey:(NSString*)defaultName
