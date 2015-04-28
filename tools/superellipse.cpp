@@ -10,9 +10,9 @@ void superellipse(const char* filename, int size, double border, bool gradient, 
     double center = size / 2;
     double radius = center - border;
     for (int y = 0; y < size; ++y) {
-        double yf = abs(y - center + 0.5) / radius;
+        double yf = fabs(y - center + 0.5) / radius;
         for (int x = 0; x < size; ++x) {
-            double xf = abs(x - center + 0.5) / radius;
+            double xf = fabs(x - center + 0.5) / radius;
             unsigned char* c = &data[y * size + x];
             double f = pow(xf, exponent) + pow(yf, exponent);
             if (gradient) {
