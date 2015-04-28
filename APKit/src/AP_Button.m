@@ -27,6 +27,7 @@
     _titleLabel = [[AP_Label alloc] initWithFrame:self.bounds];
     _titleLabel.autoresizingMask = -1;
     _titleLabel.textAlignment = NSTextAlignmentCenter;
+    _titleLabel.adjustsFontSizeToFitWidth = YES;
 
     _imageView = [[AP_ImageView alloc] initWithFrame:self.bounds];
     _imageView.autoresizingMask = -1;

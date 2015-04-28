@@ -24,6 +24,6 @@
 
 @interface AP_TextField : AP_View
 
-@property NSString* text;
+@property (nonatomic,strong) NSString* text;
 
 @end

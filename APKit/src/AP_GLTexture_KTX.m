@@ -50,12 +50,21 @@ typedef struct Header
         _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
         _GL(GetIntegerv, GL_MAX_CUBE_MAP_TEXTURE_SIZE, &systemMaxCubeTextureSize);
     }
+    if (systemMaxTextureSize == 0) {
+        NSLog(@"*** glGetIntegerv(GL_MAX_TEXTURE_SIZE) returned 0 -- weird!");
+        systemMaxTextureSize = 2048; // Should be safe
+        systemMaxCubeTextureSize = 2048;
+    }
     GLint maxTextureSize = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
 #ifdef ANDROID
     CGSize s = [AP_Window screenSize];
     CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-    CGFloat screenMaxTextureSize = screenSize * screens;
-    maxTextureSize = MIN(maxTextureSize, screenMaxTextureSize);
+    if (screenSize > 0) {
+        CGFloat screenMaxTextureSize = screenSize * screens;
+        maxTextureSize = MIN(maxTextureSize, screenMaxTextureSize);
+    } else {
+        NSLog(@"*** screenSize is 0 -- weird!");
+    }
 #endif
 
     const Header* header = (const Header*)[data bytes];
@@ -77,11 +86,9 @@ typedef struct Header
     int width = read32(header->pixelWidth);
     int height = read32(header->pixelHeight);
 
-    // We currently support compressed textures and UNSIGNED_BYTE textures.
     GLenum type = read32(header->glType);
     uint32_t typeSize = read32(header->glTypeSize);
-    AP_CHECK(typeSize == 0 || typeSize == 1, return NO);
-    AP_CHECK(type == 0 || type == GL_UNSIGNED_BYTE, return NO);
+    AP_CHECK(typeSize >= 0 && typeSize < 4, return NO);
 
     // We don't support array textures or cube textures.
     int numArrayElements = MAX(1, read32(header->numberOfArrayElements));
@@ -120,7 +127,7 @@ typedef struct Header
         }
 
         if (read32(header->numberOfMipmapLevels) == 0) {
-            _GL(GenerateMipmap, self.name);
+            _GL(GenerateMipmap, self.textureTarget);
             AP_CHECK_GL("Failed to generate mipmaps", return NO);
             self.memoryUsage += dataSize / 3;
         }

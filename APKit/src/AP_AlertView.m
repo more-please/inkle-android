@@ -64,7 +64,7 @@ AP_BAN_EVIL_INIT;
             _header.textColor = [UIColor whiteColor];
             [_alert addSubview:_header];
         }
-        
+
         if (message) {
             _body = [[AP_Label alloc] init];
             _body.font = bodyFont;
@@ -74,7 +74,7 @@ AP_BAN_EVIL_INIT;
             _body.numberOfLines = 0;
             [_alert addSubview:_body];
         }
-        
+
         NSMutableArray* buttonNames = [NSMutableArray array];
 
         [buttonNames addObject:cancelButtonTitle];
@@ -170,7 +170,7 @@ AP_BAN_EVIL_INIT;
     [_delegate alertView:self clickedButtonAtIndex:i];
 }
 
-- (BOOL) goBack
+- (BOOL) handleAndroidBackButton
 {
     [self hide];
     [_delegate alertView:self clickedButtonAtIndex:0];

@@ -17,9 +17,9 @@
     return self;
 }
 
-- (BOOL) goBack
+- (BOOL) handleAndroidBackButton
 {
-    return [self.view goBack];
+    return NO;
 }
 
 - (AP_View*) view

@@ -7,7 +7,7 @@
 
 @interface AP_GLProgram : NSObject
 
-@property (readonly) GLuint name;
+@property (nonatomic,readonly) GLuint name;
 
 // If 'mask' is YES, we'll call 'discard' if the output alpha is low.
 // This is expensive, but gives the correct results when drawing a mask stencil.

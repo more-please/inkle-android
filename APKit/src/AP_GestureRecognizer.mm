@@ -1,5 +1,7 @@
 #import "AP_GestureRecognizer.h"
 
+#import <assert.h>
+
 #import <vector>
 
 #import "AP_Animation.h"
@@ -26,10 +28,15 @@ public:
         _values.push_back(value);
         _times.push_back(t);
     }
+    bool empty() const {
+        return _values.empty();
+    }
     void get(T& pOut, NSTimeInterval& tOut) const {
+        assert(!empty());
         return getAtTime([AP_Animation masterClock], pOut, tOut);
     }
     void getAtTime(NSTimeInterval t, T& pOut, NSTimeInterval& tOut) const {
+        assert(!empty());
         // Try to return a value at least 50ms old.
         // If we don't find one, pretend it's that old anyway -- this helps
         // stop things scrolling like crazy after a brief touch.
@@ -41,6 +48,11 @@ public:
                 return;
             }
         }
+    }
+    void getLatest(T& pOut, NSTimeInterval& tOut) const {
+        assert(!empty());
+        pOut = _values.back();
+        tOut = _times.back();
     }
 private:
     std::vector<T> _values;
@@ -216,7 +228,7 @@ private:
 
 @end
 
-@implementation AP_TapGestureRecognizer {
+@implementation AP_TapDownGestureRecognizer {
     NSTimeInterval _tapTime;
     CGPoint _tapPoint;
     int _tapCount;
@@ -244,7 +256,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
         }
         NSTimeInterval t = event.timestamp;
         CGPoint p = [self locationInView:self.view];
-        if ((t - _tapTime > kDoubleTapTime) || distance(p, _tapPoint) > self.maxTapDistance) {
+        if ((t - _tapTime >= kDoubleTapTime) || distance(p, _tapPoint) >= self.maxTapDistance) {
             _tapCount = 0;
         }
         ++_tapCount;
@@ -268,7 +280,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 
 @end
 
-@implementation AP_TapUpGestureRecognizer {
+@implementation AP_TapGestureRecognizer {
     CGPoint _origin;
 }
 
@@ -290,7 +302,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
     }
 }
@@ -300,7 +312,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -346,7 +358,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 {
     if (timer == _timer) {
         CGPoint p = [self locationInView:self.view];
-        if (distance(p, _origin) <= self.maxTapDistance) {
+        if (distance(p, _origin) < self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         } else {
             [self reset];
@@ -359,7 +371,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
     }
 }
@@ -369,7 +381,7 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     [self checkForStaleTouches:event];
 
     CGPoint p = [self locationInView:self.view];
-    if (distance(p, _origin) > self.maxTapDistance) {
+    if (distance(p, _origin) >= self.maxTapDistance) {
         [self reset];
         return;
     }
@@ -559,14 +571,19 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 
 - (CGPoint) velocityInView:(AP_View*)view
 {
-    CGPoint translation = [self translationInView:nil];
-    NSTimeInterval t = [AP_Animation masterClock];
+    if (_buffer.empty()) {
+        return CGPointZero;
+    }
+
+    CGPoint translation;
+    NSTimeInterval translationTime;
+    _buffer.getLatest(translation, translationTime);
 
     CGPoint lastTranslation = CGPointZero;
     NSTimeInterval lastTranslationTime;
-    _buffer.getAtTime(t, lastTranslation, lastTranslationTime);
-    
-    float dt = t - lastTranslationTime;
+    _buffer.getAtTime([AP_Animation masterClock], lastTranslation, lastTranslationTime);
+
+    float dt = translationTime - lastTranslationTime;
     if (dt > 0) {
         return CGPointMake(
             (translation.x - lastTranslation.x) / dt,
@@ -577,28 +594,24 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     }
 }
 
-- (void) zapTranslation:(CGPoint)translation time:(NSTimeInterval)t
+- (CGPoint) translationInView:(AP_View*)view
 {
-    for (AP_Touch* t in self.touches) {
-        // Give this touch an initial value such that its impact
-        // on the given translation is zero.
-        CGPoint p = t.windowPos;
-        p.x -= translation.x;
-        p.y -= translation.y;
-        AP_Pan_Value* value = [self valueForTouch:t];
-        value.initialPos = p;
+    if (_buffer.empty()) {
+        return CGPointZero;
     }
-    _buffer.clear();
-    _buffer.add(translation, t);
+
+    CGPoint delta;
+    NSTimeInterval t;
+    _buffer.getLatest(delta, t);
+    return delta;
 }
 
 - (void) maybeStartedOrChanged:(NSTimeInterval)t
 {
-    CGPoint translation = [self translationInView:nil];
-    _buffer.add(translation, t);
+    CGPoint translation = [self addTranslation:t];
 
     if (self.state == UIGestureRecognizerStatePossible) {
-        if (length(translation) > self.maxTapDistance) {
+        if (length(translation) >= self.maxTapDistance) {
             [self fireWithState:UIGestureRecognizerStateBegan];
         }
     } else {
@@ -610,17 +623,18 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 {
     [self checkForStaleTouches:event];
 
-    CGPoint currentTranslation = [self translationInView:nil];
     for (AP_Touch* t in touches) {
         [self addTouch:t withValue:[[AP_Pan_Value alloc] init]];
     }
-    [self zapTranslation:currentTranslation time:event.timestamp];
+
+    [self zapTranslation:event.timestamp];
     [self maybeStartedOrChanged:event.timestamp];
 }
 
 - (void) touchesMoved:(NSSet*)touches withEvent:(AP_Event*)event
 {
     [self checkForStaleTouches:event];
+    [self addTranslation:event.timestamp];
 
     for (AP_Touch* t in self.touches) {
         if (t.phase == UITouchPhaseMoved) {
@@ -633,24 +647,23 @@ static NSTimeInterval kDoubleTapTime = 0.5;
 - (void) touchesEnded:(NSSet*)touches withEvent:(AP_Event*)event
 {
     [self checkForStaleTouches:event];
-
-    CGPoint currentTranslation = [self translationInView:nil];
+    [self zapTranslation:event.timestamp];
     [super touchesEnded:touches withEvent:event];
-    [self zapTranslation:currentTranslation time:event.timestamp];
 }
 
 - (void) touchesCancelled:(NSSet*)touches withEvent:(AP_Event*)event
 {
     [self checkForStaleTouches:event];
-
-    CGPoint currentTranslation = [self translationInView:nil];
+    [self zapTranslation:event.timestamp];
     [super touchesEnded:touches withEvent:event];
-    [self zapTranslation:currentTranslation time:event.timestamp];
 }
 
-- (CGPoint) translationInView:(AP_View*)view
+- (CGPoint) addTranslation:(NSTimeInterval)t
 {
     NSSet* touches = self.touches;
+    if (touches.count <= 0) {
+        return CGPointZero;
+    }
     CGPoint delta = CGPointZero;
     for (AP_Touch* t in touches) {
         AP_Pinch_Value* v = [self valueForTouch:t];
@@ -663,7 +676,27 @@ static NSTimeInterval kDoubleTapTime = 0.5;
     if (_preventVerticalMovement) {
         delta.y = 0;
     }
+    _buffer.add(delta, t);
     return delta;
+}
+
+- (void) zapTranslation:(NSTimeInterval)translationTime
+{
+    CGPoint translation = CGPointZero;
+    if (!_buffer.empty()) {
+        NSTimeInterval unused;
+        _buffer.getLatest(translation, unused);
+    }
+
+    for (AP_Touch* t in self.touches) {
+        // Give this touch an initial value such that its impact
+        // on the given translation is zero.
+        CGPoint p = t.windowPos;
+        p.x -= translation.x;
+        p.y -= translation.y;
+        AP_Pan_Value* value = [self valueForTouch:t];
+        value.initialPos = p;
+    }
 }
 
 @end

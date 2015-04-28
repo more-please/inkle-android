@@ -62,7 +62,7 @@ static UIApplication* g_Application;
     block(nil);
 }
 
-- (void) mailTo:(NSString*)to attachment:(NSString*)path
+- (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path
 {
     GLUE_NOT_IMPLEMENTED;
 }

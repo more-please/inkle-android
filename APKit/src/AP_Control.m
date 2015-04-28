@@ -3,7 +3,7 @@
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
-@interface AP_Control_Action : NSObject 
+@interface AP_Control_Action : NSObject
 @property (nonatomic,weak) id target;
 @property (nonatomic) SEL action;
 @property (nonatomic) UIControlEvents events;
@@ -65,21 +65,23 @@
     _actions = newActions;
 }
 
-- (void) dispatch:(UIControlEvents)mask event:(AP_Event*)event
+- (BOOL) dispatch:(UIControlEvents)mask event:(AP_Event*)event
 {
     if (!self.isUserInteractionEnabled) {
-        return;
+        return NO;
     }
     for (AP_AnimatedProperty* p in self.animatedProperties) {
         AP_Animation* a = p.animation;
         if (a && !(a.options & UIViewAnimationOptionAllowUserInteraction)) {
-            return;
+            return NO;
         }
     }
+    BOOL result = NO;
     for (AP_Control_Action* ack in _actions) {
         if (ack.events & mask) {
             id target = ack.target;
             if (target) {
+                result = YES;
                 if (ack.numArgs == 2) {
                     void (*func)(id, SEL) = (void*) (ack.imp);
                     func(target, ack.action);
@@ -93,6 +95,16 @@
                 }
             }
         }
+    }
+    return result;
+}
+
+- (BOOL) handleAndroidBackButton
+{
+    if (_androidBackButtonEvents && !self.hidden && self.alpha > 0) {
+        return [self dispatch:_androidBackButtonEvents event:nil];
+    } else {
+        return NO;
     }
 }
 

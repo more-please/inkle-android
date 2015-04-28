@@ -32,6 +32,7 @@ NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotific
     return view == _hitTestGesture.view;
 }
 
+static CGRect g_AppFrame = {0, 0, 320, 480};
 static CGRect g_ScreenBounds = {0, 0, 320, 480};
 static CGFloat g_ScreenScale = 1.0;
 static CGRect g_ScissorRect;
@@ -126,6 +127,12 @@ static inline CGFloat aspect(CGSize size) {
     return size.width / size.height;
 }
 
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)iPadLandscape iPhone6:(CGFloat)i6
+{
+    // Ignore the iPhone 6 for now
+    return [AP_Window iPhone:iPhone iPad:iPad iPadLandscape:iPadLandscape];
+}
+
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)iPadLandscape
 {
     CGFloat iPhoneLandscape = (iPad == 0) ? (iPadLandscape + iPhone - iPad) : (iPadLandscape * iPhone / iPad);
@@ -154,6 +161,27 @@ static inline CGFloat aspect(CGSize size) {
     return result;
 }
 
+static NSMutableArray* s_afterFrameBlocks;
+
++ (void) performAfterFrame:(AfterFrameBlock)block
+{
+    if (!s_afterFrameBlocks) {
+        s_afterFrameBlocks = [NSMutableArray array];
+    }
+    [s_afterFrameBlocks addObject:block];
+}
+
++ (void) runAfterFrameHooks
+{
+    NSArray* blocks = s_afterFrameBlocks;
+    s_afterFrameBlocks = nil;
+    if (blocks) {
+        for (AfterFrameBlock block in blocks) {
+            block();
+        }
+    }
+}
+
 - (AP_Window*) init
 {
     self = [super init];
@@ -165,13 +193,14 @@ static inline CGFloat aspect(CGSize size) {
         _fps.logInterval = 1;
         _profiler.reportInterval = 5;
 #else
-        _fps.logInterval = 10;
-        _profiler.reportInterval = 60;
+        _fps.logInterval = 5;
+        _profiler.reportInterval = 30;
 #endif
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
-#ifdef ANDROID
+
         UIScreen* screen = [UIScreen mainScreen];
+        g_AppFrame = screen.applicationFrame;
         g_ScreenBounds = screen.bounds;
         g_ScreenScale = screen.scale;
         NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, g_ScreenScale);
@@ -181,7 +210,6 @@ static inline CGFloat aspect(CGSize size) {
             selector:@selector(didReceiveMemoryWarning)
             name:UIApplicationDidReceiveMemoryWarningNotification
             object:nil];
-#endif
     }
     return self;
 }
@@ -209,46 +237,6 @@ static inline CGFloat aspect(CGSize size) {
     }
 }
 
-#ifndef AP_REPLACE_UI
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-    
-    self.preferredFramesPerSecond = 30;
-
-    GLKView *view = (GLKView *)self.view;
-    view.multipleTouchEnabled = TRUE;
-    view.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    assert(view.context);
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat16;
-    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
-    view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    view.contentMode = UIViewContentModeRedraw;
-    view.multipleTouchEnabled = TRUE;
-    [EAGLContext setCurrentContext:view.context];
-
-    // You might very well expect view.bounds to take the screen orientation into account,
-    // but IT DOESN'T. As far as I can tell, if you launch in landscape mode, the root view
-    // is initially portrait, then resized to landscape. ????!??
-    UIScreen* screen = [UIScreen mainScreen];
-    UIInterfaceOrientation orientation = self.interfaceOrientation;
-    BOOL isLandscape = UIInterfaceOrientationIsLandscape(orientation);
-    g_ScreenScale = screen.scale;
-    g_ScreenBounds = screen.bounds;
-    if (isLandscape) {
-        g_ScreenBounds.origin = CGPointMake(g_ScreenBounds.origin.y, g_ScreenBounds.origin.x);
-        g_ScreenBounds.size = CGSizeMake(g_ScreenBounds.size.height, g_ScreenBounds.size.width);
-    }
-    NSLog(@"Screen size %dx%d, density %.2f", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, g_ScreenScale);
-}
-
-- (void)dealloc
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [EAGLContext setCurrentContext:nil];
-}
-#endif
-
 - (void) update
 {
 }
@@ -257,13 +245,6 @@ static inline CGFloat aspect(CGSize size) {
 {
     return g_ScreenBounds;
 }
-
-#ifndef ANDROID
-- (void) glkView:(GLKView *)view drawInRect:(CGRect)r
-{
-    [self draw];
-}
-#endif
 
 - (void) draw
 {
@@ -289,14 +270,16 @@ static inline CGFloat aspect(CGSize size) {
     UIScreen* screen = [UIScreen mainScreen];
     float scale = screen.scale;
     CGRect bounds = screen.bounds;
+    CGRect appFrame = screen.applicationFrame;
 
     if (scale != g_ScreenScale) {
         g_ScreenScale = scale;
     }
 
-    if (!CGRectEqualToRect(bounds, g_ScreenBounds)) {
-        NSLog(@"Screen size changed: was %dx%d, now %dx%d", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, (int) bounds.size.width, (int) bounds.size.height);
+    if (!CGRectEqualToRect(bounds, g_ScreenBounds) || !CGRectEqualToRect(appFrame, g_AppFrame)) {
+        NSLog(@"Screen (or status bar) size changed: was %dx%d, now %dx%d", (int) g_ScreenBounds.size.width, (int) g_ScreenBounds.size.height, (int) bounds.size.width, (int) bounds.size.height);
         g_ScreenBounds = bounds;
+        g_AppFrame = appFrame;
         [[NSNotificationCenter defaultCenter] postNotificationName:AP_ScreenSizeChangedNotification object:nil];
         if (_rootViewController) {
             [_rootViewController.view visitControllersWithBlock:^(AP_ViewController* c) {
@@ -310,6 +293,13 @@ static inline CGFloat aspect(CGSize size) {
     }
 
     [_profiler step:@"update"];
+
+    // Make sure we don't scissor any offscreen rendering
+    _GL(Disable, GL_SCISSOR_TEST);
+    _GL(Disable, GL_DEPTH_TEST);
+    _GL(Enable, GL_BLEND);
+    _GL(Disable, GL_DITHER);
+
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
     if (_rootViewController) {
@@ -344,17 +334,18 @@ static inline CGFloat aspect(CGSize size) {
 #endif
     _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
     _GL(Disable, GL_DEPTH_TEST);
+    _GL(DepthFunc, GL_LESS);
     _GL(Enable, GL_BLEND);
     _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    _GL(Disable, GL_DITHER);
+
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(ClearColor, 0, 0, 0, 0);
+    _GL(ClearDepthf, 1);
     _GL(ClearStencil, 0);
-    _GL(Clear, GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    _GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);
-
-    // Make sure we notice if somebody enables depth-testing!
-    _GL(DepthFunc, GL_NEVER);
 
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 
@@ -379,6 +370,8 @@ static inline CGFloat aspect(CGSize size) {
     }
 
     [_profiler step:@"other"];
+
+    [AP_Window runAfterFrameHooks];
 }
 
 //------------------------------------------------------------------------------------

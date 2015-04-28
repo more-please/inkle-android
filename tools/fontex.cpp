@@ -45,6 +45,25 @@ static const Range kRanges[] = {
     { 0, 0 }
 };
 
+struct Alias {
+    int alias;
+    int master;
+};
+
+static const Alias kAliases[] = {
+    // Sorcery spellbook characters
+    { 948, 'd' },
+    { 966, 'f' },
+    { 3947, 'm' },
+    { 3913, 'g' },
+    { 3941, 'p' },
+
+    // Non-breaking space
+    { 160, 32 },
+
+    { 0, 0 }
+};
+
 // http://en.wikipedia.org/wiki/Typographic_ligature#Ligatures_in_Unicode_.28Latin-derived_alphabets.29
 static const Ligature kLigatures[] = {
     { 'f', 'f', 0xfb00 },
@@ -110,12 +129,25 @@ public:
         sort(_ligatures.begin(), _ligatures.end());
         sort(_kerningPairs.begin(), _kerningPairs.end());
 
+        vector<Glyph> aliasedGlyphs;
+        for (int i = 0; kAliases[i].alias; ++i) {
+            for (int j = 0; j < _glyphs.size(); ++j) {
+                if (_glyphs[j].codepoint == kAliases[i].master) {
+                    fprintf(stderr, "Aliasing %d -> %d\n", kAliases[i].alias, kAliases[i].master);
+                    Glyph g = _glyphs[j];
+                    g.codepoint = kAliases[i].alias;
+                    aliasedGlyphs.push_back(g);
+                    break;
+                }
+            }
+        }
+
         fprintf(stderr, "Writing font: %s\n", filename);
         FILE* f = fopen(filename, "wb");
 
         int ascent, descent, leading;
         stbtt_GetFontVMetrics(&_font, &ascent, &descent, &leading);
-        
+
         Header h;
         memset(&h, 0, sizeof(Header));
         strncpy(h.magic, "fontex02", 8);
@@ -123,7 +155,7 @@ public:
         h.descent = descent;
         h.leading = leading;
         h.emSize = floor(0.5 + 1.0 / stbtt_ScaleForMappingEmToPixels(&_font, 1.0));
-        h.numGlyphs = _glyphs.size();
+        h.numGlyphs = _glyphs.size() + aliasedGlyphs.size();
         h.numLigatures = _ligatures.size();
         h.numKerningPairs = _kerningPairs.size();
         h.textureSize = textureSize;
@@ -132,6 +164,9 @@ public:
         fwrite(&h, sizeof(Header), 1, f);
         for (int i = 0; i < _glyphs.size(); ++i) {
             fwrite(&_glyphs[i], sizeof(Glyph), 1, f);
+        }
+        for (int i = 0; i < aliasedGlyphs.size(); ++i) {
+            fwrite(&aliasedGlyphs[i], sizeof(Glyph), 1, f);
         }
         for (int i = 0; i < _ligatures.size(); ++i) {
             fwrite(&_ligatures[i], sizeof(Ligature), 1, f);

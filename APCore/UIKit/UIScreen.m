@@ -24,12 +24,25 @@
 
 - (CGFloat) statusBarHeight
 {
-    return _bounds.size.height - _applicationFrame.size.height;
+    CGFloat result = _applicationFrame.origin.y - _bounds.origin.y;
+//     NSLog(@"*** statusBarHeight: %f", result);
+    return result;
 }
 
 - (void) setBounds:(CGRect)bounds applicationFrame:(CGRect)frame scale:(CGFloat)scale
 {
-    _bounds = bounds;
+    if (bounds.size.width <= 0 || bounds.size.height <= 0 || scale <= 0) {
+        NSLog(@"*** Ignoring invalid screen size: %f %f scale: %f", bounds.size.width, bounds.size.height, scale);
+        return;
+    }
+    // The navigation bar sometimes is and sometimes isn't counted in the bounds, bah.
+    // To fix that, assume that the screen ends at the bottom-right of the frame.
+    _bounds = CGRectMake(
+        bounds.origin.x,
+        bounds.origin.y,
+        CGRectGetMaxX(frame) - bounds.origin.x,
+        CGRectGetMaxY(frame) - bounds.origin.y
+    );
     _applicationFrame = frame;
     _scale = scale;
 }

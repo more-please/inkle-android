@@ -70,27 +70,33 @@ static AP_WeakCache* s_textureCache = nil;
     AP_CHECK(s_textureCache, return nil);
     AP_GLTexture* result = [s_textureCache get:name withLoader:^{
         NSData* data = nil;
-        if (name.pathExtension.length > 0) {
+        NSString* assetName = name;
+        if (assetName.pathExtension.length > 0) {
             // Name has a path extension, load this exact texture
-            data = [AP_Bundle dataForResource:name ofType:nil];
+            data = [AP_Bundle dataForResource:assetName ofType:nil];
         } else {
             // No path extension, try both .png and .ktx
             if (!data) {
-                data = [AP_Bundle dataForResource:name ofType:@"png"];
+                assetName = [name stringByAppendingPathExtension:@"png"];
+                data = [AP_Bundle dataForResource:assetName ofType:nil];
             }
             if (!data) {
-                data = [AP_Bundle dataForResource:name ofType:@"ktx"];
+                assetName = [name stringByAppendingPathExtension:@"ktx"];
+                data = [AP_Bundle dataForResource:assetName ofType:nil];
             }
         }
+        AP_GLTexture* result = nil;
         if (data) {
-            return [AP_GLTexture textureWithName:name data:data maxSize:screens];
+            result = [AP_GLTexture textureWithName:assetName data:data maxSize:screens];
         }
-        NSLog(@"*** Failed to load texture: %@", name);
-        return (AP_GLTexture*)nil;
+        if (result) {
+            NSLog(@"Loaded %@ (%d bytes)", assetName, result.memoryUsage);
+        }
+        return result;
     }];
 
-    if (result) {
-        NSLog(@"Loaded %@ (%d bytes)", name, result.memoryUsage);
+    if (!result) {
+        NSLog(@"*** Failed to load texture: %@", name);
     }
     return result;
 }
@@ -200,12 +206,18 @@ static AP_WeakCache* s_textureCache = nil;
     if (level == 0) {
         _width = width;
         _height = height;
+        if (!self.cube && width == height && ((width-1) & width) == 0) {
+            // This texture is square and a power of two in size, should be safe to wrap.
+            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        }
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
     _GL(TexImage2D, target, level, format, width, height, 0, format, type, data);
 
     switch (format) {
+        case GL_ALPHA:
         case GL_LUMINANCE:
             _memoryUsage += width * height;
             break;
@@ -213,10 +225,30 @@ static AP_WeakCache* s_textureCache = nil;
             _memoryUsage += 2 * width * height;
             break;
         case GL_RGB:
-            _memoryUsage += 3 * width * height;
+            switch (type) {
+                case GL_UNSIGNED_BYTE:
+                    _memoryUsage += 3 * width * height;
+                    break;
+                case GL_UNSIGNED_SHORT_5_6_5:
+                    _memoryUsage += 2 * width * height;
+                default:
+                    NSLog(@"Unknown GL_RGB texture type: %d", type);
+                    break;
+            }
             break;
         case GL_RGBA:
-            _memoryUsage += 4 * width * height;
+            switch (type) {
+                case GL_UNSIGNED_BYTE:
+                    _memoryUsage += 4 * width * height;
+                    break;
+                case GL_UNSIGNED_SHORT_4_4_4_4:
+                case GL_UNSIGNED_SHORT_5_5_5_1:
+                    _memoryUsage += 2 * width * height;
+                    break;
+                default:
+                    NSLog(@"Unknown GL_RGBA texture type: %d", type);
+                    break;
+            }
             break;
         default:
             NSLog(@"Unknown texture format: %d", format);

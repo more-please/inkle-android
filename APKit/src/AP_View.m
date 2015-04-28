@@ -284,7 +284,7 @@ static inline CGAffineTransform toParent(AP_View* v) {
 
     // Bounds center -> (0, 0)
     t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
-    
+
     // Bounds origin -> (0, 0)
     t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
 
@@ -306,7 +306,7 @@ static inline CGAffineTransform toParentInFlight(AP_View* v) {
 
     // Bounds center -> (0, 0)
     t = CGAffineTransformTranslate(t, -anchor.x * size.width, -anchor.y * size.height);
-    
+
     // Bounds origin -> (0, 0)
     t = CGAffineTransformTranslate(t, -boundsOrigin.x, -boundsOrigin.y);
 
@@ -491,9 +491,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         }];
     }
     if (oldWindow && !window) {
-        for (AP_AnimatedProperty* prop in _animatedProperties) {
-            [prop leaveAnimation];
-        }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
         }];
@@ -623,7 +620,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     if (willChangeWindow) {
         [view didMoveToWindow];
     }
-    
+
     if (willAppear) {
         [view visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewDidAppear:NO];
@@ -644,9 +641,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
-        for (AP_AnimatedProperty* prop in _animatedProperties) {
-            [prop leaveAnimation];
-        }
         [self visitControllersWithBlock:^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
         }];
@@ -740,12 +734,22 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     [protectSelf self];
 }
 
-- (BOOL) goBack
+- (BOOL) handleAndroidBackButton
 {
+    if (self.hidden || self.alpha <= 0) {
+        return NO;
+    }
+
+    AP_ViewController* controller = _viewDelegate;
+    if (controller && [controller handleAndroidBackButton]) {
+        return YES;
+    }
+
     BOOL result = NO;
     ++_iterating;
-    for (AP_View* view in _subviews) {
-        if ([view goBack]) {
+    // Iterate in reverse, to ensure the topmost back button gets first dibs.
+    for (AP_View* view in [_subviews reverseObjectEnumerator]) {
+        if ([view handleAndroidBackButton]) {
             result = YES;
             break;
         }
@@ -818,7 +822,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             CGFloat rightMargin = CGRectGetMaxX(oldBounds) - CGRectGetMaxX(r);
             CGFloat topMargin = CGRectGetMinY(r) - CGRectGetMinY(oldBounds);
             CGFloat bottomMargin = CGRectGetMaxY(oldBounds) - CGRectGetMaxY(r);
-            
+
             CGFloat flexibleWidth = 0;
             CGFloat widthCount = 0;
             if (mask & UIViewAutoresizingFlexibleLeftMargin) {
@@ -849,7 +853,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
                     r.size.width += delta.width / widthCount;
                 }
             }
-            
+
             CGFloat flexibleHeight = 0;
             CGFloat heightCount = 0;
             if (mask & UIViewAutoresizingFlexibleTopMargin) {
@@ -1074,9 +1078,17 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         // Render the mask into the stencil buffer.
         _GL(Enable, GL_STENCIL_TEST);
 
-        // Write a '1' for pixels that should be visible.
-        // TODO: if there are multiple masks, each should use its own stencil value.
-        _GL(StencilFunc, GL_ALWAYS, 1, 0xff);
+        // Continually rotate the stencil value. It's cleared to zero
+        // each frame, so each view needs a different non-zero value.
+        // This static variable will work for up to 255 masked views.
+        // That's enough for anyone, right? :)
+        static int stencil = 0;
+        stencil = (stencil + 1) % 256;
+        if (stencil == 0) {
+            ++stencil;
+        }
+
+        _GL(StencilFunc, GL_ALWAYS, stencil, 0xff);
         _GL(StencilOp, GL_KEEP, GL_REPLACE, GL_REPLACE);
         _GL(StencilMask, 0xff);
         _GL(ColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -1088,7 +1100,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [AP_GLProgram useMask:oldUseMask];
 
         // Now re-enable color output, but only draw where the stencil is 1.
-        _GL(StencilFunc, GL_EQUAL, 1, 0xff);
+        _GL(StencilFunc, GL_EQUAL, stencil, 0xff);
         _GL(StencilOp, GL_KEEP, GL_KEEP, GL_KEEP);
         _GL(ColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 

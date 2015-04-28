@@ -27,7 +27,7 @@
 typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == cancel
 - (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block;
 
-- (void) mailTo:(NSString*)to attachment:(NSString*)path;
+- (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path;
 
 - (void) quit;
 

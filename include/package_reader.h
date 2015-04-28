@@ -14,6 +14,7 @@ public:
 
     void add(const std::string& name, const std::vector<char>& data);
     void subtract(const std::string& name, const std::vector<char>& data);
+    void subtract_crc(const std::string& name, unsigned long crc32);
 
     bool has(const std::string& name) const {
         return _data.find(name) != _data.end();

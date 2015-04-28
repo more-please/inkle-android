@@ -10,7 +10,7 @@
     "#endif\n"
 
 #define AP_MASK_PREFIX AP_COMMON_PREFIX \
-    "#define OUTPUT(x) if ((x).a > 0) gl_FragColor = (x); else discard\n"
+    "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n"
 
 #define AP_NORMAL_PREFIX AP_COMMON_PREFIX \
     "#define OUTPUT(x) gl_FragColor = (x)\n"

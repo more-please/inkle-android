@@ -11,6 +11,7 @@
 #import "AP_Application.h"
 #import "AP_Button.h"
 #import "AP_Bundle.h"
+#import "AP_Checkbox.h"
 #import "AP_Control.h"
 #import "AP_Event.h"
 #import "AP_Font.h"

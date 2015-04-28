@@ -185,6 +185,36 @@ static inline GLKMatrix4 GLKMatrix4MakeScale(float sx, float sy, float sz) {
     return m;
 }
 
+static inline GLKMatrix4 GLKMatrix4MakeXRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { 1.0f, 0.0f, 0.0f, 0.0f,
+                     0.0f, cos, sin, 0.0f,
+                     0.0f, -sin, cos, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
+static inline GLKMatrix4 GLKMatrix4MakeYRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { cos, 0.0f, -sin, 0.0f,
+                     0.0f, 1.0f, 0.0f, 0.0f,
+                     sin, 0.0f, cos, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
+static inline GLKMatrix4 GLKMatrix4MakeZRotation(float radians) {
+    float cos = cosf(radians);
+    float sin = sinf(radians);
+    GLKMatrix4 m = { cos, sin, 0.0f, 0.0f,
+                     -sin, cos, 0.0f, 0.0f,
+                     0.0f, 0.0f, 1.0f, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    return m;
+}
+
 static inline GLKMatrix4 GLKMatrix4MakeRotation(float radians, float x, float y, float z) {
     GLKVector3 v = GLKVector3Normalize(GLKVector3Make(x, y, z));
     float cos = cosf(radians);
@@ -211,6 +241,17 @@ static inline GLKMatrix4 GLKMatrix4MakeRotation(float radians, float x, float y,
     return m;
 }
 
+static inline GLKMatrix4 GLKMatrix4Translate(GLKMatrix4 matrix, float tx, float ty, float tz) {
+    GLKMatrix4 m = { matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3],
+                     matrix.m[4], matrix.m[5], matrix.m[6], matrix.m[7],
+                     matrix.m[8], matrix.m[9], matrix.m[10], matrix.m[11],
+                     matrix.m[0] * tx + matrix.m[4] * ty + matrix.m[8] * tz + matrix.m[12],
+                     matrix.m[1] * tx + matrix.m[5] * ty + matrix.m[9] * tz + matrix.m[13],
+                     matrix.m[2] * tx + matrix.m[6] * ty + matrix.m[10] * tz + matrix.m[14],
+                     matrix.m[3] * tx + matrix.m[7] * ty + matrix.m[11] * tz + matrix.m[15] };
+    return m;
+}
+
 static inline GLKMatrix4 GLKMatrix4Scale(GLKMatrix4 matrix, float sx, float sy, float sz) {
 #if defined(__ARM_NEON__)
     float32x4x4_t iMatrix = *(float32x4x4_t *)&matrix;
@@ -229,6 +270,26 @@ static inline GLKMatrix4 GLKMatrix4Scale(GLKMatrix4 matrix, float sx, float sy, 
                      matrix.m[12], matrix.m[13], matrix.m[14], matrix.m[15] };
     return m;
 #endif
+}
+
+static inline GLKMatrix4 GLKMatrix4Rotate(GLKMatrix4 matrix, float radians, float x, float y, float z) {
+    GLKMatrix4 rm = GLKMatrix4MakeRotation(radians, x, y, z);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateX(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeXRotation(radians);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateY(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeYRotation(radians);
+    return GLKMatrix4Multiply(matrix, rm);
+}
+
+static inline GLKMatrix4 GLKMatrix4RotateZ(GLKMatrix4 matrix, float radians) {
+    GLKMatrix4 rm = GLKMatrix4MakeZRotation(radians);
+    return GLKMatrix4Multiply(matrix, rm);
 }
 
 static inline GLKMatrix4 GLKMatrix4MakeWithQuaternion(GLKQuaternion quaternion) {

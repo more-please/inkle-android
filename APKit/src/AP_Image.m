@@ -296,6 +296,13 @@ typedef struct VertexData {
     return other;
 }
 
+- (AP_Image*) imageWithScale:(CGFloat)scale
+{
+    AP_Image* other = [[AP_Image alloc] initWithImage:self];
+    other->_scale = scale;
+    return other;
+}
+
 - (void) addRaw:(RawQuad)raw
 {
     CGRect r = {
@@ -447,11 +454,15 @@ typedef struct VertexData {
             CGFloat scale = (insets.left + insets.right + 1) / (_size.width / _scale);
             insets.left /= scale;
             insets.right /= scale;
+            // Tiling makes no sense here, stretch instead
+            _resizingMode = UIImageResizingModeStretch;
         }
-        if (insets.top + insets.bottom + 1 > _size.height) {
+        if (insets.top + insets.bottom + 1 > (_size.height / _scale)) {
             CGFloat scale = (insets.top + insets.bottom + 1) / (_size.height / _scale);
             insets.top /= scale;
             insets.bottom /= scale;
+            // Tiling makes no sense here, stretch instead
+            _resizingMode = UIImageResizingModeStretch;
         }
 
         _insets = insets;
@@ -533,8 +544,10 @@ typedef struct VertexData {
 
         // Load texture name. Look for a .png first.
         NSString* texName = [_assetName stringByAppendingString:@".png"];
-        _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
-        if (_texture) {
+        NSData* png = [AP_Bundle dataForResource:texName ofType:nil];
+        if (png) {
+            _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
+            AP_CHECK(_texture, return nil);
             // PNG has alpha, so we don't need the separate-alpha shader.
             if (img->channels == 4) {
                 _prog = g_Prog3;

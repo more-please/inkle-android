@@ -7,8 +7,11 @@
 #include <set>
 #include <string>
 
+#include "json.h"
+
 #include "package_reader.h"
 #include "package_writer.h"
+#include "read_entire_file.h"
 
 using namespace std;
 
@@ -18,6 +21,7 @@ void usage() {
     cerr << "  -o, --outfile: output file" << endl;
     cerr << "  -i, --include: include this pak file" << endl;
     cerr << "  -x, --exclude: skip any resources in this pak file" << endl;
+    cerr << "  --crc: skip any resources in this CRC file" << endl;
     cerr << "  -c, --compress: compress files ending with the given extension(s)" << endl;
     cerr << "  -h, --help: show this help text" << endl << endl;
     flush(cerr);
@@ -34,6 +38,7 @@ int main(int argc, const char* argv[]) {
     string outfile;
     vector<string> includes;
     vector<string> excludes;
+    vector<string> crcs;
     vector<string> compress;
 
     for (int i = 1; i < argc; ++i) {
@@ -61,6 +66,8 @@ int main(int argc, const char* argv[]) {
                 includes.push_back(param);
             } else if (arg == "-x" || arg == "--exclude") {
                 excludes.push_back(param);
+            } else if (arg == "--crc") {
+                crcs.push_back(param);
             } else if (arg == "-c" || arg == "--compress") {
                 compress.push_back(param);
             } else {
@@ -78,6 +85,20 @@ int main(int argc, const char* argv[]) {
 	}
 	for (string exclude : excludes) {
 		result.subtract(PackageReader(exclude));
+	}
+	for (string f : crcs) {
+	    std::vector<unsigned char> bytes = read_entire_file(f.c_str());
+	    json_value* json = json_parse((const char*) &bytes[0], bytes.size());
+	    assert(json->type == json_object);
+	    for (int i = 0; i < json->u.object.length; ++i) {
+	        string name (
+	            json->u.object.values[i].name,
+	            json->u.object.values[i].name + json->u.object.values[i].name_length);
+            assert(json->u.object.values[i].value->type == json_integer);
+            unsigned long crc = json->u.object.values[i].value->u.integer;
+            result.subtract_crc(name, crc);
+	    }
+	    json_value_free(json);
 	}
 
     if (!outfile.empty()) {

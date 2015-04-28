@@ -12,6 +12,8 @@
 
 #import "AP_ViewController.h"
 
+typedef void (^AfterFrameBlock)();
+
 extern NSString* const AP_ScreenSizeChangedNotification;
 
 // Plays the role of a UIWindow containing UIViews.
@@ -19,9 +21,9 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 
 @interface AP_Window : Real_GLKViewController
 
-@property (readonly) CGRect bounds;
+@property (nonatomic,readonly) CGRect bounds;
 
-@property AP_ViewController* rootViewController;
+@property (nonatomic,strong) AP_ViewController* rootViewController;
 
 - (void) resetAllGestures;
 
@@ -46,7 +48,12 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 // As above, but scale the value appropriately if we're in landscape mode.
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape;
 
+// As above, but with an iPhone 6 value too
++ (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)landscape iPhone6:(CGFloat)i6;
+
 - (BOOL) isHitTestView:(AP_View*)view;
 - (BOOL) isGestureView:(AP_View*)view;
+
++ (void) performAfterFrame:(AfterFrameBlock)block;
 
 @end

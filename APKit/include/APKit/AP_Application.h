@@ -16,12 +16,7 @@
 @property (nonatomic,strong) Real_UIWindow* window;
 
 // Android-specific additions
-- (BOOL) goBack; // Return YES if the event was handled.
-
-#if 0 // Sorcery-specific?
-- (void) addBackCloseBlock:(void(^)())backBlock;
-- (void) removeLastBackButtonBlock;
-#endif
+- (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
 
 @end
 
@@ -35,7 +30,6 @@
 
 @property(nonatomic,strong) id<AP_ApplicationDelegate> delegate;
 
-// FIXME -- needs to be properly implemented!
 @property(nonatomic,readonly) AP_Window *keyWindow;
 @property(nonatomic,readonly) UIInterfaceOrientation statusBarOrientation;
 

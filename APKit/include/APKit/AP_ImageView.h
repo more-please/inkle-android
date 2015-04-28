@@ -10,9 +10,8 @@
 - (instancetype) initWithImage:(AP_Image*)image;
 - (instancetype) initWithImage:(AP_Image*)image highlightedImage:(AP_Image*)highlightedImage;
 
-@property AP_Image* image;
-
-@property AP_Image* highlightedImage;
-@property(getter=isHighlighted) BOOL highlighted;
+@property (nonatomic,strong) AP_Image* image;
+@property (nonatomic,strong) AP_Image* highlightedImage;
+@property (nonatomic,getter=isHighlighted) BOOL highlighted;
 
 @end

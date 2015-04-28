@@ -12,10 +12,10 @@ PackageReader::PackageReader(const string& filename) {
     cerr << "Reading " << filename << "...\n";
     int fd = open(filename.c_str(), O_RDONLY);
     assert(fd > 0);
-    
+
     long fileSize = lseek(fd, 0, SEEK_END);
     assert(fileSize > 0);
-    
+
     const uint8_t* ptr = reinterpret_cast<const uint8_t*>(mmap(0, fileSize, PROT_READ, MAP_PRIVATE, fd, 0));
     assert(ptr != MAP_FAILED);
 
@@ -60,7 +60,7 @@ PackageReader::PackageReader(const string& filename) {
 
             zerr = inflateEnd(&z);
             assert(zerr == Z_OK);
-            
+
             bytes = decompressedBytes;
         }
 
@@ -96,5 +96,18 @@ void PackageReader::subtract(const string& name, const vector<char>& bytes) {
     if (i != _data.end() && i->second == bytes) {
 //         cerr << "Removing " << name << "\n";
         _data.erase(i);
+    }
+}
+
+void PackageReader::subtract_crc(const string& name, unsigned long their_crc) {
+    auto i = _data.find(name);
+    if (i != _data.end()) {
+        auto bytes = i->second;
+        unsigned long my_crc = crc32(0, NULL, 0);
+        my_crc = crc32(my_crc, (const unsigned char*) &bytes[0], bytes.size());
+        if (their_crc == my_crc) {
+//             cerr << "Removing " << name << " (same CRC)\n";
+            _data.erase(i);
+        }
     }
 }

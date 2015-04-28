@@ -38,3 +38,12 @@ static inline BOOL GLKVector4AllEqualToVector4(GLKVector4 lhs, GLKVector4 rhs) {
         && lhs.v[3] == rhs.v[3];
 }
 
+static inline GLKVector4 GLKVector4Lerp(GLKVector4 a, GLKVector4 b, float t)
+{
+    return GLKVector4Make(
+        a.x + t * (b.x - a.x),
+        a.y + t * (b.y - a.y),
+        a.z + t * (b.z - a.z),
+        a.w + t * (b.w - a.w)
+    );
+}

@@ -6,10 +6,15 @@
 
 #import "GlueCommon.h"
 
+extern "C" {
+NSString* const AP_UserDefault_Mute = @"AP_UserDefault_Mute";
+}
+
 @implementation AVAudioPlayer {
     NSString* _name;
     CkSound* _sound;
     NSTimer* _timer;
+    float _volume;
 }
 
 - (id) initWithResource:(NSString*)path error:(NSError**)err
@@ -19,17 +24,8 @@
         // Audio file type is always .cks
         path = [[path stringByDeletingPathExtension] stringByAppendingString:@".cks"];
         _name = [path lastPathComponent];
-        PAK_Item* item = [PAK_Search item:path];
-        if (!item) {
-            NSLog(@"Couldn't find asset for sound: %@", path);
-            return nil;
-        }
-        _sound = CkSound::newStreamSound(
-            item.path.cString,
-            item.isAsset ? kCkPathType_Asset : kCkPathType_FileSystem,
-            item.offset,
-            item.length,
-            path.pathExtension.cString);
+        _sound = CkSound::newStreamSound(path.cString);
+        _volume = 1.0;
         if (!_sound || _sound->isFailed()) {
             return nil;
         }
@@ -61,12 +57,19 @@
 
 - (float) volume
 {
-    return _sound->getVolume();
+    return _volume;
 }
 
 - (void) setVolume:(float)volume
 {
-    _sound->setVolume(volume);
+    _volume = volume;
+    [self updateVolume];
+}
+
+- (void) updateVolume
+{
+    BOOL mute = [[NSUserDefaults standardUserDefaults] boolForKey:AP_UserDefault_Mute];
+    _sound->setVolume(mute ? 0.0 : _volume);
 }
 
 - (void) setNumberOfLoops:(int)i
@@ -90,6 +93,7 @@
     if (!_timer) {
 //        NSLog(@"+++ %@", _name);
         if (_sound->isReady()) {
+            [self updateVolume];
             // Cricket resets the loop count after loading the audio file.
             _sound->setLoopCount(_numberOfLoops);
             _sound->play();
@@ -130,6 +134,7 @@
         [_delegate audioPlayerDidFinishPlaying:self successfully:YES];
     } else {
         // Still playing...
+        [self updateVolume];
     }
 }
 

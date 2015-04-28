@@ -85,7 +85,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             attributes:attrs];
     }
 
-#if 0
+#ifdef SORCERY
     // Sorcery! styles. TODO: extract this into game-specific code.
     if (isTag(n, "strong")) {
         AP_Font* font = [attrs objectForKey:NSFontAttributeName];
@@ -163,7 +163,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
         UIColor* color = [attrs objectForKey:NSForegroundColorAttributeName];
         AP_TextTransform textTransform = nil;
-#if 0
+#ifdef SORCERY
         // Sorcery! styles. TODO: extract this into game-specific code.
         if (isTags(n, "h1", "h2", NULL)) {
             font = @"Baskerville-Bold";
@@ -309,6 +309,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     _indexHtml = name;
 
     NSData* data = [AP_Bundle dataForResource:name ofType:nil];
+    NSAssert(data, @"Couldn't find HTML resource: %@", name);
     xmlDoc* doc = htmlReadMemory((const char*)data.bytes, data.length, name.cString, NULL, 0);
     xmlNode* root = xmlDocGetRootElement(doc);
 
@@ -332,8 +333,11 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     [super layoutSubviews];
 
     if (_label) {
+#ifdef SORCERY
+        CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
+#else
         CGFloat margin = [AP_Window scaleForIPhone:25 iPad:50];
-
+#endif
         CGSize viewSize = _scrollView.frame.size;
         CGSize textSize = [_label sizeThatFits:viewSize];
         textSize.width = viewSize.width;

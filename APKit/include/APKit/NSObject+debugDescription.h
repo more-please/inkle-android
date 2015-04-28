@@ -4,6 +4,6 @@
 
 @interface NSObject (debugDescription)
 
-@property (readonly, strong) NSString* debugDescription;
+@property (nonatomic, readonly, strong) NSString* debugDescription;
 
 @end

@@ -2,6 +2,7 @@
 #import <PAK/PAK.h>
 
 #import <map>
+#import <vector>
 
 #import <jni.h>
 #import <errno.h>
@@ -19,6 +20,7 @@
 #import <android_native_app_glue.h>
 
 #import <ck/ck.h>
+#import <ck/customfile.h>
 #import <ck/mixer.h>
 
 #import <unicode/udata.h>
@@ -173,7 +175,7 @@ static JavaMethod kShareJourney = {
     "shareJourney", "(Ljava/lang/String;I)V", NULL
 };
 static JavaMethod kMailTo = {
-    "mailTo", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
+    "mailTo", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kGetLocale = {
     "getLocale", "()Ljava/lang/String;", NULL
@@ -250,6 +252,13 @@ static void NSLog_handler(NSString* message) {
     write(_NSLog_fd, message.UTF8String, message.length);
 }
 
+static void NSLog_flush(NSString* message) {
+    if (_NSLog_fd >= 0) {
+        NSLog_handler(message);
+        fsync(_NSLog_fd);
+    }
+}
+
 static void logStatfs(NSString* path) {
     if (path) {
         struct statfs s;
@@ -263,6 +272,66 @@ static void logStatfs(NSString* path) {
         }
     }
 }
+
+class PakSound : public CkCustomFile
+{
+    NSString* _name;
+    NSData* _data;
+    const char* _ptr;
+    int _len;
+    int _pos;
+
+public:
+    PakSound(const char* name) {
+        _name = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
+        _data = [NSBundle dataForResource:_name ofType:nil];
+        _ptr = (const char*) _data.bytes;
+        _len = _data.length;
+        _pos = 0;
+    }
+
+    /** Returns true if the file was successfully opened. */
+    virtual bool isValid() const {
+        return _ptr;
+    }
+
+    /** Read from the file.  Returns number of bytes actually read. */
+    virtual int read(void* buf, int bytes) {
+//         NSLog(@"Reading %d bytes at %d from %@", bytes, _pos, _name);
+        if (_pos + bytes > _len) {
+            bytes = _len - _pos;
+        }
+        memcpy(buf, _ptr + _pos, bytes);
+        _pos += bytes;
+        return bytes;
+    }
+
+    /** Returns the size of the file. */
+    virtual int getSize() const {
+        return _len;
+    }
+
+    /** Sets the read position in the file. */
+    virtual void setPos(int pos) {
+//         NSLog(@"Setting pos to %d in %@", pos, _name);
+        if (pos < 0) {
+            pos = 0;
+        }
+        if (pos > _len) {
+            pos = _len;
+        }
+        _pos = pos;
+    }
+
+    /** Returns the read position in the file. */
+    virtual int getPos() const {
+        return _pos;
+    }
+
+    static CkCustomFile* customFileFunc(const char* path, void* data) {
+        return new PakSound(path);
+    }
+};
 
 @implementation Main {
     struct android_app* _android;
@@ -313,16 +382,6 @@ static void logStatfs(NSString* path) {
         AP_CHECK(result == JNI_OK, return nil);
         AP_CHECK(_env, return nil);
 
-        // Initialize Cricket Audio
-        CkConfig config(_env, _android->activity->clazz);
-        config.useJavaAudio = true; // OpenSLES is totally broken.
-        // Nice big audio buffers, to prevent any glitches.
-        config.audioUpdateMs = 50;
-        config.streamBufferMs = 3000;
-        config.streamFileUpdateMs = 600;
-        int success = CkInit(&config);
-        AP_CHECK(success, return nil);
-
         // Get InkleActivity and its methods.
         _instance = _env->NewGlobalRef(_android->activity->clazz);
         AP_CHECK(_instance, return nil);
@@ -358,8 +417,6 @@ static void logStatfs(NSString* path) {
             self.isCrappyDevice = YES;
         }
 
-        _touches = [NSMutableDictionary dictionary];
-
         // Initialize non-OBB assets.
         _assetManager = [self getAssets];
 
@@ -371,6 +428,62 @@ static void logStatfs(NSString* path) {
         logStatfs(self.publicDocumentsDir);
         logStatfs(_obbPath);
 
+        PAK* pak;
+
+        AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
+        if (pakAsset) {
+            NSLog(@"Mapping OBB...");
+            if (AAsset_isAllocated(pakAsset)) {
+                NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
+                NSLog(@"This is wasting a lot of memory.");
+            }
+
+            void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
+            NSAssert(ptr, @"AAsset_getBuffer failed!");
+
+            off_t size = AAsset_getLength(pakAsset);
+            NSAssert(size, @"AAsset_getLength failed!");
+
+            NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
+            NSAssert(data, @"dataWithBytesNoCopy failed!");
+
+            pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
+
+        } else {
+            // Using Google Play-style expansion files.
+            // This means there may be a patch file.
+            NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
+            if (patch) {
+                pak = [PAK pakWithMemoryMappedFile:patch];
+                [PAK_Search add:pak];
+            }
+
+            pak = [PAK pakWithMemoryMappedFile:_obbPath];
+
+            // A cheat: assume all the sounds are in the OBB, so we
+            // don't have to bother checking assets (which are very slow).
+            _pakNamesCache = [NSArray array];
+        }
+
+        NSAssert(pak, @"Can't find .pak file");
+        [PAK_Search add:pak];
+
+        // Add ourselves as a backup resource bundle (APK assets)
+        [PAK_Search add:self];
+
+        // Initialize Cricket Audio
+        CkConfig config(_env, _android->activity->clazz);
+        config.useJavaAudio = true; // OpenSLES is totally broken.
+        // Nice big audio buffers, to prevent any glitches.
+        config.audioUpdateMs = 50;
+        config.streamBufferMs = 3000;
+        config.streamFileUpdateMs = 600;
+        int success = CkInit(&config);
+        AP_CHECK(success, return nil);
+
+        CkSetCustomFileHandler(PakSound::customFileFunc, NULL);
+
+        _touches = [NSMutableDictionary dictionary];
         _blocks = [NSMutableDictionary dictionary];
     }
     return self;
@@ -508,9 +621,25 @@ static void logStatfs(NSString* path) {
     }
 }
 
+class PushLocalFrame {
+    JNIEnv* _env;
+public:
+    PushLocalFrame(JNIEnv* env) : _env(env) {
+        _env->PushLocalFrame(16);
+    }
+    ~PushLocalFrame() {
+        if (_env->ExceptionOccurred()) {
+            _env->ExceptionDescribe();
+            _env->ExceptionClear();
+        }
+        _env->PopLocalFrame(NULL);
+    }
+};
+
 - (void) javaVoidMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
+    PushLocalFrame frame(_env);
     _env->CallVoidMethod(_instance, m->method);
 }
 
@@ -518,12 +647,9 @@ static void logStatfs(NSString* path) {
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jstr = _env->NewStringUTF(s.UTF8String);
     _env->CallVoidMethod(_instance, m->method, jstr);
-
-    _env->PopLocalFrame(NULL);
-
 }
 
 - (BOOL) javaBoolMethod:(JavaMethod*)m
@@ -544,7 +670,7 @@ static void logStatfs(NSString* path) {
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring str = (jstring) _env->CallObjectMethod(_instance, m->method);
     NSString* result = nil;
@@ -553,7 +679,6 @@ static void logStatfs(NSString* path) {
         result = [NSString stringWithCString:c];
         _env->ReleaseStringUTFChars(str, c);
     }
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -561,23 +686,18 @@ static void logStatfs(NSString* path) {
 {
     [self maybeInitJavaMethod:m];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jfloatArray arr = (jfloatArray) _env->CallObjectMethod(_instance, m->method);
-    if (_env->ExceptionOccurred()) {
-        _env->ExceptionDescribe();
-        _env->ExceptionClear();
-        return NO;
-    }
     AP_CHECK(arr, return NO);
     AP_CHECK(_env->GetArrayLength(arr) == size, return NO);
+
     jfloat* f = _env->GetFloatArrayElements(arr, NULL);
     for (int i = 0; i < size; ++i) {
         ptr[i] = f[i];
     }
     _env->ReleaseFloatArrayElements(arr, f, 0);
 
-    _env->PopLocalFrame(NULL);
     return YES;
 }
 
@@ -595,12 +715,12 @@ static void logStatfs(NSString* path) {
 {
     [self maybeInitJavaMethod:&kFindClass];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
+
     jstring str = _env->NewStringUTF(name.UTF8String);
     jclass result = (jclass) _env->CallObjectMethod(_instance, kFindClass.method, str);
     result = (jclass) _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -684,13 +804,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseInit];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
     jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
@@ -699,13 +817,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     [self maybeInitJavaMethod:&kParseCallFunction];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jFunction = _env->NewStringUTF(function.UTF8String);
     jobject jParams = [self jsonEncode:params];
 
     _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
@@ -744,13 +860,12 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseNewObject];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
     result = _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -758,14 +873,13 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseNewObjectId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
     jstring jId = _env->NewStringUTF(objectId.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
     result = _env->NewGlobalRef(result);
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -773,7 +887,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseObjectId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring str = (jstring) _env->CallObjectMethod(_instance, kParseObjectId.method, obj);
     NSString* result = nil;
@@ -782,8 +896,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         result = [NSString stringWithCString:c];
         _env->ReleaseStringUTFChars(str, c);
     }
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -830,38 +942,32 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseAddKey];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
     jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseObject:(jobject)obj removeKey:(NSString*)key
 {
     [self maybeInitJavaMethod:&kParseRemoveKey];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
 
     _env->CallVoidMethod(_instance, kParseRemoveKey.method, obj, jKey);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (jobject) parseNewQuery:(NSString*)className
 {
     [self maybeInitJavaMethod:&kParseNewQuery];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(className.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kParseNewQuery.method, jName);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -869,13 +975,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseWhereEqualTo];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jKey = _env->NewStringUTF(key.UTF8String);
     jobject jValue = [self jsonEncode:value];
 
     _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
@@ -894,12 +998,10 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kParseCurrentUser];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -907,7 +1009,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kGaiTrackerWithTrackingId];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring jName = _env->NewStringUTF(trackingId.UTF8String);
 
     jobject result = _env->CallObjectMethod(_instance, kGaiTrackerWithTrackingId.method, jName);
@@ -916,7 +1018,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         _gaiDefaultTracker = result;
     }
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -932,7 +1033,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kBoxLong];
     [self maybeInitJavaMethod:&kGaiEvent];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring jCategory = _env->NewStringUTF(category.UTF8String);
     jstring jAction = _env->NewStringUTF(label.UTF8String);
@@ -944,39 +1045,33 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     jobject result = _env->CallObjectMethod(_instance, kGaiEvent.method, jCategory, jAction, jLabel, jValue);
     result = _env->NewGlobalRef(result);
-
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
 - (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value
 {
     [self maybeInitJavaMethod:&kGaiTrackerSet];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jstring jParam = _env->NewStringUTF(param.UTF8String);
     jstring jValue = _env->NewStringUTF(value.UTF8String);
     _env->CallVoidMethod(_instance, kGaiTrackerSet.method, tracker, jParam, jValue);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) gaiTracker:(jobject)tracker send:(jobject)params
 {
     [self maybeInitJavaMethod:&kGaiTrackerSend];
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     _env->CallVoidMethod(_instance, kGaiTrackerSend.method, tracker, params);
     _env->DeleteGlobalRef(params);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (AAssetManager*) getAssets
 {
     [self maybeInitJavaMethod:&kGetAssets];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
 
     jobject obj = _env->CallObjectMethod(_instance, kGetAssets.method);
     obj = _env->NewGlobalRef(obj);
@@ -986,7 +1081,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
         abort();
     }
 
-    _env->PopLocalFrame(NULL);
     return result;
 }
 
@@ -1020,13 +1114,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kTweet];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s1 = text ? _env->NewStringUTF(text.UTF8String) : NULL;
     jstring s2 = url ? _env->NewStringUTF(url.UTF8String) : NULL;
     jstring s3 = image ? _env->NewStringUTF(image.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
-
-    _env->PopLocalFrame(NULL);
 }
 
 - (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
@@ -1035,11 +1127,9 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 
     int handle = [self pushBlock:block];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s = existingName ? _env->NewStringUTF(existingName.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kShareJourney.method, s, handle);
-
-    _env->PopLocalFrame(NULL);
 }
 
 static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
@@ -1066,16 +1156,15 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     }
 }
 
-- (void) mailTo:(NSString*)to attachment:(NSString*)path
+- (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path
 {
     [self maybeInitJavaMethod:&kMailTo];
 
-    _env->PushLocalFrame(16);
+    PushLocalFrame frame(_env);
     jstring s1 = to ? _env->NewStringUTF(to.UTF8String) : NULL;
-    jstring s2 = path ? _env->NewStringUTF(path.UTF8String) : NULL;
-    _env->CallVoidMethod(_instance, kMailTo.method, s1, s2);
-
-    _env->PopLocalFrame(NULL);
+    jstring s2 = message ? _env->NewStringUTF(message.UTF8String) : NULL;
+    jstring s3 = path ? _env->NewStringUTF(path.UTF8String) : NULL;
+    _env->CallVoidMethod(_instance, kMailTo.method, s1, s2, s3);
 }
 
 - (void) maybeInitApp
@@ -1089,50 +1178,18 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
         return;
     }
 
-    PAK* pak;
+    [self maybeInitSurface];
 
-    AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
-    if (pakAsset) {
-        NSLog(@"Mapping OBB...");
-        if (AAsset_isAllocated(pakAsset)) {
-            NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
-            NSLog(@"This is wasting a lot of memory.");
-        }
-
-        void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
-        NSAssert(ptr, @"AAsset_getBuffer failed!");
-
-        off_t size = AAsset_getLength(pakAsset);
-        NSAssert(size, @"AAsset_getLength failed!");
-
-        NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-        NSAssert(data, @"dataWithBytesNoCopy failed!");
-
-        pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
-
-    } else {
-        // Using Google Play-style expansion files.
-        // This means there may be a patch file.
-        NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
-        if (patch) {
-            pak = [PAK pakWithMemoryMappedFile:patch];
-            [PAK_Search add:pak];
-        }
-
-        pak = [PAK pakWithMemoryMappedFile:_obbPath];
-
-        // A cheat: assume all the sounds are in the OBB, so we
-        // don't have to bother checking assets (which are very slow).
-        _pakNamesCache = [NSArray array];
+    if (_surface == EGL_NO_SURFACE) {
+        // No surface, can't draw
+        return;
     }
 
-    NSAssert(pak, @"Can't find .pak file");
-    [PAK_Search add:pak];
-
-    // TODO: could potentially look for a patch file too
-
-    // Add ourselves as a backup resource bundle (APK assets)
-    [PAK_Search add:self];
+    if (!eglMakeCurrent(_display, _surface, _surface, _context)) {
+        NSLog(@"*** eglMakeCurrent failed!");
+        [self teardownSurface];
+        return;
+    }
 
     NSLog(@"Let's get started!");
     id<AP_ApplicationDelegate> delegate = AP_GetDelegate();
@@ -1146,8 +1203,13 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     delegate.window = [[Real_UIWindow alloc] init];
     delegate.window.rootViewController = window; // Err, yes, well
 
+#ifdef SORCERY
+    AP_Image* logo = [AP_Image imageNamed:@"sorcery-title"];
+    logo = [logo imageScaledBy:0.75];
+#else
     AP_Image* logo = [AP_Image imageNamed:@"80-days-logo"];
     logo = [logo imageWithWidth:[AP_Window widthForIPhone:150 iPad:250]];
+#endif
 
     AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
     view.frame = [[UIScreen mainScreen] bounds];
@@ -1158,6 +1220,10 @@ static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     controller.view = view;
     window.rootViewController = controller;
 
+    [self updateGL:YES];
+
+    // Lollipop seems to reject the first frame, because the window is the wrong size...?
+    // Just sending another frame seems to do the trick.
     [self updateGL:YES];
 
     // Without this, the splash screen gets leaked...?
@@ -1233,41 +1299,61 @@ static EGLattr EGLattrs[] = {
         eglGetConfigAttrib(_display, c, a.attr, &value);
         NSLog(@"%s: %d", a.name, value);
     }
+    NSLog(@"Score: %.0f", [self scoreConfig:c]);
 }
 
-const EGLint highQualityAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        // Definitely want 24-bit colour.
-        EGL_BLUE_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_RED_SIZE, 8,
-        // Need an 8-bit stencil for layer masks
-        EGL_STENCIL_SIZE, 8,
-        // We want 4x MSAA, but only if it's fast.
-        EGL_SAMPLES, 4,
-        EGL_CONFIG_CAVEAT, EGL_NONE,
-        EGL_NONE
-};
+- (double) scoreConfig:(EGLConfig)c
+{
+    EGLint red, green, blue, alpha, stencil, depth, samples;
 
-const EGLint lowQualityAttribs[] = {
-        // As above, without MSAA.
+    eglGetConfigAttrib(_display, c, EGL_RED_SIZE, &red);
+    eglGetConfigAttrib(_display, c, EGL_GREEN_SIZE, &green);
+    eglGetConfigAttrib(_display, c, EGL_BLUE_SIZE, &blue);
+    eglGetConfigAttrib(_display, c, EGL_ALPHA_SIZE, &alpha);
+    eglGetConfigAttrib(_display, c, EGL_STENCIL_SIZE, &stencil);
+    eglGetConfigAttrib(_display, c, EGL_DEPTH_SIZE, &depth);
+    eglGetConfigAttrib(_display, c, EGL_SAMPLES, &samples);
+
+    const double BAD = 0;
+
+    // We'll multiply the score each round, so the most important checks come first.
+    double score = 1;
+
+    // Preferably no alpha, because it barely works on the Kindle Fire.
+    score = 100 * score - alpha;
+
+    // More RGB is better
+    score = 100 * score + red + green + blue;
+
+#ifdef SORCERY
+    // For Sorcery, MSAA isn't worth the performance hit -- less is better.
+    score = 100 * score - samples;
+#else
+    // For Eighty Days, MSAA is nice (but more than 4x is overkill)
+    if (samples > 4) {
+        return BAD;
+    }
+    score = 100 * score + samples;
+#endif
+
+    // Must have at least 16-bit depth (but less is better)
+    if (depth < 16) {
+        return BAD;
+    }
+    score = 100 * score - depth;
+
+    // Must have at least 4-bit stencil (but less is better)
+    if (stencil < 4) {
+        return BAD;
+    }
+    score = 100 * score - stencil;
+
+    return score;
+}
+
+const EGLint basicAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        // The original Kindle Fire gives us a config with broken
-        // alpha if we request 24-bit colour. However, some other
-        // devices give us 16-bit configs if we don't specify any
-        // constraints! Therefore, request 16-bit colour at a minimum
-        // (if there's a 32-bit config it should be sorted first).
-        EGL_BLUE_SIZE, 5,
-        EGL_GREEN_SIZE, 6,
-        EGL_RED_SIZE, 5,
-        // Need an 8-bit stencil for layer masks
-        EGL_STENCIL_SIZE, 8,
-        // (Although... some devices like the Nexus 4 don't sort
-        // their configs properly so we still end up with 16-bit
-        // colour. Arrrgh! Well, the N4 can use the high-quality
-        // config, so we should never hit that case in practice.)
         EGL_NONE
 };
 
@@ -1280,29 +1366,35 @@ const EGLint lowQualityAttribs[] = {
         eglInitialize(_display, 0, 0);
 
         EGLint numConfigs;
-
-//         static EGLConfig configs[500];
-//         eglChooseConfig(_display, lowQualityAttribs, configs, 500, &numConfigs);
-//         for (int i = 0; i < numConfigs; ++i) {
-//             NSLog(@"EGL config %d of %d:", i, numConfigs);
-//             [self dumpConfig:configs[i]];
-//             NSLog(@"----");
-//         }
-
-        EGLBoolean success = eglChooseConfig(_display, highQualityAttribs, &_config, 1, &numConfigs);
-        if (!success || numConfigs < 1) {
-            NSLog(@"Couldn't find high-quality EGL config, using low-quality");
-            success = eglChooseConfig(_display, lowQualityAttribs, &_config, 1, &numConfigs);
-        }
-        if (!success || numConfigs < 1) {
-            NSLog(@"Couldn't find low-quality EGL config! Aborting, sorry");
+        eglChooseConfig(_display, basicAttribs, NULL, 0, &numConfigs);
+        NSLog(@"There are %d ES2-capable screen configs", numConfigs);
+        if (numConfigs <= 0) {
             abort();
         }
-        EGLint err = eglGetError();
-        if (err != EGL_SUCCESS) {
-            NSLog(@"*** EGL error: %x", err);
+
+        std::vector<EGLConfig> configs(numConfigs);
+        eglChooseConfig(_display, basicAttribs, &configs[0], numConfigs, &numConfigs);
+
+#ifdef DEBUG
+        NSLog(@"----------------");
+        for (int i = 0; i < numConfigs; ++i) {
+            [self dumpConfig:configs[i]];
+            NSLog(@"----------------");
+        }
+#endif
+
+        int bestConfig = 0;
+        double bestScore = [self scoreConfig:configs[0]];
+        for (int i = 1; i < numConfigs; ++i) {
+            double score = [self scoreConfig:configs[i]];
+            if (score > bestScore) {
+                bestScore = score;
+                bestConfig = i;
+            }
         }
 
+        _config = configs[bestConfig];
+        NSLog(@"Selected config:");
         [self dumpConfig:_config];
 
         const EGLint contextAttribs[] = {
@@ -1336,8 +1428,6 @@ const EGLint lowQualityAttribs[] = {
             abort();
         }
     }
-
-    [self updateScreenSize];
 }
 
 - (void) updateScreenSize
@@ -1516,8 +1606,7 @@ const EGLint lowQualityAttribs[] = {
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_KEY
         && AKeyEvent_getKeyCode(event) == AKEYCODE_BACK
         && AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP) {
-        // FIXME
-        return [self.delegate goBack];
+        return [self.delegate handleAndroidBackButton];
     }
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
@@ -1613,14 +1702,6 @@ const EGLint lowQualityAttribs[] = {
             // engine->app->savedStateSize = sizeof(struct saved_state);
             break;
 
-        case APP_CMD_INIT_WINDOW:
-            // The window is being shown, get it ready.
-            if (_android->window) {
-                [self maybeInitSurface];
-                [self maybeInitApp];
-            }
-            break;
-
         case APP_CMD_WINDOW_REDRAW_NEEDED:
             if (_android->window) {
                 [self updateGL:YES];
@@ -1637,6 +1718,7 @@ const EGLint lowQualityAttribs[] = {
             [self teardownSurface];
             break;
 
+        case APP_CMD_INIT_WINDOW:
         case APP_CMD_GAINED_FOCUS:
         case APP_CMD_LOST_FOCUS:
             break;
@@ -1742,7 +1824,10 @@ void android_main(struct android_app* android) {
                     CkShutdown();
                     [g_Main teardownGL];
                     [g_Main teardownJava];
-                    exit(EXIT_SUCCESS);
+                    // Call _exit() rather than exit() to avoid running C++ destructors.
+                    // I've been seeing some audio-related shutdown crashes.
+                    NSLog_flush(@"_exit(EXIT_SUCCESS)");
+                    _exit(EXIT_SUCCESS);
                     return;
                 }
             }
@@ -1752,6 +1837,8 @@ void android_main(struct android_app* android) {
             [g_Main maybeInitSurface];
 
             if (g_Main.canDraw) {
+                [g_Main maybeInitApp];
+
                 // Run Objective-C timers.
                 NSDate* now = [NSDate date];
                 NSDate* nextTimer;
