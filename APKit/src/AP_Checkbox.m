@@ -34,7 +34,7 @@
     const CGRect bounds = self.bounds;
     const CGSize boxSize = _box.image.size;
     const CGRect boxRect = CGRectMake(
-        0,
+        0.5 * (bounds.size.width - 2 * boxSize.width),
         0.5 * (bounds.size.height - boxSize.height),
         boxSize.width,
         boxSize.height);
