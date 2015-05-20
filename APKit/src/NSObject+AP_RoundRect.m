@@ -3,165 +3,8 @@
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
+#import "AP_GLTexture.h"
 #import "AP_Window.h"
-
-static const char* kCommonVertex = AP_SHADER(
-    uniform vec2 screenSize;
-    uniform mat3 transform;
-    attribute vec3 pos;
-    varying vec2 f_innerPos;
-    varying vec2 f_outerPos;
-
-    void main() {
-        gl_Position = vec4(transform * pos, 1.0);
-        // Calculate two positions roughly one pixel apart, for anti-aliasing
-        vec3 dx = vec3(0.5, 0.0, 0.0);
-        vec3 dy = vec3(0.0, 0.5, 0.0);
-        vec2 xScreen = (transform * (pos + dx) - transform * (pos - dx)).xy;
-        vec2 yScreen = (transform * (pos + dy) - transform * (pos - dy)).xy;
-        float xPix = length(xScreen * 0.5 * screenSize);
-        float yPix = length(yScreen * 0.5 * screenSize);
-        vec2 p = pos.xy - 0.5;
-        vec2 k = p / vec2(xPix, yPix);
-        f_innerPos = p - k;
-        f_outerPos = p + k;
-    }
-);
-
-static const char* kCircleFragment = AP_SHADER(
-    uniform vec4 color;
-    varying vec2 f_innerPos;
-    varying vec2 f_outerPos;
-
-    float distanceForPoint(vec2 p) {
-        return length(p);
-    }
-
-    float alphaForDistances(float inner, float outer) {
-        float lo = min(inner, outer);
-        float hi = max(inner, outer);
-        return clamp((0.5 - lo) / (hi - lo), 0.0, 1.0);
-    }
-
-    float alphaForEdge(vec2 inner, vec2 outer) {
-        return alphaForDistances(distanceForPoint(inner), distanceForPoint(outer));
-    }
-
-    void main() {
-        float a = alphaForEdge(f_innerPos, f_outerPos);
-        vec4 c = vec4(color.rgb, color.a * a);
-        OUTPUT(c);
-    }
-);
-
-static const char* kStrokedRoundRectFragment = AP_SHADER(
-    uniform vec4 fillColor;
-    uniform vec4 penColor;
-    uniform vec2 corner;
-    uniform vec2 pen;
-
-    varying vec2 f_outerPos;
-    varying vec2 f_innerPos;
-
-    const vec2 zero = vec2(0.0, 0.0);
-
-    float alphaForDistances(float inner, float outer) {
-        float lo = min(inner, outer);
-        float hi = max(inner, outer);
-        return clamp((0.5 - lo) / (hi - lo), 0.0, 1.0);
-    }
-
-    vec2 focus(vec2 c) {
-        vec2 c2 = c * c;
-        return sqrt(max(zero, vec2(c2.x - c2.y, c2.y - c2.x)));
-    }
-
-    float distanceForPoint(vec2 p) {
-        p = abs(p) - 0.5 + corner;
-        vec2 f = focus(corner);
-        vec2 pLo = min(p - f, zero);
-        vec2 pHi = max(p, zero);
-        float rectDist = max(pLo.x, pLo.y);
-        float ellipseDist = 0.5 * (distance(pHi, f) + distance(pHi, -f)) - max(corner.x, corner.y);
-        return 0.5 + rectDist + ellipseDist;
-    }
-
-    float distanceForPointWithPen(vec2 p) {
-        vec2 innerCorner = max(zero, corner - pen);
-        p = abs(p) - 0.5 + innerCorner + pen;
-        vec2 f = focus(innerCorner);
-        vec2 pLo = min(p - f, zero);
-        vec2 pHi = max(p, zero);
-        float rectDist = max(pLo.x, pLo.y);
-        float ellipseDist = 0.5 * (distance(pHi, f) + distance(pHi, -f)) - max(innerCorner.x, innerCorner.y);
-        return 0.5 + rectDist + ellipseDist;
-    }
-
-    float alphaForEdge(vec2 inner, vec2 outer) {
-        return alphaForDistances(distanceForPoint(inner), distanceForPoint(outer));
-    }
-
-    float alphaForEdgeWithPen(vec2 inner, vec2 outer) {
-        return alphaForDistances(distanceForPointWithPen(inner), distanceForPointWithPen(outer));
-    }
-
-    void main() {
-        float a1 = alphaForEdge(f_innerPos, f_outerPos);
-        float a2 = alphaForEdgeWithPen(f_innerPos, f_outerPos);
-        vec4 ink = mix(penColor, fillColor, a2);
-        vec4 c = vec4(ink.rgb, ink.a * a1);
-        OUTPUT(c);
-    }
-);
-
-static const char* kFilledRoundRectFragment = AP_SHADER(
-    uniform vec4 color;
-    uniform vec2 corner;
-
-    varying vec2 f_outerPos;
-    varying vec2 f_innerPos;
-
-    const vec2 zero = vec2(0.0, 0.0);
-
-    float alphaForDistances(float inner, float outer) {
-        float lo = min(inner, outer);
-        float hi = max(inner, outer);
-        return clamp((0.5 - lo) / (hi - lo), 0.0, 1.0);
-    }
-
-    vec2 focus(vec2 c) {
-        vec2 c2 = c * c;
-        return sqrt(max(zero, vec2(c2.x - c2.y, c2.y - c2.x)));
-    }
-
-    float distanceForPoint(vec2 p) {
-        p = abs(p) - 0.5 + corner;
-        vec2 f = focus(corner);
-        vec2 pLo = min(p - f, zero);
-        vec2 pHi = max(p, zero);
-        float rectDist = max(pLo.x, pLo.y);
-        float ellipseDist = 0.5 * (distance(pHi, f) + distance(pHi, -f)) - max(corner.x, corner.y);
-        return 0.5 + rectDist + ellipseDist;
-    }
-
-    float alphaForEdge(vec2 inner, vec2 outer) {
-        return alphaForDistances(distanceForPoint(inner), distanceForPoint(outer));
-    }
-
-    void main() {
-        float a = alphaForEdge(f_innerPos, f_outerPos);
-        vec4 c = vec4(color.rgb, color.a * a);
-        OUTPUT(c);
-    }
-);
-
-static const char* kRectFragment = AP_SHADER(
-    uniform vec4 color;
-    void main() {
-        vec4 c = color;
-        OUTPUT(c);
-    }
-);
 
 @implementation NSObject (AP_RoundRect)
 
@@ -169,41 +12,229 @@ static const char* kRectFragment = AP_SHADER(
     transform:(CGAffineTransform)transform
     color:(GLKVector4)color
 {
+    static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
-    static AP_GLBuffer* s_buffer;
-    static GLint s_screenSize;
     static GLint s_transform;
     static GLint s_color;
     static GLint s_pos;
+    static GLint s_texPos;
+    static GLint s_tex;
+
+    static const char* kVertex = AP_SHADER(
+        uniform mat3 transform;
+        attribute vec3 pos;
+        attribute vec2 texPos;
+        varying vec2 f_texPos;
+
+        void main() {
+            gl_Position = vec4(transform * pos, 1.0);
+            f_texPos = texPos;
+        }
+    );
+
+    static const char* kFragment = AP_SHADER(
+        uniform vec4 color;
+        uniform sampler2D tex;
+        varying vec2 f_texPos;
+
+        void main() {
+            float a = texture2D(tex, f_texPos).r;
+            vec4 c = vec4(color.rgb, color.a * a);
+            OUTPUT(c);
+        }
+    );
 
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_prog = [[AP_GLProgram alloc]
-            initWithVertex:kCommonVertex
-            fragment:kCircleFragment
-        ];
-        s_screenSize = [s_prog uniform:@"screenSize"];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
+        s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
         s_pos = [s_prog attr:@"pos"];
-
-        s_buffer = [[AP_GLBuffer alloc] init];
-        [s_buffer bind];
-
-        // Unit square around (0.5,0.5) in homogenous 2D coordinates
-        float k = 0.01; // Outset slightly to avoid gaps at the edges.
-        float data[12] = {
-            0-k, 0-k, 1,
-            0-k, 1+k, 1,
-            1+k, 0-k, 1,
-            1+k, 1+k, 1,
-        };
-        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
+        s_texPos = [s_prog attr:@"texPos"];
+        s_tex = [s_prog uniform:@"tex"];
     }
 
+    AP_CHECK(s_texture, return);
     AP_CHECK(s_prog, return);
-    AP_CHECK(s_buffer, return);
+
+    GLKMatrix3 matrix = GLKMatrix3Make(
+        transform.a * size.width,  transform.b * size.width,  0,
+        transform.c * size.height, transform.d * size.height, 0,
+        transform.tx,              transform.ty,              1);
+
+    [s_prog use];
+
+    _GL(Uniform4fv, s_color, 1, color.v);
+    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
+
+    const GLfloat a = 1/8.0, d = 7/8.0;
+    GLfloat data[20] = {
+        // pos.x, y, z, texPos.s, t
+               0, 0, 1,        a, a,
+               0, 1, 1,        a, d,
+               1, 0, 1,        d, a,
+               1, 1, 1,        d, d,
+    };
+
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
+
+    _GL(EnableVertexAttribArray, s_texPos);
+    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
+
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(Uniform1i, s_tex, 0);
+    [s_texture bind];
+
+    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+
+    _GL(DisableVertexAttribArray, s_pos);
+    _GL(DisableVertexAttribArray, s_texPos);
+}
+
+- (void) rectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)color
+{
+    static AP_GLTexture* s_texture;
+    static AP_GLProgram* s_prog;
+    static GLint s_transform;
+    static GLint s_color;
+    static GLint s_pos;
+    static GLint s_texPos;
+    static GLint s_tex;
+
+    static const char* kVertex = AP_SHADER(
+        uniform mat3 transform;
+        attribute vec3 pos;
+        attribute vec2 texPos;
+        varying vec2 f_texPos;
+
+        void main() {
+            gl_Position = vec4(transform * pos, 1.0);
+            f_texPos = texPos;
+        }
+    );
+
+    static const char* kFragment = AP_SHADER(
+        uniform vec4 color;
+        uniform sampler2D tex;
+        varying vec2 f_texPos;
+
+        void main() {
+            float a = texture2D(tex, f_texPos).r;
+            vec4 c = vec4(color.rgb, color.a * a);
+            OUTPUT(c);
+        }
+    );
+
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        s_texture = [AP_GLTexture textureNamed:@"rect_template.png" maxSize:4.0];
+        s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
+        s_transform = [s_prog uniform:@"transform"];
+        s_color = [s_prog uniform:@"color"];
+        s_pos = [s_prog attr:@"pos"];
+        s_texPos = [s_prog attr:@"texPos"];
+        s_tex = [s_prog uniform:@"tex"];
+    }
+
+    AP_CHECK(s_texture, return);
+    AP_CHECK(s_prog, return);
+
+    GLKMatrix3 matrix = GLKMatrix3Make(
+        transform.a * size.width,  transform.b * size.width,  0,
+        transform.c * size.height, transform.d * size.height, 0,
+        transform.tx,              transform.ty,              1);
+
+    [s_prog use];
+
+    _GL(Uniform4fv, s_color, 1, color.v);
+    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
+
+    const GLfloat a = 1/8.0, d = 7/8.0;
+    GLfloat data[20] = {
+        // pos.x, y, z, texPos.s, t
+               0, 0, 1,        a, a,
+               0, 1, 1,        a, d,
+               1, 0, 1,        d, a,
+               1, 1, 1,        d, d,
+    };
+
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
+
+    _GL(EnableVertexAttribArray, s_texPos);
+    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
+
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(Uniform1i, s_tex, 0);
+    [s_texture bind];
+
+    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+
+    _GL(DisableVertexAttribArray, s_pos);
+    _GL(DisableVertexAttribArray, s_texPos);
+}
+
+- (void) roundRectWithSize:(CGSize)size
+    transform:(CGAffineTransform)transform
+    color:(GLKVector4)color
+    corner:(CGFloat)corner
+{
+    if (corner <= 0) {
+        [self rectWithSize:size transform:transform color:color];
+        return;
+    }
+    static AP_GLTexture* s_texture;
+    static AP_GLProgram* s_prog;
+    static GLint s_transform;
+    static GLint s_color;
+    static GLint s_pos;
+    static GLint s_texPos;
+    static GLint s_tex;
+
+    static const char* kVertex = AP_SHADER(
+        uniform mat3 transform;
+        attribute vec3 pos;
+        attribute vec2 texPos;
+        varying vec2 f_texPos;
+
+        void main() {
+            gl_Position = vec4(transform * pos, 1.0);
+            f_texPos = texPos;
+        }
+    );
+
+    static const char* kFragment = AP_SHADER(
+        uniform vec4 color;
+        uniform sampler2D tex;
+        varying vec2 f_texPos;
+
+        void main() {
+            float a = texture2D(tex, f_texPos).r;
+            vec4 c = vec4(color.rgb, color.a * a);
+            OUTPUT(c);
+        }
+    );
+
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        s_texture = [AP_GLTexture textureNamed:@"round_rect_template.png" maxSize:4.0];
+        s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
+        s_transform = [s_prog uniform:@"transform"];
+        s_color = [s_prog uniform:@"color"];
+        s_pos = [s_prog attr:@"pos"];
+        s_texPos = [s_prog attr:@"texPos"];
+        s_tex = [s_prog uniform:@"tex"];
+    }
+
+    AP_CHECK(s_texture, return);
+    AP_CHECK(s_prog, return);
 
     CGSize screenSize = [AP_Window screenSize];
     CGFloat scale = [AP_Window screenScale];
@@ -213,20 +244,58 @@ static const char* kRectFragment = AP_SHADER(
         transform.c * size.height, transform.d * size.height, 0,
         transform.tx,              transform.ty,              1);
 
-    [s_buffer bind];
     [s_prog use];
 
     _GL(Uniform4fv, s_color, 1, color.v);
-    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
-    _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
 
-    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+    const GLfloat kx = corner / size.width;
+    const GLfloat ky = corner / size.height;
+    const GLfloat a = 1/8.0, b = 3/8.0, c = 5/8.0, d = 7/8.0;
+    GLfloat data[80] = {
+        // pos.x, y, z, texPos.s, t
+               0, 0, 1,        a, a,
+              kx, 0, 1,        b, a,
+            1-kx, 0, 1,        c, a,
+               1, 0, 1,        d, a,
+
+               0, ky, 1,       a, b,
+              kx, ky, 1,       b, b,
+            1-kx, ky, 1,       c, b,
+               1, ky, 1,       d, b,
+
+               0, 1-ky, 1,     a, c,
+              kx, 1-ky, 1,     b, c,
+            1-kx, 1-ky, 1,     c, c,
+               1, 1-ky, 1,     d, c,
+
+               0, 1, 1,        a, d,
+              kx, 1, 1,        b, d,
+            1-kx, 1, 1,        c, d,
+               1, 1, 1,        d, d,
+    };
+
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
+
+    _GL(EnableVertexAttribArray, s_texPos);
+    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
+
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(Uniform1i, s_tex, 0);
+    [s_texture bind];
+
+    GLubyte indices[22] = {
+         0, 4,
+         1, 5,  2,  6,  3,  7,
+        11, 6, 10,  5,  9,  4, 8,
+        12, 9, 13, 10, 14, 11, 15
+    };
+
+    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, indices);
 
     _GL(DisableVertexAttribArray, s_pos);
-
-    [s_buffer unbind];
+    _GL(DisableVertexAttribArray, s_texPos);
 }
 
 - (void) roundRectWithSize:(CGSize)size
@@ -244,48 +313,65 @@ static const char* kRectFragment = AP_SHADER(
         [self roundRectWithSize:size transform:transform color:fillColor corner:corner];
         return;
     }
+    NSAssert((pen + 1) < corner, @"pen size must be lower than corner size");
 
+    static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
-    static AP_GLBuffer* s_buffer;
-    static GLint s_screenSize;
     static GLint s_transform;
-    static GLint s_fillColor;
     static GLint s_penColor;
-    static GLint s_corner;
-    static GLint s_pen;
+    static GLint s_fillColor;
     static GLint s_pos;
+    static GLint s_penTexPos;
+    static GLint s_fillTexPos;
+    static GLint s_tex;
+
+    static const char* kVertex = AP_SHADER(
+        uniform mat3 transform;
+        attribute vec3 pos;
+        attribute vec2 penTexPos;
+        attribute vec2 fillTexPos;
+        varying vec2 f_penTexPos;
+        varying vec2 f_fillTexPos;
+
+        void main() {
+            gl_Position = vec4(transform * pos, 1.0);
+            f_penTexPos = penTexPos;
+            f_fillTexPos = fillTexPos;
+        }
+    );
+
+    static const char* kFragment = AP_SHADER(
+        uniform vec4 penColor;
+        uniform vec4 fillColor;
+        uniform sampler2D tex;
+        varying vec2 f_penTexPos;
+        varying vec2 f_fillTexPos;
+
+        void main() {
+            float p = texture2D(tex, f_penTexPos).r;
+            float f = texture2D(tex, f_fillTexPos).r;
+            vec4 color = mix(penColor, fillColor, f);
+            vec4 c = vec4(color.rgb, color.a * p);
+            OUTPUT(c);
+        }
+    );
 
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_prog = [[AP_GLProgram alloc]
-            initWithVertex:kCommonVertex
-            fragment:kStrokedRoundRectFragment
-        ];
-        s_screenSize = [s_prog uniform:@"screenSize"];
+        s_texture = [AP_GLTexture textureNamed:@"round_rect_template.png" maxSize:4.0];
+        s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
-        s_fillColor = [s_prog uniform:@"fillColor"];
         s_penColor = [s_prog uniform:@"penColor"];
-        s_corner = [s_prog uniform:@"corner"];
-        s_pen = [s_prog uniform:@"pen"];
+        s_fillColor = [s_prog uniform:@"fillColor"];
         s_pos = [s_prog attr:@"pos"];
-
-        s_buffer = [[AP_GLBuffer alloc] init];
-        [s_buffer bind];
-
-        // Unit square around (0.5,0.5) in homogenous 2D coordinates
-        float k = 0.01; // Outset slightly to avoid gaps at the edges.
-        float data[12] = {
-            0-k, 0-k, 1,
-            0-k, 1+k, 1,
-            1+k, 0-k, 1,
-            1+k, 1+k, 1,
-        };
-        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
+        s_penTexPos = [s_prog attr:@"penTexPos"];
+        s_fillTexPos = [s_prog attr:@"fillTexPos"];
+        s_tex = [s_prog uniform:@"tex"];
     }
 
+    AP_CHECK(s_texture, return);
     AP_CHECK(s_prog, return);
-    AP_CHECK(s_buffer, return);
 
     CGSize screenSize = [AP_Window screenSize];
     CGFloat scale = [AP_Window screenScale];
@@ -295,159 +381,66 @@ static const char* kRectFragment = AP_SHADER(
         transform.c * size.height, transform.d * size.height, 0,
         transform.tx,              transform.ty,              1);
 
-    [s_buffer bind];
     [s_prog use];
 
-    _GL(Uniform4fv, s_fillColor, 1, fillColor.v);
     _GL(Uniform4fv, s_penColor, 1, penColor.v);
-    _GL(Uniform2f, s_corner, corner / size.width, corner / size.height);
-    _GL(Uniform2f, s_pen, pen / size.width, pen / size.height);
-    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
+    _GL(Uniform4fv, s_fillColor, 1, fillColor.v);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
-    _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
 
-    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
+    const GLfloat kx = corner / size.width;
+    const GLfloat ky = corner / size.height;
+    const GLfloat a = 1/8.0, b = 3/8.0, c = 5/8.0, d = 7/8.0;
+    const GLfloat p = corner / (corner - pen) - 1.0;
+    const GLfloat _a = a - p/4;
+    const GLfloat _d = d + p/4;
+    GLfloat data[112] = {
+        // pos.x, y, z, penTexPos.s, t, fillTexPos.s,  t
+               0, 0, 1,           a, a,           _a, _a,
+              kx, 0, 1,           b, a,            b, _a,
+            1-kx, 0, 1,           c, a,            c, _a,
+               1, 0, 1,           d, a,           _d, _a,
+
+               0, ky, 1,          a, b,           _a,  b,
+              kx, ky, 1,          b, b,            b,  b,
+            1-kx, ky, 1,          c, b,            c,  b,
+               1, ky, 1,          d, b,           _d,  b,
+
+               0, 1-ky, 1,        a, c,           _a,  c,
+              kx, 1-ky, 1,        b, c,            b,  c,
+            1-kx, 1-ky, 1,        c, c,            c,  c,
+               1, 1-ky, 1,        d, c,           _d,  c,
+
+               0, 1, 1,           a, d,           _a, _d,
+              kx, 1, 1,           b, d,            b, _d,
+            1-kx, 1, 1,           c, d,            c, _d,
+               1, 1, 1,           d, d,           _d, _d,
+    };
+
+    _GL(EnableVertexAttribArray, s_pos);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[0]);
+
+    _GL(EnableVertexAttribArray, s_penTexPos);
+    _GL(VertexAttribPointer, s_penTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[3]);
+
+    _GL(EnableVertexAttribArray, s_fillTexPos);
+    _GL(VertexAttribPointer, s_fillTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[5]);
+
+    _GL(ActiveTexture, GL_TEXTURE0);
+    _GL(Uniform1i, s_tex, 0);
+    [s_texture bind];
+
+    GLubyte indices[22] = {
+         0, 4,
+         1, 5,  2,  6,  3,  7,
+        11, 6, 10,  5,  9,  4, 8,
+        12, 9, 13, 10, 14, 11, 15
+    };
+
+    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, indices);
 
     _GL(DisableVertexAttribArray, s_pos);
-
-    [s_buffer unbind];
-}
-
-- (void) roundRectWithSize:(CGSize)size
-    transform:(CGAffineTransform)transform
-    color:(GLKVector4)color
-    corner:(CGFloat)corner
-{
-    if (corner <= 0) {
-        [self rectWithSize:size transform:transform color:color];
-        return;
-    }
-
-    static AP_GLProgram* s_prog;
-    static AP_GLBuffer* s_buffer;
-    static GLint s_screenSize;
-    static GLint s_transform;
-    static GLint s_color;
-    static GLint s_corner;
-    static GLint s_pos;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        s_prog = [[AP_GLProgram alloc]
-            initWithVertex:kCommonVertex
-            fragment:kFilledRoundRectFragment
-        ];
-        s_screenSize = [s_prog uniform:@"screenSize"];
-        s_transform = [s_prog uniform:@"transform"];
-        s_color = [s_prog uniform:@"color"];
-        s_corner = [s_prog uniform:@"corner"];
-        s_pos = [s_prog attr:@"pos"];
-
-        s_buffer = [[AP_GLBuffer alloc] init];
-        [s_buffer bind];
-
-        // Unit square around (0.5,0.5) in homogenous 2D coordinates
-        float k = 0.01; // Outset slightly to avoid gaps at the edges.
-        float data[12] = {
-            0-k, 0-k, 1,
-            0-k, 1+k, 1,
-            1+k, 0-k, 1,
-            1+k, 1+k, 1,
-        };
-        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
-    }
-
-    AP_CHECK(s_prog, return);
-    AP_CHECK(s_buffer, return);
-
-    CGSize screenSize = [AP_Window screenSize];
-    CGFloat scale = [AP_Window screenScale];
-
-    GLKMatrix3 matrix = GLKMatrix3Make(
-        transform.a * size.width,  transform.b * size.width,  0,
-        transform.c * size.height, transform.d * size.height, 0,
-        transform.tx,              transform.ty,              1);
-
-    [s_buffer bind];
-    [s_prog use];
-
-    _GL(Uniform4fv, s_color, 1, color.v);
-    _GL(Uniform2f, s_corner, corner / size.width, corner / size.height);
-    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
-    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
-    _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
-
-    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
-
-    _GL(DisableVertexAttribArray, s_pos);
-
-    [s_buffer unbind];
-}
-
-- (void) rectWithSize:(CGSize)size
-    transform:(CGAffineTransform)transform
-    color:(GLKVector4)color
-{
-    static AP_GLProgram* s_prog;
-    static AP_GLBuffer* s_buffer;
-    static GLint s_screenSize;
-    static GLint s_transform;
-    static GLint s_color;
-    static GLint s_pos;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        s_prog = [[AP_GLProgram alloc]
-            initWithVertex:kCommonVertex
-            fragment:kRectFragment
-        ];
-        s_screenSize = [s_prog uniform:@"screenSize"];
-        s_transform = [s_prog uniform:@"transform"];
-        s_color = [s_prog uniform:@"color"];
-        s_pos = [s_prog attr:@"pos"];
-
-        s_buffer = [[AP_GLBuffer alloc] init];
-        [s_buffer bind];
-
-        // Unit square around (0.5,0.5) in homogenous 2D coordinates
-        float data[12] = {
-            0, 0, 1,
-            0, 1, 1,
-            1, 0, 1,
-            1, 1, 1,
-        };
-        [s_buffer bufferTarget:GL_ARRAY_BUFFER usage:GL_STATIC_DRAW data:data size:sizeof(data)];
-    }
-
-    AP_CHECK(s_prog, return);
-    AP_CHECK(s_buffer, return);
-
-    CGSize screenSize = [AP_Window screenSize];
-    CGFloat scale = [AP_Window screenScale];
-
-    GLKMatrix3 matrix = GLKMatrix3Make(
-        transform.a * size.width,  transform.b * size.width,  0,
-        transform.c * size.height, transform.d * size.height, 0,
-        transform.tx,              transform.ty,              1);
-
-    [s_buffer bind];
-    [s_prog use];
-
-    _GL(Uniform4fv, s_color, 1, color.v);
-    _GL(Uniform2f, s_screenSize, screenSize.width * scale, screenSize.height * scale);
-    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
-    _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 0, 0);
-
-    _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
-
-    _GL(DisableVertexAttribArray, s_pos);
-
-    [s_buffer unbind];
+    _GL(DisableVertexAttribArray, s_penTexPos);
+    _GL(DisableVertexAttribArray, s_fillTexPos);
 }
 
 @end
