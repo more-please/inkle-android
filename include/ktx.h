@@ -49,16 +49,15 @@ typedef enum ktx_pixel_format_t {
     KTX_LUMINANCE_ALPHA = 0x190A
 } ktx_pixel_format_t;
 
-// Write a single texture to a KTX file.
+// Write a KTX header to the given file.
 // Returns 0 on failures and non-zero on success.
-int ktx_write_2d_uncompressed(
+int ktx_write_header(
     FILE* f,
     uint32_t glType, // e.g. GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5
     uint32_t glFormat, // e.g. GL_RGB, GL_RGBA
     uint32_t width,
     uint32_t height,
-    const uint8_t* data,
-    uint32_t data_length)
+    int numMipmaps)
 {
     const ktx_pixel_type_t type = (ktx_pixel_type_t) glType;
     const ktx_pixel_format_t format = (ktx_pixel_format_t) glFormat;
@@ -99,11 +98,6 @@ int ktx_write_2d_uncompressed(
         return 0;
     }
 
-    if (data_length != width * height * header.glTypeSize) {
-        fprintf(stderr, "KTX data_length was %d, expected %d\n", data_length, width * height * header.glTypeSize);
-        return 0;
-    }
-
     header.glInternalFormat = glFormat; // Only used for compressed textures
     header.glBaseInternalFormat = glFormat; // Only used for compressed textures
     header.pixelWidth = width;
@@ -111,10 +105,20 @@ int ktx_write_2d_uncompressed(
     header.pixelDepth = 0; // Only used for 3D textures
     header.numberOfArrayElements = 0; // Only used for texture arrays
     header.numberOfFaces = 1; // Only used for cubemaps
-    header.numberOfMipmapLevels = 0; // Request glGenerateMipmap at runtime
+    header.numberOfMipmapLevels = numMipmaps; // Request glGenerateMipmap at runtime
     header.bytesOfKeyValueData = 0;
 
     fwrite((const void*) &header, 1, sizeof(header), f);
+    return 1;
+}
+
+// Append a single mipmap to the given file.
+// This file must already contain a matching header.
+int ktx_append_mipmap(
+    FILE* f,
+    const uint8_t* data,
+    uint32_t data_length)
+{
     fwrite((const void*) &data_length, 1, sizeof(data_length), f);
     fwrite((const void*) data, data_length, 1, f);
     for (uint32_t i = data_length; i & 3; ++i) {
