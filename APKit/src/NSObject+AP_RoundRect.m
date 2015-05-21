@@ -191,7 +191,7 @@
     }
 
     // Corner radius must be less than half the total size
-    corner = MIN(corner, MIN(size.width, size.height)/2 - 1);
+    corner = MIN(corner, MIN(size.width, size.height)/2);
 
     static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
@@ -228,7 +228,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"round_rect_template.png" maxSize:4.0];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
@@ -255,7 +255,7 @@
 
     const GLfloat kx = corner / size.width;
     const GLfloat ky = corner / size.height;
-    const GLfloat a = 1/8.0, b = 3/8.0, c = 5/8.0, d = 7/8.0;
+    const GLfloat a = 1/8.0, b = 4/8.0, c = 4/8.0, d = 7/8.0;
     GLfloat data[80] = {
         // pos.x, y, z, texPos.s, t
                0, 0, 1,        a, a,
@@ -319,7 +319,7 @@
     }
 
     // Corner radius must be less than half the total size
-    corner = MIN(corner, MIN(size.width, size.height)/2 - 2);
+    corner = MIN(corner, MIN(size.width, size.height)/2);
 
     // Pen size must be lower than the corner radius
     pen = MIN(pen, corner - 1);
@@ -368,7 +368,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"round_rect_template.png" maxSize:4.0];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_penColor = [s_prog uniform:@"penColor"];
@@ -398,7 +398,7 @@
 
     const GLfloat kx = corner / size.width;
     const GLfloat ky = corner / size.height;
-    const GLfloat a = 1/8.0, b = 3/8.0, c = 5/8.0, d = 7/8.0;
+    const GLfloat a = 1/8.0, b = 4/8.0, c = 4/8.0, d = 7/8.0;
     const GLfloat p = corner / (corner - pen) - 1.0;
     const GLfloat _a = a - p/4;
     const GLfloat _d = d + p/4;
