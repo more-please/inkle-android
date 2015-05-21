@@ -1005,9 +1005,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         CGRect r = self.inFlightBounds;
         [self roundRectWithSize:r.size
             transform:boundsToGL
-            penColor:backgroundColor
-            fillColor:backgroundColor
-            pen:0
+            color:backgroundColor
             corner:self.layer.cornerRadius
         ];
     }

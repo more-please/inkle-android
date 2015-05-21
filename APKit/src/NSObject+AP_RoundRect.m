@@ -103,46 +103,33 @@
     static GLint s_transform;
     static GLint s_color;
     static GLint s_pos;
-    static GLint s_texPos;
-    static GLint s_tex;
 
     static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
         attribute vec3 pos;
-        attribute vec2 texPos;
-        varying vec2 f_texPos;
 
         void main() {
             gl_Position = vec4(transform * pos, 1.0);
-            f_texPos = texPos;
         }
     );
 
     static const char* kFragment = AP_SHADER(
         uniform vec4 color;
-        uniform sampler2D tex;
-        varying vec2 f_texPos;
 
         void main() {
-            float a = texture2D(tex, f_texPos).r;
-            vec4 c = vec4(color.rgb, color.a * a);
-            OUTPUT(c);
+            OUTPUT(color);
         }
     );
 
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"rect_template.png" maxSize:4.0];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
         s_pos = [s_prog attr:@"pos"];
-        s_texPos = [s_prog attr:@"texPos"];
-        s_tex = [s_prog uniform:@"tex"];
     }
 
-    AP_CHECK(s_texture, return);
     AP_CHECK(s_prog, return);
 
     GLKMatrix3 matrix = GLKMatrix3Make(
@@ -155,29 +142,20 @@
     _GL(Uniform4fv, s_color, 1, color.v);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
 
-    const GLfloat a = 1/8.0, d = 7/8.0;
-    GLfloat data[20] = {
-        // pos.x, y, z, texPos.s, t
-               0, 0, 1,        a, a,
-               0, 1, 1,        a, d,
-               1, 0, 1,        d, a,
-               1, 1, 1,        d, d,
+    GLfloat data[12] = {
+        // pos.x, y, z,
+               0, 0, 1,
+               0, 1, 1,
+               1, 0, 1,
+               1, 1, 1,
     };
 
     _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
-
-    _GL(EnableVertexAttribArray, s_texPos);
-    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
-
-    _GL(ActiveTexture, GL_TEXTURE0);
-    _GL(Uniform1i, s_tex, 0);
-    [s_texture bind];
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 3 * sizeof(GLfloat), &data[0]);
 
     _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
 
     _GL(DisableVertexAttribArray, s_pos);
-    _GL(DisableVertexAttribArray, s_texPos);
 }
 
 - (void) roundRectWithSize:(CGSize)size
