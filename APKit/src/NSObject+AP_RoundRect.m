@@ -189,6 +189,10 @@
         [self rectWithSize:size transform:transform color:color];
         return;
     }
+
+    // Corner radius must be less than half the total size
+    corner = MIN(corner, MIN(size.width, size.height)/2 - 1);
+
     static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
     static GLint s_transform;
@@ -313,7 +317,12 @@
         [self roundRectWithSize:size transform:transform color:fillColor corner:corner];
         return;
     }
-    NSAssert((pen + 1) < corner, @"pen size must be lower than corner size");
+
+    // Corner radius must be less than half the total size
+    corner = MIN(corner, MIN(size.width, size.height)/2 - 2);
+
+    // Pen size must be lower than the corner radius
+    pen = MIN(pen, corner - 1);
 
     static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
