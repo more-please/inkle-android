@@ -66,9 +66,6 @@ static JavaMethod kGetPublicDocumentsDir = {
 static JavaMethod kGetExpansionFilePath = {
     "getExpansionFilePath", "()Ljava/lang/String;", NULL
 };
-static JavaMethod kGetPatchFilePath = {
-    "getPatchFilePath", "()Ljava/lang/String;", NULL
-};
 static JavaMethod kGetScreenInfo = {
     "getScreenInfo", "()[F", NULL
 };
@@ -360,6 +357,47 @@ public:
     NSArray* _pakNamesCache;
 }
 
+- (BOOL) maybeMountAsset:(const char*)name
+{
+    AAsset* pakAsset = AAssetManager_open(_assetManager, name, AASSET_MODE_BUFFER);
+    if (!pakAsset) {
+        return NO;
+    }
+    NSLog(@"Mapping %s...", name);
+    if (AAsset_isAllocated(pakAsset)) {
+        NSLog(@"*** WARNING, asset is allocated (not mmapped) ***");
+        NSLog(@"This is wasting a lot of memory.");
+    }
+
+    void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
+    if (!ptr) {
+        NSLog(@"AAsset_getBuffer failed!");
+        return NO;
+    }
+
+    off_t size = AAsset_getLength(pakAsset);
+    if (!size) {
+        NSLog(@"AAsset_getLength failed!");
+        return NO;
+    }
+
+    NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
+    if (!data) {
+        NSLog(@"dataWithBytesNoCopy failed!");
+        return NO;
+    }
+
+    PAK* pak = [PAK pakWithData:data];
+    if (!pak) {
+        NSLog(@"Failed to load game data from %s", name);
+        return NO;
+    }
+
+    [PAK_Search add:pak];
+    return YES;
+}
+
+
 - (id) initWithAndroidApp:(struct android_app*)android
 {
     self = [super init];
@@ -428,48 +466,27 @@ public:
         logStatfs(self.publicDocumentsDir);
         logStatfs(_obbPath);
 
-        PAK* pak;
-
-        AAsset* pakAsset = AAssetManager_open(_assetManager, "sorcery.ogg", AASSET_MODE_BUFFER);
-        if (pakAsset) {
-            NSLog(@"Mapping OBB...");
-            if (AAsset_isAllocated(pakAsset)) {
-                NSLog(@"*** WARNING, game data is allocated (not mmapped) ***");
-                NSLog(@"This is wasting a lot of memory.");
-            }
-
-            void* ptr = const_cast<void*>(AAsset_getBuffer(pakAsset));
-            NSAssert(ptr, @"AAsset_getBuffer failed!");
-
-            off_t size = AAsset_getLength(pakAsset);
-            NSAssert(size, @"AAsset_getLength failed!");
-
-            NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-            NSAssert(data, @"dataWithBytesNoCopy failed!");
-
-            pak = [PAK pakWithAsset:@"sorcery.ogg" data:data];
-
-        } else {
-            // Using Google Play-style expansion files.
-            // This means there may be a patch file.
-            NSString* patch = [self javaStringMethod:&kGetPatchFilePath];
-            if (patch) {
-                pak = [PAK pakWithMemoryMappedFile:patch];
-                [PAK_Search add:pak];
-            }
-
-            pak = [PAK pakWithMemoryMappedFile:_obbPath];
-
-            // A cheat: assume all the sounds are in the OBB, so we
-            // don't have to bother checking assets (which are very slow).
-            _pakNamesCache = [NSArray array];
+        // Load the patch first, so it takes priority.
+        if ([self maybeMountAsset:"patch.ogg"]) {
+            NSLog(@"Loaded game data patch");
         }
 
-        NSAssert(pak, @"Can't find .pak file");
-        [PAK_Search add:pak];
+        // Load the main game data file.
+        if ([self maybeMountAsset:"main.ogg"]) {
+            NSLog(@"Loaded game data from asset (Amazon style)");
+        } else {
+            PAK* pak = [PAK pakWithMemoryMappedFile:_obbPath];
+            NSAssert(pak, @"Can't find game data file!");
+            [PAK_Search add:pak];
+            NSLog(@"Loaded game data from OBB (Google style)");
+        }
 
         // Add ourselves as a backup resource bundle (APK assets)
         [PAK_Search add:self];
+
+        // A cheat: assume all the sounds are in the OBB, so we
+        // don't have to bother checking assets (which are very slow).
+        _pakNamesCache = [NSArray array];
 
         // Initialize Cricket Audio
         CkConfig config(_env, _android->activity->clazz);
@@ -595,7 +612,7 @@ public:
     AAsset_close(asset);
 
     if (data) {
-        return [[PAK_Item alloc] initWithName:path path:path isAsset:YES offset:0 length:data.length data:data];
+        return [[PAK_Item alloc] initWithName:path length:data.length data:data];
     } else {
         return nil;
     }

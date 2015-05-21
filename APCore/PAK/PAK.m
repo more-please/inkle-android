@@ -11,15 +11,12 @@
     __weak NSData* _uncompressedData;
 }
 
-- (instancetype) initWithName:(NSString*)name path:(NSString*)path isAsset:(BOOL)isAsset offset:(int)offset length:(int)length data:(NSData*)data
+- (instancetype) initWithName:(NSString*)name length:(int)length data:(NSData*)data
 {
 	self = [super init];
 	if (self) {
         _name = name;
-		_path = path;
-		_isAsset = isAsset;
         _isCompressed = (length != data.length);
-		_offset = offset;
 		_length = length;
 		_originalData = data;
 	}
@@ -75,9 +72,9 @@
     NSDictionary* _items;
 }
 
-+ (PAK*) pakWithAsset:(NSString*)name data:(NSData*)data
++ (PAK*) pakWithData:(NSData*)data
 {
-    return [[PAK alloc] initWithPath:name data:data isAsset:YES];
+    return [[PAK alloc] initWithData:data];
 }
 
 + (PAK*) pakWithMemoryMappedFile:(NSString*)filename
@@ -90,7 +87,7 @@
             uint8_t* ptr = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
             if (ptr != MAP_FAILED) {
                 NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-                result = [[PAK alloc] initWithPath:filename data:data isAsset:NO];
+                result = [[PAK alloc] initWithData:data];
                 result->_isMemoryMapped = YES;
             }
         }
@@ -104,14 +101,12 @@
     return result;
 }
 
-- (instancetype) initWithPath:(NSString*)path data:(NSData*)data isAsset:(BOOL)isAsset
+- (instancetype) initWithData:(NSData*)data
 {
     self = [super init];
     if (self) {
-        _path = path;
         _data = data;
         _isMemoryMapped = NO;
-        _isAsset = isAsset;
 
         NSAssert(_data.length >= 16, @".pak file is too small");
         NSAssert(memcmp(_data.bytes, "AP_Pack!", 8) == 0, @"Bad .pak file signature");
@@ -149,7 +144,7 @@
     uint32_t uncompressedSize = [self wordAtOffset:(blobOffset + 16)];
     char* base = (char*)[_data bytes];
     NSData* data = [NSData dataWithBytesNoCopy:(base + offset) length:fileSize freeWhenDone:NO];
-    return [[PAK_Item alloc] initWithName:name path:_path isAsset:_isAsset offset:offset length:uncompressedSize data:data];
+    return [[PAK_Item alloc] initWithName:name length:uncompressedSize data:data];
 }
 
 - (NSString*) string:(uint32_t)strOffset {
