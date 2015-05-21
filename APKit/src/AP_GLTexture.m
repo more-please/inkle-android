@@ -206,11 +206,6 @@ static AP_WeakCache* s_textureCache = nil;
     if (level == 0) {
         _width = width;
         _height = height;
-        if (!self.cube && width == height && ((width-1) & width) == 0) {
-            // This texture is square and a power of two in size, should be safe to wrap.
-            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            _GL(TexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        }
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
