@@ -1444,6 +1444,9 @@ const EGLint basicAttribs[] = {
             NSLog(@"Initializing EGL surface... Failed!");
             abort();
         }
+
+        NSLog(@"GL_VENDOR: %s", glGetString(GL_VENDOR));
+        NSLog(@"GL_RENDERER: %s", glGetString(GL_RENDERER));
     }
 }
 
