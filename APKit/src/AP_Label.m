@@ -41,40 +41,26 @@
     CGFloat _fontScale; // Default 1.0, reduced if needed by adjustsFontSizeToFitWidth
 }
 
-- (void) labelCommonInit
-{
-    self.userInteractionEnabled = NO;
-
-    _text = [[NSMutableAttributedString alloc] initWithString:@""];
-    _font = [AP_Font systemFontOfSize:17];
-    _alignment = NSTextAlignmentNatural;
-    _lineSpacing = 0;
-    _textColor = [UIColor blackColor];
-    _shadowColor = [UIColor clearColor];
-    _shadowOffset = CGSizeMake(0, -1);
-
-    _urlRuns = [NSMutableArray array];
-
-    _numberOfLines = 1;
-
-    _fontScale = 1.0;
-    _minimumScaleFactor = 0.01;
-}
-
-- (id) init
-{
-    self = [super init];
-    if (self) {
-        [self labelCommonInit];
-    }
-    return self;
-}
-
 - (id) initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-        [self labelCommonInit];
+        self.userInteractionEnabled = NO;
+
+        _text = [[NSMutableAttributedString alloc] initWithString:@""];
+        _font = [AP_Font systemFontOfSize:17];
+        _alignment = NSTextAlignmentNatural;
+        _lineSpacing = 0;
+        _textColor = [UIColor blackColor];
+        _shadowColor = [UIColor clearColor];
+        _shadowOffset = CGSizeMake(0, -1);
+
+        _urlRuns = [NSMutableArray array];
+
+        _numberOfLines = 1;
+
+        _fontScale = 1.0;
+        _minimumScaleFactor = 0.01;
     }
     return self;
 }
