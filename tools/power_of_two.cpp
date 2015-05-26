@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,10 @@ int main(int argc, const char* argv[]) {
 
     int w, h, comp;
     unsigned char* input = stbi_load_from_memory(&file[0], file.size(), &w, &h, &comp, 0);
+    if (!input) {
+        fprintf(stderr, "Error loading input image: %s\n", stbi_failure_reason());
+        exit(1);
+    }
 
     int w2 = 4, h2 = 4;
     double k = 1.25; // Allow images to be shrunk by this amount
