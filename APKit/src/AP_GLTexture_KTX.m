@@ -88,7 +88,7 @@ typedef struct Header
 
     GLenum type = read32(header->glType);
     uint32_t typeSize = read32(header->glTypeSize);
-    AP_CHECK(typeSize >= 0 && typeSize < 4, return NO);
+    AP_CHECK(typeSize >= 0 && typeSize <= 4, return NO);
 
     // We don't support array textures or cube textures.
     int numArrayElements = MAX(1, read32(header->numberOfArrayElements));
