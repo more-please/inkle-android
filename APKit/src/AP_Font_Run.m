@@ -245,7 +245,7 @@ typedef struct VertexData {
         varying vec2 _texCoord;
         uniform sampler2D texture;
         void main() {
-            float alpha = texture2D(texture, _texCoord).r;
+            float alpha = TEXTURE_2D_BIAS(texture, _texCoord, -0.25).r;
             vec4 c = vec4(color.rgb, color.a * alpha);
             OUTPUT(c);
         }

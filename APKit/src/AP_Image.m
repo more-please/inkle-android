@@ -79,7 +79,7 @@ static const char* kFragment2 = AP_SHADER(
     uniform sampler2D texture;
     varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = texture2D(texture, f_texCoord).gggr;
+        vec4 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75).gggr;
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         vec4 c = vec4(tinted.rgb, pixel.a * alpha);
         OUTPUT(c);
@@ -93,7 +93,7 @@ static const char* kFragment3 = AP_SHADER(
     uniform sampler2D texture;
     varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = texture2D(texture, f_texCoord);
+        vec4 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75);
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         vec4 c = vec4(tinted.rgb, pixel.a * alpha);
         OUTPUT(c);
@@ -108,9 +108,9 @@ static const char* kFragment4 = AP_SHADER(
     uniform sampler2D alphaTexture;
     varying vec2 f_texCoord;
     void main() {
-        vec3 pixel = texture2D(texture, f_texCoord).rgb;
+        vec3 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75).rgb;
         vec3 tinted = mix(pixel, tint.rgb, tint.a);
-        float pixelAlpha = texture2D(alphaTexture, f_texCoord).g;
+        float pixelAlpha = TEXTURE_2D_BIAS(alphaTexture, f_texCoord, -0.75).g;
         vec4 c = vec4(tinted.rgb, pixelAlpha * alpha);
         OUTPUT(c);
     }

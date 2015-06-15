@@ -15,14 +15,21 @@
 #define AP_NORMAL_PREFIX AP_COMMON_PREFIX \
     "#define OUTPUT(x) gl_FragColor = (x)\n"
 
+#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
+#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
+
 static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
 {
+    // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
+    NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
+
     GLuint shader = glCreateShader(type);
-    const GLchar* src[2] = {
+    const GLchar* src[3] = {
         mask ? AP_MASK_PREFIX : AP_NORMAL_PREFIX,
+        [vendor hasPrefix:@"Vivante"] ? AP_VIVANTE_PREFIX : AP_SHARPEN_PREFIX,
         ptr,
     };
-    _GL(ShaderSource, shader, 2, src, NULL);
+    _GL(ShaderSource, shader, 3, src, NULL);
     _GL(CompileShader, shader);
 
     GLint logLength;
