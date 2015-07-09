@@ -346,6 +346,8 @@ public:
     EGLContext _context;
     EGLSurface _surface; // This can change across suspend/resume
 
+    CGRect _oldBounds;
+
     BOOL _inForeground;
     NSDate* _autoQuitTime;
 
@@ -1473,6 +1475,13 @@ const EGLint basicAttribs[] = {
         appFrame.size.height = f[8] / scale;
 
         [[UIScreen mainScreen] setBounds:bounds applicationFrame:appFrame scale:scale];
+
+        if (!CGRectEqualToRect(bounds, _oldBounds) && !CGRectEqualToRect(_oldBounds, CGRectZero)) {
+            NSLog(@"*** Screen size changed, tearing down GL surface");
+            [self teardownSurface];
+            [self maybeInitSurface];
+        }
+        _oldBounds = bounds;
     }
 }
 
