@@ -2,17 +2,20 @@
 
 #import "AP_Check.h"
 
-#define AP_COMMON_PREFIX \
+#define AP_VERTEX_PREFIX \
+    "precision highp float;\n"
+
+#define AP_FRAGMENT_PREFIX \
     "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
     "precision highp float;\n" \
     "#else\n" \
     "precision mediump float;\n" \
     "#endif\n"
 
-#define AP_MASK_PREFIX AP_COMMON_PREFIX \
+#define AP_MASK_PREFIX \
     "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n"
 
-#define AP_NORMAL_PREFIX AP_COMMON_PREFIX \
+#define AP_NORMAL_PREFIX \
     "#define OUTPUT(x) gl_FragColor = (x)\n"
 
 #define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
@@ -24,12 +27,13 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
     NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
 
     GLuint shader = glCreateShader(type);
-    const GLchar* src[3] = {
+    const GLchar* src[4] = {
+        (type == GL_VERTEX_SHADER) ? AP_VERTEX_PREFIX : AP_FRAGMENT_PREFIX,
         mask ? AP_MASK_PREFIX : AP_NORMAL_PREFIX,
         [vendor hasPrefix:@"Vivante"] ? AP_VIVANTE_PREFIX : AP_SHARPEN_PREFIX,
         ptr,
     };
-    _GL(ShaderSource, shader, 3, src, NULL);
+    _GL(ShaderSource, shader, 4, src, NULL);
     _GL(CompileShader, shader);
 
     GLint logLength;
