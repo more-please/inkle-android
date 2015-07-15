@@ -3,12 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <GLKit/GLKit.h>
-
-// Blerg, this top-level stuff is a real mess. Sort it out!
-#ifndef ANDROID
-#define Real_GLKViewController GLKViewController
-#define Real_UIWindow UIWindow
-#endif
+#import <UIKit/UIKit.h>
 
 #import "AP_ViewController.h"
 
@@ -19,7 +14,7 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 // Plays the role of a UIWindow containing UIViews.
 // Actually implemented as a GL-based UIView.
 
-@interface AP_Window : Real_GLKViewController
+@interface AP_Window : Real_UIViewController
 
 @property (nonatomic,readonly) CGRect bounds;
 

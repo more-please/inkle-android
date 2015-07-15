@@ -4,7 +4,6 @@
 
 #import "AP_View.h"
 
-#ifdef ANDROID
 typedef enum UITouchPhase {
     UITouchPhaseBegan,             // whenever a finger touches the surface.
     UITouchPhaseMoved,             // whenever a finger moves on the surface.
@@ -12,7 +11,6 @@ typedef enum UITouchPhase {
     UITouchPhaseEnded,             // whenever a finger leaves the surface.
     UITouchPhaseCancelled,         // whenever a touch doesn't end but we need to stop tracking (e.g. putting device to face)
 } UITouchPhase;
-#endif
 
 @interface AP_Touch : NSObject
 
@@ -26,10 +24,6 @@ typedef enum UITouchPhase {
 
 @end
 
-#ifdef ANDROID
-
-// On Android, UITouch is a thin wrapper around an Android motion event.
-// It holds a direct reference to an AP_Touch object.
 @interface Real_UITouch : NSObject
 
 @property (nonatomic,strong) AP_Touch* android;
@@ -38,12 +32,3 @@ typedef enum UITouchPhase {
 - (CGPoint)locationInView:(UIView*)view;
 
 @end
-
-#else
-
-// On iOS, the AP_Touch is an associated object.
-@interface UITouch(AP)
-@property (nonatomic) AP_Touch* android;
-@end
-
-#endif

@@ -37,12 +37,6 @@ extern const CGSize CGSizeZero;
 extern const CGRect CGRectZero;
 extern const CGRect CGRectNull;
 
-extern CGPoint CGPointFromString(NSString*);
-extern NSString* NSStringFromCGPoint(CGPoint);
-
-extern CGRect CGRectFromString(NSString*);
-extern NSString* NSStringFromCGRect(CGRect);
-
 extern CGRect CGRectUnion(CGRect r1, CGRect r2);
 extern CGRect CGRectIntersection(CGRect r1, CGRect r2);
 

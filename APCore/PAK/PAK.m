@@ -114,7 +114,7 @@
         uint32_t totalSize = [self wordAtOffset:8];
         uint32_t dirOffset = [self wordAtOffset:12];
 
-        NSAssert(data.length == totalSize, @".pak file is %d bytes, expected %d", data.length, totalSize);
+        NSAssert(data.length == totalSize, @".pak file is %lu bytes, expected %d", data.length, totalSize);
         NSAssert((dirOffset & 15) == 0, @".pak directory isn't 16-byte aligned");
         NSAssert(totalSize >= dirOffset, @".pak directory location is out of bounds");
 

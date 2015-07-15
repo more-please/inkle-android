@@ -131,11 +131,8 @@ AP_BAN_EVIL_INIT;
 
 - (void) show
 {
-#ifdef ANDROID
     id root = [AP_Application sharedApplication].delegate.window.rootViewController;
-#else
-    id root = [UIApplication sharedApplication].delegate.window.rootViewController;
-#endif
+
     AP_CHECK([root isKindOfClass:[AP_Window class]], abort());
     AP_Window* window = (AP_Window*)root;
     [window resetAllGestures];

@@ -37,9 +37,6 @@ static NSMutableArray* s_deleteQueue = nil;
 
 - (AP_GLBuffer*) init
 {
-#ifndef ANDROID
-    AP_CHECK([EAGLContext currentContext], return nil);
-#endif
     self = [super init];
     if (self) {
         _GL(GenBuffers, 1, &_name);

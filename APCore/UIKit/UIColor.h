@@ -3,10 +3,12 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
+#ifdef ANDROID
 // Don't use CGColor, just use RGBA vectors.
 typedef GLKVector4 CGColorRef;
 
 extern size_t CGColorGetNumberOfComponents(CGColorRef color);
+#endif
 
 @class AP_Image;
 
@@ -33,7 +35,6 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 - (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha;
 - (UIColor*) colorWithAlphaComponent:(CGFloat)alpha;
 
-// Android extensions...
 @property(nonatomic,readonly,assign) GLKVector4 rgba;
 + (UIColor*) colorWithRgba:(GLKVector4)rgba;
 

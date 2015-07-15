@@ -4,12 +4,10 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <UIKit/UIKit.h>
 
-#ifdef ANDROID
 typedef enum UIImageResizingMode {
     UIImageResizingModeTile,
     UIImageResizingModeStretch,
 } UIImageResizingMode;
-#endif
 
 @interface AP_Image : NSObject
 

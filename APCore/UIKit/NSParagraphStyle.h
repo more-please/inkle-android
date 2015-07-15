@@ -4,17 +4,20 @@
 
 #import "UIDefines.h"
 
-extern NSString* const NSParagraphStyleAttributeName;
-extern NSString* const NSFontAttributeName;
-extern NSString* const NSKernAttributeName;
-extern NSString* const NSForegroundColorAttributeName;
-
 // Iain additions
 extern NSString* const AP_UrlAttributeName;
 extern NSString* const AP_ImageAttributeName;
 extern NSString* const AP_TextTransformAttributeName;
 
 typedef NSString* (^AP_TextTransform)(NSString*);
+
+#ifdef ANDROID
+// TODO - move to the correct place!
+
+extern NSString* const NSParagraphStyleAttributeName;
+extern NSString* const NSFontAttributeName;
+extern NSString* const NSKernAttributeName;
+extern NSString* const NSForegroundColorAttributeName;
 
 @interface NSParagraphStyle : NSObject <NSCopying, NSMutableCopying>
 
@@ -36,3 +39,5 @@ typedef NSString* (^AP_TextTransform)(NSString*);
 @interface NSMutableParagraphStyle : NSParagraphStyle
 
 @end
+
+#endif

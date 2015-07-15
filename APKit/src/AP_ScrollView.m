@@ -5,10 +5,8 @@
 #import "AP_GestureRecognizer.h"
 #import "AP_Window.h"
 
-#ifdef ANDROID
 const CGFloat UIScrollViewDecelerationRateNormal = 5.0;
 const CGFloat UIScrollViewDecelerationRateFast = 25.0;
-#endif
 
 @implementation AP_ScrollView {
     AP_AnimatedSize* _animatedContentSize;

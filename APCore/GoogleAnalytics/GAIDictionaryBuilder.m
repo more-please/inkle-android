@@ -3,7 +3,7 @@
 #import "GlueCommon.h"
 
 @implementation GAIDictionaryBuilder {
-    jobject _obj;
+    void* _obj;
 }
 
 + (GAIDictionaryBuilder *)createEventWithCategory:(NSString *)category
@@ -11,12 +11,17 @@
                                             label:(NSString *)label
                                             value:(NSNumber *)value
 {
+#ifdef ANDROID
     GAIDictionaryBuilder* builder = [[GAIDictionaryBuilder alloc] init];
     builder->_obj = [[UIApplication sharedApplication] gaiEventWithCategory:category action:action label:label value:value];
     return builder;
+#else
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+#endif
 }
 
-- (jobject) build
+- (void*) build
 {
     return _obj;
 }

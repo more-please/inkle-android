@@ -226,6 +226,18 @@ typedef enum UIStatusBarStyle {
 }
 UIStatusBarStyle;
 
+#ifdef TARGET_OS_MAC
+
+#import <AppKit/AppKit.h>
+
+#define NSTextAlignmentLeft         NSLeftTextAlignment
+#define NSTextAlignmentRight        NSRightTextAlignment
+#define NSTextAlignmentCenter       NSCenterTextAlignment
+#define NSTextAlignmentJustified    NSJustifiedTextAlignment
+#define NSTextAlignmentNatural      NSNaturalTextAlignment
+
+#else
+
 typedef enum NSTextAlignment {
     NSTextAlignmentLeft      = 0,    // Visually left aligned
     NSTextAlignmentRight     = 1,    // Visually right aligned
@@ -260,6 +272,8 @@ typedef enum NSLineBreakMode {		/* What to do with long lines */
 }
 NSLineBreakMode;
 
+#endif
+
 typedef struct UIEdgeInsets {
     CGFloat top, left, bottom, right;
 } UIEdgeInsets;
@@ -291,7 +305,5 @@ extern NSString* const UIKeyboardWillHideNotification;
 // Properties of keyboard notifications
 extern NSString* const UIKeyboardAnimationDurationUserInfoKey;
 extern NSString* const UIKeyboardAnimationCurveUserInfoKey;
-
-extern CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment);
 
 extern UIEdgeInsets UIEdgeInsetsFromString(NSString* string);

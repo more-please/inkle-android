@@ -2,14 +2,16 @@
 
 #import "GlueCommon.h"
 
+NSString* const AP_UrlAttributeName = @"AP_Url";
+NSString* const AP_ImageAttributeName = @"AP_Image";
+NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
+
+#ifdef ANDROID
+
 NSString* const NSParagraphStyleAttributeName = @"NSParagraphStyle";
 NSString* const NSFontAttributeName = @"NSFont";
 NSString* const NSKernAttributeName = @"NSKern";
 NSString* const NSForegroundColorAttributeName = @"NSForegroundColor";
-
-NSString* const AP_UrlAttributeName = @"AP_Url";
-NSString* const AP_ImageAttributeName = @"AP_Image";
-NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
 
 @implementation NSParagraphStyle
 
@@ -45,3 +47,5 @@ NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
 
 @implementation NSMutableParagraphStyle
 @end
+
+#endif

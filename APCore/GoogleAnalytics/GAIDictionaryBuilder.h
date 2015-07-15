@@ -12,6 +12,6 @@
 
 // On iOS this is an NSMutableDictionary, but on Android we return
 // an opaque reference to a Java Map.
-- (jobject) build;
+- (void*) build;
 
 @end

@@ -1,5 +1,8 @@
 #pragma once
 
+// Functions that exist on iOS but not OS X.
+#import "CoreGraphicsExtensions.h"
+
 #import "UIDefines.h"
 
 #import "UIApplication.h"

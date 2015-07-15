@@ -3,7 +3,9 @@
 #import <Foundation/Foundation.h>
 #import <Parse/Parse.h>
 
+#ifdef ANDROID
 #import <jni.h>
+#endif
 
 @interface UIApplication : NSObject
 
@@ -31,12 +33,13 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 
 - (void) quit;
 
+#ifdef ANDROID
+// Wrappers for Parse.
+// TODO (URGENT!) - split these off from SorceryActivity.
 - (JNIEnv*) jniEnv;
 - (jobject) jniContext;
 - (jclass) jniFindClass:(NSString*)name;
 
-// Wrappers for Parse.
-// TODO: split these off from SorceryActivity.
 - (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)parameters block:(PFIdResultBlock)block;
 
@@ -69,5 +72,6 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 
 - (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value;
 - (void) gaiTracker:(jobject)tracker send:(jobject)params;
+#endif
 
 @end

@@ -170,9 +170,6 @@ static AP_WeakCache* s_textureCache = nil;
 
 - (AP_GLTexture*) initWithName:(NSString*)name target:(GLenum)target
 {
-#ifndef ANDROID
-    AP_CHECK([EAGLContext currentContext], return nil);
-#endif
     self = [super init];
     if (self) {
         _assetName = name;

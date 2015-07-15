@@ -3,8 +3,6 @@
 #import <objc/runtime.h>
 #import "AP_View.h"
 
-#ifdef ANDROID
-
 @implementation Real_UITouch
 
 - (CGPoint)locationInView:(UIView*)view
@@ -13,21 +11,6 @@
 }
 
 @end
-
-#else
-
-@implementation UITouch(AP)
-- (void) setAndroid:(AP_Touch*)t
-{
-    objc_setAssociatedObject(self, @selector(android), t, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-- (AP_Touch*) android
-{
-    return objc_getAssociatedObject(self, @selector(android));
-}
-@end
-
-#endif
 
 @implementation AP_Touch
 

@@ -9,12 +9,10 @@
 #import "NSObject+AP_KeepAlive.h"
 #import "NSObject+AP_RoundRect.h"
 
-#ifdef ANDROID
 static inline CGPoint CGRectGetCenter(CGRect rect)
 {
     return CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
 }
-#endif
 
 @implementation AP_View {
     __weak AP_Window* _window;

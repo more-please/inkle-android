@@ -3,10 +3,10 @@
 #import "GlueCommon.h"
 
 @implementation AP_GAITracker {
-    jobject _obj;
+    void* _obj;
 }
 
-- (instancetype) initWithObj:(jobject)obj
+- (instancetype) initWithObj:(void*)obj
 {
     self = [super init];
     if (self) {
@@ -17,12 +17,20 @@
 
 - (void) set:(NSString*)parameterName value:(NSString*)value
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] gaiTracker:_obj set:parameterName value:value];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
-- (void) send:(jobject)parameters
+- (void) send:(void*)parameters
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] gaiTracker:_obj send:parameters];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 @end

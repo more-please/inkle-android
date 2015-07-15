@@ -72,6 +72,8 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+#ifdef ANDROID
+
 - (JNIEnv*) jniEnv
 {
     GLUE_NOT_IMPLEMENTED;
@@ -205,6 +207,8 @@ static UIApplication* g_Application;
 {
     GLUE_NOT_IMPLEMENTED;
 }
+
+#endif
 
 - (BOOL) isPartInstalled:(int)part
 {

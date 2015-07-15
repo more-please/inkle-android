@@ -2,9 +2,13 @@
 
 #import "GlueCommon.h"
 
+#ifdef ANDROID
+
 size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return 4;
 }
+
+#endif
 
 @implementation UIColor
 
@@ -105,7 +109,11 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 
 - (CGColorRef) CGColor
 {
+#ifdef ANDROID
     return _rgba;
+#else
+    return CGColorCreateGenericRGB(_rgba.r, _rgba.g, _rgba.b, _rgba.a);
+#endif
 }
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha {

@@ -19,21 +19,3 @@ UIEdgeInsets UIEdgeInsetsFromString(NSString* s) {
     UIEdgeInsets insets = { ns.origin.x, ns.origin.y, ns.size.width, ns.size.height };
     return insets;
 }
-
-CTTextAlignment NSTextAlignmentToCTTextAlignment(NSTextAlignment nsTextAlignment) {
-    switch (nsTextAlignment) {
-        case NSTextAlignmentLeft:
-            return kCTTextAlignmentLeft;
-        case NSTextAlignmentCenter:
-            return kCTTextAlignmentCenter;
-        case NSTextAlignmentJustified:
-            return kCTTextAlignmentJustified;
-        case NSTextAlignmentRight:
-            return kCTTextAlignmentRight;
-        case NSTextAlignmentNatural:
-            return kCTTextAlignmentNatural;
-        default:
-            NSLog(@"Unexpected NSTextAlignment: %d", nsTextAlignment);
-            return kCTTextAlignmentNatural;
-    }
-}

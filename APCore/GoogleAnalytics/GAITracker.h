@@ -9,12 +9,12 @@
 
 // On iOS the parameter is an NSDictionary, but on Android
 // it's an opaque reference to a Java Map.
-- (void) send:(jobject)parameters;
+- (void) send:(void*)parameters;
 
 @end
 
 @interface AP_GAITracker : NSObject<GAITracker>
 
-- (instancetype) initWithObj:(jobject)obj;
+- (instancetype) initWithObj:(void*)obj;
 
 @end

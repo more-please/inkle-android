@@ -20,11 +20,7 @@
 
 @end
 
-#ifdef ANDROID
 @interface AP_Application : UIApplication
-#else
-@interface AP_Application : NSObject
-#endif
 
 + (AP_Application*) sharedApplication;
 

@@ -4,6 +4,9 @@
 
 #import "UIDefines.h"
 
+#ifdef ANDROID
+// TODO - move this into SecondFoundation
+
 @interface NSAttributedString (enumerate)
 
 typedef NS_OPTIONS(NSUInteger, NSAttributedStringEnumerationOptions) {
@@ -15,3 +18,5 @@ typedef NS_OPTIONS(NSUInteger, NSAttributedStringEnumerationOptions) {
 - (void) enumerateAttribute:(NSString*) attrName inRange:(NSRange)enumerationRange options:(NSAttributedStringEnumerationOptions)opts usingBlock:(void (^)(id value, NSRange range, BOOL* stop))block;
 
 @end
+
+#endif

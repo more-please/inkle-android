@@ -94,9 +94,6 @@ AP_BAN_EVIL_INIT
 
 - (AP_GLProgram*) initWithVertex:(const char *)vertex fragment:(const char *)fragment mask:(BOOL)mask
 {
-#ifndef ANDROID
-    AP_CHECK([EAGLContext currentContext], return nil);
-#endif
     self = [super init];
     if (self) {
         _name = glCreateProgram();

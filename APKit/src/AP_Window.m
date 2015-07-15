@@ -583,29 +583,4 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     }
 }
 
-#ifndef ANDROID
-
-//------------------------------------------------------------------------------------
-#pragma mark - Delegated UIViewController methods
-//------------------------------------------------------------------------------------
-
-- (BOOL) shouldAutorotate
-{
-    return YES;
-}
-
-- (NSUInteger) supportedInterfaceOrientations
-{
-    return UIInterfaceOrientationMaskAll;
-}
-
-- (void) viewDidLayoutSubviews
-{
-    if (_rootViewController) {
-        _rootViewController.view.frame = self.bounds;
-    }
-}
-
-#endif
-
 @end
