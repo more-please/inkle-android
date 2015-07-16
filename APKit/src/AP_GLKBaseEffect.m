@@ -54,10 +54,10 @@
 
     static const char* kFragment = AP_SHADER(
         uniform vec4 color;
-        uniform sampler2D texture;
+        uniform sampler2D tex;
         varying vec2 fragTexCoord;
         void main() {
-            gl_FragColor = color * texture2D(texture, fragTexCoord);
+            gl_FragColor = color * texture2D(tex, fragTexCoord);
         }
     );
 
@@ -71,7 +71,7 @@
         initialized = YES;
         prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragment];
         modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
-        texture = [prog uniform:@"texture"];
+        texture = [prog uniform:@"tex"];
         color = [prog uniform:@"color"];
     }
 

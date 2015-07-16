@@ -2,8 +2,27 @@
 
 #import "AP_Check.h"
 
+#ifdef SORCERY_SDL
+
 #define AP_VERTEX_PREFIX \
-    "precision highp float;\n"
+    "#version 150\n" \
+    "#define texture2D texture\n" \
+    "#define attribute in\n" \
+    "#define varying out\n"
+
+#define AP_FRAGMENT_PREFIX \
+    "#version 150\n" \
+    "#define texture2D texture\n" \
+    "#define gl_FragColor more_gl_FragColor\n" \
+    "#define varying in\n" \
+    "out vec4 gl_FragColor;\n"
+
+#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p,b)\n"
+#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n"
+
+#else
+
+#define AP_VERTEX_PREFIX "precision highp float;\n"
 
 #define AP_FRAGMENT_PREFIX \
     "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
@@ -12,14 +31,16 @@
     "precision mediump float;\n" \
     "#endif\n"
 
+#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
+#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
+
+#endif
+
 #define AP_MASK_PREFIX \
     "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n"
 
 #define AP_NORMAL_PREFIX \
     "#define OUTPUT(x) gl_FragColor = (x)\n"
-
-#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
-#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
 
 static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
 {

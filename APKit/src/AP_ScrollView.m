@@ -213,7 +213,7 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
         _velocity.y = _previousTranslation.y - _nextTranslation.y;
         _previousTranslation = _nextTranslation;
         if (_directionalLockEnabled) {
-            if (abs(_velocity.x) < abs(_velocity.y)) {
+            if (fabs(_velocity.x) < fabs(_velocity.y)) {
                 _velocity.x = 0;
             } else {
                 _velocity.y = 0;

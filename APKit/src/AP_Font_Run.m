@@ -243,9 +243,9 @@ typedef struct VertexData {
     static const char* kFragment = AP_SHADER(
         uniform vec4 color;
         varying vec2 _texCoord;
-        uniform sampler2D texture;
+        uniform sampler2D tex;
         void main() {
-            float alpha = TEXTURE_2D_BIAS(texture, _texCoord, -0.25).r;
+            float alpha = TEXTURE_2D_BIAS(tex, _texCoord, -0.25).r;
             vec4 c = vec4(color.rgb, color.a * alpha);
             OUTPUT(c);
         }
@@ -264,7 +264,7 @@ typedef struct VertexData {
         prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         transform = [prog uniform:@"transform"];
         color = [prog uniform:@"color"];
-        texture = [prog uniform:@"texture"];
+        texture = [prog uniform:@"tex"];
         pos = [prog attr:@"pos"];
         texCoord = [prog attr:@"texCoord"];
     }

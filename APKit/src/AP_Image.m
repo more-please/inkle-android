@@ -38,7 +38,7 @@ AP_BAN_EVIL_INIT
         _stretch = [self uniform:@"stretch"];
         _alpha = [self uniform:@"alpha"];
         _tint = [self uniform:@"tint"];
-        _texture = [self uniform:@"texture"];
+        _texture = [self uniform:@"tex"];
         _alphaTexture = -1; // Lazy initialize
         _edgePos = [self attr:@"edgePos"];
         _stretchPos = [self attr:@"stretchPos"];
@@ -76,10 +76,10 @@ static const char* kVertex = AP_SHADER(
 static const char* kFragment2 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
-    uniform sampler2D texture;
+    uniform sampler2D tex;
     varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75).gggr;
+        vec4 pixel = TEXTURE_2D_BIAS(tex, f_texCoord, -0.75).gggr;
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         vec4 c = vec4(tinted.rgb, pixel.a * alpha);
         OUTPUT(c);
@@ -90,10 +90,10 @@ static const char* kFragment2 = AP_SHADER(
 static const char* kFragment3 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
-    uniform sampler2D texture;
+    uniform sampler2D tex;
     varying vec2 f_texCoord;
     void main() {
-        vec4 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75);
+        vec4 pixel = TEXTURE_2D_BIAS(tex, f_texCoord, -0.75);
         vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
         vec4 c = vec4(tinted.rgb, pixel.a * alpha);
         OUTPUT(c);
@@ -104,11 +104,11 @@ static const char* kFragment3 = AP_SHADER(
 static const char* kFragment4 = AP_SHADER(
     uniform float alpha;
     uniform vec4 tint;
-    uniform sampler2D texture;
+    uniform sampler2D tex;
     uniform sampler2D alphaTexture;
     varying vec2 f_texCoord;
     void main() {
-        vec3 pixel = TEXTURE_2D_BIAS(texture, f_texCoord, -0.75).rgb;
+        vec3 pixel = TEXTURE_2D_BIAS(tex, f_texCoord, -0.75).rgb;
         vec3 tinted = mix(pixel, tint.rgb, tint.a);
         float pixelAlpha = TEXTURE_2D_BIAS(alphaTexture, f_texCoord, -0.75).g;
         vec4 c = vec4(tinted.rgb, pixelAlpha * alpha);

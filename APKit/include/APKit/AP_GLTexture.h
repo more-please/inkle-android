@@ -3,14 +3,6 @@
 #import <Foundation/Foundation.h>
 #import <OpenGLES/ES2/gl.h>
 
-// Fucking GL 3.0 removed some useful texture formats, and didn't add a
-// 'texture swizzling' API that lets you reproduce it until 3.3. BAH
-#ifndef GL_LUMINANCE
-// These aren't actually the same, of course, so we may need to fix them in GLSL.
-#define GL_LUMINANCE GL_RED
-#define GL_LUMINANCE_ALPHA GL_RG
-#endif
-
 // Simple wrapper for a GL texture object.
 // The texture is initially empty. Before using it, texImage2d or compressedTexImage2D to upload texture data.
 

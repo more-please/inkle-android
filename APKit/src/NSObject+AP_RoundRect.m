@@ -17,18 +17,18 @@
     static GLint s_transform;
     static GLint s_color;
     static GLint s_pos;
-    static GLint s_texPos;
     static GLint s_tex;
+
+    static GLuint s_vbo;
 
     static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
         attribute vec3 pos;
-        attribute vec2 texPos;
         varying vec2 f_texPos;
 
         void main() {
             gl_Position = vec4(transform * pos, 1.0);
-            f_texPos = texPos;
+            f_texPos = vec2(0.125, 0.125) + 0.75 * pos.xy;
         }
     );
 
@@ -52,8 +52,18 @@
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
         s_pos = [s_prog attr:@"pos"];
-        s_texPos = [s_prog attr:@"texPos"];
         s_tex = [s_prog uniform:@"tex"];
+
+        GLfloat data[12] = {
+            0, 0, 1,
+            0, 1, 1,
+            1, 0, 1,
+            1, 1, 1,
+        };
+        _GL(GenBuffers, 1, &s_vbo);
+        _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
+        _GL(BufferData, GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), data, GL_STATIC_DRAW);
+        _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
     }
 
     AP_CHECK(s_texture, return);
@@ -69,20 +79,9 @@
     _GL(Uniform4fv, s_color, 1, color.v);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
 
-    const GLfloat a = 1/8.0, d = 7/8.0;
-    GLfloat data[20] = {
-        // pos.x, y, z, texPos.s, t
-               0, 0, 1,        a, a,
-               0, 1, 1,        a, d,
-               1, 0, 1,        d, a,
-               1, 1, 1,        d, d,
-    };
-
+    _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
     _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
-
-    _GL(EnableVertexAttribArray, s_texPos);
-    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
     _GL(ActiveTexture, GL_TEXTURE0);
     _GL(Uniform1i, s_tex, 0);
@@ -91,18 +90,19 @@
     _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
 
     _GL(DisableVertexAttribArray, s_pos);
-    _GL(DisableVertexAttribArray, s_texPos);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
 }
 
 - (void) rectWithSize:(CGSize)size
     transform:(CGAffineTransform)transform
     color:(GLKVector4)color
 {
-    static AP_GLTexture* s_texture;
     static AP_GLProgram* s_prog;
     static GLint s_transform;
     static GLint s_color;
     static GLint s_pos;
+
+    static GLuint s_vbo;
 
     static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
@@ -128,6 +128,17 @@
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
         s_pos = [s_prog attr:@"pos"];
+
+        GLfloat data[12] = {
+            0, 0, 1,
+            0, 1, 1,
+            1, 0, 1,
+            1, 1, 1,
+        };
+        _GL(GenBuffers, 1, &s_vbo);
+        _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
+        _GL(BufferData, GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), data, GL_STATIC_DRAW);
+        _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
     }
 
     AP_CHECK(s_prog, return);
@@ -142,20 +153,14 @@
     _GL(Uniform4fv, s_color, 1, color.v);
     _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
 
-    GLfloat data[12] = {
-        // pos.x, y, z,
-               0, 0, 1,
-               0, 1, 1,
-               1, 0, 1,
-               1, 1, 1,
-    };
-
+    _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
     _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 3 * sizeof(GLfloat), &data[0]);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
     _GL(DrawArrays, GL_TRIANGLE_STRIP, 0, 4);
 
     _GL(DisableVertexAttribArray, s_pos);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
 }
 
 - (void) roundRectWithSize:(CGSize)size
@@ -178,6 +183,9 @@
     static GLint s_pos;
     static GLint s_texPos;
     static GLint s_tex;
+
+    static GLuint s_vbo;
+    static GLuint s_ibo;
 
     static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
@@ -213,13 +221,24 @@
         s_pos = [s_prog attr:@"pos"];
         s_texPos = [s_prog attr:@"texPos"];
         s_tex = [s_prog uniform:@"tex"];
+
+        _GL(GenBuffers, 1, &s_vbo);
+        _GL(GenBuffers, 1, &s_ibo);
+
+        GLubyte indices[22] = {
+             0, 4,
+             1, 5,  2,  6,  3,  7,
+            11, 6, 10,  5,  9,  4, 8,
+            12, 9, 13, 10, 14, 11, 15
+        };
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 22 * sizeof(GLubyte), indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     AP_CHECK(s_texture, return);
     AP_CHECK(s_prog, return);
-
-    CGSize screenSize = [AP_Window screenSize];
-    CGFloat scale = [AP_Window screenScale];
 
     GLKMatrix3 matrix = GLKMatrix3Make(
         transform.a * size.width,  transform.b * size.width,  0,
@@ -257,27 +276,26 @@
                1, 1, 1,        d, d,
     };
 
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, s_ibo);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
+    _GL(BufferData, GL_ARRAY_BUFFER, 80 * sizeof(GLfloat), data, GL_DYNAMIC_DRAW);
+
     _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[0]);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 5 * sizeof(GLfloat), NULL);
 
     _GL(EnableVertexAttribArray, s_texPos);
-    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), &data[3]);
+    _GL(VertexAttribPointer, s_texPos, 2, GL_FLOAT, false, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 
     _GL(ActiveTexture, GL_TEXTURE0);
     _GL(Uniform1i, s_tex, 0);
     [s_texture bind];
 
-    GLubyte indices[22] = {
-         0, 4,
-         1, 5,  2,  6,  3,  7,
-        11, 6, 10,  5,  9,  4, 8,
-        12, 9, 13, 10, 14, 11, 15
-    };
-
-    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, indices);
+    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, NULL);
 
     _GL(DisableVertexAttribArray, s_pos);
     _GL(DisableVertexAttribArray, s_texPos);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 - (void) roundRectWithSize:(CGSize)size
@@ -311,6 +329,9 @@
     static GLint s_penTexPos;
     static GLint s_fillTexPos;
     static GLint s_tex;
+
+    static GLuint s_vbo;
+    static GLuint s_ibo;
 
     static const char* kVertex = AP_SHADER(
         uniform mat3 transform;
@@ -355,13 +376,24 @@
         s_penTexPos = [s_prog attr:@"penTexPos"];
         s_fillTexPos = [s_prog attr:@"fillTexPos"];
         s_tex = [s_prog uniform:@"tex"];
+
+        _GL(GenBuffers, 1, &s_vbo);
+        _GL(GenBuffers, 1, &s_ibo);
+
+        GLubyte indices[22] = {
+             0, 4,
+             1, 5,  2,  6,  3,  7,
+            11, 6, 10,  5,  9,  4, 8,
+            12, 9, 13, 10, 14, 11, 15
+        };
+
+        _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, s_ibo);
+        _GL(BufferData, GL_ELEMENT_ARRAY_BUFFER, 22 * sizeof(GLubyte), indices, GL_STATIC_DRAW);
+        _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     AP_CHECK(s_texture, return);
     AP_CHECK(s_prog, return);
-
-    CGSize screenSize = [AP_Window screenSize];
-    CGFloat scale = [AP_Window screenScale];
 
     GLKMatrix3 matrix = GLKMatrix3Make(
         transform.a * size.width,  transform.b * size.width,  0,
@@ -403,31 +435,30 @@
                1, 1, 1,           d, d,           _d, _d,
     };
 
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, s_ibo);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, s_vbo);
+    _GL(BufferData, GL_ARRAY_BUFFER, 112 * sizeof(GLfloat), data, GL_DYNAMIC_DRAW);
+
     _GL(EnableVertexAttribArray, s_pos);
-    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[0]);
+    _GL(VertexAttribPointer, s_pos, 3, GL_FLOAT, false, 7 * sizeof(GLfloat), NULL);
 
     _GL(EnableVertexAttribArray, s_penTexPos);
-    _GL(VertexAttribPointer, s_penTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[3]);
+    _GL(VertexAttribPointer, s_penTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 
     _GL(EnableVertexAttribArray, s_fillTexPos);
-    _GL(VertexAttribPointer, s_fillTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), &data[5]);
+    _GL(VertexAttribPointer, s_fillTexPos, 2, GL_FLOAT, false, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
 
     _GL(ActiveTexture, GL_TEXTURE0);
     _GL(Uniform1i, s_tex, 0);
     [s_texture bind];
 
-    GLubyte indices[22] = {
-         0, 4,
-         1, 5,  2,  6,  3,  7,
-        11, 6, 10,  5,  9,  4, 8,
-        12, 9, 13, 10, 14, 11, 15
-    };
-
-    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, indices);
+    _GL(DrawElements, GL_TRIANGLE_STRIP, 22, GL_UNSIGNED_BYTE, NULL);
 
     _GL(DisableVertexAttribArray, s_pos);
     _GL(DisableVertexAttribArray, s_penTexPos);
     _GL(DisableVertexAttribArray, s_fillTexPos);
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 @end

@@ -3,9 +3,7 @@
 #import "AP_Check.h"
 #import "NSDictionary+AP_InitWithData.h"
 
-#ifdef ANDROID
 #import <PAK/PAK.h>
-#endif
 
 #ifdef ANDROID
 const NSString* kCFBundleVersionKey = @"CFBundleVersion";
@@ -43,30 +41,20 @@ static AP_Bundle* g_Bundle;
         fullName = [fullName stringByDeletingPathExtension];
         fullName = [fullName stringByAppendingPathExtension:@"json"];
     }
-//     DLOG(@"Loading resource: %@", fullName);
-#ifdef ANDROID
+//    DLOG(@"Loading resource: %@", fullName);
     PAK_Item* item = [PAK_Search item:fullName];
     if (item) {
         return item.data;
     }
-#endif
-//     DLOG(@"*** Failed to load resource:%@ ofType:%@", name, ext);
+//    DLOG(@"*** Failed to load resource:%@ ofType:%@", name, ext);
     return nil;
 }
 
-#ifdef ANDROID
 + (AP_Bundle*) mainBundle
 {
     return g_Bundle;
 }
-#else
-+ (NSBundle*) mainBundle
-{
-    return [NSBundle mainBundle];
-}
-#endif
 
-#ifdef ANDROID
 + (NSArray*) namesForResourcesOfType:(NSString *)ext inDirectory:(NSString *)dir
 {
     NSMutableArray* results = [NSMutableArray array];
@@ -77,13 +65,13 @@ static AP_Bundle* g_Bundle;
     }
     return [NSArray arrayWithArray:results];
 }
-#endif
 
 - (NSDictionary*) infoDictionary
 {
     if (!_info) {
         DLOG(@"Loading info dictionary...");
         NSData* data = [AP_Bundle dataForResource:@"Info" ofType:@"plist"];
+        AP_CHECK(data, return nil);
         _info = [NSDictionary dictionaryWithPlistData:data];
         AP_CHECK(_info, return nil);
         DLOG(@"Loading info dictionary... Done.");

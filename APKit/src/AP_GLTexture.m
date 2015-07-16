@@ -210,12 +210,12 @@ static AP_WeakCache* s_textureCache = nil;
 
     switch (format) {
         case GL_ALPHA:
-        case GL_LUMINANCE:
+//        case GL_LUMINANCE:
             _memoryUsage += width * height;
             break;
-        case GL_LUMINANCE_ALPHA:
-            _memoryUsage += 2 * width * height;
-            break;
+//        case GL_LUMINANCE_ALPHA:
+//            _memoryUsage += 2 * width * height;
+//            break;
         case GL_RGB:
             switch (type) {
                 case GL_UNSIGNED_BYTE:
