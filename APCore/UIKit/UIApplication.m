@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 
+#ifdef ANDROID
 NSArray* NSSearchPathForDirectoriesInDomains(
     NSSearchPathDirectory directoryKey,
     NSSearchPathDomainMask domainMask,
@@ -13,6 +14,7 @@ NSArray* NSSearchPathForDirectoriesInDomains(
     NSString* result = [UIApplication sharedApplication].documentsDir;
     return [NSArray arrayWithObjects:result, nil];
 }
+#endif
 
 @implementation UIApplication
 

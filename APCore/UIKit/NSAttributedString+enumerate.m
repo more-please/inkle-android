@@ -1,5 +1,7 @@
 #import "NSAttributedString+enumerate.h"
 
+#ifdef ANDROID
+
 @implementation NSAttributedString (enumerate)
 
 - (void)enumerateAttribute:(NSString*)attrName inRange:(NSRange)enumerationRange options:(NSAttributedStringEnumerationOptions)opts usingBlock:(void (^)(id value, NSRange range, BOOL *stop))block
@@ -31,3 +33,5 @@
 }
 
 @end
+
+#endif

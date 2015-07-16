@@ -1,3 +1,4 @@
+
 #import "AVAudioPlayer.h"
 
 #import <ck/ck.h>
@@ -24,7 +25,7 @@ NSString* const AP_UserDefault_Mute = @"AP_UserDefault_Mute";
         // Audio file type is always .cks
         path = [[path stringByDeletingPathExtension] stringByAppendingString:@".cks"];
         _name = [path lastPathComponent];
-        _sound = CkSound::newStreamSound(path.cString);
+        _sound = CkSound::newStreamSound(path.cString, kCkPathType_FileSystem);
         _volume = 1.0;
         if (!_sound || _sound->isFailed()) {
             return nil;
