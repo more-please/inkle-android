@@ -214,12 +214,11 @@ static NSMutableArray* s_afterFrameBlocks;
     return self;
 }
 
-#ifdef ANDROID
 - (void)dealloc
 {
+    [AP_Window runAfterFrameHooks];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
-#endif
 
 - (AP_ViewController*) rootViewController
 {
@@ -237,20 +236,13 @@ static NSMutableArray* s_afterFrameBlocks;
     }
 }
 
-- (void) update
-{
-}
-
 - (CGRect) bounds
 {
     return g_ScreenBounds;
 }
 
-- (void) draw
+- (BOOL) update
 {
-    [AP_GLTexture processDeleteQueue];
-    [AP_GLBuffer processDeleteQueue];
-
     const double t = AP_TimeInSeconds();
     const float minFrameTime = 1.0 / 120;
     const float maxFrameTime = 1.0 / 10;
@@ -292,7 +284,12 @@ static NSMutableArray* s_afterFrameBlocks;
         }
     }
 
+    [AP_Window runAfterFrameHooks];
+
     [_profiler step:@"update"];
+
+    [AP_GLTexture processDeleteQueue];
+    [AP_GLBuffer processDeleteQueue];
 
     // Make sure we don't scissor any offscreen rendering
     _GL(Disable, GL_SCISSOR_TEST);
@@ -315,18 +312,18 @@ static NSMutableArray* s_afterFrameBlocks;
         }];
     }
 
-#ifdef ANDROID
-    if (needsDisplay) {
-        self.idleFrameCount = 0;
-    } else {
-        self.idleFrameCount += 1;
-    }
-#endif
+    return needsDisplay;
+}
 
+- (void) draw
+{
     [_profiler step:@"layout"];
     if (_rootViewController) {
         [_rootViewController.view layoutIfNeeded];
     }
+
+    CGRect bounds = g_ScreenBounds;
+    CGFloat scale = g_ScreenScale;
 
     [_profiler step:@"clear"];
 #ifdef ANDROID
@@ -368,10 +365,6 @@ static NSMutableArray* s_afterFrameBlocks;
         AP_View* v = _rootViewController.view;
         [v renderSelfAndChildrenWithFrameToGL:frameToGL alpha:1];
     }
-
-    [_profiler step:@"other"];
-
-    [AP_Window runAfterFrameHooks];
 }
 
 //------------------------------------------------------------------------------------
