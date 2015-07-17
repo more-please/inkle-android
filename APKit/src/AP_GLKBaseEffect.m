@@ -80,7 +80,7 @@
     [prog use];
 
     _GL(ActiveTexture, GL_TEXTURE0);
-    _GL(BindTexture, GL_TEXTURE_2D, _texture2d0.name);
+    _GL(BindTexture, GL_TEXTURE_2D, _texture2d0.enabled ? _texture2d0.name : 0);
     _GL(Uniform1i, texture, 0);
     GLKVector4 c = {1, 1, 1, 1};
     if (_useConstantColor) {
