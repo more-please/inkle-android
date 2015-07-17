@@ -206,7 +206,14 @@ static AP_WeakCache* s_textureCache = nil;
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
-    _GL(TexImage2D, target, level, format, width, height, 0, format, type, data);
+#ifdef SORCERY_SDL
+    // Desktop GL: expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
+    GLint internalFormat = GL_RGBA8;
+#else
+    // ES: internal format must match external format.
+    GLint internalFormat = format;
+#endif
+    _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
 
     switch (format) {
         case GL_ALPHA:
