@@ -211,12 +211,16 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
 
 - (void) setBackgroundColor:(UIColor*)color
 {
+    AP_Image* oldBackground = _backgroundImage;
     if (color.pattern) {
         _backgroundImage = color.pattern;
         _animatedBackgroundColor.dest = GLKVector4Make(0, 0, 0, 0);
     } else {
         _backgroundImage = nil;
         _animatedBackgroundColor.dest = AP_ColorToVector(color);
+    }
+    if (_backgroundImage != oldBackground) {
+        [self setNeedsDisplay];
     }
 }
 

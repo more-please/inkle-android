@@ -40,6 +40,22 @@
     return _image.size;
 }
 
+- (void) setImage:(AP_Image*)image
+{
+    if (_image != image) {
+        _image = image;
+        [self setNeedsDisplay];
+    }
+}
+
+- (void) setHighlightedImage:(AP_Image*)highlightedImage
+{
+    if (_highlightedImage != highlightedImage) {
+        _highlightedImage = highlightedImage;
+        [self setNeedsDisplay];
+    }
+}
+
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
     [super renderWithBoundsToGL:boundsToGL alpha:alpha];
