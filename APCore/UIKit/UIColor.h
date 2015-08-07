@@ -3,12 +3,12 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
-#ifdef ANDROID
+// #ifdef ANDROID
 // Don't use CGColor, just use RGBA vectors.
 typedef GLKVector4 CGColorRef;
 
 extern size_t CGColorGetNumberOfComponents(CGColorRef color);
-#endif
+// #endif
 
 @class AP_Image;
 

@@ -5,20 +5,20 @@
 #ifdef SORCERY_SDL
 
 #define AP_VERTEX_PREFIX \
-    "#version 150\n" \
-    "#define texture2D texture\n" \
-    "#define attribute in\n" \
-    "#define varying out\n"
+    "#version 120\n"
+//     "#define texture2D texture\n" \
+//     "#define attribute in\n" \
+//     "#define varying out\n"
 
 #define AP_FRAGMENT_PREFIX \
-    "#version 150\n" \
-    "#define texture2D texture\n" \
-    "#define gl_FragColor more_gl_FragColor\n" \
-    "#define varying in\n" \
-    "out vec4 gl_FragColor;\n"
+    "#version 120\n"
+//     "#define texture2D texture\n" \
+//     "#define gl_FragColor more_gl_FragColor\n" \
+//     "#define varying in\n" \
+//     "out vec4 gl_FragColor;\n"
 
-#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p,b)\n"
-#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n"
+#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
+#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
 
 #else
 

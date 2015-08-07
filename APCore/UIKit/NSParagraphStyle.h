@@ -11,7 +11,8 @@ extern NSString* const AP_TextTransformAttributeName;
 
 typedef NSString* (^AP_TextTransform)(NSString*);
 
-#ifdef ANDROID
+#ifndef OSX
+
 // TODO - move to the correct place!
 
 extern NSString* const NSParagraphStyleAttributeName;

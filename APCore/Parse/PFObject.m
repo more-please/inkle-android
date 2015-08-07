@@ -6,7 +6,7 @@
 
 @implementation PFObject
 
-- (instancetype) initWithObj:(jobject)obj
+- (instancetype) initWithObj:(void*)obj
 {
     if (!obj) {
         return nil;
@@ -20,14 +20,24 @@
 
 + (instancetype) objectWithClassName:(NSString*)className
 {
+#ifdef ANDROID
     jobject obj = [[UIApplication sharedApplication] parseNewObject:className];
     return [[PFObject alloc] initWithObj:obj];
+#else
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+#endif
 }
 
 + (instancetype) objectWithoutDataWithClassName:(NSString*)className objectId:(NSString*)objectId
 {
+#ifdef ANDROID
     jobject obj = [[UIApplication sharedApplication] parseNewObject:className objectId:objectId];
     return [[PFObject alloc] initWithObj:obj];
+#else
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+#endif
 }
 
 - (void) setObject:(id)object forKey:(NSString*)key
@@ -36,7 +46,11 @@
         NSLog(@"*** Tried to set null value for key: %@", key);
         return;
     }
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj addKey:key value:object];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (void) saveInBackground
@@ -46,7 +60,11 @@
 
 - (void) saveInBackgroundWithBlock:(PFBooleanResultBlock)block
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj saveWithBlock:block];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (id) objectForKey:(NSString*)key
@@ -72,27 +90,48 @@
 
 - (void) refreshInBackgroundWithBlock:(PFObjectResultBlock)block
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj refreshWithBlock:block];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (void) fetchInBackgroundWithBlock:(PFObjectResultBlock)block
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj fetchWithBlock:block];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (void) removeObjectForKey:(NSString*)key
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj removeKey:key];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (void) saveEventually:(PFBooleanResultBlock)block
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseObject:_jobj saveEventuallyWithBlock:block];
+#else
+    GLUE_NOT_IMPLEMENTED;
+#endif
 }
 
 - (NSString*) objectId
 {
+#ifdef ANDROID
     return [[UIApplication sharedApplication] parseObjectId:_jobj];
+#else
+    GLUE_NOT_IMPLEMENTED;
+    return nil;
+#endif
 }
 
 @end

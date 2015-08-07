@@ -3,7 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#ifdef ANDROID
+#ifndef OSX
 extern NSTimeInterval CACurrentMediaTime();
 #endif
 

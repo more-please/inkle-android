@@ -8,7 +8,9 @@
 
 + (void)callFunctionInBackground:(NSString*)function withParameters:(NSDictionary*)parameters block:(PFIdResultBlock)block
 {
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseCallFunction:function parameters:parameters block:block];
+#endif
 }
 
 @end

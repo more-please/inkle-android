@@ -10,5 +10,3 @@
 #import "GLKMatrix4.h"
 
 #import "GLKQuaternion.h"
-
-#import "GLKViewController.h"

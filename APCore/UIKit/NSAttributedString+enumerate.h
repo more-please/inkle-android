@@ -4,7 +4,8 @@
 
 #import "UIDefines.h"
 
-#ifdef ANDROID
+#ifndef OSX
+
 // TODO - move this into SecondFoundation
 
 @interface NSAttributedString (enumerate)

@@ -19,30 +19,19 @@ static inline float AP_Lerp(float v1, float v2, float t) {
     return v1 + t*(v2-v1);
 }
 
-#ifdef ANDROID
+#ifdef OSX
+extern GLKVector4 AP_ColorToVector(UIColor*);
+extern UIColor* AP_VectorToColor(GLKVector4);
+#else
 static inline GLKVector4 AP_ColorToVector(UIColor* color) {
     return color.rgba;
 }
 static inline UIColor* AP_VectorToColor(GLKVector4 rgba) {
     return [UIColor colorWithRgba:rgba];
 }
-
-#else
-extern GLKVector4 AP_ColorToVector(UIColor*);
-extern UIColor* AP_VectorToColor(GLKVector4);
 #endif
 
-#ifdef ANDROID
-
-#import <time.h>
-
-static inline double AP_TimeInSeconds() {
-    struct timespec t;
-    int result = clock_gettime(CLOCK_MONOTONIC, &t);
-    return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
-}
-
-#else
+#ifdef OSX
 
 #import <mach/mach_time.h>
 
@@ -54,4 +43,15 @@ static inline double AP_TimeInSeconds() {
     t /= info.denom;
     return t / (double) NSEC_PER_SEC;
 }
+
+#else
+
+#import <time.h>
+
+static inline double AP_TimeInSeconds() {
+    struct timespec t;
+    int result = clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
+}
+
 #endif

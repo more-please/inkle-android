@@ -2,7 +2,8 @@
 
 #import "AP_Log.h"
 
-#ifndef ANDROID
+#ifdef OSX
+
 GLKVector4 AP_ColorToVector(UIColor* color) {
     CGFloat r, g, b, a;
     CGColorRef colorRef = color.CGColor;
@@ -43,4 +44,5 @@ GLKVector4 AP_ColorToVector(UIColor* color) {
 UIColor* AP_VectorToColor(GLKVector4 rgba) {
     return [UIColor colorWithRed:rgba.r green:rgba.g blue:rgba.b alpha:rgba.a];
 }
+
 #endif

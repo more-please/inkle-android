@@ -13,7 +13,9 @@ static NSString* s_clientKey;
 {
     s_applicationId = applicationId;
     s_clientKey = clientKey;
+#ifdef ANDROID
     [[UIApplication sharedApplication] parseInitWithApplicationId:applicationId clientKey:clientKey];
+#endif
 }
 
 + (NSString *)getApplicationId

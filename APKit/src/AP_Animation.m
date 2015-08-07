@@ -5,7 +5,7 @@
 #import "AP_View.h"
 #import "NSObject+AP_KeepAlive.h"
 
-#ifdef ANDROID
+#ifndef OSX
 NSTimeInterval CACurrentMediaTime() {
     return [AP_Animation masterClock];
 }

@@ -1,6 +1,6 @@
 #import "NSAttributedString+enumerate.h"
 
-#ifdef ANDROID
+#ifndef OSX
 
 @implementation NSAttributedString (enumerate)
 
