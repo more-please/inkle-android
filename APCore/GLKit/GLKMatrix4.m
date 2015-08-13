@@ -1,5 +1,7 @@
 #import "GLKMatrix4.h"
 
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 GLKMatrix4 GLKMatrix4Invert(GLKMatrix4 matrix, bool *isInvertible) {
     // m = transposed cofactor matrix
     float c02070306 = matrix.m[2] * matrix.m[7] - matrix.m[3] * matrix.m[6];

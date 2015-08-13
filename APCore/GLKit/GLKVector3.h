@@ -2,6 +2,9 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 union _GLKVector3
 {
     struct { float x, y, z; };
@@ -144,3 +147,5 @@ static inline BOOL GLKVector3AllEqualToVector3(GLKVector3 lhs, GLKVector3 rhs) {
         && lhs.v[1] == rhs.v[1]
         && lhs.v[2] == rhs.v[2];
 }
+
+#pragma clang diagnostic pop

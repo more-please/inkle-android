@@ -1,5 +1,7 @@
 #import "GLKQuaternion.h"
 
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 const GLKQuaternion GLKQuaternionIdentity = {
     0.0f, 0.0f, 0.0f, 1.0f
 };
@@ -65,4 +67,5 @@ GLKQuaternion GLKQuaternionMakeWithMatrix3(GLKMatrix3 m) {
 
     // Magical parity fix. Can't be bothered figuring it out properly,
     // but this gives the same results as the real iOS code!
-    return GLKQuaternionMake(q1, q2, q3, q0);}
+    return GLKQuaternionMake(q1, q2, q3, q0);
+}

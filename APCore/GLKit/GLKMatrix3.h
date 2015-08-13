@@ -2,6 +2,9 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 union _GLKMatrix3
 {
     struct
@@ -50,3 +53,5 @@ static inline GLKMatrix3 GLKMatrix3MakeWithColumns(
     };
     return result;
 }
+
+#pragma clang diagnostic pop

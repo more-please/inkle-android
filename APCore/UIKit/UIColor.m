@@ -77,19 +77,19 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 
 + (UIColor*) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha
 {
-    GLKVector4 rgba = {white, white, white, alpha};
+    GLKVector4 rgba = {{white, white, white, alpha}};
     return [UIColor colorWithRgba:rgba];
 }
 
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue
 {
-    GLKVector4 rgba = {red, green, blue, 1.0};
+    GLKVector4 rgba = {{red, green, blue, 1.0}};
     return [UIColor colorWithRgba:rgba];
 }
 
 + (UIColor*) colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha
 {
-    GLKVector4 rgba = {red, green, blue, alpha};
+    GLKVector4 rgba = {{red, green, blue, alpha}};
     return [UIColor colorWithRgba:rgba];
 }
 

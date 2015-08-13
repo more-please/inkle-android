@@ -5,6 +5,9 @@
 #import "GLKVector3.h"
 #import "GLKMatrix3.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 union _GLKQuaternion
 {
     struct { GLKVector3 v; float s; };
@@ -136,3 +139,5 @@ static inline GLKQuaternion GLKQuaternionSlerp(GLKQuaternion lhs, GLKQuaternion 
     };
     return GLKQuaternionNormalize(result);
 }
+
+#pragma clang diagnostic pop

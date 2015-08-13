@@ -2,6 +2,9 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 union _GLKVector4
 {
     struct { float x, y, z, w; };
@@ -47,3 +50,5 @@ static inline GLKVector4 GLKVector4Lerp(GLKVector4 a, GLKVector4 b, float t)
         a.w + t * (b.w - a.w)
     );
 }
+
+#pragma clang diagnostic pop
