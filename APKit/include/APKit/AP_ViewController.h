@@ -27,9 +27,6 @@
 - (void) viewWillLayoutSubviews;
 - (void) viewDidLayoutSubviews;
 
-- (void) presentModalViewController:(AP_ViewController*)modalViewController animated:(BOOL)animated;
-- (void) dismissModalViewControllerAnimated:(BOOL)animated;
-
 @property(nonatomic,readonly) UIInterfaceOrientation interfaceOrientation;
 @property(nonatomic,readonly,strong) NSArray* childViewControllers;
 @property(nonatomic,readonly,weak) AP_ViewController* parentViewController;
@@ -40,11 +37,6 @@
 
 // Android-specific additions
 - (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
-
-// FIXME
-- (void) presentViewController:(AP_ViewController*)viewControllerToPresent animated:(BOOL)flag completion:(void(^)(void))completion;
-// The completion handler, if provided, will be invoked after the dismissed controller's viewDidDisappear: callback is invoked.
-- (void) dismissViewControllerAnimated:(BOOL)flag completion: (void(^)(void))completion;
 
 // These methods are delegated from the real UIViewController.
 

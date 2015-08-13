@@ -50,7 +50,7 @@ static inline double AP_TimeInSeconds() {
 
 static inline double AP_TimeInSeconds() {
     struct timespec t;
-    int result = clock_gettime(CLOCK_MONOTONIC, &t);
+    clock_gettime(CLOCK_MONOTONIC, &t);
     return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
 }
 

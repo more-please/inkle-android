@@ -7,9 +7,8 @@
 
 + (AP_GLKTextureInfo*) textureWithContentsOfData:(NSData*)data options:(NSDictionary*)options error:(NSError**)outError
 {
-    AP_GLKTextureInfo* info = [[AP_GLKTextureInfo alloc] init];
-    info.tex = [AP_GLTexture textureWithData:data maxSize:2.15];
-    return info;
+    AP_NOT_IMPLEMENTED;
+    return nil;
 }
 
 @end

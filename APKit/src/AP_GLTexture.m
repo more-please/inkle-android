@@ -144,12 +144,6 @@ static AP_WeakCache* s_textureCache = nil;
     return result;
 }
 
-+ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens
-{
-    NSData* data = [NSData dataWithContentsOfMappedFile:path];
-    return [AP_GLTexture textureWithData:data maxSize:screens];
-}
-
 + (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data maxSize:(CGFloat)screens
 {
     if (!data) {

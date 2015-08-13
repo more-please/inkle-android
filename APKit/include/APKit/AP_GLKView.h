@@ -19,10 +19,4 @@
 
 @property (nonatomic,weak) id <AP_GLKViewDelegate> delegate;
 
-/*
- Returns a UIImage of the resulting draw. Snapshot should never be called from within the draw method or from a
- thread other than the main thread.
- */
-- (AP_Image*) snapshot;
-
 @end

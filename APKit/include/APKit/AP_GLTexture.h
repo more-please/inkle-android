@@ -25,9 +25,6 @@
 // minify rather than magnify the texture.
 + (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens;
 
-+ (AP_GLTexture*) textureWithData:(NSData*)data maxSize:(CGFloat)screens;
-+ (AP_GLTexture*) textureWithContentsOfFile:(NSString*)path maxSize:(CGFloat)screens;
-
 + (AP_GLTexture*) cubeTextureNamed:(NSString*)name maxSize:(CGFloat)screens;
 
 // Estimated total memory usage for all textures.

@@ -88,7 +88,7 @@ AP_BAN_EVIL_INIT;
         va_end(args);
 
         // See http://developer.android.com/design/style/color.html
-        UIColor* lightBlue = [UIColor colorWithRed:(0x33 / 255.0) green:(0xb5 / 255.0) blue:(0xe5 / 255.0) alpha:1];
+//         UIColor* lightBlue = [UIColor colorWithRed:(0x33 / 255.0) green:(0xb5 / 255.0) blue:(0xe5 / 255.0) alpha:1];
         UIColor* darkBlue = [UIColor colorWithRed:(0x00 / 255.0) green:(0x99 / 255.0) blue:(0xcc / 255.0) alpha:1];
         UIColor* white = [UIColor whiteColor];
         UIColor* black = [UIColor blackColor];

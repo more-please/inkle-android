@@ -123,10 +123,6 @@ static inline CGFloat side(CGSize size) {
     return result;
 }
 
-static inline CGFloat aspect(CGSize size) {
-    return size.width / size.height;
-}
-
 + (CGFloat) iPhone:(CGFloat)iPhone iPad:(CGFloat)iPad iPadLandscape:(CGFloat)iPadLandscape iPhone6:(CGFloat)i6
 {
     // Ignore the iPhone 6 for now
