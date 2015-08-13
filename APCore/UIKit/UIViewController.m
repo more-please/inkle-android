@@ -2,6 +2,12 @@
 
 @implementation Real_UIViewController
 
+- (BOOL) update
+{
+    NSLog(@"[UIViewController update]");
+    return NO;
+}
+
 - (void) draw
 {
     NSLog(@"[UIViewController draw]");
