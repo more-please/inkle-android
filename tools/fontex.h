@@ -22,7 +22,7 @@ typedef struct Header {
 } fontex_header_t;
 
 typedef struct Glyph {
-    uint16_t codepoint;
+    uint32_t codepoint;
     int16_t advance; // Horizontal distance to next character
     int16_t x0, y0, x1, y1; // Bounding box relative to glyph origin
     uint16_t xTex, yTex; // Location in texture
@@ -48,14 +48,14 @@ typedef struct Glyph {
 } fontex_glyph_t;
 
 typedef struct Ligature {
-    uint16_t lhs;
-    uint16_t rhs;
+    uint32_t lhs;
+    uint32_t rhs;
     uint16_t ligature;
 } fontex_ligature_t;
 
 typedef struct KerningPair {
-    uint16_t lhs;
-    uint16_t rhs;
+    uint32_t lhs;
+    uint32_t rhs;
     int16_t advance;
 } fontex_kerning_pair_t;
 

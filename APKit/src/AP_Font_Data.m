@@ -25,7 +25,7 @@ typedef struct LigatureLHS {
     const fontex_ligature_t* _ligatures;
     const fontex_kerning_pair_t* _kerning;
     NSMutableDictionary* _charMap;
-    unichar _glyphMap[256];
+    unsigned int _glyphMap[256];
     LigatureLHS _ligatureMap;
     KerningLHS _kerningMap;
     NSMutableArray* _extraMaps;
@@ -133,7 +133,7 @@ static LigatureRHS g_ZeroLigature;
     return self;
 }
 
-- (unsigned char) glyphForChar:(unichar)c
+- (unsigned char) glyphForChar:(unsigned int)c
 {
     NSNumber* key = [NSNumber numberWithUnsignedShort:c];
     NSNumber* result = [_charMap objectForKey:key];
@@ -145,7 +145,7 @@ static LigatureRHS g_ZeroLigature;
     return [result unsignedCharValue];
 }
 
-- (unichar) charForGlyph:(unsigned char)c
+- (unsigned int) charForGlyph:(unsigned char)c
 {
     return _glyphMap[c];
 }
