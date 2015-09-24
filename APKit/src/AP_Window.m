@@ -335,7 +335,11 @@ static NSMutableArray* s_afterFrameBlocks;
 
     _GL(Disable, GL_SCISSOR_TEST);
     _GL(ClearColor, 0, 0, 0, 0);
+#ifdef GL_ES_VERSION_2_0
     _GL(ClearDepthf, 1);
+#else
+    _GL(ClearDepth, 1);
+#endif
     _GL(ClearStencil, 0);
     _GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);

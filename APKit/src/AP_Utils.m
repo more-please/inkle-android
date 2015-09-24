@@ -2,7 +2,7 @@
 
 #import "AP_Log.h"
 
-#ifdef OSX
+#ifdef APPLE_RUNTIME
 
 GLKVector4 AP_ColorToVector(UIColor* color) {
     CGFloat r, g, b, a;

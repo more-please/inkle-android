@@ -19,7 +19,7 @@ static inline float AP_Lerp(float v1, float v2, float t) {
     return v1 + t*(v2-v1);
 }
 
-#ifdef OSX
+#ifdef APPLE_RUNTIME
 extern GLKVector4 AP_ColorToVector(UIColor*);
 extern UIColor* AP_VectorToColor(GLKVector4);
 #else
@@ -31,7 +31,7 @@ static inline UIColor* AP_VectorToColor(GLKVector4 rgba) {
 }
 #endif
 
-#ifdef OSX
+#if defined(OSX)
 
 #import <mach/mach_time.h>
 
@@ -44,7 +44,7 @@ static inline double AP_TimeInSeconds() {
     return t / (double) NSEC_PER_SEC;
 }
 
-#else
+#elif defined(LINUX)
 
 #import <time.h>
 
@@ -52,6 +52,18 @@ static inline double AP_TimeInSeconds() {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
+}
+
+#else
+
+#import <windows.h>
+
+static inline double AP_TimeInSeconds() {
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&counter);
+    return counter.QuadPart / (double)frequency.QuadPart;
 }
 
 #endif

@@ -1,7 +1,7 @@
 #import "AP_Image.h"
 
 #import <assert.h>
-#import <GLKit/GLKit.h>
+#import <OpenGLES/ES2/gl.h>
 
 #import "AP_Bundle.h"
 #import "AP_Check.h"
@@ -472,9 +472,6 @@ typedef struct VertexData {
         for (int i = 0; i < numQuads; i++) {
             [self addStretchy:quads[i]];
         }
-
-        // Speculative: is "other" being collected by ARC?
-        [other self];
     }
 //    NSLog(@"Added insets to image: %@", _assetName);
     return self;

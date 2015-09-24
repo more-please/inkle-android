@@ -179,7 +179,6 @@ AP_BAN_EVIL_INIT;
     if (protectSelf->_completion) {
         protectSelf->_completion(NO);
     }
-    [protectSelf self];
 }
 
 - (void) finish
@@ -207,7 +206,6 @@ AP_BAN_EVIL_INIT;
     if (protectSelf->_completion) {
         protectSelf->_completion(YES);
     }
-    [protectSelf self];
 }
 
 @end

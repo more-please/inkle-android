@@ -482,8 +482,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) setWindow:(AP_Window *)window
 {
-    id protectSelf = self;
-
     AP_CHECK(!_superview, abort());
 
     AP_Window* oldWindow = self.window;
@@ -514,8 +512,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             [vc viewDidDisappear:NO];
         }];
     }
-
-    [protectSelf self];
 }
 
 - (void) addSubview:(AP_View*)view
@@ -639,8 +635,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         _superview->_subviews = [_superview->_subviews mutableCopy];
     }
 
-    id protectSelf = self;
-
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
         [self visitControllersWithBlock:^(AP_ViewController* vc){
@@ -666,8 +660,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             [vc viewDidDisappear:NO];
         }];
     }
-
-    [protectSelf self];
 }
 
 - (void) bringSubviewToFront:(AP_View*)view
@@ -705,7 +697,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [mask visitWithBlock:block];
     }
 
-    id protectSelf = self;
     AP_CHECK(block, return);
     block(self);
 
@@ -714,13 +705,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [v visitWithBlock:block];
     }
     --_iterating;
-
-    [protectSelf self];
 }
 
 - (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block
 {
-    id protectSelf = self;
     AP_CHECK(block, return);
     AP_ViewController* controller = _viewDelegate;
     if (controller) {
@@ -732,8 +720,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
         [v visitControllersWithBlock:block];
     }
     --_iterating;
-
-    [protectSelf self];
 }
 
 - (BOOL) handleAndroidBackButton
@@ -771,8 +757,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) layoutIfNeeded
 {
-    id protectSelf = self;
-
     ++_iterating;
     for (AP_View* view in _subviews) {
         [view layoutIfNeeded];
@@ -792,8 +776,6 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
             [controller viewDidLayoutSubviews];
         }
     }
-
-    [protectSelf self];
 }
 
 - (void) maybeAutolayout:(CGRect)oldBounds

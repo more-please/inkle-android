@@ -82,7 +82,6 @@
 
 - (void) removeFromParentViewController
 {
-    id protectSelf = self;
     AP_ViewController* p = _parentViewController;
     if (p) {
         [self willMoveToParentViewController:self];
@@ -91,7 +90,6 @@
         _parentViewController = nil;
         [self didMoveToParentViewController:nil];
     }
-    [protectSelf self];
 }
 
 - (void) willMoveToParentViewController:(AP_ViewController*)parent {}
