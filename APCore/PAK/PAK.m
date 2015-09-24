@@ -4,6 +4,18 @@
 #import <sys/mman.h>
 #import <zlib.h>
 
+#ifdef WINDOWS
+
+#include <io.h>
+
+#define open _open
+#define close _close
+#define lseek _lseek
+
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+#endif
+
 // ---------------------------------------------------------------------------------------
 
 @implementation PAK_Item {

@@ -4,7 +4,7 @@
 
 #import "UIDefines.h"
 
-#ifndef OSX
+#ifndef APPLE_RUNTIME
 
 // TODO - move this into SecondFoundation
 

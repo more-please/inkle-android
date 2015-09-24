@@ -11,7 +11,7 @@ extern NSString* const AP_TextTransformAttributeName;
 
 typedef NSString* (^AP_TextTransform)(NSString*);
 
-#ifndef OSX
+#ifndef APPLE_RUNTIME
 
 // TODO - move to the correct place!
 

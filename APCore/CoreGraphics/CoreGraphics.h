@@ -2,6 +2,10 @@
 
 #import <Foundation/NSObjcRuntime.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CGPoint {
   CGFloat x;
   CGFloat y;
@@ -281,3 +285,7 @@ static inline bool CGRectIntersectsRect(CGRect rect1, CGRect rect2) {
         && (CGRectGetMinY(rect1) < CGRectGetMaxY(rect2))
         && (CGRectGetMinY(rect2) < CGRectGetMaxY(rect1));
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
