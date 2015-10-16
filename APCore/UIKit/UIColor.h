@@ -3,12 +3,12 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
-// #ifdef ANDROID
+#ifndef APPLE_RUNTIME
 // Don't use CGColor, just use RGBA vectors.
 typedef GLKVector4 CGColorRef;
 
 extern size_t CGColorGetNumberOfComponents(CGColorRef color);
-// #endif
+#endif
 
 @class AP_Image;
 

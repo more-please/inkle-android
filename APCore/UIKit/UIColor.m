@@ -109,11 +109,11 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
 
 - (CGColorRef) CGColor
 {
-// #ifdef ANDROID
+#ifdef APPLE_RUNTIME
+    return CGColorCreateGenericRGB(_rgba.r, _rgba.g, _rgba.b, _rgba.a);
+#else
     return _rgba;
-// #else
-//     return CGColorCreateGenericRGB(_rgba.r, _rgba.g, _rgba.b, _rgba.a);
-// #endif
+#endif
 }
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha {

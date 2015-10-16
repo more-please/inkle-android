@@ -6,7 +6,7 @@ NSString* const AP_UrlAttributeName = @"AP_Url";
 NSString* const AP_ImageAttributeName = @"AP_Image";
 NSString* const AP_TextTransformAttributeName = @"AP_TextTransform";
 
-#ifndef OSX
+#ifndef APPLE_RUNTIME
 
 NSString* const NSParagraphStyleAttributeName = @"NSParagraphStyle";
 NSString* const NSFontAttributeName = @"NSFont";

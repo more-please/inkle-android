@@ -310,7 +310,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
     NSData* data = [AP_Bundle dataForResource:name ofType:nil];
     NSAssert(data, @"Couldn't find HTML resource: %@", name);
-    xmlDoc* doc = htmlReadMemory((const char*)data.bytes, data.length, name.cString, NULL, 0);
+    xmlDoc* doc = htmlReadMemory((const char*)data.bytes, (int) data.length, name.UTF8String, NULL, 0);
     xmlNode* root = xmlDocGetRootElement(doc);
 
     NSAttributedString* text = [self parseHtml:root attrs:@{

@@ -226,7 +226,7 @@ typedef enum UIStatusBarStyle {
 }
 UIStatusBarStyle;
 
-#if 0 // #ifdef TARGET_OS_MAC
+#ifdef OSX
 
 #import <AppKit/AppKit.h>
 

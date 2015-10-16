@@ -46,7 +46,7 @@
     ack.action = action;
     ack.events = controlEvents;
     ack.imp = [target methodForSelector:ack.action];
-    ack.numArgs = [target methodSignatureForSelector:action].numberOfArguments;
+    ack.numArgs = (int) [target methodSignatureForSelector:action].numberOfArguments;
     AP_CHECK(ack.numArgs <= 4, return);
     [_actions addObject:ack];
 }

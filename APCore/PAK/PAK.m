@@ -48,9 +48,9 @@
         z_stream z;
         memset(&z, 0, sizeof(z));
         z.next_in = (unsigned char*)_originalData.bytes;
-        z.avail_in = _originalData.length;
+        z.avail_in = (uInt) _originalData.length;
         z.next_out = (unsigned char*)result.bytes;
-        z.avail_out = result.length;
+        z.avail_out = (uInt) result.length;
 
         int zerr = inflateInit(&z);
         if (zerr != Z_OK) {
