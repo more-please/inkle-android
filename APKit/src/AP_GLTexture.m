@@ -200,9 +200,12 @@ static AP_WeakCache* s_textureCache = nil;
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
-#ifdef SORCERY_SDL
-    // Desktop GL: expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
-    GLint internalFormat = GL_RGBA; //8;
+#if defined(OSX)
+    // GL 3.2: expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
+    GLint internalFormat = GL_RGBA8;
+#elif defined(SORCERY_SDL)
+    // Same thing for GL 2.1
+    GLint internalFormat = GL_RGBA;
 #else
     // ES: internal format must match external format.
     GLint internalFormat = format;
