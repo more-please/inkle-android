@@ -145,7 +145,9 @@
 {
     if (_isMemoryMapped) {
         int result = munmap((void*) [_data bytes], [_data length]);
-        NSAssert(result == 0, @"munmap() failed! Error: %s", strerror(errno));
+        if (!result) {
+            NSLog(@"munmap() failed! Error: %s", strerror(errno));
+        }
     }
 }
 
