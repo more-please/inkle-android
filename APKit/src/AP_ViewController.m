@@ -17,11 +17,6 @@
     return self;
 }
 
-- (BOOL) handleAndroidBackButton
-{
-    return NO;
-}
-
 - (AP_View*) view
 {
     if (!_view) {

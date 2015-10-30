@@ -123,8 +123,6 @@
 // Prevent touches in this view from firing gesture recognizers in lower views.
 @property(nonatomic) BOOL blockGestures;
 
-- (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
-
 // ----------------------------------------------------------------------
 // Internal stuff
 
@@ -141,5 +139,8 @@
 // Traversing the view hierarchy
 - (void) visitWithBlock:(void(^)(AP_View*))block;
 - (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block;
+
+// Event dispatch. Visible subviews get first dibs, then self, then view controller.
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler;
 
 @end

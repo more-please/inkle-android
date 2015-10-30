@@ -44,4 +44,14 @@
     }
 }
 
+- (BOOL) handleAndroidBackButton
+{
+    return NO;
+}
+
+- (BOOL) handleMouseWheelX:(float)x Y:(float)y
+{
+    return NO;
+}
+
 @end

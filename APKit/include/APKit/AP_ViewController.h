@@ -35,9 +35,6 @@
 
 @property(nonatomic,readonly) float timeSinceLastUpdate;
 
-// Android-specific additions
-- (BOOL) handleAndroidBackButton; // Return YES if the event was handled.
-
 // These methods are delegated from the real UIViewController.
 
 - (void) didReceiveMemoryWarning;

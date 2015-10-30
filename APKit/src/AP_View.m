@@ -722,28 +722,33 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     --_iterating;
 }
 
-- (BOOL) handleAndroidBackButton
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler
 {
     if (self.hidden || self.alpha <= 0) {
         return NO;
     }
 
-    AP_ViewController* controller = _viewDelegate;
-    if (controller && [controller handleAndroidBackButton]) {
-        return YES;
-    }
-
-    BOOL result = NO;
+    // Subviews: iterate in reverse, to ensure the topmost back button gets first dibs.
     ++_iterating;
-    // Iterate in reverse, to ensure the topmost back button gets first dibs.
     for (AP_View* view in [_subviews reverseObjectEnumerator]) {
-        if ([view handleAndroidBackButton]) {
-            result = YES;
-            break;
+        if ([view dispatchEvent:handler]) {
+            --_iterating;
+            return YES;
         }
     }
     --_iterating;
-    return result;
+
+    if (handler(self)) {
+        return YES;
+    }
+
+    // Offer event to view controller
+    AP_ViewController* controller = _viewDelegate;
+    if (controller && handler(controller)) {
+        return YES;
+    }
+
+    return NO;
 }
 
 //------------------------------------------------------------------------------------
