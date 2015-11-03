@@ -54,4 +54,9 @@
     return NO;
 }
 
+- (BOOL) handleKeyDown:(int)key
+{
+    return NO;
+}
+
 @end
