@@ -5,6 +5,10 @@
 #import "AP_GestureRecognizer.h"
 #import "AP_Window.h"
 
+#ifdef SORCERY_SDL
+#import <SDL2/SDL.h>
+#endif
+
 const CGFloat UIScrollViewDecelerationRateNormal = 5.0;
 const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
@@ -199,6 +203,37 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
         }
     }
 }
+
+#ifdef SORCERY_SDL
+
+- (BOOL) handleKeyDown:(int)key
+{
+    if (!_enabled) {
+        return NO;
+    }
+    if (key == SDLK_UP || key == SDLK_DOWN || key == SDLK_LEFT || key == SDLK_RIGHT) {
+        const CGPoint oldPos = self.contentOffset;
+        const CGSize size = self.bounds.size;
+        const CGSize contentSize = self.contentSize;
+
+        const float kStep = [AP_Window scaleForIPhone:24 iPad:32];
+        CGPoint pos = oldPos;
+        if (key == SDLK_LEFT) pos.x -= kStep;
+        if (key == SDLK_RIGHT) pos.x += kStep;
+        if (key == SDLK_UP) pos.y -= kStep;
+        if (key == SDLK_DOWN) pos.y += kStep;
+
+        pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
+        pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));
+        if (!CGPointEqualToPoint(pos, oldPos)) {
+            self.contentOffset = pos;
+            return YES;
+        }
+    }
+    return NO;
+}
+
+#endif
 
 static CGFloat magnitude(CGFloat x, CGFloat y) {
     return sqrt(x * x + y * y);
