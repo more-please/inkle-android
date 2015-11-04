@@ -724,7 +724,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (BOOL) dispatchEvent:(EventHandlerBlock)handler
 {
-    if (self.hidden || self.alpha <= 0) {
+    if (self.hidden || self.alpha <= 0 || !self.userInteractionEnabled) {
         return NO;
     }
 

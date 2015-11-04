@@ -18,6 +18,7 @@
 // Override these. Call super.
 - (BOOL) handleMouseWheelX:(float)x Y:(float)y;
 - (BOOL) handleKeyDown:(int)key;
+- (BOOL) handleKeyUp:(int)key;
 - (BOOL) handleAndroidBackButton;
 
 // Block that calls one of the above methods.

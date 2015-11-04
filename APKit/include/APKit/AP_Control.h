@@ -17,4 +17,6 @@
 // Android addition: fire these events when the back button is pressed.
 @property(nonatomic) UIControlEvents androidBackButtonEvents;
 
+@property(nonatomic) int keyboardShortcut; // Woohoo!
+
 @end

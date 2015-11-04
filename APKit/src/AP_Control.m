@@ -165,4 +165,22 @@
     }
 }
 
+- (BOOL) handleKeyDown:(int)key
+{
+    if (_keyboardShortcut && key == _keyboardShortcut) {
+        self.highlighted = YES;
+        [self dispatch:UIControlEventTouchDown event:nil];
+    }
+    return NO;
+}
+
+- (BOOL) handleKeyUp:(int)key
+{
+    if (_keyboardShortcut && key == _keyboardShortcut) {
+        self.highlighted = NO;
+        [self dispatch:UIControlEventTouchUpInside event:nil];
+    }
+    return NO;
+}
+
 @end

@@ -59,4 +59,9 @@
     return NO;
 }
 
+- (BOOL) handleKeyUp:(int)key
+{
+    return NO;
+}
+
 @end
