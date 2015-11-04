@@ -176,7 +176,7 @@
 
 - (BOOL) handleKeyUp:(int)key
 {
-    if (_keyboardShortcut && key == _keyboardShortcut) {
+    if (_keyboardShortcut && key == _keyboardShortcut && self.isHighlighted) {
         self.highlighted = NO;
         [self dispatch:UIControlEventTouchUpInside event:nil];
     }
