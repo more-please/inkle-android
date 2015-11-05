@@ -49,6 +49,11 @@
     return NO;
 }
 
+- (BOOL) handleMouseWheelX:(float)x Y:(float)y mousePos:(CGPoint)pos
+{
+    return [self handleMouseWheelX:x Y:y];
+}
+
 - (BOOL) handleMouseWheelX:(float)x Y:(float)y
 {
     return NO;
@@ -62,6 +67,11 @@
 - (BOOL) handleKeyUp:(int)key
 {
     return NO;
+}
+
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler
+{
+    return handler(self);
 }
 
 @end

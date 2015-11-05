@@ -16,6 +16,7 @@
 // dispatch is via the view hierarchy, not the responder chain.
 
 // Override these. Call super.
+- (BOOL) handleMouseWheelX:(float)x Y:(float)y mousePos:(CGPoint)pos; // Calls the method below by default
 - (BOOL) handleMouseWheelX:(float)x Y:(float)y;
 - (BOOL) handleKeyDown:(int)key;
 - (BOOL) handleKeyUp:(int)key;
@@ -23,5 +24,9 @@
 
 // Block that calls one of the above methods.
 typedef BOOL (^EventHandlerBlock)(AP_Responder*);
+
+// Default just calls handler(self).
+// Subclasses can override to implement a different response chain.
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler;
 
 @end
