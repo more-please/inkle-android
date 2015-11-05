@@ -16,6 +16,7 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     AP_AnimatedSize* _animatedContentSize;
     AP_PanGestureRecognizer* _gesture;
     BOOL _inGesture;
+    BOOL _inMouseWheel;
     CGPoint _previousTranslation;
     CGPoint _nextTranslation;
     CGPoint _velocity;
@@ -206,11 +207,16 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
 #ifdef SORCERY_SDL
 
-- (BOOL) handleKeyDown:(int)key
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler
 {
     if (!_enabled) {
         return NO;
     }
+    return [super dispatchEvent:handler];
+}
+
+- (BOOL) handleKeyDown:(int)key
+{
     if (key == SDLK_UP || key == SDLK_DOWN || key == SDLK_LEFT || key == SDLK_RIGHT) {
         const CGPoint oldPos = self.contentOffset;
         const CGSize size = self.bounds.size;
@@ -233,6 +239,44 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     return NO;
 }
 
+- (BOOL) handleMouseWheelX:(float)x Y:(float)y
+{
+    const CGPoint oldPos = self.contentOffset;
+    const CGSize size = self.bounds.size;
+    const CGSize contentSize = self.contentSize;
+
+    CGPoint pos = oldPos;
+    pos.x += x;
+    pos.y -= y; // Polarity seems right for OS X, need to check on more platforms...
+
+    pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
+    pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));
+    if (CGPointEqualToPoint(pos, oldPos)) {
+        // Reached the end of the scroll area, don't handle this event.
+        return NO;
+    }
+
+    // Don't update contentOffset immediately, do it in the updateGL with inertia.
+
+    if (!_inMouseWheel) {
+        _previousTranslation = [_gesture translationInView:nil];
+        _nextTranslation = _previousTranslation;
+        _inMouseWheel = YES;
+    }
+
+#if defined(WINDOWS)
+    const float kStep = [AP_Window scaleForIPhone:16 iPad:24];
+#elif defined(OSX)
+    const float kStep = [AP_Window scaleForIPhone:2 iPad:3];
+#else
+    #error Don't know what scroll wheel step size should be for this platform.
+#endif
+
+    _nextTranslation.x -= x * kStep;
+    _nextTranslation.y += y * kStep;
+    return YES;
+}
+
 #endif
 
 static CGFloat magnitude(CGFloat x, CGFloat y) {
@@ -243,7 +287,8 @@ static CGFloat magnitude(CGFloat x, CGFloat y) {
 {
     [super updateGL:timeStep];
 
-    if (_inGesture) {
+    if (_inGesture || _inMouseWheel) {
+        _inMouseWheel = NO;
         _velocity.x = _previousTranslation.x - _nextTranslation.x;
         _velocity.y = _previousTranslation.y - _nextTranslation.y;
         _previousTranslation = _nextTranslation;

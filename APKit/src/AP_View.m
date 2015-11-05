@@ -739,12 +739,14 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     --_iterating;
 
     if (handler(self)) {
+        [self setNeedsDisplay];
         return YES;
     }
 
     // Offer event to view controller
     AP_ViewController* controller = _viewDelegate;
     if (controller && handler(controller)) {
+        [self setNeedsDisplay];
         return YES;
     }
 
