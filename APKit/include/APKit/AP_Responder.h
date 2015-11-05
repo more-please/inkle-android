@@ -1,5 +1,6 @@
 #pragma once
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 
 #import "AP_Event.h"
