@@ -59,6 +59,11 @@
     return NO;
 }
 
+- (BOOL) handleKeyRepeat:(int)key
+{
+    return [self handleKeyDown:key];
+}
+
 - (BOOL) handleKeyDown:(int)key
 {
     return NO;
