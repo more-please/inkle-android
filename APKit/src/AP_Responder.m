@@ -59,7 +59,7 @@
     return NO;
 }
 
-- (BOOL) handleKeyRepeat:(int)key
+- (BOOL) handleKeyDown:(int)key repeat:(BOOL)repeat shift:(BOOL)shift
 {
     return [self handleKeyDown:key];
 }

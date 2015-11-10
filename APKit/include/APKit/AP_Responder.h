@@ -19,7 +19,7 @@
 // Override these. Call super.
 - (BOOL) handleMouseWheelX:(float)x Y:(float)y mousePos:(CGPoint)pos; // Calls the method below by default
 - (BOOL) handleMouseWheelX:(float)x Y:(float)y;
-- (BOOL) handleKeyRepeat:(int)key; // Calls the method below by default
+- (BOOL) handleKeyDown:(int)key repeat:(BOOL)repeat shift:(BOOL)shift; // Calls the method below by default
 - (BOOL) handleKeyDown:(int)key;
 - (BOOL) handleKeyUp:(int)key;
 - (BOOL) handleAndroidBackButton;
