@@ -9,6 +9,10 @@
 #import "AP_Layer.h"
 #import "AP_Window.h"
 
+#ifdef SORCERY_SDL
+#import <SDL2/SDL.h>
+#endif
+
 @implementation AP_AlertView {
     AP_Label* _header;
     AP_Label* _body;
@@ -127,6 +131,86 @@ AP_BAN_EVIL_INIT;
 {
     AP_Button* button = [_buttons objectAtIndex:i];
     return button.titleLabel.text.copy;
+}
+
+- (int) highlightedButton
+{
+    int i = 0;
+    for (AP_Button* button in _buttons) {
+        if (button.isHighlighted) {
+            return i;
+        }
+        ++i;
+    }
+    return -1;
+}
+
+- (void) setHighlightedButton:(int)option
+{
+    int i = 0;
+    for (AP_Button* button in _buttons) {
+        button.highlighted = (i == option);
+        ++i;
+    }
+}
+
+#ifdef SORCERY_SDL
+
+- (BOOL) handleKeyDown:(int)key repeat:(BOOL)repeat shift:(BOOL)shift
+{
+    int i = self.highlightedButton;
+    int count = _buttons.count;
+
+    if (count == 0) {
+        return NO;
+    }
+
+    if (key == SDLK_DOWN || key == SDLK_RIGHT) {
+        // Step through options from the top, stopping at the bottom.
+        if (i < count-1) {
+            self.highlightedButton = i + 1;
+            return YES;
+        }
+    } else if (key == SDLK_UP || key == SDLK_LEFT) {
+        // Step through options from the bottom, stopping at the top.
+        if (i > 0) {
+            self.highlightedButton = i - 1;
+            return YES;
+        }
+    } else if (key == SDLK_TAB && !shift) {
+        // Cycle forward through options repeatedly
+        self.highlightedButton = (i + 1) % count;
+        return YES;
+    } else if (key == SDLK_TAB && shift) {
+        // Cycle backward through options repeatedly
+        self.highlightedButton = (i > 0) ? (i - 1) : (count - 1);
+        return YES;
+    } else if (key == SDLK_RETURN) {
+        // If no option highlighted, pick the last one.
+        if (i == -1) {
+            self.highlightedButton = (count - 1);
+        }
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL) handleKeyUp:(int)key
+{
+    int i = self.highlightedButton;
+    if (i >= 0 && key == SDLK_RETURN) {
+        [self buttonPressed:_buttons[i]];
+    }
+    return NO;
+}
+
+#endif
+
+- (BOOL) dispatchEvent:(EventHandlerBlock)handler
+{
+    handler(self);
+    // We are SUPER MODAL
+    return TRUE;
 }
 
 - (void) show
