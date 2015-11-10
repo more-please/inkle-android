@@ -170,6 +170,7 @@
     if (_keyboardShortcut && key == _keyboardShortcut) {
         self.highlighted = YES;
         [self dispatch:UIControlEventTouchDown event:nil];
+        return YES;
     }
     return NO;
 }
@@ -179,6 +180,7 @@
     if (_keyboardShortcut && key == _keyboardShortcut && self.isHighlighted) {
         self.highlighted = NO;
         [self dispatch:UIControlEventTouchUpInside event:nil];
+        return YES;
     }
     return NO;
 }
