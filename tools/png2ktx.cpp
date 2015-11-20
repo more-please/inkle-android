@@ -40,7 +40,10 @@ int main(int argc, const char* argv[]) {
             break;
         }
     }
-    ANDROID_DIR = ANDROID_DIR + "/..";
+
+//     ANDROID_DIR = ANDROID_DIR + "/..";
+// Fuck it, bypass Buck and just pull binaries from the actual source tree
+    ANDROID_DIR = ANDROID_DIR + "/../../../../../inkle-android";
 
     const char* infile = "-";
     const char* outfile = NULL;
