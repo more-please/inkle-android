@@ -31,6 +31,7 @@
 // Singleton holding a list of bundles, which are searched in order for resources.
 @interface PAK_Search : NSObject
 + (void) add:(id<PAK_Reader>)pak; // Add the given bundle end of the search path.
++ (void) remove:(id<PAK_Reader>)pak; // Remove the given bundle.
 + (NSArray*) names;
 + (PAK_Item*) item:(NSString*)name;
 @end

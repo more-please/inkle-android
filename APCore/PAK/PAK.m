@@ -91,6 +91,9 @@
 
 + (PAK*) pakWithMemoryMappedFile:(NSString*)filename
 {
+#ifdef OSX
+    filename = [[NSBundle mainBundle] pathForResource:filename ofType:nil];
+#endif
     PAK* result = nil;
     int fd = open([filename UTF8String], O_RDONLY);
     if (fd > 0) {
@@ -205,6 +208,11 @@ static NSMutableArray* g_paks;
 + (void) add:(id<PAK_Reader>)pak
 {
     [g_paks addObject:pak];
+}
+
++ (void) remove:(id<PAK_Reader>)pak
+{
+    [g_paks removeObject:pak];
 }
 
 + (NSArray*) names
