@@ -16,6 +16,8 @@
 
 #endif
 
+NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotification";
+
 // ---------------------------------------------------------------------------------------
 
 @implementation PAK_Item {
@@ -99,7 +101,7 @@
     if (fd > 0) {
         long size = lseek(fd, 0, SEEK_END);
         if (size > 0) {
-            uint8_t* ptr = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
+            uint8_t* ptr = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0);
             if (ptr != MAP_FAILED) {
                 NSData* data = [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
                 result = [[PAK alloc] initWithData:data];
@@ -147,8 +149,8 @@
 - (void) dealloc
 {
     if (_isMemoryMapped) {
-        int result = munmap((void*) [_data bytes], [_data length]);
-        if (!result) {
+        int err = munmap((void*) [_data bytes], [_data length]);
+        if (err) {
             NSLog(@"munmap() failed! Error: %s", strerror(errno));
         }
     }
@@ -208,11 +210,13 @@ static NSMutableArray* g_paks;
 + (void) add:(id<PAK_Reader>)pak
 {
     [g_paks addObject:pak];
+    [[NSNotificationCenter defaultCenter] postNotificationName:PAK_SearchPathChangedNotification object:nil];
 }
 
 + (void) remove:(id<PAK_Reader>)pak
 {
     [g_paks removeObject:pak];
+    [[NSNotificationCenter defaultCenter] postNotificationName:PAK_SearchPathChangedNotification object:nil];
 }
 
 + (NSArray*) names

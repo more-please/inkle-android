@@ -28,6 +28,9 @@
 
 @end
 
+// Notification sent when the search path changes. Time to flush caches!
+extern NSString* const PAK_SearchPathChangedNotification;
+
 // Singleton holding a list of bundles, which are searched in order for resources.
 @interface PAK_Search : NSObject
 + (void) add:(id<PAK_Reader>)pak; // Add the given bundle end of the search path.

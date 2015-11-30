@@ -3,6 +3,8 @@
 #import "AP_Animation.h"
 #import "AP_Check.h"
 
+#import <PAK/PAK.h>
+
 @interface AP_StrongCache_Entry : NSObject
 @property (nonatomic,strong) id key;
 @property (nonatomic,strong) id value;
@@ -23,10 +25,19 @@
         _cacheSize = size;
         _dict = [NSMutableDictionary dictionary];
 
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(didReceiveMemoryWarning:)
-                                                     name:UIApplicationDidReceiveMemoryWarningNotification
-                                                   object:nil];
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self
+            selector:@selector(didReceiveMemoryWarning:)
+            name:UIApplicationDidReceiveMemoryWarningNotification
+            object:nil
+        ];
+
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self
+            selector:@selector(searchPathChanged:)
+            name:PAK_SearchPathChangedNotification
+            object:nil
+        ];
     }
     return self;
 }
@@ -37,6 +48,11 @@
 }
 
 - (void) didReceiveMemoryWarning:(NSNotification*)notification
+{
+    [_dict removeAllObjects];
+}
+
+- (void) searchPathChanged:(NSNotification*)notification
 {
     [_dict removeAllObjects];
 }

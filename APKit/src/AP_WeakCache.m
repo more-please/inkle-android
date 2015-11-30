@@ -3,6 +3,8 @@
 #import "AP_Animation.h"
 #import "AP_Check.h"
 
+#import <PAK/PAK.h>
+
 @interface AP_WeakCache_Entry : NSObject
 @property (nonatomic,strong) id key;
 @property (nonatomic,weak) id value;
@@ -20,8 +22,25 @@
     self = [super init];
     if (self) {
         _dict = [NSMutableDictionary dictionary];
+
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self
+            selector:@selector(searchPathChanged:)
+            name:PAK_SearchPathChangedNotification
+            object:nil
+        ];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) searchPathChanged:(NSNotification*)notification
+{
+    [_dict removeAllObjects];
 }
 
 - (id) get:(id)key withLoader:(id (^)(void))loader
