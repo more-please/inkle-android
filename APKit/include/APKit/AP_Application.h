@@ -24,6 +24,7 @@
 
 + (AP_Application*) sharedApplication;
 
+@property(nonatomic,strong) NSThread* uiThread;
 @property(nonatomic,strong) id<AP_ApplicationDelegate> delegate;
 
 @property(nonatomic,readonly) AP_Window *keyWindow;

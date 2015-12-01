@@ -12,4 +12,9 @@
     [self performSelector:@selector(performBlock:) withObject:block afterDelay:delay];
 }
 
+- (void) performBlock:(void(^)())block onThread:(NSThread*)thread waitUntilDone:(BOOL)waitUntilDone
+{
+    [self performSelector:@selector(performBlock:) onThread:thread withObject:block waitUntilDone:waitUntilDone];
+}
+
 @end
