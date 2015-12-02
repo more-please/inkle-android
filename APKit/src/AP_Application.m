@@ -1,6 +1,7 @@
 #import "AP_Application.h"
 
 #import "AP_Check.h"
+#import "NSObject+AP_PerformBlock.h"
 
 @implementation AP_Application
 
@@ -57,6 +58,14 @@ static AP_Application* g_Application;
     // Nasty! This is a hangover from the original version that
     // ran on iOS inside a GLKViewController...
     return (AP_Window*) _delegate.window.rootViewController;
+}
+
+- (void) performOnUiThread:(UiThreadBlock)block
+{
+    NSThread* caller = [NSThread currentThread];
+    [self performBlock:^{
+        [self performBlock:block() onThread:caller waitUntilDone:NO];
+    } onThread:_uiThread waitUntilDone:NO];
 }
 
 @end

@@ -35,4 +35,10 @@
 
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
 
+typedef void (^ResultBlock)(void);
+typedef ResultBlock (^UiThreadBlock)(void);
+
+// Run the given block on the UI thread, then run its result on the calling thread.
+- (void) performOnUiThread:(UiThreadBlock)block;
+
 @end
