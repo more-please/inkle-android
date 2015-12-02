@@ -8,8 +8,6 @@
 @property(nonatomic,readonly) BOOL isCompressed;
 @property(nonatomic,readonly) int length; // Uncompressed length of this resource.
 @property(nonatomic,readonly,strong) NSData* data; // Uncompressed contents of this resource.
-
-- (instancetype) initWithName:(NSString*)name length:(int)uncompressedLength data:(NSData*)maybeCompressedData;
 @end
 
 // Interface for a bundle containing multiple named assets.

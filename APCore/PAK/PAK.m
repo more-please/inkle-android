@@ -20,15 +20,63 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 
 // ---------------------------------------------------------------------------------------
 
+@interface PAK_WeakCache_Entry : NSObject
+@property (nonatomic,strong) id key;
+@property (nonatomic,weak) id value;
+@end
+
+@implementation PAK_WeakCache_Entry
+@end
+
+@interface PAK_WeakCache : NSObject
+- (id) get:(id)key withLoader:(id(^)(void))block;
+@end
+
+@implementation PAK_WeakCache {
+    NSMutableDictionary* _dict;
+}
+
+- (instancetype) init
+{
+    self = [super init];
+    if (self) {
+        _dict = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (id) get:(id)key withLoader:(id (^)(void))loader
+{
+    PAK_WeakCache_Entry* entry = [_dict objectForKey:key];
+    id result = entry.value;
+    if (!result) {
+        result = loader();
+        if (!result) {
+            return nil;
+        }
+        entry = [[PAK_WeakCache_Entry alloc] init];
+        entry.key = key;
+        entry.value = result;
+        [_dict setObject:entry forKey:key];
+    }
+    return result;
+}
+
+@end
+
+// ---------------------------------------------------------------------------------------
+
 @implementation PAK_Item {
+    PAK* _parent;
     NSData* _originalData;
     __weak NSData* _uncompressedData;
 }
 
-- (instancetype) initWithName:(NSString*)name length:(int)length data:(NSData*)data
+- (instancetype) initWithParent:(PAK*)parent name:(NSString*)name length:(int)length data:(NSData*)data
 {
 	self = [super init];
 	if (self) {
+        _parent = parent;
         _name = name;
         _isCompressed = (length != data.length);
 		_length = length;
@@ -83,7 +131,8 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 
 @implementation PAK {
     BOOL _isMemoryMapped;
-    NSDictionary* _items;
+    NSDictionary* _names; // Map of name -> pos
+    PAK_WeakCache* _cache; // Cache of name -> PAK_Item
 }
 
 + (PAK*) pakWithData:(NSData*)data
@@ -136,12 +185,13 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
         NSAssert(totalSize >= dirOffset, @".pak directory location is out of bounds");
 
         uint32_t dirSize = (totalSize - dirOffset) / 20;
-        NSMutableDictionary* items = [NSMutableDictionary dictionaryWithCapacity:dirSize];
+        NSMutableDictionary* names = [NSMutableDictionary dictionaryWithCapacity:dirSize];
         for (uint32_t pos = dirOffset; pos < totalSize; pos += 20) {
-            PAK_Item* item = [self blob:pos];
-            items[item.name] = item;
+            NSString* name = [self string:pos];
+            names[name] = @(pos);
         }
-        _items = [NSDictionary dictionaryWithDictionary:items];
+        _names = [NSDictionary dictionaryWithDictionary:names];
+        _cache = [[PAK_WeakCache alloc] init];
     }
     return self;
 }
@@ -163,7 +213,7 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
     uint32_t uncompressedSize = [self wordAtOffset:(blobOffset + 16)];
     char* base = (char*)[_data bytes];
     NSData* data = [NSData dataWithBytesNoCopy:(base + offset) length:fileSize freeWhenDone:NO];
-    return [[PAK_Item alloc] initWithName:name length:uncompressedSize data:data];
+    return [[PAK_Item alloc] initWithParent:self name:name length:uncompressedSize data:data];
 }
 
 - (NSString*) string:(uint32_t)strOffset {
@@ -182,12 +232,15 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 
 - (NSArray*) pakNames
 {
-	return _items.allKeys;
+	return _names.allKeys;
 }
 
 - (PAK_Item*) pakItem:(NSString*)name
 {
-    return [_items objectForKey:name];
+    return [_cache get:name withLoader:^{
+        NSNumber* pos = _names[name];
+        return pos ? [self blob:pos.intValue] : nil;
+    }];
 }
 
 @end
