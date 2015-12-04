@@ -13,10 +13,14 @@
 #import <SDL2/SDL.h>
 #endif
 
+const CGFloat kCornerRadius = 6;
+const CGFloat kButtonInset = 3;
+
 @implementation AP_AlertView {
     AP_Label* _header;
     AP_Label* _body;
-    NSMutableArray* _buttons;
+    NSArray* _buttons;
+    NSArray* _buttonsInVisualOrder;
     AP_View* _alert;
     AP_Control* _vignette;
     AP_Control* _backstop; // Catch gestures during opening animation.
@@ -47,7 +51,7 @@ AP_BAN_EVIL_INIT;
 
         _alert = [[AP_View alloc] init];
         _alert.backgroundColor = [UIColor colorWithWhite:0.25 alpha:1];
-        _alert.layer.cornerRadius = 14;
+        _alert.layer.cornerRadius = kCornerRadius;
         [self addSubview:_alert];
 
 #ifdef SORCERY
@@ -98,7 +102,7 @@ AP_BAN_EVIL_INIT;
         UIColor* black = [UIColor blackColor];
         UIColor* empty = [UIColor colorWithWhite:0 alpha:0];
 
-        _buttons = [NSMutableArray array];
+        NSMutableArray* buttons = [NSMutableArray array];
         for (NSString* name in buttonNames) {
             AP_Button* button = [[AP_Button alloc] init];
             button.titleLabel.font = buttonFont;
@@ -116,11 +120,21 @@ AP_BAN_EVIL_INIT;
             [button setBackgroundColor:empty forState:UIControlStateNormal];
             [button setBackgroundColor:darkBlue forState:UIControlStateHighlighted];
 
-            button.layer.cornerRadius = 14;
+            button.layer.cornerRadius = kCornerRadius - kButtonInset;
 
-            [_buttons addObject:button];
+            [buttons addObject:button];
             [_alert addSubview:button];
         }
+        _buttons = [NSArray arrayWithArray:buttons];
+
+        buttons = [_buttons mutableCopy];
+        if (buttons.count > 2) {
+            // Move cancel button to the end
+            AP_Button* cancel = [buttons objectAtIndex:0];
+            [buttons removeObjectAtIndex:0];
+            [buttons addObject:cancel];
+        }
+        _buttonsInVisualOrder = [NSArray arrayWithArray:buttons];
 
         [self layoutIfNeeded];
     }
@@ -136,7 +150,7 @@ AP_BAN_EVIL_INIT;
 - (int) highlightedButton
 {
     int i = 0;
-    for (AP_Button* button in _buttons) {
+    for (AP_Button* button in _buttonsInVisualOrder) {
         if (button.isHighlighted) {
             return i;
         }
@@ -148,7 +162,7 @@ AP_BAN_EVIL_INIT;
 - (void) setHighlightedButton:(int)option
 {
     int i = 0;
-    for (AP_Button* button in _buttons) {
+    for (AP_Button* button in _buttonsInVisualOrder) {
         button.highlighted = (i == option);
         ++i;
     }
@@ -199,7 +213,7 @@ AP_BAN_EVIL_INIT;
 {
     int i = self.highlightedButton;
     if (i >= 0 && key == SDLK_RETURN) {
-        [self buttonPressed:_buttons[i]];
+        [self buttonPressed:_buttonsInVisualOrder[i]];
     }
     return NO;
 }
@@ -327,15 +341,10 @@ AP_BAN_EVIL_INIT;
         pos.y += ySpace / 2;
     }
 
-    NSMutableArray* buttons = [_buttons mutableCopy];
-    if (buttons.count > 2) {
-        // Move cancel button to the end
-        AP_Button* cancel = [buttons objectAtIndex:0];
-        [buttons removeObjectAtIndex:0];
-        [buttons addObject:cancel];
-    }
-    for (AP_Button* button in buttons) {
-        button.frame = CGRectMake(pos.x, pos.y, buttonSize.width, buttonSize.height);
+    for (AP_Button* button in _buttonsInVisualOrder) {
+        button.frame = CGRectInset(
+            CGRectMake(pos.x, pos.y, buttonSize.width, buttonSize.height),
+            kButtonInset, kButtonInset);
         if (verticalLayout) {
             pos.y += buttonSize.height;
         } else {
