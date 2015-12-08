@@ -222,12 +222,15 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
         const CGSize size = self.bounds.size;
         const CGSize contentSize = self.contentSize;
 
+        const float xPolarity = _reverseKeyboardPolarityX ? -1 : 1;
+        const float yPolarity = _reverseKeyboardPolarityY ? -1 : 1;
+
         const float kStep = [AP_Window scaleForIPhone:24 iPad:32];
         CGPoint pos = oldPos;
-        if (key == SDLK_LEFT) pos.x -= kStep;
-        if (key == SDLK_RIGHT) pos.x += kStep;
-        if (key == SDLK_UP) pos.y -= kStep;
-        if (key == SDLK_DOWN) pos.y += kStep;
+        if (key == SDLK_LEFT) pos.x -= kStep * xPolarity;
+        if (key == SDLK_RIGHT) pos.x += kStep * xPolarity;
+        if (key == SDLK_UP) pos.y -= kStep * yPolarity;
+        if (key == SDLK_DOWN) pos.y += kStep * yPolarity;
 
         pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
         pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));

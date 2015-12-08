@@ -48,4 +48,8 @@
 @property (nonatomic, assign) int pageIndex;
 @property (nonatomic, assign) BOOL enabled;
 
+// Iain addition
+@property (nonatomic, assign) BOOL reverseKeyboardPolarityX;
+@property (nonatomic, assign) BOOL reverseKeyboardPolarityY;
+
 @end
