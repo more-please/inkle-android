@@ -10,12 +10,25 @@
 
 #define AP_DEVICE_METRIC(m) [AP_Window iPhone:(m)[0] iPad:(m)[1]]
 
-static inline float AP_Ease(float t)
+static inline double AP_Ease(double t)
 {
-    return 3*t*t - 2*t*t*t;
+    t = AP_CLAMP(t, 0.0, 1.0);
+    return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-static inline float AP_Lerp(float v1, float v2, float t) {
+static inline double AP_EaseIn(double t)
+{
+    t = AP_CLAMP(t, 0.0, 1.0);
+    return t * (2 - t);
+}
+
+static inline double AP_EaseOut(double t)
+{
+    t = AP_CLAMP(t, 0.0, 1.0);
+    return t * t;
+}
+
+static inline double AP_Lerp(double v1, double v2, double t) {
     return v1 + t*(v2-v1);
 }
 

@@ -124,13 +124,21 @@ AP_BAN_EVIL_INIT;
         }
     }
 
-    if (t >= _finishTime || _finishTime <= _startTime) {
-        _progress = 1;
-    } else if (t <= _startTime) {
-        _progress = 0;
-    } else {
-        _progress = (t - _startTime) / (_finishTime - _startTime);
-        _progress = AP_Ease(_progress);
+    const double p = (t - _startTime) / (_finishTime - _startTime);
+    switch (_options & UIViewAnimationOptionCurveLinear) {
+        case UIViewAnimationOptionCurveLinear:
+            _progress = AP_CLAMP(p, 0.0, 1.0);
+            break;
+        case UIViewAnimationOptionCurveEaseIn:
+            _progress = AP_EaseIn(p);
+            break;
+        case UIViewAnimationOptionCurveEaseOut:
+            _progress = AP_EaseOut(p);
+            break;
+        default:
+        case UIViewAnimationOptionCurveEaseInOut:
+            _progress = AP_Ease(p);
+            break;
     }
 
     if (_reverse) {
@@ -138,7 +146,7 @@ AP_BAN_EVIL_INIT;
     }
 
     if (_tag) {
-        NSLog(@"Updating animation: %@ (progress: %.1f)", _tag, _progress);
+        NSLog(@"Updating animation: %@ (progress: %.1f value: %.1f)", _tag, p, _progress);
     }
 
     for (AP_AnimatedProperty* prop in _props) {
