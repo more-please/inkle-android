@@ -9,6 +9,8 @@
 - (void) addTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
 - (void) removeTarget:(id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
 
+- (BOOL) dispatch:(UIControlEvents)mask event:(AP_Event*)event;
+
 @property(nonatomic,getter=isEnabled) BOOL enabled; // default is YES
 @property(nonatomic,getter=isHighlighted) BOOL highlighted; // default is NO
 @property(nonatomic,getter=isSelected) BOOL selected; // default is NO
