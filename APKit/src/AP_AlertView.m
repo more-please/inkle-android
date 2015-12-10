@@ -180,12 +180,22 @@ AP_BAN_EVIL_INIT;
     }
 
     if (key == SDLK_DOWN || key == SDLK_RIGHT) {
+        // Special case for 2 options: right cursor selects the right-hand option.
+        if (i < 0 && count == 2) {
+            self.highlightedButton = 1;
+            return YES;
+        }
         // Step through options from the top, stopping at the bottom.
         if (i < count-1) {
             self.highlightedButton = i + 1;
             return YES;
         }
     } else if (key == SDLK_UP || key == SDLK_LEFT) {
+        // Special case for 2 options: left cursor selects the left-hand option.
+        if (i < 0 && count == 2) {
+            self.highlightedButton = 0;
+            return YES;
+        }
         // Step through options from the bottom, stopping at the top.
         if (i > 0) {
             self.highlightedButton = i - 1;
@@ -240,16 +250,16 @@ AP_BAN_EVIL_INIT;
     _alert.transform = CGAffineTransformMakeScale(0.25, 0.25);
     [window.rootViewController.view addSubview:self];
 
-    [AP_View animateWithDuration:0.25 animations:^{
+    [AP_View animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseIn animations:^{
         _vignette.alpha = 1;
         _alert.alpha = 1;
         _alert.transform = CGAffineTransformIdentity;
-    }];
+    } completion:nil];
 }
 
 - (void) hide
 {
-    [AP_View animateWithDuration:0.25 animations:^{
+    [AP_View animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
         self.transform = CGAffineTransformMakeScale(0.25, 0.25);
         _vignette.transform = CGAffineTransformMakeScale(4, 4);
         self.alpha = 0;
