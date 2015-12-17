@@ -4,6 +4,7 @@
 
 #import "AP_Bundle.h"
 #import "AP_Check.h"
+#import "AP_GLTexture_CRN.h"
 #import "AP_GLTexture_KTX.h"
 #import "AP_GLTexture_PNG.h"
 #import "AP_GLTexture_PVR.h"
@@ -52,6 +53,8 @@ static AP_WeakCache* s_textureCache = nil;
         success = [self loadPVR:data];
     } else if ([AP_GLTexture isKTX:data]) {
         success = [self loadKTX:data maxSize:screens];
+    } else if ([AP_GLTexture isCRN:data]) {
+        success = [self loadCRN:data];
     } else if ([AP_GLTexture isPNG:data]) {
         success = [self loadPNG:data];
     } else {
@@ -82,6 +85,10 @@ static AP_WeakCache* s_textureCache = nil;
             }
             if (!data) {
                 assetName = [name stringByAppendingPathExtension:@"ktx"];
+                data = [AP_Bundle dataForResource:assetName ofType:nil];
+            }
+            if (!data) {
+                assetName = [name stringByAppendingPathExtension:@"crn"];
                 data = [AP_Bundle dataForResource:assetName ofType:nil];
             }
         }
