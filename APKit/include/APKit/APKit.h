@@ -9,6 +9,7 @@
 #import "AP_ActivityViewController.h"
 #import "AP_AlertView.h"
 #import "AP_Application.h"
+#import "AP_BookView.h"
 #import "AP_Button.h"
 #import "AP_Bundle.h"
 #import "AP_Checkbox.h"
