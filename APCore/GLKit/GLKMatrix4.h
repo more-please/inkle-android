@@ -127,6 +127,24 @@ static inline GLKMatrix4 GLKMatrix4MakePerspective(float fovyRadians, float aspe
     return m;
 }
 
+static inline GLKMatrix4 GLKMatrix4MakeFrustum(
+    float left, float right, float bottom, float top, float nearZ, float farZ)
+{
+    const float ral = right + left;
+    const float rsl = right - left;
+    const float tsb = top - bottom;
+    const float tab = top + bottom;
+    const float fan = farZ + nearZ;
+    const float fsn = farZ - nearZ;
+    GLKMatrix4 m = {
+        2.0f * nearZ / rsl, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f * nearZ / tsb, 0.0f, 0.0f,
+        ral / rsl, tab / tsb, -fan / fsn, -1.0f,
+        0.0f, 0.0f, (-2.0f * farZ * nearZ) / fsn, 0.0f
+    };
+    return m;
+}
+
 static inline GLKVector4 GLKMatrix4MultiplyVector4(GLKMatrix4 matrixLeft, GLKVector4 vectorRight) {
 #if defined(__ARM_NEON__)
     float32x4x4_t iMatrix = *(float32x4x4_t *)&matrixLeft;
