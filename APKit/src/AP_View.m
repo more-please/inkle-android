@@ -760,6 +760,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 - (void) setNeedsLayout
 {
     _needsLayout = YES;
+    _needsDisplay = YES;
 }
 
 - (void) layoutIfNeeded
