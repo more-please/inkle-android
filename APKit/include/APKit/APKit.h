@@ -36,6 +36,7 @@
 #import "AP_View.h"
 #import "AP_ViewController.h"
 #import "AP_WeakCache.h"
+#import "AP_WeakSet.h"
 #import "AP_WebView.h"
 #import "AP_Window.h"
 
