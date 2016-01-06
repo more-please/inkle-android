@@ -59,14 +59,21 @@ using namespace std;
 
 - (BOOL) handleKeyDown:(int)key
 {
-    if (key == SDLK_LEFT) {
-        [self setCurrentPage:_currentPage - 2 animated:YES];
-        return YES;
-    } else if (key == SDLK_RIGHT) {
-        [self setCurrentPage:_currentPage + 2 animated:YES];
-        return YES;
+    switch (key) {
+        case SDLK_LEFT:
+        case SDLK_BACKSPACE:
+            [self setCurrentPage:_currentPage - 2 animated:YES];
+            return YES;
+
+        case SDLK_RIGHT:
+        case SDLK_SPACE:
+        case SDLK_RETURN:
+            [self setCurrentPage:_currentPage + 2 animated:YES];
+            return YES;
+
+        default:
+            return NO;
     }
-    return NO;
 }
 
 - (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event *)event
