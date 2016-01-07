@@ -21,4 +21,6 @@
 - (void) touchesMoved:(NSSet*)touches withEvent:(Real_UIEvent*)event;
 - (void) resetTouches;
 
+- (void) mouseMoved:(CGPoint)pos withEvent:(Real_UIEvent*)event;
+
 @end

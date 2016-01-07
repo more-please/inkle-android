@@ -38,4 +38,9 @@
     NSLog(@"[UIViewController resetTouches]");
 }
 
+- (void) mouseMoved:(CGPoint)pos withEvent:(Real_UIEvent*)event
+{
+    NSLog(@"[UIViewController mouseMoved]");
+}
+
 @end

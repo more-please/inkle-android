@@ -48,6 +48,7 @@ extern NSString* const AP_ScreenSizeChangedNotification;
 
 - (BOOL) isHitTestView:(AP_View*)view;
 - (BOOL) isGestureView:(AP_View*)view;
+- (BOOL) isHoverView:(AP_View*)view;
 
 + (void) performAfterFrame:(AfterFrameBlock)block;
 

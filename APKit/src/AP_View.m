@@ -451,6 +451,16 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     return nil;
 }
 
+- (void) mouseEnter
+{
+    // Nothing
+}
+
+- (void) mouseLeave
+{
+    // Nothing
+}
+
 //------------------------------------------------------------------------------------
 #pragma mark - View & window hierarchy
 //------------------------------------------------------------------------------------
@@ -989,6 +999,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     }
     if ([self.window isGestureView:self]) {
         backgroundColor.b = 1;
+        backgroundColor.a = MAX(0.25, backgroundColor.a);
+    }
+    if ([self.window isHoverView:self]) {
+        backgroundColor.g = 1;
         backgroundColor.a = MAX(0.25, backgroundColor.a);
     }
 #endif

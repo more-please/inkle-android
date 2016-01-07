@@ -123,6 +123,9 @@
 // Prevent touches in this view from firing gesture recognizers in lower views.
 @property(nonatomic) BOOL blockGestures;
 
+- (void) mouseEnter;
+- (void) mouseLeave;
+
 // ----------------------------------------------------------------------
 // Internal stuff
 

@@ -17,6 +17,7 @@ NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotific
     AP_FPSCounter* _fps;
     AP_Profiler* _profiler;
     double _clock;
+    __weak AP_View* _hoverView;
     AP_View* _hitTestView;
     AP_GestureRecognizer* _hitTestGesture;
     NSMutableSet* _activeTouches;
@@ -30,6 +31,11 @@ NSString* const AP_ScreenSizeChangedNotification = @"AP_ScreenSizeChangedNotific
 - (BOOL) isGestureView:(AP_View *)view
 {
     return view == _hitTestGesture.view;
+}
+
+- (BOOL) isHoverView:(AP_View*)view
+{
+    return view == _hoverView;
 }
 
 static CGRect g_AppFrame = {0, 0, 320, 480};
@@ -564,6 +570,17 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     _hitTestView = nil;
     _hitTestGesture = nil;
     _activeTouches = [NSMutableSet set];
+}
+
+- (void) mouseMoved:(CGPoint)pos withEvent:(Real_UIEvent*)event
+{
+    AP_View* oldHoverView = _hoverView;
+    AP_View* newHoverView = [_rootViewController.view hitTest:pos withEvent:nil];
+    if (newHoverView != oldHoverView) {
+        [oldHoverView mouseLeave];
+        _hoverView = newHoverView;
+        [newHoverView mouseEnter];
+    }
 }
 
 - (void) didReceiveMemoryWarning
