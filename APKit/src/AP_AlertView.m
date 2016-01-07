@@ -95,9 +95,7 @@ AP_BAN_EVIL_INIT;
         }
         va_end(args);
 
-        // See http://developer.android.com/design/style/color.html
-//         UIColor* lightBlue = [UIColor colorWithRed:(0x33 / 255.0) green:(0xb5 / 255.0) blue:(0xe5 / 255.0) alpha:1];
-        UIColor* darkBlue = [UIColor colorWithRed:(0x00 / 255.0) green:(0x99 / 255.0) blue:(0xcc / 255.0) alpha:1];
+        UIColor* glow = [UIColor colorWithWhite:0.8 alpha:1];
         UIColor* white = [UIColor whiteColor];
         UIColor* black = [UIColor blackColor];
         UIColor* empty = [UIColor colorWithWhite:0 alpha:0];
@@ -114,11 +112,8 @@ AP_BAN_EVIL_INIT;
             [button setTitleColor:white forState:UIControlStateNormal];
             [button setTitleShadowColor:black forState:UIControlStateNormal];
 
-            [button setTitleColor:empty forState:UIControlStateHighlighted];
-            [button setTitleShadowColor:white forState:UIControlStateHighlighted];
-
             [button setBackgroundColor:empty forState:UIControlStateNormal];
-            [button setBackgroundColor:darkBlue forState:UIControlStateHighlighted];
+            [button setBackgroundColor:glow forState:UIControlStateHighlighted];
 
             button.layer.cornerRadius = kCornerRadius - kButtonInset;
 
@@ -151,7 +146,7 @@ AP_BAN_EVIL_INIT;
 {
     int i = 0;
     for (AP_Button* button in _buttonsInVisualOrder) {
-        if (button.isHighlighted) {
+        if (button.isHovered) {
             return i;
         }
         ++i;
@@ -163,7 +158,7 @@ AP_BAN_EVIL_INIT;
 {
     int i = 0;
     for (AP_Button* button in _buttonsInVisualOrder) {
-        button.highlighted = (i == option);
+        button.hovered = (i == option);
         ++i;
     }
 }
@@ -214,6 +209,8 @@ AP_BAN_EVIL_INIT;
         if (i == -1) {
             self.highlightedButton = (count - 1);
         }
+        AP_Button* b = _buttonsInVisualOrder[self.highlightedButton];
+        b.highlighted = YES;
         return YES;
     }
     return NO;
@@ -223,7 +220,10 @@ AP_BAN_EVIL_INIT;
 {
     int i = self.highlightedButton;
     if (i >= 0 && key == SDLK_RETURN) {
-        [self buttonPressed:_buttonsInVisualOrder[i]];
+        AP_Button* b = _buttonsInVisualOrder[i];
+        b.highlighted = NO;
+        b.hovered = NO;
+        [self buttonPressed:b];
     }
     return NO;
 }
