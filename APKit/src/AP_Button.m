@@ -14,6 +14,8 @@
 
     AP_Label* _titleLabel;
     AP_ImageView* _imageView;
+
+    AP_AnimatedFloat* _highlightProgress;
 }
 
 + (AP_Button*) buttonWithType:(UIButtonType)buttonType
@@ -53,6 +55,9 @@
     _image = [NSMutableDictionary dictionary];
     _backgroundImage = [NSMutableDictionary dictionary];
     _backgroundColor = [NSMutableDictionary dictionary];
+
+    _highlightProgress = [[AP_AnimatedFloat alloc] initWithName:@"highlightProgress" view:self];
+    [_highlightProgress setAll:0];
 }
 
 - (id) init
@@ -285,10 +290,12 @@
     // - Image is only adjusted if not set specifically for this mode.
     // - Both the foreground and background images are adjusted.
 
-    if (_adjustsImageWhenHighlighted && state == UIControlStateHighlighted) {
+    if (_adjustsImageWhenHighlighted) {
+        CGFloat p = _highlightProgress.inFlight;
         // Use a pale blue tint to make it look Android-y.
         // Second-lightest blue from http://developer.android.com/design/style/color.html
-        UIColor* color = [UIColor colorWithRed:0.773 green:0.918 blue:0.973 alpha:0.5];
+//        UIColor* color = [UIColor colorWithRed:0.773 green:0.918 blue:0.973 alpha:0.5 * progress];
+        UIColor* color = [UIColor colorWithRed:1 green:0.8 + 0.2 * p blue:0.3 + 0.6 * p alpha:0.5 * p];
         image = [image tintedImageUsingColor:color];
     }
     return image;
@@ -317,13 +324,69 @@
 - (void) setHighlighted:(BOOL)highlighted
 {
     [super setHighlighted:highlighted];
+    [self animateHighlight];
     [self setNeedsLayout];
+}
+
+- (void) setHovered:(BOOL)hovered
+{
+    [super setHovered:hovered];
+    [self animateHighlight];
+    [self setNeedsLayout];
+}
+
+- (void) animateHighlight
+{
+    if (self.highlighted) {
+        [AP_View animateWithDuration:0.05 delay:0
+            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+            animations:^{
+                [_highlightProgress setDest:1.0];
+            }
+            completion:nil
+        ];
+    } else if (self.hovered) {
+        [AP_View animateWithDuration:0.1 delay:0
+            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+            animations:^{
+                [_highlightProgress setDest:0.5];
+            }
+            completion:^(BOOL finished) {
+                if (finished) {
+                    [AP_View animateWithDuration:0.4 delay:0
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                            | UIViewAnimationOptionAllowUserInteraction
+                            | UIViewAnimationOptionRepeat
+                            | UIViewAnimationOptionAutoreverse
+                        animations:^{
+                            [_highlightProgress setDest:0.25];
+                        }
+                        completion:nil
+                    ];
+                }
+            }
+        ];
+    } else {
+        [AP_View animateWithDuration:0.1 delay:0
+            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+            animations:^{
+                [_highlightProgress setDest:0];
+            }
+            completion:nil
+        ];
+    }
 }
 
 - (void) refreshStateIfNeeded
 {
-    if (_needsStateRefresh) {
-        UIControlState state = self.highlighted ? UIControlStateHighlighted : UIControlStateNormal;
+    if (_needsStateRefresh || _highlightProgress.animation) {
+        UIControlState state = UIControlStateNormal;
+        if (self.selected) {
+            state = UIControlStateSelected;
+        }
+        if (self.highlighted || self.hovered) {
+            state = UIControlStateHighlighted;
+        }
 
         NSAttributedString* title = [self attributedTitleForState:state];
         if (title) {

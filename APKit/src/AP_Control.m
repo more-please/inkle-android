@@ -118,6 +118,7 @@
     if (_enabled) {
         for (AP_Touch* touch in touches) {
             _touch = touch;
+            self.hovered = YES;
             self.highlighted = YES;
             [self dispatch:UIControlEventTouchDown event:event];
             return;
@@ -130,6 +131,7 @@
     for (AP_Touch* touch in touches) {
         if (touch == _touch) {
             _touch = nil;
+            self.hovered = NO;
             self.highlighted = NO;
             [self dispatch:UIControlEventTouchCancel event:event];
         }
@@ -141,6 +143,7 @@
     for (AP_Touch* touch in touches) {
         if (touch == _touch) {
             _touch = nil;
+            self.hovered = NO;
             self.highlighted = NO;
             CGPoint p = [touch locationInView:self];
             BOOL inside = [self pointInside:p withEvent:event];
@@ -168,6 +171,7 @@
 - (BOOL) handleKeyDown:(int)key
 {
     if (_keyboardShortcut && key == _keyboardShortcut) {
+        self.hovered = YES;
         self.highlighted = YES;
         [self dispatch:UIControlEventTouchDown event:nil];
         return YES;
@@ -178,11 +182,42 @@
 - (BOOL) handleKeyUp:(int)key
 {
     if (_keyboardShortcut && key == _keyboardShortcut && self.isHighlighted) {
+        self.hovered = NO;
         self.highlighted = NO;
         [self dispatch:UIControlEventTouchUpInside event:nil];
         return YES;
     }
     return NO;
+}
+
+- (void) mouseLeave
+{
+    self.hovered = NO;
+}
+
+- (void) mouseEnter
+{
+    self.hovered = YES;
+}
+
+- (void) setHovered:(BOOL)hovered
+{
+    static AP_Control* s_hovered = nil;
+    if (hovered && s_hovered != self) {
+        s_hovered = NO;
+        s_hovered = self;
+    }
+    _hovered = hovered;
+}
+
+- (void) setHighlighted:(BOOL)highlighted
+{
+    static AP_Control* s_highlighted = nil;
+    if (highlighted && s_highlighted != self) {
+        s_highlighted.highlighted = NO;
+        s_highlighted = self;
+    }
+    _highlighted = highlighted;
 }
 
 @end

@@ -13,6 +13,7 @@
 
 @property(nonatomic,getter=isEnabled) BOOL enabled; // default is YES
 @property(nonatomic,getter=isHighlighted) BOOL highlighted; // default is NO
+@property(nonatomic,getter=isHovered) BOOL hovered; // default is NO
 @property(nonatomic,getter=isSelected) BOOL selected; // default is NO
 @property(nonatomic,readonly,getter=isTracking) BOOL tracking;
 
