@@ -249,38 +249,53 @@
 
 - (UIColor*)titleColorForState:(UIControlState)state
 {
+    UIColor* normal = [_titleColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (!normal) {
+        normal = [UIColor whiteColor];
+    }
+    if (state == UIControlStateNormal) {
+        return normal;
+    }
     UIColor* result = [_titleColor objectForKey:[NSNumber numberWithInt:state]];
-    if (!result) {
-        result = [_titleColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (result) {
+        return [normal mix:_highlightProgress.inFlight with:result];
+    } else {
+        return normal;
     }
-    if (!result) {
-        result = [UIColor whiteColor];
-    }
-    return result;
 }
 
 - (UIColor*)titleShadowColorForState:(UIControlState)state
 {
+    UIColor* normal = [_titleShadowColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (!normal) {
+        normal = [UIColor colorWithWhite:0 alpha:0.5];
+    }
+    if (state == UIControlStateNormal) {
+        return normal;
+    }
     UIColor* result = [_titleShadowColor objectForKey:[NSNumber numberWithInt:state]];
-    if (!result) {
-        result = [_titleShadowColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (result) {
+        return [normal mix:_highlightProgress.inFlight with:result];
+    } else {
+        return normal;
     }
-    if (!result) {
-        result = [UIColor colorWithWhite:0 alpha:0.5];
-    }
-    return result;
 }
 
 - (UIColor*)backgroundColorForState:(UIControlState)state
 {
+    UIColor* normal = [_backgroundColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (!normal) {
+        normal = [UIColor colorWithWhite:0 alpha:0];
+    }
+    if (state == UIControlStateNormal) {
+        return normal;
+    }
     UIColor* result = [_backgroundColor objectForKey:[NSNumber numberWithInt:state]];
-    if (!result) {
-        result = [_backgroundColor objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (result) {
+        return [normal mix:_highlightProgress.inFlight with:result];
+    } else {
+        return normal;
     }
-    if (!result) {
-        result = [UIColor colorWithWhite:0 alpha:0];
-    }
-    return result;
 }
 
 - (AP_Image*) maybeAdjustImage:(AP_Image*)image forState:(UIControlState)state
@@ -303,22 +318,30 @@
 
 - (AP_Image*)imageForState:(UIControlState)state
 {
-    AP_Image* result = [_image objectForKey:[NSNumber numberWithInt:state]];
-    if (!result) {
-        result = [_image objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
-        result = [self maybeAdjustImage:result forState:state];
+    AP_Image* normal = [_image objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (state == UIControlStateNormal) {
+        return normal;
     }
-    return result;
+    AP_Image* result = [_image objectForKey:[NSNumber numberWithInt:state]];
+    if (result) {
+        return [normal mix:_highlightProgress.inFlight with:result];
+    } else {
+        return [self maybeAdjustImage:normal forState:state];
+    }
 }
 
 - (AP_Image*)backgroundImageForState:(UIControlState)state
 {
-    AP_Image* result = [_backgroundImage objectForKey:[NSNumber numberWithInt:state]];
-    if (!result) {
-        result = [_backgroundImage objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
-        result = [self maybeAdjustImage:result forState:state];
+    AP_Image* normal = [_backgroundImage objectForKey:[NSNumber numberWithInt:UIControlStateNormal]];
+    if (state == UIControlStateNormal) {
+        return normal;
     }
-    return result;
+    AP_Image* result = [_backgroundImage objectForKey:[NSNumber numberWithInt:state]];
+    if (result) {
+        return [normal mix:_highlightProgress.inFlight with:result];
+    } else {
+        return [self maybeAdjustImage:normal forState:state];
+    }
 }
 
 - (void) setHighlighted:(BOOL)highlighted
