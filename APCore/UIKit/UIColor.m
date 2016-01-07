@@ -143,4 +143,14 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return [UIColor colorWithRgba:rgba];
 }
 
+- (UIColor*) mix:(CGFloat)ratio with:(UIColor *)other
+{
+    if (other) {
+        return [UIColor colorWithRgba:GLKVector4Lerp(_rgba, other.rgba, ratio)];
+    } else {
+        NSLog(@"ERROR - 'other' was nil in [UIColor mix:with:]");
+        return nil;
+    }
+}
+
 @end

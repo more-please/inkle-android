@@ -38,4 +38,7 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 @property(nonatomic,readonly,assign) GLKVector4 rgba;
 + (UIColor*) colorWithRgba:(GLKVector4)rgba;
 
+// Equivalent of GLSL mix(self, other, ratio)
+- (UIColor*) mix:(CGFloat)ratio with:(UIColor*)other;
+
 @end
