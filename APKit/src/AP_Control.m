@@ -204,7 +204,7 @@
 {
     static AP_Control* s_hovered = nil;
     if (hovered && s_hovered != self) {
-        s_hovered = NO;
+        s_hovered.hovered = NO;
         s_hovered = self;
     }
     _hovered = hovered;
