@@ -39,4 +39,6 @@ typedef enum UIImageResizingMode {
 
 - (instancetype) initWithSize:(CGSize)size scale:(CGFloat)scale;
 
+- (AP_Image*) mix:(CGFloat)ratio with:(AP_Image*)other;
+
 @end
