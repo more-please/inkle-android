@@ -346,16 +346,20 @@
 
 - (void) setHighlighted:(BOOL)highlighted
 {
-    [super setHighlighted:highlighted];
-    [self animateHighlight];
-    [self setNeedsLayout];
+    if (highlighted != self.isHighlighted) {
+        [super setHighlighted:highlighted];
+        [self animateHighlight];
+        [self setNeedsLayout];
+    }
 }
 
 - (void) setHovered:(BOOL)hovered
 {
-    [super setHovered:hovered];
-    [self animateHighlight];
-    [self setNeedsLayout];
+    if (hovered != self.isHovered) {
+        [super setHovered:hovered];
+        [self animateHighlight];
+        [self setNeedsLayout];
+    }
 }
 
 - (void) animateHighlight
