@@ -68,4 +68,9 @@ static AP_Application* g_Application;
     } onThread:_uiThread waitUntilDone:NO];
 }
 
+- (void) performOnGameThread:(GameThreadBlock)block
+{
+    [self performBlock:block onThread:_gameThread waitUntilDone:NO];
+}
+
 @end

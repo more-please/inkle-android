@@ -25,6 +25,7 @@
 + (AP_Application*) sharedApplication;
 
 @property(nonatomic,strong) NSThread* uiThread;
+@property(nonatomic,strong) NSThread* gameThread;
 @property(nonatomic,strong) id<AP_ApplicationDelegate> delegate;
 
 @property(nonatomic,readonly) AP_Window *keyWindow;
@@ -35,10 +36,13 @@
 
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
 
-typedef void (^ResultBlock)(void);
-typedef ResultBlock (^UiThreadBlock)(void);
+typedef void (^GameThreadBlock)(void);
+typedef GameThreadBlock (^UiThreadBlock)(void);
 
 // Run the given block on the UI thread, then run its result on the calling thread.
 - (void) performOnUiThread:(UiThreadBlock)block;
+
+// Run the given block on the game thread (useful to avoid Parse threading gotchas)
+- (void) performOnGameThread:(GameThreadBlock)block;
 
 @end
