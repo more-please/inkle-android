@@ -45,6 +45,7 @@
 #import "AP_GLProgram.h"
 #import "AP_GLTexture.h"
 #import "AP_Profiler.h"
+#import "AP_UserDefaults.h"
 
 #import "APKit_main.h"
 
@@ -62,7 +63,6 @@
 #define UIApplication                  AP_Application
 #define UIApplicationDelegate          AP_ApplicationDelegate
 #define UIButton                       AP_Button
-#define NSBundle                       AP_Bundle
 #define UIControl                      AP_Control
 #define UIEvent                        AP_Event
 #define UIFont                         AP_Font
@@ -101,6 +101,9 @@
 #define UIWebViewDelegate              AP_WebViewDelegate
 #define UIWindow                       AP_Window
 #define UIResponder                    AP_Responder
+
+#define NSBundle                       AP_Bundle
+#define NSUserDefaults                 AP_UserDefaults
 
 #else
 
