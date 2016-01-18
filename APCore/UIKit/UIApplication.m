@@ -13,6 +13,16 @@ static UIApplication* g_Application;
     return g_Application;
 }
 
+- (BOOL) needsInitialSetup
+{
+    return NO;
+}
+
+- (void) initialSetupWithFullScreen:(BOOL)fullScreen
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (NSString*) versionName
 {
     GLUE_NOT_IMPLEMENTED;
