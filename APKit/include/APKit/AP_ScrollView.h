@@ -52,4 +52,6 @@
 @property (nonatomic, assign) BOOL reverseKeyboardPolarityX;
 @property (nonatomic, assign) BOOL reverseKeyboardPolarityY;
 
+@property(nonatomic) BOOL eatAllButtonEvents;
+
 @end

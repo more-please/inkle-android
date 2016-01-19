@@ -225,18 +225,39 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
         const float xPolarity = _reverseKeyboardPolarityX ? -1 : 1;
         const float yPolarity = _reverseKeyboardPolarityY ? -1 : 1;
 
-        const float kStep = [AP_Window scaleForIPhone:24 iPad:32];
+        CGSize kStep;
+        if (_pagingEnabled) {
+            kStep = self.bounds.size;
+        } else {
+            kStep.width = kStep.height = [AP_Window scaleForIPhone:24 iPad:32];
+        }
         CGPoint pos = oldPos;
-        if (key == SDLK_LEFT) pos.x -= kStep * xPolarity;
-        if (key == SDLK_RIGHT) pos.x += kStep * xPolarity;
-        if (key == SDLK_UP) pos.y -= kStep * yPolarity;
-        if (key == SDLK_DOWN) pos.y += kStep * yPolarity;
+        if (key == SDLK_LEFT) pos.x -= kStep.width * xPolarity;
+        if (key == SDLK_RIGHT) pos.x += kStep.width * xPolarity;
+        if (key == SDLK_UP) pos.y -= kStep.height * yPolarity;
+        if (key == SDLK_DOWN) pos.y += kStep.height * yPolarity;
 
         pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
         pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));
         if (!CGPointEqualToPoint(pos, oldPos)) {
-            self.contentOffset = pos;
+            [AP_View animateWithDuration: _pagingEnabled ? 0.1 : 0.05 delay:0
+                options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+                animations:^{
+                    self.contentOffset = pos;
+                }
+                completion:nil
+            ];
             return YES;
+        }
+
+        // Would normally return NO here, but maybe eat the event instead.
+        if (_eatAllButtonEvents) {
+            if (key == SDLK_UP || key == SDLK_DOWN) {
+                return self.contentSize.height > self.bounds.size.height;
+            }
+            if (key == SDLK_RIGHT || key == SDLK_LEFT) {
+                return self.contentSize.width > self.bounds.size.width;
+            }
         }
     }
     return NO;
