@@ -18,7 +18,13 @@ static UIApplication* g_Application;
     return NO;
 }
 
-- (void) initialSetupWithFullScreen:(BOOL)fullScreen
+- (BOOL) isFullScreen
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NO;
+}
+
+- (void) setFullScreen:(BOOL)fullScreen
 {
     GLUE_NOT_IMPLEMENTED;
 }

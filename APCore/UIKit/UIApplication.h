@@ -15,9 +15,9 @@
 @property(nonatomic,strong) NSString* documentsDir;
 @property(nonatomic,strong) NSString* publicDocumentsDir;
 @property(nonatomic) BOOL isCrappyDevice;
+@property(nonatomic, getter=isFullScreen) BOOL fullScreen;
 
 - (BOOL) needsInitialSetup;
-- (void) initialSetupWithFullScreen:(BOOL)fullScreen;
 
 - (NSString*) versionName;
 - (int) versionCode;
