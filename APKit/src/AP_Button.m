@@ -378,20 +378,21 @@
             animations:^{
                 [_highlightProgress setDest:0.5];
             }
-            completion:^(BOOL finished) {
-                if (finished) {
-                    [AP_View animateWithDuration:0.4 delay:0
-                        options:UIViewAnimationOptionBeginFromCurrentState
-                            | UIViewAnimationOptionAllowUserInteraction
-                            | UIViewAnimationOptionRepeat
-                            | UIViewAnimationOptionAutoreverse
-                        animations:^{
-                            [_highlightProgress setDest:0.25];
-                        }
-                        completion:nil
-                    ];
-                }
-            }
+            completion:nil
+//            completion:^(BOOL finished) {
+//                if (finished) {
+//                    [AP_View animateWithDuration:0.4 delay:0
+//                        options:UIViewAnimationOptionBeginFromCurrentState
+//                            | UIViewAnimationOptionAllowUserInteraction
+//                            | UIViewAnimationOptionRepeat
+//                            | UIViewAnimationOptionAutoreverse
+//                        animations:^{
+//                            [_highlightProgress setDest:0.25];
+//                        }
+//                        completion:nil
+//                    ];
+//                }
+//            }
         ];
     } else {
         [AP_View animateWithDuration:0.1 delay:0
