@@ -23,6 +23,7 @@
 - (BOOL) handleKeyDown:(int)key;
 - (BOOL) handleKeyUp:(int)key;
 - (BOOL) handleAndroidBackButton;
+- (BOOL) handleControlKey:(int)key;
 
 // Block that calls one of the above methods.
 typedef BOOL (^EventHandlerBlock)(AP_Responder*);

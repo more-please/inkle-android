@@ -74,6 +74,11 @@
     return NO;
 }
 
+- (BOOL) handleControlKey:(int)key
+{
+    return NO;
+}
+
 - (BOOL) dispatchEvent:(EventHandlerBlock)handler
 {
     return handler(self);
