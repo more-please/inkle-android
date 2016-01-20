@@ -185,4 +185,9 @@ static inline bool GLKVector2AllEqualToScalar(GLKVector2 vector, float value)
 #endif
 }
 
+static inline BOOL GLKVector2AllEqualToVector2(GLKVector2 lhs, GLKVector2 rhs) {
+    return lhs.v[0] == rhs.v[0]
+        && lhs.v[1] == rhs.v[1];
+}
+
 #pragma clang diagnostic pop
