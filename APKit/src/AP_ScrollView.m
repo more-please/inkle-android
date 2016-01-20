@@ -239,7 +239,8 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
 
         pos.x = MAX(0, MIN(contentSize.width - size.width, pos.x));
         pos.y = MAX(0, MIN(contentSize.height - size.height, pos.y));
-        if (!CGPointEqualToPoint(pos, oldPos)) {
+        CGFloat delta = fabs(pos.x - oldPos.x) + fabs(pos.y - oldPos.y);
+        if (delta > 0.5) {
             [AP_View animateWithDuration: _pagingEnabled ? 0.1 : 0.05 delay:0
                 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
                 animations:^{
