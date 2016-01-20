@@ -42,6 +42,13 @@ static const Range kRanges[] = {
     { 0x2013, 0x2014 }, // en-dash, em-dash
     { 0x2026, 0x2026 }, // Ellipsis
 
+    // Weird characters used in Sorcery 2
+    { 0x10409, 0x10409 }, // Deseret Capital Short Ah (alias for Right Tack)
+    { 0x1040b, 0x1040b }, // Desert Capital Short Oo (alias for There Exists)
+    { 0x10411, 0x10411 }, // Deseret Capital Pee (alias for Increment)
+    { 0x10422, 0x10422 }, // Deseret Capital El (alias for Gamma)
+    { 0x10424, 0x10424 }, // Deseret Capital En (alias for Iota)
+
     { 0, 0 }
 };
 
@@ -57,6 +64,12 @@ static const Alias kAliases[] = {
     { 3947, 'm' },
     { 3913, 'g' },
     { 3941, 'p' },
+
+    { 0x0393, 0x10422 }, // Gamma -> Deseret Capital El
+    { 0x0399, 0x10424 }, // Iota -> Deseret Capital En
+    { 0x2203, 0x1040b }, // There Exists -> Desert Capital Short Oo
+    { 0x2206, 0x10411 }, // Increment -> Deseret Capital Pee
+    { 0x22a2, 0x10409 }, // Right Tack -> Deseret Capital Short Ah
 
     // Non-breaking space
     { 160, 32 },

@@ -13,8 +13,8 @@
 
 + (AP_Font_Data*) fontDataNamed:(NSString*)name;
 
-- (unsigned char) glyphForChar:(unichar)c;
-- (unichar) charForGlyph:(unsigned char)c;
+- (unsigned char) glyphForChar:(unsigned int)c;
+- (unsigned int) charForGlyph:(unsigned char)c;
 
 - (const fontex_glyph_t*) dataForGlyph:(unsigned char)glyph;
 - (int16_t) kerningForGlyph1:(unsigned char)c1 glyph2:(unsigned char)c2;
