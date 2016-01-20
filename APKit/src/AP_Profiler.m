@@ -64,11 +64,13 @@
 
 - (void) step:(NSString*)step
 {
-    if (_stepName) {
-        [self end];
+    if (_reportInterval > 0) {
+        if (_stepName) {
+            [self end];
+        }
+        _stepName = step;
+        _stepStart = AP_TimeInSeconds();
     }
-    _stepName = step;
-    _stepStart = AP_TimeInSeconds();
 }
 
 - (void) end

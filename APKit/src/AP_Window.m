@@ -195,8 +195,8 @@ static NSMutableArray* s_afterFrameBlocks;
         _fps.logInterval = 1;
         _profiler.reportInterval = 5;
 #else
-        _fps.logInterval = 5;
-        _profiler.reportInterval = 30;
+//        _fps.logInterval = 5;
+//        _profiler.reportInterval = 30;
 #endif
         [AP_Animation setMasterClock:_clock];
         _activeTouches = [NSMutableSet set];
