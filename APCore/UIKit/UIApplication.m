@@ -4,6 +4,9 @@
 
 #import <Foundation/Foundation.h>
 
+#import <stdlib.h>
+#import <stdio.h>
+
 @implementation UIApplication
 
 static UIApplication* g_Application;
@@ -76,6 +79,14 @@ static UIApplication* g_Application;
 - (void) quit
 {
     GLUE_NOT_IMPLEMENTED;
+    exit(EXIT_SUCCESS);
+}
+
+- (void) fatalError:(NSString*)message
+{
+    GLUE_NOT_IMPLEMENTED;
+    fprintf(stderr, "FATAL ERROR: %s\n", message.UTF8String);
+    abort();
 }
 
 #ifdef ANDROID

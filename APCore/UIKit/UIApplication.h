@@ -35,6 +35,7 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 - (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path;
 
 - (void) quit;
+- (void) fatalError:(NSString*)message;
 
 #ifdef ANDROID
 // Wrappers for Parse.
