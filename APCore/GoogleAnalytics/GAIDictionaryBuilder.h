@@ -10,8 +10,6 @@
                                             label:(NSString*) label
                                             value:(NSNumber*) value;
 
-// On iOS this is an NSMutableDictionary, but on Android we return
-// an opaque reference to a Java Map.
-- (void*) build;
+- (NSDictionary*) build;
 
 @end

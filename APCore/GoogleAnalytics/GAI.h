@@ -11,4 +11,7 @@
 - (id<GAITracker>)trackerWithTrackingId:(NSString *)trackingId;
 - (id<GAITracker>)defaultTracker;
 
+// Iain additions
+- (void) send:(NSDictionary*)params;
+
 @end

@@ -1,9 +1,23 @@
 #import "GAIDictionaryBuilder.h"
 
-#import "GlueCommon.h"
+#import "GAIFields.h"
 
 @implementation GAIDictionaryBuilder {
-    void* _obj;
+    NSMutableDictionary* _dict;
+}
+
+- (instancetype) init
+{
+    self = [super init];
+    if (self) {
+        _dict = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void) setObject:(id)value forKeyedSubscript:(nonnull NSString*)key
+{
+    _dict[key] = value;
 }
 
 + (GAIDictionaryBuilder *)createEventWithCategory:(NSString *)category
@@ -11,19 +25,17 @@
                                             label:(NSString *)label
                                             value:(NSNumber *)value
 {
-#ifdef ANDROID
-    GAIDictionaryBuilder* builder = [[GAIDictionaryBuilder alloc] init];
-    builder->_obj = [[UIApplication sharedApplication] gaiEventWithCategory:category action:action label:label value:value];
-    return builder;
-#else
-    GLUE_NOT_IMPLEMENTED;
-    return nil;
-#endif
+    GAIDictionaryBuilder* result = [[GAIDictionaryBuilder alloc] init];
+    result[kGAIEventCategory] = category;
+    result[kGAIEventAction] = action;
+    result[kGAIEventLabel] = label;
+    result[kGAIEventValue] = value;
+    return result;
 }
 
-- (void*) build
+- (NSDictionary*) build
 {
-    return _obj;
+    return [NSDictionary dictionaryWithDictionary:_dict];
 }
 
 @end

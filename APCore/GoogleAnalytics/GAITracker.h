@@ -6,14 +6,12 @@
 
 - (void) set:(NSString*)parameterName value:(NSString*)value;
 
-// On iOS the parameter is an NSDictionary, but on Android
-// it's an opaque reference to a Java Map.
-- (void) send:(void*)parameters;
+- (void) send:(NSDictionary*)parameters;
 
 @end
 
 @interface AP_GAITracker : NSObject<GAITracker>
 
-- (instancetype) initWithObj:(void*)obj;
+- (instancetype) initWithTrackingId:(NSString*)trackingId;
 
 @end

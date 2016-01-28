@@ -1,36 +1,51 @@
 #import "GAITracker.h"
 
-#import "GlueCommon.h"
+#import "UIScreen.h"
+#import <SDL2/SDL.h>
+
+#import "GAI.h"
+#import "GAIFields.h"
 
 @implementation AP_GAITracker {
-    void* _obj;
+    NSMutableDictionary* _params;
+    BOOL _sessionStarted;
 }
 
-- (instancetype) initWithObj:(void*)obj
+- (instancetype) initWithTrackingId:(NSString*)trackingId
 {
     self = [super init];
     if (self) {
-        _obj = obj;
+        _params = [NSMutableDictionary dictionary];
+        _params[kGAITrackingId] = trackingId;
     }
     return self;
 }
 
 - (void) set:(NSString*)parameterName value:(NSString*)value
 {
-#ifdef ANDROID
-    [[UIApplication sharedApplication] gaiTracker:_obj set:parameterName value:value];
-#else
-    GLUE_NOT_IMPLEMENTED;
-#endif
+    _params[parameterName] = value;
 }
 
-- (void) send:(void*)parameters
+- (void) send:(NSDictionary*)params
 {
-#ifdef ANDROID
-    [[UIApplication sharedApplication] gaiTracker:_obj send:parameters];
-#else
-    GLUE_NOT_IMPLEMENTED;
-#endif
+    NSMutableDictionary* p = [_params mutableCopy];
+    [p addEntriesFromDictionary:params];
+
+    if (!_sessionStarted) {
+        _sessionStarted = YES;
+        p[kGAISessionControl] = @"start";
+    }
+
+    CGSize size = [UIScreen mainScreen].bounds.size;
+    p[kGAIViewportSize] = [NSString stringWithFormat:@"%dx%d", (int) size.width, (int) size.height];
+
+    SDL_DisplayMode mode;
+    SDL_GetCurrentDisplayMode(0, &mode);
+    p[kGAIScreenResolution] = [NSString stringWithFormat:@"%dx%d", mode.w, mode.h];
+
+    p[kGAIDataSource] = @"app";
+
+    [[GAI sharedInstance] send:p];
 }
 
 @end
