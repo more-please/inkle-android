@@ -26,6 +26,7 @@
                                             value:(NSNumber *)value
 {
     GAIDictionaryBuilder* result = [[GAIDictionaryBuilder alloc] init];
+    result[kGAIHitType] = @"event";
     result[kGAIEventCategory] = category;
     result[kGAIEventAction] = action;
     result[kGAIEventLabel] = label;

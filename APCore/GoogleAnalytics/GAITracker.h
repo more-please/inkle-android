@@ -8,6 +8,11 @@
 
 - (void) send:(NSDictionary*)parameters;
 
+// Iain additions
+
+// Send this in the next message only
+- (void) setOnce:(NSString*)parameterName value:(NSString*)value;
+
 @end
 
 @interface AP_GAITracker : NSObject<GAITracker>

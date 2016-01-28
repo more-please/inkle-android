@@ -3,6 +3,8 @@
 NSString* const kGAITrackingId = @"tid";
 NSString* const kGAIClientId = @"cid";
 
+NSString* const kGAIHitType = @"t";
+
 NSString* const kGAIDataSource = @"ds";
 NSString* const kGAISessionControl = @"sc";
 NSString* const kGAIScreenResolution = @"sr";

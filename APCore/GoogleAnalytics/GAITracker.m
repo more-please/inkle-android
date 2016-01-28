@@ -8,7 +8,7 @@
 
 @implementation AP_GAITracker {
     NSMutableDictionary* _params;
-    BOOL _sessionStarted;
+    NSMutableDictionary* _onceParams;
 }
 
 - (instancetype) initWithTrackingId:(NSString*)trackingId
@@ -16,6 +16,7 @@
     self = [super init];
     if (self) {
         _params = [NSMutableDictionary dictionary];
+        _onceParams = [NSMutableDictionary dictionary];
         _params[kGAITrackingId] = trackingId;
     }
     return self;
@@ -24,17 +25,26 @@
 - (void) set:(NSString*)parameterName value:(NSString*)value
 {
     _params[parameterName] = value;
+
+    if ([parameterName isEqualToString:kGAIScreenName] && value) {
+        [self send:@{
+            kGAIHitType: @"screenview",
+        }];
+    }
+}
+
+- (void) setOnce:(NSString *)parameterName value:(NSString *)value
+{
+    _onceParams[parameterName] = value;
 }
 
 - (void) send:(NSDictionary*)params
 {
-    NSMutableDictionary* p = [_params mutableCopy];
-    [p addEntriesFromDictionary:params];
+    NSMutableDictionary* p = _onceParams;
+    _onceParams = [NSMutableDictionary dictionary];
 
-    if (!_sessionStarted) {
-        _sessionStarted = YES;
-        p[kGAISessionControl] = @"start";
-    }
+    [p addEntriesFromDictionary:_params];
+    [p addEntriesFromDictionary:params];
 
     CGSize size = [UIScreen mainScreen].bounds.size;
     p[kGAIViewportSize] = [NSString stringWithFormat:@"%dx%d", (int) size.width, (int) size.height];

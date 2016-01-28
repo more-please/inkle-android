@@ -5,6 +5,8 @@
 extern NSString* const kGAITrackingId;
 extern NSString* const kGAIClientId;
 
+extern NSString* const kGAIHitType;
+
 extern NSString* const kGAIDataSource;
 extern NSString* const kGAISessionControl;
 extern NSString* const kGAIScreenResolution;
