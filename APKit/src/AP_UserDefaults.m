@@ -1,5 +1,9 @@
 #import "AP_UserDefaults.h"
 
+#ifndef APPLE_RUNTIME
+#import <Foundation/Foundation.h>
+#endif
+
 @implementation AP_UserDefaults {
     BOOL _dirty;
     NSMutableDictionary* _contents;
@@ -13,6 +17,9 @@ static AP_UserDefaults* g_Defaults = nil;
 + (void) setDocumentsDir:(NSString*)dir
 {
     g_DocumentsDir = dir;
+#ifndef APPLE_RUNTIME
+    [NSUserDefaults setDocumentsDir:dir];
+#endif
 }
 
 + (AP_UserDefaults*) standardUserDefaults

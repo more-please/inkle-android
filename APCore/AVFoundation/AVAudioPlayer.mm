@@ -5,6 +5,9 @@
 #import <ck/sound.h>
 #import <PAK/PAK.h>
 
+// Argh, hack
+#import "../APKit/include/APKit/AP_UserDefaults.h"
+
 #import "GlueCommon.h"
 
 extern "C" {
@@ -69,7 +72,7 @@ NSString* const AP_UserDefault_Mute = @"AP_UserDefault_Mute";
 
 - (void) updateVolume
 {
-    BOOL mute = [[NSUserDefaults standardUserDefaults] boolForKey:AP_UserDefault_Mute];
+    BOOL mute = [[AP_UserDefaults standardUserDefaults] boolForKey:AP_UserDefault_Mute];
     _sound->setVolume(mute ? 0.0 : _volume);
 }
 
