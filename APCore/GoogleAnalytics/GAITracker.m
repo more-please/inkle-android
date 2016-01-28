@@ -1,6 +1,6 @@
 #import "GAITracker.h"
 
-#import "UIScreen.h"
+#import <UIKit/UIScreen.h>
 #import <SDL2/SDL.h>
 
 #import "GAI.h"
