@@ -89,8 +89,8 @@
     c.a *= _alpha;
     _GL(Uniform4fv, color, 1, &c.v[0]);
 
-    GLKMatrix4 modelViewProjection = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, modelViewProjection.m);
+    _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
+    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
 
     _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
     _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);

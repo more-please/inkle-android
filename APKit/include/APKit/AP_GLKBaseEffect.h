@@ -33,4 +33,7 @@ enum {
 // problem.)
 @property (nonatomic) GLfloat alpha;
 
+// Iain addition: hack to extract the final transform (calculated in prepareToDraw)
+@property (nonatomic, readonly) GLKMatrix4 modelViewProjectionMatrix;
+
 @end
