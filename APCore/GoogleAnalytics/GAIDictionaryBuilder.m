@@ -27,10 +27,18 @@
 {
     GAIDictionaryBuilder* result = [[GAIDictionaryBuilder alloc] init];
     result[kGAIHitType] = @"event";
-    result[kGAIEventCategory] = category;
-    result[kGAIEventAction] = action;
-    result[kGAIEventLabel] = label;
-    result[kGAIEventValue] = value;
+    if (category) {
+        result[kGAIEventCategory] = category;
+    }
+    if (action) {
+        result[kGAIEventAction] = action;
+    }
+    if (label) {
+        result[kGAIEventLabel] = label;
+    }
+    if (value) {
+        result[kGAIEventValue] = value;
+    }
     return result;
 }
 

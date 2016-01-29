@@ -24,6 +24,11 @@
 
 - (void) set:(NSString*)parameterName value:(NSString*)value
 {
+    if (!value) {
+        [_params removeObjectForKey:parameterName];
+        return;
+    }
+
     _params[parameterName] = value;
 
     if ([parameterName isEqualToString:kGAIScreenName] && value) {
