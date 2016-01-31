@@ -4,7 +4,9 @@
 
 - (void) performBlock:(void(^)())block
 {
-    block();
+    if (block) {
+        block();
+    }
 }
 
 - (void) performBlock:(void(^)())block afterDelay:(NSTimeInterval)delay
