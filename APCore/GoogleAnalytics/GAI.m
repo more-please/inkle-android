@@ -69,7 +69,7 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
 
 - (void) timerFired:(NSTimer*)timer
 {
-    NSArray* queue = _queue;
+    NSMutableArray* queue = _queue;
     _queue = [NSMutableArray array];
 
     if (!_curl) {
@@ -83,8 +83,19 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
     curl_easy_setopt(_curl, CURLOPT_URL, "https://ssl.google-analytics.com/collect");
     curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, write_devnull);
 
-    for (NSMutableDictionary* p in queue) {
+    const int kMaxSize = 100;
+    if (queue.count > kMaxSize) {
+        NSLog(@"*** GAI queue is full, discarding %d events", (int) (queue.count - kMaxSize));
+        NSIndexSet* indices = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(kMaxSize, queue.count - kMaxSize)];
+        [queue removeObjectsAtIndexes:indices];
+    }
+
+    while (queue.count) {
+        NSDictionary* head = [queue firstObject];
+        [queue removeObjectAtIndex:0];
+
         // https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters
+        NSMutableDictionary* p = [head mutableCopy];
         NSDate* now = [NSDate date];
         NSTimeInterval queueTime = [now timeIntervalSinceDate:p[kGAIQueueTime]];
         p[kGAIQueueTime] = [NSNumber numberWithLong:(1000 * queueTime)];
@@ -103,6 +114,15 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
         int err = curl_easy_perform(_curl);
         if (err) {
             NSLog(@"*** curl_easy_perform() failed: %s", curl_easy_strerror(err));
+
+            [queue insertObject:head atIndex:0];
+
+            NSLog(@"*** Re-queuing %d log events", (int) queue.count);
+            NSIndexSet* indices = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, queue.count)];
+            [_queue insertObjects:queue atIndexes:indices];
+
+            // Back off and try again later
+            break;
         }
     }
 }
