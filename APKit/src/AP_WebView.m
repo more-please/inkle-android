@@ -141,13 +141,16 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     return buffer;
 }
 
+#define WIDTH(x,y) [AP_Window widthForIPhone:x iPad:y]
+#define HEIGHT(x,y) [AP_Window heightForIPhone:x iPad:y]
+#define SIZE(x,y) MIN(WIDTH(x,y),HEIGHT(x,y))
 
 - (NSAttributedString*) parseBody:(xmlNode*)n attrs:(NSDictionary*)attrs
 {
     NSMutableAttributedString* buffer = [NSMutableAttributedString new];
 
     NSString* font = @"Baskerville";
-    CGFloat size = 16;
+    CGFloat size = SIZE(16,24);
 
     if (isTags(n, "a", "br", "p", "h1", "h2", "h3", "h4", NULL)) {
 
@@ -167,17 +170,17 @@ static BOOL isTag(xmlNode* n, const char* tag) {
         // Sorcery! styles. TODO: extract this into game-specific code.
         if (isTags(n, "h1", "h2", NULL)) {
             font = @"Baskerville-Bold";
-            style.paragraphSpacingBefore = [AP_Window scaleForIPhone:45 iPad:90];
-            style.paragraphSpacing = [AP_Window scaleForIPhone:30 iPad:60];
-            size = [AP_Window scaleForIPhone:24 iPad:32];
+            style.paragraphSpacingBefore = SIZE(45, 90);
+            style.paragraphSpacing = SIZE(30,60);
+            size = SIZE(24, 32);
         } else if (isTag(n, "h3")) {
             // TODO: fancy letter-spacing
             font = @"Baskerville-Italic";
             style.paragraphSpacingBefore = [AP_Window scaleForIPhone:30 iPad:45];
-            size = 19;
+            size = SIZE(19, 28);
         } else {
             style.paragraphSpacingBefore = 10;
-            size = 16;
+            size = SIZE(16,24);
         }
 #else
         // 80 Days styles.
@@ -257,7 +260,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             AP_Font* f = [AP_Font fontWithName:font size:size];
             NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
             style.alignment = NSTextAlignmentCenter;
-            style.paragraphSpacing = 8;
+            style.paragraphSpacing = SIZE(8,12);
 
             [buffer appendAttributedString:[[NSAttributedString alloc]
                 initWithString:@"*"
