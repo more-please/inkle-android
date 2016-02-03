@@ -5,6 +5,7 @@
 #import <vector>
 
 #import "AP_Check.h"
+#import "AP_Window.h"
 
 #undef _MSC_VER
 #undef check
@@ -33,8 +34,32 @@ using namespace crnd;
     return crnd_get_texture_info(data.bytes, data.length, &info);
 }
 
-- (BOOL) loadCRN:(NSData*)data
+- (BOOL) loadCRN:(NSData*)data maxSize:(CGFloat)screens
 {
+    static GLint systemMaxTextureSize = 0;
+    static GLint systemMaxCubeTextureSize = 0;
+    if (systemMaxTextureSize == 0) {
+        _GL(GetIntegerv, GL_MAX_TEXTURE_SIZE, &systemMaxTextureSize);
+        _GL(GetIntegerv, GL_MAX_CUBE_MAP_TEXTURE_SIZE, &systemMaxCubeTextureSize);
+    }
+    if (systemMaxTextureSize == 0) {
+        NSLog(@"*** glGetIntegerv(GL_MAX_TEXTURE_SIZE) returned 0 -- weird!");
+        systemMaxTextureSize = 2048; // Should be safe
+        systemMaxCubeTextureSize = 2048;
+    }
+    GLint maxTextureWidth = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
+    GLint maxTextureHeight = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
+
+    CGSize logicalSize = [AP_Window screenSize];
+    CGFloat screenScale = [AP_Window screenScale];
+    CGSize physicalSize = CGSizeMake(logicalSize.width * screenScale, logicalSize.height * screenScale);
+    if (physicalSize.width > 0 && physicalSize.height > 0) {
+        maxTextureWidth = MIN(maxTextureWidth, physicalSize.width * screens);
+        maxTextureHeight = MIN(maxTextureHeight, physicalSize.height * screens);
+    } else {
+        NSLog(@"*** screenSize is %f, %f -- weird!", physicalSize.width, physicalSize.height);
+    }
+
     crn_texture_info info;
     AP_CHECK(crnd_get_texture_info(data.bytes, data.length, &info), return NO);
 
@@ -66,6 +91,7 @@ using namespace crnd;
     crnd_unpack_context context = crnd_unpack_begin(data.bytes, data.length);
     AP_CHECK(context, return NO);
 
+    int skipped = 0;
     for (int i = 0; i < info.m_levels; ++i) {
         crn_level_info level;
         AP_CHECK(
@@ -80,12 +106,16 @@ using namespace crnd;
         const int row_size = blocks_x * block_size;
         const int total_size = blocks_y * row_size;
 
-        void* dest = &buffer[0];
-        AP_CHECK(
-            crnd_unpack_level(context, &dest, total_size, row_size, i),
-            break);
-        
-        [self compressedTexImage2dLevel:i format:format width:w height:h data:&buffer[0] dataSize:total_size];
+        if ((i+1 < info.m_levels) && (w > maxTextureWidth || h > maxTextureHeight)) {
+            NSLog(@"Skipping mipmap level %d (width %d, height %d, max %dx%d)", i, w, h, maxTextureWidth, maxTextureHeight);
+            ++skipped;
+        } else {
+            void* dest = &buffer[0];
+            AP_CHECK(
+                crnd_unpack_level(context, &dest, total_size, row_size, i),
+                break);
+            [self compressedTexImage2dLevel:i - skipped format:format width:w height:h data:&buffer[0] dataSize:total_size];
+        }
     }
 
     crnd_unpack_end(context);

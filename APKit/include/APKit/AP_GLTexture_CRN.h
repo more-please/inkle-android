@@ -11,6 +11,6 @@
 
 + (BOOL) isCRN:(NSData*)data;
 
-- (BOOL) loadCRN:(NSData*)data;
+- (BOOL) loadCRN:(NSData*)data maxSize:(CGFloat)screens;
 
 @end
