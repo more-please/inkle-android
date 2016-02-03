@@ -13,9 +13,6 @@
 #import <SDL2/SDL.h>
 #endif
 
-const CGFloat kCornerRadius = 6;
-const CGFloat kButtonInset = 3;
-
 @implementation AP_AlertView {
     AP_Label* _header;
     AP_Label* _body;
@@ -27,6 +24,13 @@ const CGFloat kButtonInset = 3;
 }
 
 AP_BAN_EVIL_INIT;
+
+#define WIDTH(x,y) [AP_Window widthForIPhone:x iPad:y]
+#define HEIGHT(x,y) [AP_Window heightForIPhone:x iPad:y]
+#define SIZE(x,y) MIN(WIDTH(x,y),HEIGHT(x,y))
+
+#define kCornerRadius SIZE(6, 10)
+#define kButtonInset SIZE(3, 5)
 
 - (id) initWithTitle:(NSString*)title
         message:(NSString*)message
@@ -55,13 +59,13 @@ AP_BAN_EVIL_INIT;
         [self addSubview:_alert];
 
 #ifdef SORCERY
-        AP_Font* headerFont = [AP_Font fontWithName:@"Helvetica" size:20];
-        AP_Font* bodyFont = [AP_Font fontWithName:@"Helvetica" size:17];
-        AP_Font* buttonFont = [AP_Font fontWithName:@"Helvetica-Bold" size:20];
+        AP_Font* headerFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(18, 24)];
+        AP_Font* bodyFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(15, 20)];
+        AP_Font* buttonFont = [AP_Font fontWithName:@"Helvetica-Bold" size:SIZE(18, 24)];
 #else
-        AP_Font* headerFont = [AP_Font fontWithName:@"Futura-Medium" size:20];
-        AP_Font* bodyFont = [AP_Font fontWithName:@"Futura-Medium" size:17];
-        AP_Font* buttonFont = [AP_Font fontWithName:@"Futura-CondensedMedium" size:20];
+        AP_Font* headerFont = [AP_Font fontWithName:@"Futura-Medium" size:SIZE(18, 24)];
+        AP_Font* bodyFont = [AP_Font fontWithName:@"Futura-Medium" size:SIZE(15, 20)];
+        AP_Font* buttonFont = [AP_Font fontWithName:@"Futura-CondensedMedium" size:SIZE(18, 24)];
 #endif
 
         if (title) {
