@@ -129,28 +129,34 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
 
 - (void) mainLoop:(id)ignored
 {
-    int err = curl_global_init(CURL_GLOBAL_DEFAULT);
-    if (err) {
-        NSLog(@"*** curl_global_init() failed: %s", curl_easy_strerror(err));
-        _done = YES;
-        return;
+    NSTimer* timer;
+
+    @autoreleasepool {
+        int err = curl_global_init(CURL_GLOBAL_DEFAULT);
+        if (err) {
+            NSLog(@"*** curl_global_init() failed: %s", curl_easy_strerror(err));
+            _done = YES;
+            return;
+        }
+
+        NSLog(@"GAI: starting");
+
+        timer = [NSTimer scheduledTimerWithTimeInterval:kTimerInterval target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
     }
 
-    NSLog(@"GAI: starting");
-
-    NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:kTimerInterval target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
-
     while (!_done) {
-        // Run Objective-C timers.
-        NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
-        NSDate* now = [NSDate date];
-        NSDate* nextTimer;
-        do {
-            nextTimer = [runLoop limitDateForMode:NSDefaultRunLoopMode];
-        } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
+        @autoreleasepool {
+            // Run Objective-C timers.
+            NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
+            NSDate* now = [NSDate date];
+            NSDate* nextTimer;
+            do {
+                nextTimer = [runLoop limitDateForMode:NSDefaultRunLoopMode];
+            } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
-        // Run callbacks.
-        [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:now];
+            // Run callbacks.
+            [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:now];
+        }
     }
 
     [timer invalidate];
