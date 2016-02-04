@@ -197,36 +197,55 @@ static AP_WeakCache* s_textureCache = nil;
     _GL(BindTexture, _textureTarget, _name);
 }
 
+#ifdef OSX
+#define GL_2_3(x,y) y
+#else
+#define GL_2_3(x,y) x
+#endif
+
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data
 {
     [self bind];
 
-    if (level == 0) {
+    if (!_width || !_height) {
         _width = width;
         _height = height;
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
-#if defined(OSX)
-    // GL 3.2: expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
-    GLint internalFormat = GL_RGBA8;
-#elif defined(SORCERY_SDL)
-    // Same thing for GL 2.1
-    GLint internalFormat = GL_RGBA;
+
+#ifdef SORCERY_SDL
+    // Expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
+    GLint internalFormat = GL_2_3(GL_RGBA, GL_RGBA8);
 #else
     // ES: internal format must match external format.
     GLint internalFormat = format;
 #endif
-    _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
 
     switch (format) {
         case GL_ALPHA:
-//        case GL_LUMINANCE:
+        case GL_2_3(GL_LUMINANCE, GL_RED): {
             _memoryUsage += width * height;
+#ifdef SORCERY_SDL
+            internalFormat = GL_2_3(GL_LUMINANCE, GL_R8);
+#endif
+#ifdef OSX
+            GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+            glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
+#endif
             break;
-//        case GL_LUMINANCE_ALPHA:
-//            _memoryUsage += 2 * width * height;
-//            break;
+        }
+        case GL_2_3(GL_LUMINANCE_ALPHA, GL_RG): {
+            _memoryUsage += 2 * width * height;
+#ifdef SORCERY_SDL
+            internalFormat = GL_2_3(GL_LUMINANCE_ALPHA, GL_RG8);
+#endif
+#ifdef OSX
+            GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+            glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
+#endif
+            break;
+        }
         case GL_RGB:
             switch (type) {
                 case GL_UNSIGNED_BYTE:
@@ -257,13 +276,15 @@ static AP_WeakCache* s_textureCache = nil;
             NSLog(@"Unknown texture format: %d", format);
             break;
     }
+
+    _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
 }
 
 - (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize
 {
     [self bind];
 
-    if (level == 0) {
+    if (!_width || !_height) {
         _width = width;
         _height = height;
     }
@@ -271,6 +292,12 @@ static AP_WeakCache* s_textureCache = nil;
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
     _GL(CompressedTexImage2D, target, level, format, width, height, 0, dataSize, data);
     _memoryUsage += dataSize;
+}
+
+- (void) fixWidth:(int)w height:(int)h
+{
+    _width = w;
+    _height = h;
 }
 
 @end

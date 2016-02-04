@@ -1,6 +1,9 @@
 #import "AP_GLTexture_PNG.h"
 
+#import <UIKit/UIKit.h>
+
 #import "stb_image.h"
+#import "stb_image_resize.h"
 
 #import "AP_Check.h"
 
@@ -14,6 +17,12 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
     return ([data length] > 9) && (0 == memcmp([data bytes], gPNGIdentifier, 8));
 }
 
+#ifdef OSX
+#define GL_2_3(x,y) y
+#else
+#define GL_2_3(x,y) x
+#endif
+
 - (BOOL) loadPNG:(NSData*)data
 {
     int w, h, c;
@@ -23,17 +32,34 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
         return NO;
     }
 
-#ifdef SORCERY_SDL
-    // Desktop GL: expand all textures to full RGBA.
-    // 1- and 2-component textures are broken, and I can't figure out how to load 3-component data directly.
-    const int wantedComponents = 4;
-#else
     const int wantedComponents = c;
-#endif
 
     unsigned char* bytes = stbi_load_from_memory([data bytes], [data length], &w, &h, &c, wantedComponents);
     AP_CHECK(bytes, return NO);
-    GLenum format = (wantedComponents == 3) ? GL_RGB : GL_RGBA;
+    GLenum format = GL_RGBA;
+    switch (wantedComponents) {
+        case 1: format = GL_2_3(GL_LUMINANCE, GL_RED); break;
+        case 2: format = GL_2_3(GL_LUMINANCE_ALPHA, GL_RG); break;
+        case 3: format = GL_RGB; break;
+        case 4: format = GL_RGBA; break;
+    }
+
+    [self fixWidth:w height:h];
+    if ([UIApplication sharedApplication].isCrappyDevice && w > 8 && h > 8) {
+        int w2 = w / 2;
+        int h2 = h / 2;
+        unsigned char* bytes2 = malloc(w2 * h2 * wantedComponents);
+
+        NSLog(@"Reducing PNG from %dx%d -> %dx%d...", w, h, w2, h2);
+        stbir_resize_uint8(bytes, w, h, 0, bytes2, w2, h2, 0, wantedComponents);
+        NSLog(@"Reducing PNG from %dx%d -> %dx%d... Done", w, h, w2, h2);
+
+        stbi_image_free(bytes);
+
+        bytes = bytes2;
+        w = w2;
+        h = h2;
+    }
 
     [self texImage2dLevel:0 format:format width:w height:h type:GL_UNSIGNED_BYTE data:(const char*)bytes];
     stbi_image_free(bytes);
