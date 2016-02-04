@@ -154,8 +154,12 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
                 nextTimer = [runLoop limitDateForMode:NSDefaultRunLoopMode];
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
+            if (!nextTimer) {
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:1];
+            }
+
             // Run callbacks.
-            [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:now];
+            [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:nextTimer];
         }
     }
 
