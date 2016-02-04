@@ -3,13 +3,6 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
-#ifndef APPLE_RUNTIME
-// Don't use CGColor, just use RGBA vectors.
-typedef GLKVector4 CGColorRef;
-
-extern size_t CGColorGetNumberOfComponents(CGColorRef color);
-#endif
-
 @class AP_Image;
 
 @interface UIColor : NSObject
@@ -29,7 +22,7 @@ extern size_t CGColorGetNumberOfComponents(CGColorRef color);
 + (UIColor*) colorWithPatternImage:(AP_Image*)pattern;
 @property(nonatomic,readonly,strong) AP_Image* pattern;
 
-@property(nonatomic,readonly) CGColorRef CGColor;
+@property(nonatomic,readonly) GLKVector4 CGColor;
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha;
 - (BOOL) getRed:(CGFloat*)red green:(CGFloat*)green blue:(CGFloat*)blue alpha:(CGFloat*)alpha;

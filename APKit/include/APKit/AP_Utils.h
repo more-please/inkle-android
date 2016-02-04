@@ -32,17 +32,12 @@ static inline double AP_Lerp(double v1, double v2, double t) {
     return v1 + t*(v2-v1);
 }
 
-#ifdef APPLE_RUNTIME
-extern GLKVector4 AP_ColorToVector(UIColor*);
-extern UIColor* AP_VectorToColor(GLKVector4);
-#else
 static inline GLKVector4 AP_ColorToVector(UIColor* color) {
     return color.rgba;
 }
 static inline UIColor* AP_VectorToColor(GLKVector4 rgba) {
     return [UIColor colorWithRgba:rgba];
 }
-#endif
 
 #if defined(OSX)
 

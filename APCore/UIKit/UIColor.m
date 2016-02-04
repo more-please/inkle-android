@@ -107,13 +107,9 @@ size_t CGColorGetNumberOfComponents(CGColorRef color) {
     return result;
 }
 
-- (CGColorRef) CGColor
+- (GLKVector4) CGColor
 {
-#ifdef APPLE_RUNTIME
-    return CGColorCreateGenericRGB(_rgba.r, _rgba.g, _rgba.b, _rgba.a);
-#else
     return _rgba;
-#endif
 }
 
 - (BOOL) getWhite:(CGFloat*)white alpha:(CGFloat*)alpha {
