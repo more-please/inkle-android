@@ -60,6 +60,8 @@ using namespace crnd;
         NSLog(@"*** screenSize is %f, %f -- weird!", physicalSize.width, physicalSize.height);
     }
 
+    BOOL crappy = [UIApplication sharedApplication].isCrappyDevice;
+
     crn_texture_info info;
     AP_CHECK(crnd_get_texture_info(data.bytes, data.length, &info), return NO);
 
@@ -106,16 +108,25 @@ using namespace crnd;
         const int row_size = blocks_x * block_size;
         const int total_size = blocks_y * row_size;
 
-        if ((i+1 < info.m_levels) && (w > maxTextureWidth || h > maxTextureHeight)) {
-            NSLog(@"Skipping mipmap level %d (width %d, height %d, max %dx%d)", i, w, h, maxTextureWidth, maxTextureHeight);
-            ++skipped;
-        } else {
-            void* dest = &buffer[0];
-            AP_CHECK(
-                crnd_unpack_level(context, &dest, total_size, row_size, i),
-                break);
-            [self compressedTexImage2dLevel:i - skipped format:format width:w height:h data:&buffer[0] dataSize:total_size];
+        if (i+1 < info.m_levels) {
+            // This isn't the last mipmap, maybe skip it
+            if (crappy && i == 0) {
+                NSLog(@"Skipping mipmap level %d (low-end GPU)", i);
+                ++skipped;
+                continue;
+            }
+            if (w > maxTextureWidth || h > maxTextureHeight) {
+                NSLog(@"Skipping mipmap level %d (width %d, height %d, max %dx%d)", i, w, h, maxTextureWidth, maxTextureHeight);
+                ++skipped;
+                continue;
+            }
         }
+
+        void* dest = &buffer[0];
+        AP_CHECK(
+            crnd_unpack_level(context, &dest, total_size, row_size, i),
+            break);
+        [self compressedTexImage2dLevel:i - skipped format:format width:w height:h data:&buffer[0] dataSize:total_size];
     }
 
     crnd_unpack_end(context);
