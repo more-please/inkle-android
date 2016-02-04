@@ -2,14 +2,6 @@
 
 #import "GlueCommon.h"
 
-// #ifdef ANDROID
-
-size_t CGColorGetNumberOfComponents(CGColorRef color) {
-    return 4;
-}
-
-// #endif
-
 @implementation UIColor
 
 + (UIColor*) whiteColor
