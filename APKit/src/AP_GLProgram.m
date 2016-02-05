@@ -1,57 +1,60 @@
 #import "AP_GLProgram.h"
 
 #import "AP_Check.h"
-
-#if defined(OSX) // Mac
-
-#define AP_VERTEX_PREFIX \
-    "#version 150\n" \
-    "#define texture2D texture\n" \
-    "#define attribute in\n" \
-    "#define varying out\n"
-
-#define AP_FRAGMENT_PREFIX \
-    "#version 150\n" \
-    "#define texture2D texture\n" \
-    "#define gl_FragColor more_gl_FragColor\n" \
-    "#define varying in\n" \
-    "out vec4 gl_FragColor;\n"
-
-#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p,b)\n"
-#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n"
-
-#elif defined(SORCERY_SDL) // Linux/Windows
-
-#define AP_VERTEX_PREFIX "#version 120\n"
-#define AP_FRAGMENT_PREFIX "#version 120\n"
-
-#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
-#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
-
-#else // Mobile
-
-#define AP_VERTEX_PREFIX "precision highp float;\n"
-
-#define AP_FRAGMENT_PREFIX \
-    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
-    "precision highp float;\n" \
-    "#else\n" \
-    "precision mediump float;\n" \
-    "#endif\n"
-
-#define AP_SHARPEN_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n"
-#define AP_VIVANTE_PREFIX "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n"
-
-#endif
-
-#define AP_MASK_PREFIX \
-    "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n"
-
-#define AP_NORMAL_PREFIX \
-    "#define OUTPUT(x) gl_FragColor = (x)\n"
+#import "AP_GL.h"
 
 static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
 {
+    const char* AP_VERTEX_PREFIX;
+    const char* AP_FRAGMENT_PREFIX;
+    const char* AP_SHARPEN_PREFIX;
+    const char* AP_VIVANTE_PREFIX;
+
+    const char* AP_MASK_PREFIX = "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n";
+
+    const char* AP_NORMAL_PREFIX = "#define OUTPUT(x) gl_FragColor = (x)\n";
+
+    if (g_AP_GL == AP_GL3) {
+
+        AP_VERTEX_PREFIX =
+            "#version 150\n"
+            "#define texture2D texture\n"
+            "#define attribute in\n"
+            "#define varying out\n";
+
+        AP_FRAGMENT_PREFIX =
+            "#version 150\n"
+            "#define texture2D texture\n"
+            "#define gl_FragColor more_gl_FragColor\n"
+            "#define varying in\n"
+            "out vec4 gl_FragColor;\n";
+
+        AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p,b)\n";
+        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n";
+
+    } else if (g_AP_GL == AP_GL2) {
+
+        AP_VERTEX_PREFIX = "#version 120\n";
+        AP_FRAGMENT_PREFIX = "#version 120\n";
+
+        AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n";
+        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
+
+    } else {
+
+        AP_VERTEX_PREFIX = "precision highp float;\n";
+
+        AP_FRAGMENT_PREFIX =
+            "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+            "precision highp float;\n"
+            "#else\n"
+            "precision mediump float;\n"
+            "#endif\n";
+
+        AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n";
+        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
+    }
+
     // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
     NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
 

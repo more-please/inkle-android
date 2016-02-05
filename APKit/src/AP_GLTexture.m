@@ -4,6 +4,7 @@
 
 #import "AP_Bundle.h"
 #import "AP_Check.h"
+#import "AP_GL.h"
 #import "AP_GLTexture_CRN.h"
 #import "AP_GLTexture_KTX.h"
 #import "AP_GLTexture_PNG.h"
@@ -197,10 +198,28 @@ static AP_WeakCache* s_textureCache = nil;
     _GL(BindTexture, _textureTarget, _name);
 }
 
-#ifdef OSX
-#define GL_2_3(x,y) y
-#else
-#define GL_2_3(x,y) x
+#ifndef GL_LUMINANCE
+#define GL_LUMINANCE 0x1909
+#endif
+
+#ifndef GL_LUMINANCE_ALPHA
+#define GL_LUMINANCE_ALPHA 0x190A
+#endif
+
+#ifndef GL_RG
+#define GL_RG 0x8227
+#endif
+
+#ifndef GL_R8
+#define GL_R8 0x8229
+#endif
+
+#ifndef GL_RG8
+#define GL_RG8 0x822B
+#endif
+
+#ifndef GL_TEXTURE_SWIZZLE_RGBA
+#define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif
 
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data
@@ -214,36 +233,28 @@ static AP_WeakCache* s_textureCache = nil;
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
 
-#ifdef SORCERY_SDL
-    // Expand all textures to RGBA8 (for now). Don't think 24-bit RGB is possible.
-    GLint internalFormat = GL_2_3(GL_RGBA, GL_RGBA8);
-#else
-    // ES: internal format must match external format.
-    GLint internalFormat = format;
-#endif
+    GLint internalFormat = AP_GLES_2_3(format, GL_RGBA, GL_RGBA8);
 
     switch (format) {
         case GL_ALPHA:
-        case GL_2_3(GL_LUMINANCE, GL_RED): {
+        case GL_LUMINANCE:
+        case GL_RED: {
             _memoryUsage += width * height;
-#ifdef SORCERY_SDL
-            internalFormat = GL_2_3(GL_LUMINANCE, GL_R8);
-#endif
-#ifdef OSX
-            GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
-            glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
-#endif
+            internalFormat = AP_GLES_2_3(format, GL_LUMINANCE, GL_R8);
+            if (g_AP_GL == AP_GL3) {
+                GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+                _GL(TexParameteriv, target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
+            }
             break;
         }
-        case GL_2_3(GL_LUMINANCE_ALPHA, GL_RG): {
+        case GL_LUMINANCE_ALPHA:
+        case GL_RG: {
             _memoryUsage += 2 * width * height;
-#ifdef SORCERY_SDL
-            internalFormat = GL_2_3(GL_LUMINANCE_ALPHA, GL_RG8);
-#endif
-#ifdef OSX
-            GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
-            glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
-#endif
+            internalFormat = AP_GLES_2_3(format, GL_LUMINANCE_ALPHA, GL_RG8);
+            if (g_AP_GL == AP_GL3) {
+                GLint const kSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+                _GL(TexParameteriv, target, GL_TEXTURE_SWIZZLE_RGBA, kSwizzle);
+            }
             break;
         }
         case GL_RGB:

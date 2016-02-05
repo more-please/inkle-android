@@ -6,22 +6,33 @@
 #import "stb_image_resize.h"
 
 #import "AP_Check.h"
+#import "AP_GL.h"
 
 static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
 
 @implementation AP_GLTexture (PNG)
+
+#ifndef GL_LUMINANCE
+#define GL_LUMINANCE 0x1909
+#endif
+
+#ifndef GL_LUMINANCE_ALPHA
+#define GL_LUMINANCE_ALPHA 0x190A
+#endif
+
+#ifndef GL_RG
+#define GL_RG 0x8227
+#endif
+
+#ifndef GL_R8
+#define GL_R8 0x8229
+#endif
 
 + (BOOL) isPNG:(NSData*)data
 {
     AP_CHECK(data, return NO);
     return ([data length] > 9) && (0 == memcmp([data bytes], gPNGIdentifier, 8));
 }
-
-#ifdef OSX
-#define GL_2_3(x,y) y
-#else
-#define GL_2_3(x,y) x
-#endif
 
 - (BOOL) loadPNG:(NSData*)data
 {
@@ -38,10 +49,18 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
     AP_CHECK(bytes, return NO);
     GLenum format = GL_RGBA;
     switch (wantedComponents) {
-        case 1: format = GL_2_3(GL_LUMINANCE, GL_RED); break;
-        case 2: format = GL_2_3(GL_LUMINANCE_ALPHA, GL_RG); break;
-        case 3: format = GL_RGB; break;
-        case 4: format = GL_RGBA; break;
+        case 1:
+            format = AP_GLES_2_3(GL_LUMINANCE, GL_LUMINANCE, GL_RED);
+            break;
+        case 2:
+            format = AP_GLES_2_3(GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_RG);
+            break;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+            break;
     }
 
     [self fixWidth:w height:h];
