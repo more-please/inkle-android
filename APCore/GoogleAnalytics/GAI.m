@@ -132,15 +132,7 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
     NSTimer* timer;
 
     @autoreleasepool {
-        int err = curl_global_init(CURL_GLOBAL_DEFAULT);
-        if (err) {
-            NSLog(@"*** curl_global_init() failed: %s", curl_easy_strerror(err));
-            _done = YES;
-            return;
-        }
-
         NSLog(@"GAI: starting");
-
         timer = [NSTimer scheduledTimerWithTimeInterval:kTimerInterval target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
     }
 
