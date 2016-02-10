@@ -95,7 +95,7 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
     return size * nmemb;
 }
 
-- (NSError*) error:(NSString*)err
+- (NSError*) parseError:(NSString*)err
 {
     NSLog(@"*** Parse error: %@", err);
     NSDictionary* info = @{ NSLocalizedDescriptionKey: err };
@@ -130,7 +130,7 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         if (err) {
             NSString* e = [NSString stringWithUTF8String:curl_easy_strerror(err)];
             return ^{
-                block([self error:e], nil);
+                block([self parseError:e], nil);
             };
         }
         
@@ -146,21 +146,21 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
 
         if (![dict isKindOfClass:[NSDictionary class]]) {
             return ^{
-                block([self error:@"JSON returned by Parse isn't a dictionary"], nil);
+                block([self parseError:@"JSON returned by Parse isn't a dictionary"], nil);
             };
         }
 
         NSString* e = dict[@"error"];
         if (e) {
             return ^{
-                block([self error:e], nil);
+                block([self parseError:e], nil);
             };
         }
 
         NSString* result = dict[@"result"];
         if (!result) {
             return ^{
-                block([self error:@"no 'result' in result"], nil);
+                block([self parseError:@"no 'result' in result"], nil);
             };
         }
 
@@ -199,7 +199,7 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         if (err) {
             NSString* e = [NSString stringWithUTF8String:curl_easy_strerror(err)];
             return ^{
-                block([self error:e]);
+                block([self parseError:e]);
             };
         }
         
@@ -215,21 +215,21 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
 
         if (![dict isKindOfClass:[NSDictionary class]]) {
             return ^{
-                block([self error:@"JSON returned by Parse isn't a dictionary"]);
+                block([self parseError:@"JSON returned by Parse isn't a dictionary"]);
             };
         }
 
         NSString* e = dict[@"error"];
         if (e) {
             return ^{
-                block([self error:e]);
+                block([self parseError:e]);
             };
         }
 
         NSString* result = dict[@"objectId"];
         if (!result) {
             return ^{
-                block([self error:@"no 'objectId' in result"]);
+                block([self parseError:@"no 'objectId' in result"]);
             };
         }
 
@@ -275,7 +275,7 @@ static NSString* escape(CURL* curl, NSObject* s) {
         if (err) {
             NSString* e = [NSString stringWithUTF8String:curl_easy_strerror(err)];
             return ^{
-                block([self error:e], nil);
+                block([self parseError:e], nil);
             };
         }
 
@@ -288,21 +288,21 @@ static NSString* escape(CURL* curl, NSObject* s) {
 
         if (![dict isKindOfClass:[NSDictionary class]]) {
             return ^{
-                block([self error:@"JSON returned by Parse isn't a dictionary"], nil);
+                block([self parseError:@"JSON returned by Parse isn't a dictionary"], nil);
             };
         }
 
         NSString* e = dict[@"error"];
         if (e) {
             return ^{
-                block([self error:e], nil);
+                block([self parseError:e], nil);
             };
         }
 
         NSArray* result = dict[@"results"];
         if (!result) {
             return ^{
-                block([self error:@"no 'results' in result"], nil);
+                block([self parseError:@"no 'results' in result"], nil);
             };
         }
 
