@@ -1,8 +1,6 @@
 #import "AP_UserDefaults.h"
 
-#ifndef APPLE_RUNTIME
-#import <Foundation/Foundation.h>
-#endif
+#import <UIKit/UIKit.h>
 
 @implementation AP_UserDefaults {
     BOOL _dirty;
@@ -68,12 +66,16 @@ static AP_UserDefaults* g_Defaults = nil;
 
 - (void) saveDictionary:(NSDictionary*)data
 {
-    NSLog(@"Writing %@...", _path);
-    BOOL success = [data writeToFile:_path atomically:YES];
-    NSLog(@"Writing %@... Done!", _path);
-    if (!success) {
-        NSLog(@"Failed to save AP_UserDefaults to path: %@", _path);
+    [[UIApplication sharedApplication] lockQuit];
+    {
+        NSLog(@"Writing %@...", _path);
+        BOOL success = [data writeToFile:_path atomically:YES];
+        NSLog(@"Writing %@... Done!", _path);
+        if (!success) {
+            NSLog(@"Failed to save AP_UserDefaults to path: %@", _path);
+        }
     }
+    [[UIApplication sharedApplication] unlockQuit];
 }
 
 - (id) objectForKey:(NSString*)defaultName

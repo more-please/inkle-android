@@ -76,6 +76,16 @@ static UIApplication* g_Application;
     exit(EXIT_SUCCESS);
 }
 
+- (void) lockQuit
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
+- (void) unlockQuit
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (void) fatalError:(NSString*)message
 {
     GLUE_NOT_IMPLEMENTED;

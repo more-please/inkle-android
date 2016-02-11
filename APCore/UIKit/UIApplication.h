@@ -35,4 +35,8 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 - (void) quit;
 - (void) fatalError:(NSString*)message;
 
+// Lock a mutex that prevents quitting (use during e.g. important file operations)
+- (void) lockQuit;
+- (void) unlockQuit;
+
 @end
