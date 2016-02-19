@@ -40,6 +40,7 @@
 
 - (void) setOnce:(NSString *)parameterName value:(NSString *)value
 {
+    NSLog(@"GAI: %@=%@", parameterName, value);
     _onceParams[parameterName] = value;
 }
 
