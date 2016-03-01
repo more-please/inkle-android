@@ -232,9 +232,9 @@
             12, 9, 13, 10, 14, 11, 15
         };
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 22 * sizeof(GLubyte), indices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, s_ibo);
+        _GL(BufferData, GL_ELEMENT_ARRAY_BUFFER, 22 * sizeof(GLubyte), indices, GL_STATIC_DRAW);
+        _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     AP_CHECK(s_texture, return);
