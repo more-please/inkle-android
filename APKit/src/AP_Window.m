@@ -328,7 +328,7 @@ static NSMutableArray* s_afterFrameBlocks;
     CGFloat scale = g_ScreenScale;
 
     [_profiler step:@"clear"];
-#ifdef ANDROID
+#ifdef SORCERY_SDL
     _GL(BindFramebuffer, GL_FRAMEBUFFER, 0);
 #endif
     _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
