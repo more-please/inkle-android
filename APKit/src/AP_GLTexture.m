@@ -114,12 +114,12 @@ static AP_WeakCache* s_textureCache = nil;
     AP_CHECK(s_textureCache, return nil);
     AP_GLTexture* result = [s_textureCache get:name withLoader:^{
         NSString* faceExt[6] = {
-            @"front", // GL_TEXTURE_CUBE_MAP_POSITIVE_X
-            @"back", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+            @"left", // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+            @"right", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
             @"up", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
             @"down", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-            @"right", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-            @"left"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+            @"front", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+            @"back"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
         };
         NSString* base = [name stringByDeletingPathExtension];
         NSString* ext = name.pathExtension;
@@ -127,7 +127,7 @@ static AP_WeakCache* s_textureCache = nil;
         AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name target:GL_TEXTURE_CUBE_MAP];
         for (int f = 0; f < 6; ++f) {
             result->_face = f;
-            NSString* faceName = [NSString stringWithFormat:@"%@-%@.%@", base, faceExt[f], ext];
+            NSString* faceName = [NSString stringWithFormat:@"%@_%@.%@", base, faceExt[f], ext];
             NSData* data = [AP_Bundle dataForResource:faceName ofType:nil];
             if (!data) {
                 NSLog(@"Missing cube face: %@", faceName);

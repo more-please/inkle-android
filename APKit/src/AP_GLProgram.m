@@ -19,12 +19,14 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
         AP_VERTEX_PREFIX =
             "#version 150\n"
             "#define texture2D texture\n"
+            "#define textureCube texture\n"
             "#define attribute in\n"
             "#define varying out\n";
 
         AP_FRAGMENT_PREFIX =
             "#version 150\n"
             "#define texture2D texture\n"
+            "#define textureCube texture\n"
             "#define gl_FragColor more_gl_FragColor\n"
             "#define varying in\n"
             "out vec4 gl_FragColor;\n";

@@ -3,7 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <GLKit/GLKit.h>
 
-#import "AP_GLKEffectPropertyTexture.h"
+#import "AP_GLTexture.h"
 #import "AP_GLKEffectPropertyTransform.h"
 
 // On some devices (I'm looking at you, Qualcomm) the attribute indices must be fully packed: we
@@ -18,8 +18,8 @@ enum {
 
 @interface AP_GLKBaseEffect : NSObject
 
-@property (nonatomic, readonly) AP_GLKEffectPropertyTransform* transform; // Identity Matrices
-@property (nonatomic, readonly) AP_GLKEffectPropertyTexture* texture2d0;
+@property (nonatomic, strong, readonly) AP_GLKEffectPropertyTransform* transform; // Identity Matrices
+@property (nonatomic, strong) AP_GLTexture* texture;
 @property (nonatomic) GLboolean useConstantColor; // GL_TRUE
 @property (nonatomic) GLKVector4 constantColor; // { 1.0, 1.0, 1.0, 1.0 }
 
