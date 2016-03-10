@@ -4,7 +4,7 @@
 
 @interface AP_UserDefaults : NSObject
 
-+ (void) setDocumentsDir:(NSString*)dir;
++ (void) setDefaultsPath:(NSString*)path;
 + (AP_UserDefaults*) standardUserDefaults;
 
 - (id) objectForKey:(NSString*)defaultName;

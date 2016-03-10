@@ -9,14 +9,14 @@
     NSString* _path;
 }
 
-static NSString* g_DocumentsDir = nil;
+static NSString* g_DefaultsPath = nil;
 static AP_UserDefaults* g_Defaults = nil;
 
-+ (void) setDocumentsDir:(NSString*)dir
++ (void) setDefaultsPath:(NSString*)path
 {
-    g_DocumentsDir = dir;
+    g_DefaultsPath = path;
 #ifndef APPLE_RUNTIME
-    [NSUserDefaults setDocumentsDir:dir];
+    [NSUserDefaults setDocumentsDir:g_DefaultsPath.stringByDeletingLastPathComponent];
 #endif
 }
 
@@ -33,14 +33,14 @@ static AP_UserDefaults* g_Defaults = nil;
     NSAssert(!g_Defaults, @"AP_UserDefaults already instantiated");
     self = [super init];
     if (self) {
-        NSAssert(g_DocumentsDir, @"Documents dir wasn't set");
-        _path = [g_DocumentsDir stringByAppendingPathComponent:@"AP_UserDefaults.plist"];
+        NSAssert(g_DefaultsPath, @"AP_UserDefaults path wasn't set");
+        _path = g_DefaultsPath;
 
         NSDictionary* data = nil;
         if ([[NSFileManager defaultManager] fileExistsAtPath:_path]) {
             data = [NSDictionary dictionaryWithContentsOfFile:_path];
             if (!data) {
-                NSLog(@"Failed to load AP_UserDefaults!");
+                NSLog(@"Failed to load %@!", _path.lastPathComponent);
             }
         }
         _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
