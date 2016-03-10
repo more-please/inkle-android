@@ -145,6 +145,10 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 #ifdef OSX
     filename = [[NSBundle mainBundle] pathForResource:filename ofType:nil];
 #endif
+    if (![[NSFileManager defaultManager] fileExistsAtPath:filename]) {
+        NSLog(@"Missing expansion file: %@", filename);
+        return nil;
+    }
     PAK* result = nil;
     int fd = open([filename UTF8String], O_RDONLY);
     if (fd > 0) {
