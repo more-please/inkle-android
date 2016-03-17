@@ -39,6 +39,7 @@
     BOOL _hitTestInside;
 
     CGFloat _fontScale; // Default 1.0, reduced if needed by adjustsFontSizeToFitWidth
+    CGFloat _screenScale; // Default 1.0, maybe increased if autoScaleToFitIpad
 }
 
 - (id) initWithFrame:(CGRect)frame
@@ -368,6 +369,12 @@
     _formattedRuns = nil;
 }
 
+- (void) setAutoScaleForIpad:(BOOL)autoScaleForIpad
+{
+    _autoScaleForIpad = autoScaleForIpad;
+    [self setNeedsTextLayout];
+}
+
 - (void) textLayoutWithWidth:(CGFloat)width
 {
     if (_formattedRuns && _layoutWidth == width) {
@@ -375,6 +382,8 @@
     }
 
     _fontScale = 1.0;
+    _screenScale = self.autoScaleForIpad ? [AP_Window scaleForIPhone:1.0 iPad:2.0] : 1.0;
+
     [self scaledTextLayoutWithWidth:width];
 
     if (_adjustsFontSizeToFitWidth && width > 0 && _formattedSize.width > width) {
@@ -409,7 +418,7 @@
         if (!font) {
             font = defaultFont;
         }
-        font = [font fontWithSize:(font.pointSize * _fontScale)];
+        font = [font fontWithSize:(font.pointSize * _fontScale * _screenScale)];
 
         NSNumber* kerning = [attrs objectForKey:NSKernAttributeName];
 

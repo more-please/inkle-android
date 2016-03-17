@@ -34,6 +34,9 @@
 @property(nonatomic) NSInteger numberOfLines;
 @property(nonatomic) CGFloat minimumScaleFactor;
 
+// IAIN HACK - automatically scale 2x on iPad
+@property(nonatomic) BOOL autoScaleForIpad;
+
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 
 @end
