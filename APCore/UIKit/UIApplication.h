@@ -19,6 +19,7 @@
 - (BOOL) needsInitialSetup;
 
 - (NSString*) versionName;
+- (NSString*) googleAnalyticsId;
 
 - (BOOL) isPartInstalled:(int)part;
 - (void) openPart:(int)part;

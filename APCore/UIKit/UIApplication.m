@@ -38,6 +38,12 @@ static UIApplication* g_Application;
     return @"VERSION_NAME";
 }
 
+- (NSString*) googleAnalyticsId
+{
+    GLUE_NOT_IMPLEMENTED;
+    return @"GOOGLE_ANALYTICS_ID";
+}
+
 - (id) init
 {
     self = [super init];
