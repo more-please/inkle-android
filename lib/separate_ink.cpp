@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
+#include <vector>
+
+#include "fix_alpha.h"
+
 namespace {
 
 const double GAMMA = 2.2;
@@ -27,6 +32,8 @@ struct Rgb {
 
     Rgb() : r(0), g(0), b(0) {}
 
+    Rgb(const uint8_t* rgb) : r(rgb[0]), g(rgb[1]), b(rgb[2]) {}
+
     Rgb(int rr, int gg, int bb) {
         if (rr < 0) rr = 0;
         if (rr > 255) rr = 255;
@@ -48,7 +55,6 @@ struct Rgb {
     }
 
     bool isBelow(int threshold) const {
-        // Maybe use luminosity here?
         return luminosity() <= threshold;
     }
 };
@@ -123,6 +129,10 @@ public:
     }
 
     const unsigned char* data() const {
+        return _data;
+    }
+
+    unsigned char* data() {
         return _data;
     }
 
@@ -228,11 +238,13 @@ public:
     }
 
 private:
-    const unsigned char* _data;
+    unsigned char* _data;
     const int _w, _h;
 };
 
 } // namespace
+
+using namespace std;
 
 void separate_ink(
     uint8_t* rgbDest, // Must be width * height * 3 in size
@@ -241,44 +253,56 @@ void separate_ink(
     const uint8_t* rgbSrc, // Must be width * height * 3 in size
     int w, int h)
 {
-    const Image input((const Rgb*) rgbSrc, w, h);
-
 //     fprintf(stderr, "Zeroing out pixels with at least one neighbour within threshold\n");
-    Image scratch(w, h);
+
+    vector<uint8_t> bg;
+    bg.resize(w*h*4);
+
+    for (int i = 0; i < w*h; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            bg[4*i + j] = rgbSrc[3*i + j];
+        }
+        bg[4*i + 3] = 255;
+    }
+
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
-            if (input.min(x - 1, y - 1, 3, 3).isBelow(threshold)) {
-                scratch.pixel(x, y) = Rgb();
-            } else {
-                scratch.pixel(x, y) = input.pixel(x, y);
+            int i = y*w + x;
+            if (Rgb(rgbSrc + i*3).isBelow(threshold)) {
+                for (int _y = std::max(0, y-1); _y < std::min(h, y+2); ++_y) {
+                    for (int _x = std::max(0, x-1); _x < std::min(w, x+2); ++_x) {
+                        int _i = _y*w + _x;
+                        bg[4*_i + 3] = 0;
+                    }
+                }
             }
         }
     }
 
 //     fprintf(stderr, "Filling in zero pixels\n");
-    Image bg(w, h);
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            bg.pixel(x, y) = scratch.nearestNonZeroPixels(x, y, threshold);
-        }
-    }
+    fix_alpha(w, h, &bg[0]);
 
 //     fprintf(stderr, "Extracting foreground pixels\n");
-    unsigned char* fg = (unsigned char*) calloc(w, h);
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            double paper = bg.pixel(x, y).gammaCorrectLuminosity();
-            double ink = input.pixel(x, y).gammaCorrectLuminosity();
-            double value = ink / paper;
-            fg[x + w * y] = h2l(value);
-        }
+
+    vector<uint8_t> fg;
+    fg.resize(w*h);
+
+    for (int i = 0; i < w*h; ++i) {
+        Rgb paper(&bg[4*i]);
+        Rgb ink(rgbSrc + 3*i);
+        double value = ink.gammaCorrectLuminosity() / paper.gammaCorrectLuminosity();
+        fg[i] = h2l(value);
     }
 
     if (rgbDest) {
-        memcpy(rgbDest, bg.data(), w * h * 3);
+        for (int i = 0; i < w*h; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                rgbDest[3*i + j] = bg[4*i + j];
+            }
+        }
     }
 
     if (inkDest) {
-        memcpy(inkDest, fg, w * h);
+        memcpy(inkDest, &fg[0], w * h);
     }
 }
