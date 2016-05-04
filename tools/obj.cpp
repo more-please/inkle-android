@@ -11,9 +11,9 @@
 #define MINIZ_HEADER_FILE_ONLY
 #include <miniz/miniz.c>
 
-#include "cmd.h"
+#include <more-cpp/please.h>
 
-using namespace cmd;
+using namespace more::please;
 using namespace std;
 using namespace tinyobj;
 
