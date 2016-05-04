@@ -19,6 +19,7 @@ inline int& _error_guard() {
     return _guard;
 }
 
+__attribute__((format(printf, 1, 2)))
 inline void error(const char* format, ...) {
     va_list args;
     va_start(args, format);
@@ -214,6 +215,29 @@ public:
     }
 };
 
+template <int MIN, int MAX> class int_flag : public value_flag<int> {
+public:
+    int_flag(const char* name, const char* help)
+        : value_flag(name, help) {}
+
+    int_flag(const char* name, const char* help, int default_value)
+        : value_flag(name, help, default_value) {}
+
+    virtual bool parse(const char* str) {
+        int n = atoi(str);
+        if (n < MIN || n > MAX) {
+            error("--%s %d is out of range (min: %d, max: %d)", name(), n, MIN, MAX);
+            return false;
+        }
+        init(n);
+        return true;
+    }
+
+    virtual void print(FILE* f, const value_t& value) const {
+        fprintf(f, "%d", value);
+    }
+};
+
 class fopen_r_flag : public value_flag<FILE*> {
 public:
     fopen_r_flag(const char* name, const char* help)
@@ -352,6 +376,7 @@ inline bool verbose() {
     return verbose_flag.get();
 }
 
+__attribute__((format(printf, 1, 2)))
 inline void vlog(const char* format, ...) {
     if (verbose()) {
         va_list args;
@@ -362,6 +387,7 @@ inline void vlog(const char* format, ...) {
     }
 }
 
+__attribute__((format(printf, 1, 2)))
 inline void log(const char* format, ...) {
     va_list args;
     va_start(args, format);
