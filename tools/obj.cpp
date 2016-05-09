@@ -68,11 +68,8 @@ int main(int argc, const char* argv[]) {
             unique[v] = -1;
         }
         int next_index = 0;
-        for (const vertex& v : vertices) {
-            int& i = unique[v];
-            if (i < 0) {
-                i = next_index++;
-            }
+        for (auto& entry : unique) {
+            entry.second = next_index++;
         }
 
         if (list) {
@@ -95,7 +92,7 @@ int main(int argc, const char* argv[]) {
                 const vertex& v = vertices[original_index];
                 int ix = unique[v];
                 assert(ix >= 0);
-                index_data.push_back(unique[v]);
+                index_data.push_back(ix);
             }
             mz_zip_writer_add_mem(
                 &zip,
@@ -110,7 +107,7 @@ int main(int argc, const char* argv[]) {
 
             string vertex_name = s.name + ".vertex";
             vector<float> vertex_data;
-            for (auto entry : unique) {
+            for (auto& entry : unique) {
                 const vertex& v = entry.first;
                 vertex_data.insert(vertex_data.end(), get<0>(v).begin(), get<0>(v).end());
                 vertex_data.insert(vertex_data.end(), get<1>(v).begin(), get<1>(v).end());
