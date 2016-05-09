@@ -40,23 +40,29 @@
 
 - (void) prepareToDraw
 {
-    if (_texture.cube) {
+    if (!_texture) {
+        [self prepareToDrawNoTexture];
+    } else if (_texture.cube) {
         [self prepareToDrawCube];
-        return;
+    } else {
+        [self prepareToDrawTexture];
     }
+}
 
-    static const char* kVertex = AP_SHADER(
-        uniform mat4 modelViewProjectionMatrix;
-        attribute vec4 position;
-        attribute vec2 texCoord0;
-        varying vec2 fragTexCoord;
-        void main() {
-            gl_Position = modelViewProjectionMatrix * position;
-            fragTexCoord = texCoord0;
-        }
-    );
+static const char* kVertex = AP_SHADER(
+    uniform mat4 modelViewProjectionMatrix;
+    attribute vec4 position;
+    attribute vec2 texCoord0;
+    varying vec2 fragTexCoord;
+    void main() {
+        gl_Position = modelViewProjectionMatrix * position;
+        fragTexCoord = texCoord0;
+    }
+);
 
-    static const char* kFragment = AP_SHADER(
+- (void) prepareToDrawTexture
+{
+    static const char* kFragmentTexture = AP_SHADER(
         uniform vec4 color;
         uniform sampler2D tex;
         varying vec2 fragTexCoord;
@@ -73,7 +79,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragment];
+        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragmentTexture];
         modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
         texture = [prog uniform:@"tex"];
         color = [prog uniform:@"color"];
@@ -100,9 +106,48 @@
     _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+- (void) prepareToDrawNoTexture
+{
+    static const char* kFragmentNoTexture = AP_SHADER(
+        uniform vec4 color;
+        void main() {
+            gl_FragColor = color;
+        }
+    );
+
+    static AP_GLKBaseEffect_Program* prog;
+    static GLint modelViewProjectionMatrix;
+    static GLint color;
+
+    static BOOL initialized = NO;
+    if (!initialized) {
+        initialized = YES;
+        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragmentNoTexture];
+        modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
+        color = [prog uniform:@"color"];
+    }
+
+    AP_CHECK(prog, return);
+
+    [prog use];
+
+    GLKVector4 c = {1, 1, 1, 1};
+    if (_useConstantColor) {
+        c = _constantColor;
+    }
+    c.a *= _alpha;
+    _GL(Uniform4fv, color, 1, &c.v[0]);
+
+    _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
+    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
+
+    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
+    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 - (void) prepareToDrawCube
 {
-    static const char* kVertex = AP_SHADER(
+    static const char* kVertexCube = AP_SHADER(
         uniform mat4 modelViewProjectionMatrix;
         attribute vec4 position;
         attribute vec3 texCoord0;
@@ -113,7 +158,7 @@
         }
     );
 
-    static const char* kFragment = AP_SHADER(
+    static const char* kFragmentCube = AP_SHADER(
         uniform vec4 color;
         uniform samplerCube tex;
         varying vec3 fragTexCoord;
@@ -130,7 +175,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragment];
+        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertexCube fragment:kFragmentCube];
         modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
         texture = [prog uniform:@"tex"];
         color = [prog uniform:@"color"];
