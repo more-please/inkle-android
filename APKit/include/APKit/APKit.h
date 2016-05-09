@@ -18,6 +18,7 @@
 #import "AP_Font.h"
 #import "AP_GestureRecognizer.h"
 #import "AP_GLKBaseEffect.h"
+#import "AP_GLKEffectPropertyLight.h"
 #import "AP_GLKEffectPropertyTexture.h"
 #import "AP_GLKEffectPropertyTransform.h"
 #import "AP_GLKTextureLoader.h"
@@ -74,9 +75,13 @@
 #define UITapGestureRecognizer         AP_TapGestureRecognizer
 #define GLKBaseEffect                  AP_GLKBaseEffect
 #define GLKVertexAttribPosition        AP_GLKVertexAttribPosition
+#define GLKVertexAttribNormal          AP_GLKVertexAttribNormal
 #define GLKVertexAttribTexCoord0       AP_GLKVertexAttribTexCoord0
+#define GLKEffectPropertyLight         AP_GLKEffectPropertyLight
 #define GLKEffectPropertyTexture       AP_GLKEffectPropertyTexture
 #define GLKEffectPropertyTransform     AP_GLKEffectPropertyTransform
+#define GLKLightingTypePerVertex       AP_GLKLightingTypePerVertex
+#define GLKLightingTypePerPixel        AP_GLKLightingTypePerPixel
 #define GLKTextureInfo                 AP_GLKTextureInfo
 #define GLKTextureLoader               AP_GLKTextureLoader
 #define GLKView                        AP_GLKView
