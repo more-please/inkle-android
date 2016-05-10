@@ -54,8 +54,10 @@ static AP_GLKit_Shader* _shaders[8];
     if (self) {
         _transform = [[AP_GLKEffectPropertyTransform alloc] init];
         _light0 = [[AP_GLKEffectPropertyLight alloc] init];
+        _lightModelAmbientColor = GLKVector4Make(0.2, 0.2, 0.2, 1);
+        _material = [[AP_GLKEffectPropertyMaterial alloc] init];
         _useConstantColor = GL_TRUE;
-        _constantColor = GLKVector4Make(1.0, 1.0, 1.0, 1.0);
+        _constantColor = GLKVector4Make(1, 1, 1, 1);
     }
     return self;
 }
@@ -85,8 +87,8 @@ static AP_GLKit_Shader* _shaders[8];
     c.a *= _alpha;
     _GL(Uniform4fv, shader->_color, 1, &c.v[0]);
 
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    _GL(UniformMatrix4fv, shader->_modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
+    _GL(UniformMatrix4fv, shader->_modelviewMatrix, 1, NO, _transform->_modelviewMatrix.m);
+    _GL(UniformMatrix4fv, shader->_projectionMatrix, 1, NO, _transform->_projectionMatrix.m);
 
     _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
     _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);

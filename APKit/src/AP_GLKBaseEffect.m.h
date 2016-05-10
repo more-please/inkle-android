@@ -71,7 +71,8 @@
 
 @interface AP_GLKit_Shader : AP_GLProgram {
 @public
-    GLint _modelViewProjectionMatrix;
+    GLint _modelviewMatrix;
+    GLint _projectionMatrix;
     GLint _color;
 }
 
@@ -87,7 +88,8 @@
         return NO;
     }
 
-    _modelViewProjectionMatrix = [self uniform:@"modelViewProjectionMatrix"];
+    _modelviewMatrix = [self uniform:@"modelviewMatrix"];
+    _projectionMatrix = [self uniform:@"projectionMatrix"];
     _color = [self uniform:@"color"];
     return YES;
 }
@@ -131,7 +133,8 @@
 - (instancetype) init
 {
     static const char* kVertex = AP_SHADER(
-        uniform mat4 modelViewProjectionMatrix;
+        uniform mat4 modelviewMatrix;
+        uniform mat4 projectionMatrix;
         attribute vec4 position;
     )
     IF_TEX2D_SHADER(
@@ -149,13 +152,17 @@
     )
     AP_SHADER(
         void main() {
-            gl_Position = modelViewProjectionMatrix * position;
+            gl_Position = projectionMatrix * modelviewMatrix * position;
     )
     IF_TEX_SHADER(
             fragTexCoord = texCoord;
     )
     IF_NORMAL_SHADER(
-            fragIntensity = dot(normal, lightDirection);
+            // TODO: should really use the 'normal matrix' here,
+            // which is transpose(inverse(model)). However, this
+            // will work as long as there's no non-linear scaling.
+            vec4 n = normalize(modelviewMatrix * vec4(normal, 1.0));
+            fragIntensity = clamp(dot(normal, lightDirection), 0.0, 1.0);
     )
     AP_SHADER(
         }
@@ -174,8 +181,8 @@
     )
     IF_NORMAL_SHADER(
         varying float fragIntensity;
-        uniform vec4 lightAmbient;
-        uniform vec4 lightDiffuse;
+        uniform vec3 lightAmbient;
+        uniform vec3 lightDiffuse;
     )
     AP_SHADER(
         void main() {
@@ -188,7 +195,7 @@
             c = c * textureCube(tex, fragTexCoord);
     )
     IF_NORMAL_SHADER(
-            c = c * mix(lightAmbient, lightDiffuse, fragIntensity);
+            c = c * vec4(lightAmbient + lightDiffuse * fragIntensity, 1.0);
     )
     AP_SHADER(
             gl_FragColor = c;
@@ -243,13 +250,18 @@
     )
     IF_NORMAL(
         AP_GLKEffectPropertyLight* light = effect.light0;
-        GLKVector4 lightDirection = light.position;
-        GLKVector4 lightAmbient = light.ambientColor;
-        GLKVector4 lightDiffuse = light.diffuseColor;
+        AP_GLKEffectPropertyMaterial* material = effect.material;
+        GLKVector4 lightDirection = light->_direction;
+        GLKVector4 lightAmbient = GLKVector4Multiply(
+            material.ambientColor,
+            GLKVector4Add(effect.lightModelAmbientColor, light->_ambientColor));
+        GLKVector4 lightDiffuse = GLKVector4Multiply(light->_diffuseColor, material->_diffuseColor);
 
-        _GL(Uniform3fv, _lightDirection, 1, &lightDirection.v[0]); // Note: just discarding w field
-        _GL(Uniform4fv, _lightAmbient, 1, &lightAmbient.v[0]);
-        _GL(Uniform4fv, _lightDiffuse, 1, &lightDiffuse.v[0]);
+        // Note: just discarding w field
+        _GL(Uniform3fv, _lightDirection, 1, &lightDirection.v[0]);
+        // Note: just discarding a fields
+        _GL(Uniform3fv, _lightAmbient, 1, &lightAmbient.v[0]);
+        _GL(Uniform3fv, _lightDiffuse, 1, &lightDiffuse.v[0]);
     )
 }
 
