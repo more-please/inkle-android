@@ -3,35 +3,57 @@
 #import "AP_Check.h"
 #import "AP_GLProgram.h"
 
-@interface AP_GLKBaseEffect_Program : AP_GLProgram
-@end
+// ----------------------------------------------------------------------------
+// Preprocessor hack... Define a class for each combination of shader features!
 
-@implementation AP_GLKBaseEffect_Program
+#define AP_GLKIT_SHADER 0
+#include "AP_GLKBaseEffect.m.h"
 
-- (BOOL) link
-{
-    _GL(BindAttribLocation, self.name, AP_GLKVertexAttribPosition, "position");
-    _GL(BindAttribLocation, self.name, AP_GLKVertexAttribTexCoord0, "texCoord0");
-    AP_CHECK_GL("Failed to bind GLKBaseEffect vertex attributes", return NO);
-    
-    if (![super link]) {
-        return NO;
-    }
+#define AP_GLKIT_SHADER 1
+#include "AP_GLKBaseEffect.m.h"
 
-    AP_CHECK([self attr:@"position"] == AP_GLKVertexAttribPosition, return NO);
-    AP_CHECK([self attr:@"texCoord0"] == AP_GLKVertexAttribTexCoord0, return NO);
-    return YES;
-}
+#define AP_GLKIT_SHADER 2
+#include "AP_GLKBaseEffect.m.h"
 
-@end
+#define AP_GLKIT_SHADER 3
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 4
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 5
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 6
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 7
+#include "AP_GLKBaseEffect.m.h"
+
+static AP_GLKit_Shader* _shaders[8];
+
+// ----------------------------------------------------------------------------
 
 @implementation AP_GLKBaseEffect
+
++ (void) initialize
+{
+    _shaders[0] = [[AP_GLKit_Shader_0 alloc] init];
+    _shaders[1] = [[AP_GLKit_Shader_1 alloc] init];
+    _shaders[2] = [[AP_GLKit_Shader_2 alloc] init];
+    _shaders[3] = [[AP_GLKit_Shader_3 alloc] init];
+    _shaders[4] = [[AP_GLKit_Shader_4 alloc] init];
+    _shaders[5] = [[AP_GLKit_Shader_5 alloc] init];
+    _shaders[6] = [[AP_GLKit_Shader_6 alloc] init];
+    _shaders[7] = [[AP_GLKit_Shader_7 alloc] init];
+}
 
 - (id) init
 {
     self = [super init];
     if (self) {
         _transform = [[AP_GLKEffectPropertyTransform alloc] init];
+        _light0 = [[AP_GLKEffectPropertyLight alloc] init];
         _useConstantColor = GL_TRUE;
         _constantColor = GLKVector4Make(1.0, 1.0, 1.0, 1.0);
     }
@@ -40,163 +62,31 @@
 
 - (void) prepareToDraw
 {
-    if (!_texture) {
-        [self prepareToDrawNoTexture];
-    } else if (_texture.cube) {
-        [self prepareToDrawCube];
-    } else {
-        [self prepareToDrawTexture];
-    }
-}
-
-static const char* kVertex = AP_SHADER(
-    uniform mat4 modelViewProjectionMatrix;
-    attribute vec4 position;
-    attribute vec2 texCoord0;
-    varying vec2 fragTexCoord;
-    void main() {
-        gl_Position = modelViewProjectionMatrix * position;
-        fragTexCoord = texCoord0;
-    }
-);
-
-- (void) prepareToDrawTexture
-{
-    static const char* kFragmentTexture = AP_SHADER(
-        uniform vec4 color;
-        uniform sampler2D tex;
-        varying vec2 fragTexCoord;
-        void main() {
-            gl_FragColor = color * texture2D(tex, fragTexCoord);
+    int n = 0;
+    if (_texture) {
+        n |= AP_GLKIT_SHADER_TEXCOORD0_MASK;
+        if (_texture.cube) {
+            n |= AP_GLKIT_SHADER_TEXCUBE_MASK;
         }
-    );
-
-    static AP_GLKBaseEffect_Program* prog;
-    static GLint modelViewProjectionMatrix;
-    static GLint texture;
-    static GLint color;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragmentTexture];
-        modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
-        texture = [prog uniform:@"tex"];
-        color = [prog uniform:@"color"];
+    }
+    if (_light0.enabled) {
+        n |= AP_GLKIT_SHADER_NORMAL_MASK;
     }
 
-    AP_CHECK(prog, return);
+    AP_GLKit_Shader* shader = _shaders[n];
+    AP_CHECK(shader, return);
 
-    [prog use];
-
-    _GL(ActiveTexture, GL_TEXTURE0);
-    _GL(BindTexture, GL_TEXTURE_2D, _texture.name);
-    _GL(Uniform1i, texture, 0);
-    GLKVector4 c = {1, 1, 1, 1};
-    if (_useConstantColor) {
-        c = _constantColor;
-    }
-    c.a *= _alpha;
-    _GL(Uniform4fv, color, 1, &c.v[0]);
-
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
-
-    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
-    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-- (void) prepareToDrawNoTexture
-{
-    static const char* kFragmentNoTexture = AP_SHADER(
-        uniform vec4 color;
-        void main() {
-            gl_FragColor = color;
-        }
-    );
-
-    static AP_GLKBaseEffect_Program* prog;
-    static GLint modelViewProjectionMatrix;
-    static GLint color;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertex fragment:kFragmentNoTexture];
-        modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
-        color = [prog uniform:@"color"];
-    }
-
-    AP_CHECK(prog, return);
-
-    [prog use];
+    [shader prepareBaseEffect:self];
 
     GLKVector4 c = {1, 1, 1, 1};
     if (_useConstantColor) {
         c = _constantColor;
     }
     c.a *= _alpha;
-    _GL(Uniform4fv, color, 1, &c.v[0]);
+    _GL(Uniform4fv, shader->_color, 1, &c.v[0]);
 
     _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
-
-    _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
-    _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-- (void) prepareToDrawCube
-{
-    static const char* kVertexCube = AP_SHADER(
-        uniform mat4 modelViewProjectionMatrix;
-        attribute vec4 position;
-        attribute vec3 texCoord0;
-        varying vec3 fragTexCoord;
-        void main() {
-            gl_Position = modelViewProjectionMatrix * position;
-            fragTexCoord = texCoord0;
-        }
-    );
-
-    static const char* kFragmentCube = AP_SHADER(
-        uniform vec4 color;
-        uniform samplerCube tex;
-        varying vec3 fragTexCoord;
-        void main() {
-            gl_FragColor = color * textureCube(tex, fragTexCoord);
-        }
-    );
-
-    static AP_GLKBaseEffect_Program* prog;
-    static GLint modelViewProjectionMatrix;
-    static GLint texture;
-    static GLint color;
-
-    static BOOL initialized = NO;
-    if (!initialized) {
-        initialized = YES;
-        prog = [[AP_GLKBaseEffect_Program alloc] initWithVertex:kVertexCube fragment:kFragmentCube];
-        modelViewProjectionMatrix = [prog uniform:@"modelViewProjectionMatrix"];
-        texture = [prog uniform:@"tex"];
-        color = [prog uniform:@"color"];
-    }
-
-    AP_CHECK(prog, return);
-
-    [prog use];
-
-    _GL(ActiveTexture, GL_TEXTURE0);
-    _GL(BindTexture, GL_TEXTURE_CUBE_MAP, _texture.name);
-    _GL(Uniform1i, texture, 0);
-    GLKVector4 c = {1, 1, 1, 1};
-    if (_useConstantColor) {
-        c = _constantColor;
-    }
-    c.a *= _alpha;
-    _GL(Uniform4fv, color, 1, &c.v[0]);
-
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(_transform.projectionMatrix, _transform.modelviewMatrix);
-    _GL(UniformMatrix4fv, modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
+    _GL(UniformMatrix4fv, shader->_modelViewProjectionMatrix, 1, NO, _modelViewProjectionMatrix.m);
 
     _GL(BindBuffer, GL_ARRAY_BUFFER, 0);
     _GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);

@@ -3,7 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <OpenGLES/ES2/gl.h>
 
-#define AP_SHADER(...) (#__VA_ARGS__)
+#define AP_SHADER(...) #__VA_ARGS__
 
 @interface AP_GLProgram : NSObject
 
