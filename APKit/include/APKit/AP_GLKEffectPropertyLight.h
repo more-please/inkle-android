@@ -8,7 +8,6 @@
 @public
     GLboolean _enabled;
     GLKVector4 _position;
-    GLKVector4 _direction;
     GLKVector4 _ambientColor;
     GLKVector4 _diffuseColor;
     GLKVector4 _specularColor;

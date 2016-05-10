@@ -16,9 +16,7 @@
 
 - (void) setPosition:(GLKVector4)position
 {
-    _position = position;
-    position.w = 0;
-    _direction = GLKVector4Normalize(GLKVector4Negate(position));
+    _position = GLKVector4Normalize(position);
 }
 
 @end

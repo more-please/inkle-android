@@ -147,8 +147,7 @@
     )
     IF_NORMAL_SHADER(
         attribute vec3 normal;
-        uniform vec3 lightDirection;
-        varying float fragIntensity;
+        varying vec3 fragNormal;
     )
     AP_SHADER(
         void main() {
@@ -161,8 +160,7 @@
             // TODO: should really use the 'normal matrix' here,
             // which is transpose(inverse(model)). However, this
             // will work as long as there's no non-linear scaling.
-            vec4 n = normalize(modelviewMatrix * vec4(normal, 1.0));
-            fragIntensity = clamp(dot(normal, lightDirection), 0.0, 1.0);
+            fragNormal = normal; // (modelviewMatrix * vec4(normal, 1.0)).xyz;
     )
     AP_SHADER(
         }
@@ -180,7 +178,8 @@
         varying vec3 fragTexCoord;
     )
     IF_NORMAL_SHADER(
-        varying float fragIntensity;
+        varying vec3 fragNormal;
+        uniform vec3 lightDirection;
         uniform vec3 lightAmbient;
         uniform vec3 lightDiffuse;
     )
@@ -195,7 +194,9 @@
             c = c * textureCube(tex, fragTexCoord);
     )
     IF_NORMAL_SHADER(
-            c = c * vec4(lightAmbient + lightDiffuse * fragIntensity, 1.0);
+            vec3 n = normalize(fragNormal);
+            float intensity = clamp(dot(n, lightDirection), 0.0, 1.0);
+            c = c * vec4(lightAmbient + lightDiffuse * intensity, 1.0);
     )
     AP_SHADER(
             gl_FragColor = c;
@@ -251,7 +252,7 @@
     IF_NORMAL(
         AP_GLKEffectPropertyLight* light = effect.light0;
         AP_GLKEffectPropertyMaterial* material = effect.material;
-        GLKVector4 lightDirection = light->_direction;
+        GLKVector4 lightDirection = light->_position; // Is this really right?
         GLKVector4 lightAmbient = GLKVector4Multiply(
             material.ambientColor,
             GLKVector4Add(effect.lightModelAmbientColor, light->_ambientColor));
