@@ -41,14 +41,45 @@ static inline BOOL GLKVector4AllEqualToVector4(GLKVector4 lhs, GLKVector4 rhs) {
         && lhs.v[3] == rhs.v[3];
 }
 
-static inline GLKVector4 GLKVector4Lerp(GLKVector4 a, GLKVector4 b, float t)
-{
+static inline GLKVector4 GLKVector4Lerp(GLKVector4 a, GLKVector4 b, float t) {
     return GLKVector4Make(
         a.x + t * (b.x - a.x),
         a.y + t * (b.y - a.y),
         a.z + t * (b.z - a.z),
         a.w + t * (b.w - a.w)
     );
+}
+
+static inline GLKVector4 GLKVector4Multiply(GLKVector4 a, GLKVector4 b) {
+    return GLKVector4Make(
+        a.x * b.x,
+        a.y * b.y,
+        a.z * b.z,
+        a.w * b.w
+    );
+}
+
+static inline GLKVector4 GLKVector4MultiplyScalar(GLKVector4 a, float f) {
+    return GLKVector4Make(
+        a.x * f,
+        a.y * f,
+        a.z * f,
+        a.w * f
+    );
+}
+
+static inline GLKVector4 GLKVector4Add(GLKVector4 a, GLKVector4 b) {
+    return GLKVector4Make(
+        a.x + b.x,
+        a.y + b.y,
+        a.z + b.z,
+        a.w + b.w
+    );
+}
+
+static inline GLKVector4 GLKVector4Normalize(GLKVector4 vector) {
+    float scale = 1.0f / GLKVector4Length(vector);
+    return GLKVector4MultiplyScalar(vector, scale);
 }
 
 #pragma clang diagnostic pop
