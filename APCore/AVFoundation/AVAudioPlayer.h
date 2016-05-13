@@ -36,4 +36,7 @@ extern NSString* const AP_UserDefault_Mute;
 - (void) pause;
 - (void) stop;
 
++ (BOOL) enabled;
++ (void) setEnabled:(BOOL)enabled;
+
 @end

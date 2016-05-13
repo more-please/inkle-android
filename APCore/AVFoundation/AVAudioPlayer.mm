@@ -21,8 +21,24 @@ NSString* const AP_UserDefault_Mute = @"AP_UserDefault_Mute";
     float _volume;
 }
 
+static BOOL s_enabled = NO;
+
++ (BOOL) enabled
+{
+    return s_enabled;
+}
+
++ (void) setEnabled:(BOOL)enabled
+{
+    s_enabled = enabled;
+}
+
 - (id) initWithResource:(NSString*)path error:(NSError**)err
 {
+    if (!s_enabled) {
+        return nil;
+    }
+
     self = [super init];
     if (self) {
         // Audio file type is always .cks
