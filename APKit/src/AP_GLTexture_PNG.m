@@ -4,6 +4,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wunused-value"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
 #define STB_IMAGE_IMPLEMENTATION
