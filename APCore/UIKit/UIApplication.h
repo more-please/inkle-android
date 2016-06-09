@@ -40,4 +40,7 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 - (void) lockQuit;
 - (void) unlockQuit;
 
+// Register a file to be included in crash reports
+- (void) addCrashReportPath:(NSString*)path description:(NSString*)desc;
+
 @end
