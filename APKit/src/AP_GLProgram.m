@@ -8,7 +8,7 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
     const char* AP_VERTEX_PREFIX;
     const char* AP_FRAGMENT_PREFIX;
     const char* AP_SHARPEN_PREFIX;
-    const char* AP_VIVANTE_PREFIX;
+    const char* AP_BLURRY_PREFIX;
 
     const char* AP_MASK_PREFIX = "#define OUTPUT(x) if ((x).a > 0.0) gl_FragColor = (x); else discard\n";
 
@@ -32,7 +32,7 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
             "out vec4 gl_FragColor;\n";
 
         AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p,b)\n";
-        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n";
+        AP_BLURRY_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture(t,p)\n";
 
     } else if (g_AP_GL == AP_GL2) {
 
@@ -40,7 +40,7 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
         AP_FRAGMENT_PREFIX = "#version 120\n";
 
         AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n";
-        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
+        AP_BLURRY_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
 
     } else {
 
@@ -54,17 +54,26 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
             "#endif\n";
 
         AP_SHARPEN_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p,b)\n";
-        AP_VIVANTE_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
+        AP_BLURRY_PREFIX = "#define TEXTURE_2D_BIAS(t,p,b) texture2D(t,p)\n";
     }
 
-    // Vivante GPU in the HP Slate seems to have a stupid bug. Check for that.
     NSString* vendor = [NSString stringWithUTF8String:(const char*)glGetString(GL_VENDOR)];
+    BOOL buggyTextureBias = NO;
+
+    // Vivante GPU in the HP Slate can't handle texture lookup with bias. Check for that.
+    if ([vendor hasPrefix:@"Vivante"]) {
+        buggyTextureBias = YES;
+    }
+    // A Windows user with "Intel(R) HD Graphics Family" reports blurry text, try disabling bias.
+    if ([vendor hasPrefix:@"Intel(R) HD Graphics Family"]) {
+        buggyTextureBias = YES;
+    }
 
     GLuint shader = glCreateShader(type);
     const GLchar* src[4] = {
         (type == GL_VERTEX_SHADER) ? AP_VERTEX_PREFIX : AP_FRAGMENT_PREFIX,
         mask ? AP_MASK_PREFIX : AP_NORMAL_PREFIX,
-        [vendor hasPrefix:@"Vivante"] ? AP_VIVANTE_PREFIX : AP_SHARPEN_PREFIX,
+        buggyTextureBias ? AP_BLURRY_PREFIX : AP_SHARPEN_PREFIX,
         ptr,
     };
     _GL(ShaderSource, shader, 4, src, NULL);
