@@ -218,6 +218,18 @@ static AP_WeakCache* s_textureCache = nil;
 #define GL_RG8 0x822B
 #endif
 
+#ifndef GL_RGBA8
+#define GL_RGBA8 0x8058
+#endif
+
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif
+
+#ifndef GL_GREEN
+#define GL_GREEN 0x1904
+#endif
+
 #ifndef GL_TEXTURE_SWIZZLE_RGBA
 #define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif

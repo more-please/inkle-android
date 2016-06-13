@@ -28,6 +28,10 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
 #define GL_R8 0x8229
 #endif
 
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif
+
 + (BOOL) isPNG:(NSData*)data
 {
     AP_CHECK(data, return NO);
