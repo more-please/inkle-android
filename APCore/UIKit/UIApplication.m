@@ -110,4 +110,9 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (void) addCrashReportPath:(NSString*)path description:(NSString*)desc
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 @end

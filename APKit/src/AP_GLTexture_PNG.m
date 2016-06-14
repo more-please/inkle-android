@@ -43,6 +43,10 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
 #define GL_R8 0x8229
 #endif
 
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif
+
 + (BOOL) isPNG:(NSData*)data
 {
     AP_CHECK(data, return NO);
@@ -79,7 +83,7 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
     }
 
     [self fixWidth:w height:h];
-    if ([UIApplication sharedApplication].isCrappyDevice && w > 8 && h > 8) {
+    if ([UIApplication sharedApplication].isCrappyDevice && w > 1024 && h > 1024) {
         int w2 = w / 2;
         int h2 = h / 2;
         unsigned char* bytes2 = malloc(w2 * h2 * wantedComponents);
