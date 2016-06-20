@@ -300,6 +300,8 @@ static AP_WeakCache* s_textureCache = nil;
             break;
     }
 
+    NSLog(@"glTexImage2D(0x%0x, 0x%0x, 0x%0x, %d, %d, %d, 0x%0x, 0x%0x, %p)",
+        target, level, internalFormat, width, height, 0, format, type, data);
     _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
 }
 

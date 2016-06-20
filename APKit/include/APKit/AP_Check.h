@@ -51,13 +51,9 @@
         } \
     } while(0)
 
-#ifdef DEBUG
-#define _GL(cmd, ...) do { gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
-//#define _GL(cmd, ...) do { NSLog(@"%s:%d %s", __FILE__, __LINE__, #cmd); gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
-#else
 #define _GL(cmd, ...) gl ## cmd(__VA_ARGS__)
-//#define _GL(cmd, ...) do { gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
-#endif
+// #define _GL(cmd, ...) do { gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
+// #define _GL(cmd, ...) do { NSLog(@"%s:%d %s", __FILE__, __LINE__, #cmd); gl ## cmd(__VA_ARGS__); AP_CHECK_GL(#cmd,); } while(0)
 
 #define AP_NOT_IMPLEMENTED \
     do { \
