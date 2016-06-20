@@ -36,6 +36,8 @@ using namespace crnd;
 
 - (BOOL) loadCRN:(NSData*)data maxSize:(CGFloat)screens
 {
+    AP_CHECK_GL("before loadCRN", return NO);
+
     static GLint systemMaxTextureSize = 0;
     static GLint systemMaxCubeTextureSize = 0;
     if (systemMaxTextureSize == 0) {
@@ -137,6 +139,8 @@ using namespace crnd;
     } else {
         _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
+
+    AP_CHECK_GL("after loadCRN", return NO);
 
     return YES;
 }

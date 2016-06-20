@@ -300,7 +300,7 @@ static AP_WeakCache* s_textureCache = nil;
             break;
     }
 
-    NSLog(@"glTexImage2D(0x%0x, 0x%0x, 0x%0x, %d, %d, %d, 0x%0x, 0x%0x, %p)",
+    NSLog(@"glTexImage2D(0x%x, %d, 0x%x, %d, %d, %d, 0x%x, 0x%x, %p)",
         target, level, internalFormat, width, height, 0, format, type, data);
     _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
 }
@@ -315,6 +315,10 @@ static AP_WeakCache* s_textureCache = nil;
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
+
+    NSLog(@"CompressedTexImage2D(0x%x, %d, 0x%x, %d, %d, %d, %d, %p)",
+        target, level, format, width, height, 0, (int) dataSize, data);
+
     _GL(CompressedTexImage2D, target, level, format, width, height, 0, dataSize, data);
     _memoryUsage += dataSize;
 }
