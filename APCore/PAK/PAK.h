@@ -2,12 +2,16 @@
 
 #import <Foundation/Foundation.h>
 
+@class PAK;
+
 // A single resource.
 @interface PAK_Item : NSObject
 @property(nonatomic,readonly,strong) NSString* name; // Name of the resource.
 @property(nonatomic,readonly) BOOL isCompressed;
 @property(nonatomic,readonly) int length; // Uncompressed length of this resource.
 @property(nonatomic,readonly,strong) NSData* data; // Uncompressed contents of this resource.
+
+- (instancetype) initWithParent:(PAK*)parent name:(NSString*)name length:(int)length data:(NSData*)data;
 @end
 
 // Interface for a bundle containing multiple named assets.

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef SORCERY_SDL
+
 #import <Foundation/Foundation.h>
 
 #import "AP_GLTexture.h"
@@ -14,3 +16,5 @@
 - (BOOL) loadCRN:(NSData*)data maxSize:(CGFloat)screens;
 
 @end
+
+#endif // SORCERY_SDL

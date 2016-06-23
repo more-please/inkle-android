@@ -54,8 +54,10 @@ static AP_WeakCache* s_textureCache = nil;
         success = [self loadPVR:data];
     } else if ([AP_GLTexture isKTX:data]) {
         success = [self loadKTX:data maxSize:screens];
+#ifdef SORCERY_SDL
     } else if ([AP_GLTexture isCRN:data]) {
         success = [self loadCRN:data maxSize:screens];
+#endif
     } else if ([AP_GLTexture isPNG:data]) {
         success = [self loadPNG:data];
     } else {

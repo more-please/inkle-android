@@ -238,7 +238,7 @@ AP_BAN_EVIL_INIT;
 {
     handler(self);
     // We are SUPER MODAL
-    return TRUE;
+    return YES;
 }
 
 - (void) show

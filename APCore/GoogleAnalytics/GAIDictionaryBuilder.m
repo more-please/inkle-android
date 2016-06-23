@@ -15,7 +15,7 @@
     return self;
 }
 
-- (void) setObject:(id)value forKeyedSubscript:(nonnull NSString*)key
+- (void) setObject:(id)value forKeyedSubscript:(NSString*)key
 {
     _dict[key] = value;
 }

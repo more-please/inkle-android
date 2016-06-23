@@ -1,7 +1,9 @@
 #import "GAITracker.h"
 
 #import <UIKit/UIScreen.h>
+#ifdef SORCERY_SDL
 #import <SDL2/SDL.h>
+#endif
 
 #import "GAI.h"
 #import "GAIFields.h"
@@ -55,9 +57,11 @@
     CGSize size = [UIScreen mainScreen].bounds.size;
     p[kGAIViewportSize] = [NSString stringWithFormat:@"%dx%d", (int) size.width, (int) size.height];
 
+#ifdef SORCERY_SDL
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
     p[kGAIScreenResolution] = [NSString stringWithFormat:@"%dx%d", mode.w, mode.h];
+#endif
 
     p[kGAIDataSource] = @"app";
 

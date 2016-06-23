@@ -52,7 +52,7 @@ static inline double AP_TimeInSeconds() {
     return t / (double) NSEC_PER_SEC;
 }
 
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(ANDROID)
 
 #import <time.h>
 
@@ -62,7 +62,7 @@ static inline double AP_TimeInSeconds() {
     return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
 }
 
-#else
+#elif defined(WINDOWS)
 
 #import <windows.h>
 
@@ -74,4 +74,6 @@ static inline double AP_TimeInSeconds() {
     return counter.QuadPart / (double)frequency.QuadPart;
 }
 
+#else
+#error Unknown OS!
 #endif
