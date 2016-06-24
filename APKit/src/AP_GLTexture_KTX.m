@@ -123,12 +123,10 @@ typedef struct Header
                 [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
             }
             ++level;
-            AP_CHECK_GL("Failed to upload texture", return NO);
         }
 
         if (read32(header->numberOfMipmapLevels) == 0) {
             _GL(GenerateMipmap, self.textureTarget);
-            AP_CHECK_GL("Failed to generate mipmaps", return NO);
             self.memoryUsage += dataSize / 3;
         }
 

@@ -84,19 +84,15 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
         h = h2;
     }
 
-    AP_CHECK_GL("before glTexImage2d", return NO);
     [self texImage2dLevel:0 format:format width:w height:h type:GL_UNSIGNED_BYTE data:(const char*)bytes];
     stbi_image_free(bytes);
-    AP_CHECK_GL("after glTexImage2d", return NO);
 
     const BOOL pot = ((w & (w-1)) == 0) && ((h & (h-1)) == 0);
     const BOOL square = (w == h);
     const BOOL mipmaps = AP_GLES_2_3(pot && square, YES, YES);
 
     if (mipmaps) {
-        AP_CHECK_GL("before glGenerateMipmap", return NO);
         _GL(GenerateMipmap, GL_TEXTURE_2D);
-        AP_CHECK_GL("after glGenerateMipmap", return NO);
         self.memoryUsage = (4 * self.memoryUsage) / 3;
         _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -104,8 +100,6 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
          _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
          _GL(TexParameteri, self.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
-
-    AP_CHECK_GL("Failed to upload PNG texture", return NO);
 
     return YES;
 }
