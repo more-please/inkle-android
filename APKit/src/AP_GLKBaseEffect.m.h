@@ -4,8 +4,8 @@
 #error "AP_GLKIT_SHADER must be defined!"
 #endif
 
-#if AP_GLKIT_SHADER < 0 || AP_GLKIT_SHADER > 7
-#error "AP_GLKIT_SHADER must be in the range 0-7"
+#if AP_GLKIT_SHADER < 0 || AP_GLKIT_SHADER > 15
+#error "AP_GLKIT_SHADER must be in the range 0-15"
 #endif
 
 // AP_GLKIT_SHADER is a bitmask controlling GLKit features, as follows:
@@ -13,22 +13,26 @@
 #define AP_GLKIT_SHADER_TEXCOORD0_MASK 1
 #define AP_GLKIT_SHADER_TEXCUBE_MASK 2
 #define AP_GLKIT_SHADER_NORMAL_MASK 4
+#define AP_GLKIT_SHADER_RGBK_MASK 8
 #endif
 
 #undef _TEX       // True if we have texcoord0 attributes
 #undef _TEX2D     // True if we have texcoord0 attributes and a 2D texture
 #undef _TEXCUBE   // True if we have texcoord0 attributes and a cube texture
 #undef _NORMAL    // True if we have normal attributes and light0 is enabled
+#undef _RGBK      // True if the alpha channel should be interpreted as a black overlay
 
 #define _TEX ((AP_GLKIT_SHADER & AP_GLKIT_SHADER_TEXCOORD0_MASK) != 0)
 #define _TEX2D (_TEX && (AP_GLKIT_SHADER & AP_GLKIT_SHADER_TEXCUBE_MASK) == 0)
 #define _TEXCUBE (_TEX && (AP_GLKIT_SHADER & AP_GLKIT_SHADER_TEXCUBE_MASK) != 0)
 #define _NORMAL ((AP_GLKIT_SHADER & AP_GLKIT_SHADER_NORMAL_MASK) != 0)
+#define _RGBK ((AP_GLKIT_SHADER & AP_GLKIT_SHADER_RGBK_MASK) != 0)
 
 #undef IF_TEX
 #undef IF_TEX2D
 #undef IF_TEXCUBE
 #undef IF_NORMAL
+#undef IF_RGBK
 
 #if _TEX
 #define IF_TEX(x) x
@@ -54,15 +58,23 @@
 #define IF_NORMAL(x)
 #endif
 
+#if _RGBK
+#define IF_RGBK(x) x
+#else
+#define IF_RGBK(x)
+#endif
+
 #undef IF_TEX_SHADER
 #undef IF_TEX2D_SHADER
 #undef IF_TEXCUBE_SHADER
 #undef IF_NORMAL_SHADER
+#undef IF_RGBK_SHADER
 
 #define IF_TEX_SHADER(x)        IF_TEX(AP_SHADER(x))
 #define IF_TEX2D_SHADER(x)      IF_TEX2D(AP_SHADER(x))
 #define IF_TEXCUBE_SHADER(x)    IF_TEXCUBE(AP_SHADER(x))
 #define IF_NORMAL_SHADER(x)     IF_NORMAL(AP_SHADER(x))
+#define IF_RGBK_SHADER(x)       IF_RGBK(AP_SHADER(x))
 
 // -------------------------------------------------------------------------------------
 
@@ -183,16 +195,24 @@
         uniform vec3 lightAmbient;
         uniform vec3 lightDiffuse;
     )
+    IF_RGBK_SHADER(
+        float sharpen(float value, float k) {
+            return clamp((value - 0.5) * k + 0.5, 0.0, 1.0);
+        }
+    )
     AP_SHADER(
         void main() {
             vec4 c = color;
     )
-    IF_TEX2D_SHADER(
-            c = c * texture2D(tex, fragTexCoord);
+    IF_TEX2D_SHADER(c = texture2D(tex, fragTexCoord);)
+    IF_TEXCUBE_SHADER(c = textureCube(tex, fragTexCoord);)
+    IF_RGBK_SHADER(
+            float inkiness = sharpen(c.a, 4.0);
+            c = vec4(inkiness * c.rgb, 1.0);
     )
-    IF_TEXCUBE_SHADER(
-            c = c * textureCube(tex, fragTexCoord);
-    )
+    IF_TEX2D_SHADER(c = c * color;)
+    IF_TEXCUBE_SHADER(c = c * color;)
+
     IF_NORMAL_SHADER(
             vec3 n = normalize(fragNormal);
             float intensity = clamp(dot(n, lightDirection), 0.0, 1.0);

@@ -35,6 +35,9 @@ typedef enum AP_GLKLightingType {
 @property (nonatomic) GLboolean useConstantColor; // GL_TRUE
 @property (nonatomic) GLKVector4 constantColor; // { 1.0, 1.0, 1.0, 1.0 }
 
+// Iain hack
+@property (nonatomic) GLboolean useRGBK; // GL_FALSE
+
 - (void) prepareToDraw; // Bind programs and textures
 
 // Android alpha hack: instead of rendering GLKViews to an offscreen

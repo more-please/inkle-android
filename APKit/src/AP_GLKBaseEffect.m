@@ -30,7 +30,31 @@
 #define AP_GLKIT_SHADER 7
 #include "AP_GLKBaseEffect.m.h"
 
-static AP_GLKit_Shader* _shaders[8];
+#define AP_GLKIT_SHADER 8
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 9
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 10
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 11
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 12
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 13
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 14
+#include "AP_GLKBaseEffect.m.h"
+
+#define AP_GLKIT_SHADER 15
+#include "AP_GLKBaseEffect.m.h"
+
+static AP_GLKit_Shader* _shaders[16];
 
 // ----------------------------------------------------------------------------
 
@@ -46,6 +70,14 @@ static AP_GLKit_Shader* _shaders[8];
     _shaders[5] = [[AP_GLKit_Shader_5 alloc] init];
     _shaders[6] = [[AP_GLKit_Shader_6 alloc] init];
     _shaders[7] = [[AP_GLKit_Shader_7 alloc] init];
+    _shaders[8] = [[AP_GLKit_Shader_8 alloc] init];
+    _shaders[9] = [[AP_GLKit_Shader_9 alloc] init];
+    _shaders[10] = [[AP_GLKit_Shader_10 alloc] init];
+    _shaders[11] = [[AP_GLKit_Shader_11 alloc] init];
+    _shaders[12] = [[AP_GLKit_Shader_12 alloc] init];
+    _shaders[13] = [[AP_GLKit_Shader_13 alloc] init];
+    _shaders[14] = [[AP_GLKit_Shader_14 alloc] init];
+    _shaders[15] = [[AP_GLKit_Shader_15 alloc] init];
 }
 
 - (id) init
@@ -73,6 +105,9 @@ static AP_GLKit_Shader* _shaders[8];
     }
     if (_light0.enabled) {
         n |= AP_GLKIT_SHADER_NORMAL_MASK;
+    }
+    if (_useRGBK) {
+        n |= AP_GLKIT_SHADER_RGBK_MASK;
     }
 
     AP_GLKit_Shader* shader = _shaders[n];
