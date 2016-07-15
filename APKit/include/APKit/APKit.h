@@ -78,6 +78,7 @@
 #define GLKVertexAttribNormal          AP_GLKVertexAttribNormal
 #define GLKVertexAttribTexCoord0       AP_GLKVertexAttribTexCoord0
 #define GLKEffectPropertyLight         AP_GLKEffectPropertyLight
+#define GLKEffectPropertyMaterial      AP_GLKEffectPropertyMaterial
 #define GLKEffectPropertyTexture       AP_GLKEffectPropertyTexture
 #define GLKEffectPropertyTransform     AP_GLKEffectPropertyTransform
 #define GLKLightingTypePerVertex       AP_GLKLightingTypePerVertex
