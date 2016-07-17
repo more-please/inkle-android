@@ -116,6 +116,7 @@ static inline GLKMatrix4 GLKMatrix4Multiply(GLKMatrix4 lhs, GLKMatrix4 rhs)
 }
 
 extern GLKMatrix4 GLKMatrix4Invert(GLKMatrix4 matrix, bool *isInvertible);
+extern GLKMatrix4 GLKMatrix4InvertAndTranspose(GLKMatrix4 matrix, bool *isInvertible);
 
 static inline GLKMatrix4 GLKMatrix4MakePerspective(float fovyRadians, float aspect, float nearZ, float farZ) {
     float cotan = 1.0f / tanf(fovyRadians / 2.0f);
