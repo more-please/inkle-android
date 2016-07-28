@@ -48,6 +48,8 @@ static AP_WeakCache* s_textureCache = nil;
 
 - (BOOL) loadData:(NSData*)data maxSize:(CGFloat)screens
 {
+    AP_CHECK_GL(@"before [AP_GLTexture loadData]", /* ignore error and carry on */);
+
     int oldMemoryUsage = _memoryUsage;
     BOOL success;
     if ([AP_GLTexture isPVR:data]) {
@@ -62,9 +64,11 @@ static AP_WeakCache* s_textureCache = nil;
         NSLog(@"Texture is in unknown format!");
         success = NO;
     }
-    if (success) {
-        s_totalMemoryUsage += (_memoryUsage - oldMemoryUsage);
-    }
+
+    s_totalMemoryUsage += (_memoryUsage - oldMemoryUsage);
+
+    AP_CHECK_GL(@"after [AP_GLTexture loadData]", /* ignore error and carry on */);
+
     return success;
 }
 
@@ -234,6 +238,10 @@ static AP_WeakCache* s_textureCache = nil;
 #define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif
 
+static BOOL isPowerOfTwo(int n) {
+    return 0 == (n & (n-1));
+}
+
 - (void) texImage2dLevel:(GLint)level format:(GLint)format width:(GLsizei)width height:(GLsizei)height type:(GLenum)type data:(const char*)data
 {
     [self bind];
@@ -300,7 +308,13 @@ static AP_WeakCache* s_textureCache = nil;
             break;
     }
 
+    if (!isPowerOfTwo(width) || !isPowerOfTwo(height)) {
+        NSLog(@"NPOT texture - glTexImage2D(0x%x, %d, 0x%x, %d, %d, %d, 0x%x, 0x%x, %p)",
+            target, level, internalFormat, width, height, 0, format, type, data);
+    }
+
     _GL(TexImage2D, target, level, internalFormat, width, height, 0, format, type, data);
+    AP_CHECK_GL(@"glTexImage2D", /* ignore error and carry on */);
 }
 
 - (void) compressedTexImage2dLevel:(GLint)level format:(GLenum)format width:(GLsizei)width height:(GLsizei)height data:(const char*)data dataSize:(size_t)dataSize
@@ -313,8 +327,16 @@ static AP_WeakCache* s_textureCache = nil;
     }
 
     GLenum target = self.cube ? (GL_TEXTURE_CUBE_MAP_POSITIVE_X + _face) : GL_TEXTURE_2D;
+
+    if (!isPowerOfTwo(width) || !isPowerOfTwo(height)) {
+        NSLog(@"NPOT texture - glCompressedTexImage2D(0x%x, %d, 0x%x, %d, %d, %d, %d, %p)",
+            target, level, format, width, height, 0, (int) dataSize, data);
+    }
+
     _GL(CompressedTexImage2D, target, level, format, width, height, 0, dataSize, data);
     _memoryUsage += dataSize;
+
+    AP_CHECK_GL(@"glCompressedTexImage2D", /* ignore error and carry on */);
 }
 
 - (void) fixWidth:(int)w height:(int)h

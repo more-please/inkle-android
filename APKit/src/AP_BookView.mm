@@ -156,9 +156,9 @@ using namespace std;
         float cubic_hermite_spline(float t, float dydt0, float dydt1) {
             // See https://en.wikipedia.org/wiki/Cubic_Hermite_spline
             // We use the unit interval -- endpoints are fixed at 0 and 1.
-            return t * (1 - t) * (1 - t) * dydt0
-                + t*t * (t - 1) * dydt1
-                + t*t * (3 - 2*t);
+            return t * (1.0 - t) * (1.0 - t) * dydt0
+                + t*t * (t - 1.0) * dydt1
+                + t*t * (3.0 - 2.0 * t);
         }
 
         vec2 quad_spline(float t, vec2 cp0, vec2 cp1, vec2 cp2) {
@@ -187,7 +187,7 @@ using namespace std;
 
             // Page position: 0 = on right hand side, 1 = fully rotated to left.
             float spineAngle = mix(kRestingAngle, kPi - kRestingAngle, pagePos);
-            float pageAngle = kPi * smoothstep(0.0, 1.0, pagePos) + spineAngle - kPi/2;
+            float pageAngle = kPi * smoothstep(0.0, 1.0, pagePos) + spineAngle - kPi/2.0;
 
             vec2 cp0 = vec2(0.0, 0.0);
             vec2 cp1 = cp0 + kSpineLength * vec2(cos(spineAngle), sin(spineAngle));
@@ -204,7 +204,7 @@ using namespace std;
 
             vec2 p = quad_spline(t, cp0, cp1, cp2);
 
-            float kDistance = 4;
+            float kDistance = 4.0;
             float x = kDistance * p.x;
             float y = kDistance * (2.0 * pos.y - 1.0);
             float z = kDistance - p.y;

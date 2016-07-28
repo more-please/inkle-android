@@ -334,6 +334,8 @@ static NSMutableArray* s_afterFrameBlocks;
     _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
     _GL(Disable, GL_DEPTH_TEST);
     _GL(DepthFunc, GL_LESS);
+    _GL(DepthMask, GL_TRUE);
+    _GL(DepthRangef, 0, 1);
     _GL(Enable, GL_BLEND);
     _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
