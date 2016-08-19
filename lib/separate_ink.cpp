@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "blur.h"
 #include "fix_alpha.h"
 
 namespace {
@@ -247,10 +248,10 @@ private:
 using namespace std;
 
 void separate_ink(
-    uint8_t* rgbDest, // Must be width * height * 3 in size
-    uint8_t* inkDest, // Must be width * height in size
+    uint8_t* rgbDest, // Must be width * height * 4 in size
+    float* inkDest, // Must be width * height in size
     int threshold, // Maximum 8-bit luminosity of black pixels (16 is a good default)
-    const uint8_t* rgbSrc, // Must be width * height * 3 in size
+    const uint8_t* rgbaSrc, // Must be width * height * 3 in size
     int w, int h)
 {
 //     fprintf(stderr, "Zeroing out pixels with at least one neighbour within threshold\n");
@@ -260,7 +261,7 @@ void separate_ink(
 
     for (int i = 0; i < w*h; ++i) {
         for (int j = 0; j < 3; ++j) {
-            bg[4*i + j] = rgbSrc[3*i + j];
+            bg[4*i + j] = rgbaSrc[4*i + j];
         }
         bg[4*i + 3] = 255;
     }
@@ -268,7 +269,7 @@ void separate_ink(
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             int i = y*w + x;
-            if (Rgb(rgbSrc + i*3).isBelow(threshold)) {
+            if (Rgb(rgbaSrc + i*4).isBelow(threshold)) {
                 for (int _y = std::max(0, y-1); _y < std::min(h, y+2); ++_y) {
                     for (int _x = std::max(0, x-1); _x < std::min(w, x+2); ++_x) {
                         int _i = _y*w + _x;
@@ -279,30 +280,38 @@ void separate_ink(
         }
     }
 
-//     fprintf(stderr, "Filling in zero pixels\n");
-    fix_alpha(w, h, &bg[0]);
+    const double kernel[25] = {
+        0.003765,	0.015019,	0.023792,	0.015019,	0.003765,
+        0.015019,	0.059912,	0.094907,	0.059912,	0.015019,
+        0.023792,	0.094907,	0.150342,	0.094907,	0.023792,
+        0.015019,	0.059912,	0.094907,	0.059912,	0.015019,
+        0.003765,	0.015019,	0.023792,	0.015019,	0.003765,
+    };
 
-//     fprintf(stderr, "Extracting foreground pixels\n");
+    vector<uint8_t> bg2;
+    bg2.resize(w*h*4);
 
-    vector<uint8_t> fg;
-    fg.resize(w*h);
-
-    for (int i = 0; i < w*h; ++i) {
-        Rgb paper(&bg[4*i]);
-        Rgb ink(rgbSrc + 3*i);
-        double value = ink.gammaCorrectLuminosity() / paper.gammaCorrectLuminosity();
-        fg[i] = h2l(value);
+    bool done = false;
+    for (int i = 0; !done && i < 10; ++i) {
+        done = blur_rgba(&bg2[0], &bg[0], w, h, kernel, 5, 5);
+        std::swap(bg, bg2);
     }
 
+//     fix_alpha(w, h, &bg[0]);
+
     if (rgbDest) {
-        for (int i = 0; i < w*h; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                rgbDest[3*i + j] = bg[4*i + j];
-            }
+        for (int i = 0; i < w*h*4; ++i) {
+            rgbDest[i] = bg[i];
         }
     }
 
     if (inkDest) {
-        memcpy(inkDest, &fg[0], w * h);
+        for (int i = 0; i < w*h; ++i) {
+            Rgb paper(&bg[4*i]);
+            Rgb ink(rgbaSrc + 4*i);
+            float v = ink.gammaCorrectLuminosity() / paper.gammaCorrectLuminosity();
+            if (v > 1) v = 1;
+            inkDest[i] = v;
+        }
     }
 }
