@@ -146,6 +146,7 @@ int main(int argc, const char* argv[]) {
                 *destPtr++ = *rgb_ptr++;
                 *destPtr++ = *rgb_ptr++;
                 *destPtr++ = *rgb_ptr++;
+                ++rgb_ptr;
                 *destPtr++ = *ka_ptr++;
             }
 
