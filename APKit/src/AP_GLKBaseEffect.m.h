@@ -207,8 +207,12 @@
     IF_TEX2D_SHADER(c = texture2D(tex, fragTexCoord);)
     IF_TEXCUBE_SHADER(c = textureCube(tex, fragTexCoord);)
     IF_RGBK_SHADER(
-            float inkiness = sharpen(c.a, 4.0);
-            c = vec4(inkiness * c.rgb, 1.0);
+            float ka = c.a;
+            float k = (ka - 0.25) / 0.75;
+            float a = sharpen(4.0 * ka, 4.0);
+            float inkiness = sharpen(k, 4.0);
+            vec4 fgColour = vec4(inkiness, inkiness, inkiness, a);
+            c = vec4(c.rgb, color.a) * fgColour;
     )
     IF_TEX2D_SHADER(c = c * color;)
     IF_TEXCUBE_SHADER(c = c * color;)
