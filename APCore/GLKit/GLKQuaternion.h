@@ -2,6 +2,13 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 
+#import <math.h>
+
+// Windows doesn't define M_PI??
+#ifndef M_PI
+#define M_PI 3.141592653589793
+#endif
+
 #import "GLKVector3.h"
 #import "GLKMatrix3.h"
 
@@ -139,5 +146,19 @@ static inline GLKQuaternion GLKQuaternionSlerp(GLKQuaternion lhs, GLKQuaternion 
     };
     return GLKQuaternionNormalize(result);
 }
+
+static inline float GLKQuaternionAngle(GLKQuaternion quaternion) {
+    float angle = acosf(quaternion.w);
+    float scale = sqrtf(quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+
+    const float kEpsilon = 1e-4;
+    if ((scale > -kEpsilon && scale < kEpsilon)
+        || (scale < 2.0f * M_PI + kEpsilon && scale > 2.0f * M_PI - kEpsilon)) {
+        return 0;
+    }
+
+    return angle * 2;
+}
+
 
 #pragma clang diagnostic pop
