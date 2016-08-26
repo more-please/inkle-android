@@ -299,6 +299,9 @@ static NSMutableArray* s_afterFrameBlocks;
     _GL(Enable, GL_BLEND);
     _GL(Disable, GL_DITHER);
 
+    _GL(Enable, GL_CULL_FACE);
+    _GL(CullFace, GL_BACK);
+
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
     if (_rootViewController) {
@@ -351,6 +354,9 @@ static NSMutableArray* s_afterFrameBlocks;
     _GL(ClearStencil, 0);
     _GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     _GL(Enable, GL_SCISSOR_TEST);
+
+    _GL(Enable, GL_CULL_FACE);
+    _GL(CullFace, GL_BACK);
 
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
 
