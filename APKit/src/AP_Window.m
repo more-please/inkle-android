@@ -243,6 +243,51 @@ static NSMutableArray* s_afterFrameBlocks;
     return g_ScreenBounds;
 }
 
+- (void) resetGL
+{
+    _GL(BlendColor, 0, 0, 0, 0);
+    _GL(BlendEquation, GL_FUNC_ADD);
+    _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    _GL(ColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    _GL(CullFace, GL_BACK);
+    _GL(DepthFunc, GL_LESS);
+    _GL(DepthMask, GL_TRUE);
+    _GL(DepthRangef, 0, 1);
+
+    // See http://docs.gl/es2/glEnable - all initially false except GL_DITHER
+    _GL(Disable, GL_BLEND);
+    _GL(Disable, GL_CULL_FACE);
+    _GL(Disable, GL_DEPTH_TEST);
+    _GL(Enable, GL_DITHER);
+    _GL(Disable, GL_POLYGON_OFFSET_FILL);
+    _GL(Disable, GL_SAMPLE_ALPHA_TO_COVERAGE);
+    _GL(Disable, GL_SAMPLE_COVERAGE);
+    _GL(Disable, GL_SCISSOR_TEST);
+    _GL(Disable, GL_STENCIL_TEST);
+
+    _GL(FrontFace, GL_CCW);
+    _GL(LineWidth, 1);
+    _GL(PixelStorei, GL_PACK_ALIGNMENT, 4);
+    _GL(PixelStorei, GL_UNPACK_ALIGNMENT, 4);
+    _GL(PolygonOffset, 0, 0);
+    _GL(SampleCoverage, 1, GL_FALSE);
+    _GL(StencilFunc, GL_ALWAYS, 0, (GLuint) -1);
+    _GL(StencilMask, (GLuint) -1);
+    _GL(StencilOp, GL_KEEP, GL_KEEP, GL_KEEP);
+
+    // Skip these as they depend on the size of the window
+    // _GL(Scissor, 0, 0, width, height);
+    // _GL(Viewport, 0, 0, width, height);
+
+    _GL(ClearColor, 0, 0, 0, 0);
+#ifdef GL_ES_VERSION_2_0
+    _GL(ClearDepthf, 1);
+#else
+    _GL(ClearDepth, 1);
+#endif
+    _GL(ClearStencil, 0);
+}
+
 - (BOOL) update
 {
     const double t = AP_TimeInSeconds();
@@ -293,12 +338,9 @@ static NSMutableArray* s_afterFrameBlocks;
     [AP_GLTexture processDeleteQueue];
     [AP_GLBuffer processDeleteQueue];
 
-    // Make sure we don't scissor any offscreen rendering
-    _GL(Disable, GL_SCISSOR_TEST);
-    _GL(Disable, GL_DEPTH_TEST);
-    _GL(Enable, GL_BLEND);
-    _GL(Disable, GL_DITHER);
+    [self resetGL];
 
+    _GL(Enable, GL_BLEND);
     _GL(Enable, GL_CULL_FACE);
     _GL(CullFace, GL_BACK);
 
@@ -331,34 +373,22 @@ static NSMutableArray* s_afterFrameBlocks;
     CGFloat scale = g_ScreenScale;
 
     [_profiler step:@"clear"];
+
+    [self resetGL];
+
 #ifdef SORCERY_SDL
     _GL(BindFramebuffer, GL_FRAMEBUFFER, 0);
 #endif
     _GL(Viewport, 0, 0, bounds.size.width * scale, bounds.size.height * scale);
-    _GL(Disable, GL_DEPTH_TEST);
-    _GL(DepthFunc, GL_LESS);
-    _GL(DepthMask, GL_TRUE);
-    _GL(DepthRangef, 0, 1);
-    _GL(Enable, GL_BLEND);
-    _GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    _GL(Disable, GL_DITHER);
-
-    _GL(Disable, GL_SCISSOR_TEST);
-    _GL(ClearColor, 0, 0, 0, 0);
-#ifdef GL_ES_VERSION_2_0
-    _GL(ClearDepthf, 1);
-#else
-    _GL(ClearDepth, 1);
-#endif
-    _GL(ClearStencil, 0);
     _GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    _GL(Enable, GL_SCISSOR_TEST);
-
-    _GL(Enable, GL_CULL_FACE);
-    _GL(CullFace, GL_BACK);
 
     [AP_Window setScissorRect:CGRectMake(-1, -1, 2, 2)];
+
+    _GL(Enable, GL_BLEND);
+    _GL(Enable, GL_SCISSOR_TEST);
+    _GL(Enable, GL_CULL_FACE);
+    _GL(CullFace, GL_BACK);
 
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
     // - scale from screen size to (2, 2).
