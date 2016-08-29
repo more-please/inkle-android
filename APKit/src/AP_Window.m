@@ -341,8 +341,6 @@ static NSMutableArray* s_afterFrameBlocks;
     [self resetGL];
 
     _GL(Enable, GL_BLEND);
-    _GL(Enable, GL_CULL_FACE);
-    _GL(CullFace, GL_BACK);
 
     BOOL needsDisplay = NO;
     BOOL* needsDisplayPtr = &needsDisplay;
@@ -387,8 +385,6 @@ static NSMutableArray* s_afterFrameBlocks;
 
     _GL(Enable, GL_BLEND);
     _GL(Enable, GL_SCISSOR_TEST);
-    _GL(Enable, GL_CULL_FACE);
-    _GL(CullFace, GL_BACK);
 
     // To transform from UIView coordinates to glViewport coordinates (-1, -1, 2, 2):
     // - scale from screen size to (2, 2).
