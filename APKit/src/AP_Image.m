@@ -239,7 +239,7 @@ typedef struct VertexData {
             return [[AP_Image alloc] initWithName:name data:data];
         }
 
-        AP_GLTexture* texture = [AP_GLTexture textureNamed:name maxSize:2.15];
+        AP_GLTexture* texture = [AP_GLTexture textureNamed:name];
         if (texture) {
             return [[AP_Image alloc] initWithName:name texture:texture];
         }
@@ -599,7 +599,7 @@ typedef struct VertexData {
         NSString* texName = [_assetName stringByAppendingString:@".png"];
         NSData* png = [AP_Bundle dataForResource:texName ofType:nil];
         if (png) {
-            _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
+            _texture = [AP_GLTexture textureNamed:texName];
             AP_CHECK(_texture, return nil);
             // PNG has alpha, so we don't need the separate-alpha shader.
             if (img->channels == 4) {
@@ -608,13 +608,13 @@ typedef struct VertexData {
         } else {
             // No PNG, look for a KTX file.
             NSString* texName = [_assetName stringByAppendingString:@".ktx"];
-            _texture = [AP_GLTexture textureNamed:texName maxSize:2.15];
+            _texture = [AP_GLTexture textureNamed:texName];
             AP_CHECK(_texture, return nil);
 
             // KTX needs separate alpha.
             if (img->channels == 4) {
                 NSString* alphaName = [_assetName stringByAppendingString:@".alpha.ktx"];
-                _alphaTexture = [AP_GLTexture textureNamed:alphaName maxSize:2.15];
+                _alphaTexture = [AP_GLTexture textureNamed:alphaName];
                 AP_CHECK(_alphaTexture, return nil);
             }
         }

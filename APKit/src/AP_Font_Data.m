@@ -126,8 +126,17 @@ static LigatureRHS g_ZeroLigature;
         _spaceGlyph = [self glyphForChar:' '];
         _newlineGlyph = [self glyphForChar:'\n'];
 
-        NSString* textureName = [NSString stringWithFormat:@"%@.ktx", _name];
-        _texture = [AP_GLTexture textureNamed:textureName maxSize:4];
+        // Temporarily override device crappiness...
+        {
+            UIApplication* app = [UIApplication sharedApplication];
+            BOOL crappy = app.isCrappyDevice;
+            app.isCrappyDevice = NO;
+
+            NSString* textureName = [NSString stringWithFormat:@"%@.ktx", _name];
+            _texture = [AP_GLTexture textureNamed:textureName];
+
+            app.isCrappyDevice = crappy;
+        }
         AP_CHECK(_texture, return nil);
     }
     return self;

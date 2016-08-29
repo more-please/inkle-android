@@ -42,7 +42,7 @@ typedef struct Header
     return 0 == memcmp(header->magic, kMagic, 12);
 }
 
-- (BOOL) loadKTX:(NSData*)data maxSize:(CGFloat)screens
+- (BOOL) loadKTX:(NSData*)data
 {
     static GLint systemMaxTextureSize = 0;
     static GLint systemMaxCubeTextureSize = 0;
@@ -55,17 +55,12 @@ typedef struct Header
         systemMaxTextureSize = 2048; // Should be safe
         systemMaxCubeTextureSize = 2048;
     }
-    GLint maxTextureSize = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
-#ifdef ANDROID
-    CGSize s = [AP_Window screenSize];
-    CGFloat screenSize = MAX(s.width, s.height) * [AP_Window screenScale];
-    if (screenSize > 0) {
-        CGFloat screenMaxTextureSize = screenSize * screens;
-        maxTextureSize = MIN(maxTextureSize, screenMaxTextureSize);
-    } else {
-        NSLog(@"*** screenSize is 0 -- weird!");
+    GLint maxSize = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
+
+    BOOL crappy = [UIApplication sharedApplication].isCrappyDevice;
+    if (crappy && maxSize > 2048) {
+        maxSize = 2048;
     }
-#endif
 
     const Header* header = (const Header*)[data bytes];
 
@@ -114,16 +109,24 @@ typedef struct Header
         AP_CHECK(dataSize > 0, return NO);
         AP_CHECK((bytes + dataSize) <= maxBytes, return NO);
 
-        if ((i+1 < numLevels) && (width > maxTextureSize || height > maxTextureSize)) {
-            NSLog(@"Skipping mipmap level %d (width %d, height %d, max %d)", i, width, height, maxTextureSize);
-        } else {
-            if (type == 0) {
-                [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
-            } else {
-                [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
+        if (i+1 < numLevels) {
+            // This isn't the last mipmap, maybe skip it
+            if (crappy && i == 0 && (width > 128 || height > 128)) {
+                NSLog(@"Skipping mipmap level %d (low-end GPU)", i);
+                continue;
             }
-            ++level;
+            if (width > maxSize || height > maxSize) {
+                NSLog(@"Skipping mipmap level %d (width %d, height %d, max %d)", i, width, height, maxSize);
+                continue;
+            }
         }
+
+        if (type == 0) {
+            [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
+        } else {
+            [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
+        }
+        ++level;
 
         if (read32(header->numberOfMipmapLevels) == 0) {
             _GL(GenerateMipmap, self.textureTarget);

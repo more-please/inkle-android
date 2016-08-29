@@ -46,7 +46,7 @@ static AP_WeakCache* s_textureCache = nil;
     [s_deleteQueue addObject:[NSNumber numberWithInt:_name]];
 }
 
-- (BOOL) loadData:(NSData*)data maxSize:(CGFloat)screens
+- (BOOL) loadData:(NSData*)data
 {
     AP_CHECK_GL(@"before [AP_GLTexture loadData]", /* ignore error and carry on */);
 
@@ -55,9 +55,9 @@ static AP_WeakCache* s_textureCache = nil;
     if ([AP_GLTexture isPVR:data]) {
         success = [self loadPVR:data];
     } else if ([AP_GLTexture isKTX:data]) {
-        success = [self loadKTX:data maxSize:screens];
+        success = [self loadKTX:data];
     } else if ([AP_GLTexture isCRN:data]) {
-        success = [self loadCRN:data maxSize:screens];
+        success = [self loadCRN:data];
     } else if ([AP_GLTexture isPNG:data]) {
         success = [self loadPNG:data];
     } else {
@@ -72,7 +72,7 @@ static AP_WeakCache* s_textureCache = nil;
     return success;
 }
 
-+ (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens
++ (AP_GLTexture*) textureNamed:(NSString*)name
 {
     AP_CHECK(name, return nil);
     AP_CHECK(s_textureCache, return nil);
@@ -99,7 +99,7 @@ static AP_WeakCache* s_textureCache = nil;
         }
         AP_GLTexture* result = nil;
         if (data) {
-            result = [AP_GLTexture textureWithName:assetName data:data maxSize:screens];
+            result = [AP_GLTexture textureWithName:assetName data:data];
         }
         if (result) {
             NSLog(@"Loaded %@ (%d bytes)", assetName, result.memoryUsage);
@@ -113,7 +113,7 @@ static AP_WeakCache* s_textureCache = nil;
     return result;
 }
 
-+ (AP_GLTexture*) cubeTextureNamed:(NSString*)name maxSize:(CGFloat)screens
++ (AP_GLTexture*) cubeTextureNamed:(NSString*)name
 {
     AP_CHECK(s_textureCache, return nil);
     AP_GLTexture* result = [s_textureCache get:name withLoader:^{
@@ -138,7 +138,7 @@ static AP_WeakCache* s_textureCache = nil;
                 result = nil;
                 break;
             }
-            if (![result loadData:data maxSize:screens]) {
+            if (![result loadData:data]) {
                 NSLog(@"Failed to load face: %@", faceName);
                 result = nil;
                 break;
@@ -156,13 +156,13 @@ static AP_WeakCache* s_textureCache = nil;
     return result;
 }
 
-+ (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data maxSize:(CGFloat)screens
++ (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data
 {
     if (!data) {
         return nil;
     }
     AP_GLTexture* result = [[AP_GLTexture alloc] initWithName:name target:GL_TEXTURE_2D];
-    if ([result loadData:data maxSize:screens]) {
+    if ([result loadData:data]) {
         return result;
     } else {
         return nil;

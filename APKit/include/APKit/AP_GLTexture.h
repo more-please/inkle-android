@@ -20,12 +20,9 @@
 
 // Load a texture resource (via AP_Bundle).
 // The results are cached, so the same object may be returned in subsequent calls.
-// We won't load mipmaps more than 'screens' times the largest screen dimension.
-// For images displayed at 1:1 size, 1.99 is a good default value, ensuring we
-// minify rather than magnify the texture.
-+ (AP_GLTexture*) textureNamed:(NSString*)name maxSize:(CGFloat)screens;
++ (AP_GLTexture*) textureNamed:(NSString*)name;
 
-+ (AP_GLTexture*) cubeTextureNamed:(NSString*)name maxSize:(CGFloat)screens;
++ (AP_GLTexture*) cubeTextureNamed:(NSString*)name;
 
 // Estimated total memory usage for all textures.
 + (int) totalMemoryUsage;

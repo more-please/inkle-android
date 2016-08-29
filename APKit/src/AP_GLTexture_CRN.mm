@@ -34,7 +34,7 @@ using namespace crnd;
     return crnd_get_texture_info(data.bytes, data.length, &info);
 }
 
-- (BOOL) loadCRN:(NSData*)data maxSize:(CGFloat)screens
+- (BOOL) loadCRN:(NSData*)data
 {
     static GLint systemMaxTextureSize = 0;
     static GLint systemMaxCubeTextureSize = 0;
@@ -47,20 +47,12 @@ using namespace crnd;
         systemMaxTextureSize = 2048; // Should be safe
         systemMaxCubeTextureSize = 2048;
     }
-    GLint maxTextureWidth = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
-    GLint maxTextureHeight = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
-
-    CGSize logicalSize = [AP_Window screenSize];
-    CGFloat screenScale = [AP_Window screenScale];
-    CGSize physicalSize = CGSizeMake(logicalSize.width * screenScale, logicalSize.height * screenScale);
-    if (physicalSize.width > 0 && physicalSize.height > 0) {
-        maxTextureWidth = MIN(maxTextureWidth, physicalSize.width * screens);
-        maxTextureHeight = MIN(maxTextureHeight, physicalSize.height * screens);
-    } else {
-        NSLog(@"*** screenSize is %f, %f -- weird!", physicalSize.width, physicalSize.height);
-    }
+    GLint maxSize = self.cube ? systemMaxCubeTextureSize : systemMaxTextureSize;
 
     BOOL crappy = [UIApplication sharedApplication].isCrappyDevice;
+    if (crappy && maxSize > 2048) {
+        maxSize = 2048;
+    }
 
     crn_texture_info info;
     AP_CHECK(crnd_get_texture_info(data.bytes, data.length, &info), return NO);
@@ -110,13 +102,13 @@ using namespace crnd;
 
         if (i+1 < info.m_levels) {
             // This isn't the last mipmap, maybe skip it
-            if (crappy && i == 0) {
+            if (crappy && i == 0 && (w > 128 || h > 128)) {
                 NSLog(@"Skipping mipmap level %d (low-end GPU)", i);
                 ++skipped;
                 continue;
             }
-            if (w > maxTextureWidth || h > maxTextureHeight) {
-                NSLog(@"Skipping mipmap level %d (width %d, height %d, max %dx%d)", i, w, h, maxTextureWidth, maxTextureHeight);
+            if (w > maxSize || h > maxSize) {
+                NSLog(@"Skipping mipmap level %d (width %d, height %d, max %d)", i, w, h, maxSize);
                 ++skipped;
                 continue;
             }

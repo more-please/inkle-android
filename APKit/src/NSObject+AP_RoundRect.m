@@ -47,7 +47,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png"];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
@@ -214,7 +214,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png"];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_color = [s_prog uniform:@"color"];
@@ -367,7 +367,7 @@
     static BOOL initialized = NO;
     if (!initialized) {
         initialized = YES;
-        s_texture = [AP_GLTexture textureNamed:@"circle_template.png" maxSize:4.0];
+        s_texture = [AP_GLTexture textureNamed:@"circle_template.png"];
         s_prog = [[AP_GLProgram alloc] initWithVertex:kVertex fragment:kFragment];
         s_transform = [s_prog uniform:@"transform"];
         s_penColor = [s_prog uniform:@"penColor"];
