@@ -62,10 +62,16 @@ static char gPNGIdentifier[8] = "\x89PNG\r\n\x1A\n";
         return NO;
     }
 
+    // TEMP HACK: always use RGB or RGBA
+    if (c < 3) c = 3;
     const int wantedComponents = c;
 
     unsigned char* bytes = stbi_load_from_memory([data bytes], [data length], &w, &h, &c, wantedComponents);
-    AP_CHECK(bytes, return NO);
+    if (!bytes) {
+        NSLog(@"Error decoding PNG: %s", stbi_failure_reason());
+        return NO;
+    }
+
     GLenum format = GL_RGBA;
     switch (wantedComponents) {
         case 1:
