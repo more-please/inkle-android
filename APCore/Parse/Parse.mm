@@ -1,24 +1,30 @@
 #import "Parse.h"
 
+#ifndef ANDROID
 #import <curl/curl.h>
+#endif
 
 @implementation Parse {
-    struct curl_slist* _headers;
-
     NSThread* _thread;
+
+#ifndef ANDROID
+    struct curl_slist* _headers;
     CURL* _curl;
+#endif
 }
 
 - (instancetype) initWithApplicationId:(NSString *)applicationId clientKey:(NSString *)clientKey
 {
     self = [super init];
     if (self) {
+#ifndef ANDROID
         _headers = curl_slist_append(_headers,
             [@"X-Parse-Application-Id: " stringByAppendingString:applicationId].UTF8String);
         _headers = curl_slist_append(_headers,
             [@"X-Parse-REST-API-Key: " stringByAppendingString:clientKey].UTF8String);
         _headers = curl_slist_append(_headers,
             "Content-Type: application/json");
+#endif
 
         _thread = [[NSThread alloc] initWithTarget:self selector:@selector(mainLoop:) object:nil];
         [_thread start];
@@ -26,10 +32,12 @@
     return self;
 }
 
+#ifndef ANDROID
 - (void) dealloc
 {
     curl_slist_free_all(_headers);
 }
+#endif
 
 typedef void (^VoidBlock)();
 typedef VoidBlock (^Thunk)();
@@ -67,6 +75,7 @@ typedef VoidBlock (^Thunk)();
 //    return size * nmemb;
 //}
 
+#ifndef ANDROID
 struct write_context {
     write_context() : chunks([NSMutableArray array]) {}
 
@@ -96,6 +105,7 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
     data->add(d);
     return size * nmemb;
 }
+#endif
 
 - (NSError*) parseError:(NSString*)err
 {
@@ -107,6 +117,11 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
 - (void) call:(NSString*)function args:(NSDictionary*)args block:(void (^)(NSError*, NSString*))block
 {
     [self doInBackground:^{
+#ifdef ANDROID
+        return ^{
+            block([self parseError:@"Not implemented"], nil);
+        };
+#else
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
@@ -170,12 +185,18 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         return ^{
             block(nil, result);
         };
+#endif
     }];
 }
 
 - (void) save:(NSString*)className data:(NSDictionary*)data block:(void (^)(NSError*))block
 {
     [self doInBackground:^{
+#ifdef ANDROID
+        return ^{
+            block([self parseError:@"Not implemented"]);
+        };
+#else
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
@@ -240,9 +261,11 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         return ^{
             block(nil);
         };
+#endif
     }];
 }
 
+#ifndef ANDROID
 static NSString* escape(CURL* curl, NSObject* s) {
     const char* c = s.description.UTF8String;
     const char* e = curl_easy_escape(curl, c, 0);
@@ -250,10 +273,16 @@ static NSString* escape(CURL* curl, NSObject* s) {
     curl_free((void*) e);
     return result;
 }
+#endif
 
 - (void) query:(NSString*)className where:(NSDictionary*)data block:(void (^)(NSError*, NSArray*))block
 {
     [self doInBackground:^{
+#ifdef ANDROID
+        return ^{
+            block([self parseError:@"Not implemented"], nil);
+        };
+#else
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
@@ -313,11 +342,13 @@ static NSString* escape(CURL* curl, NSObject* s) {
         return ^{
             block(nil, result);
         };
+#endif
     }];
 }
 
 - (void) mainLoop:(id)ignored
 {
+#ifndef ANDROID
     @autoreleasepool {
         CURLcode err = curl_global_init(CURL_GLOBAL_DEFAULT);
         if (err) {
@@ -333,6 +364,7 @@ static NSString* escape(CURL* curl, NSObject* s) {
             return;
         }
     }
+#endif
 
     while (true) {
         @autoreleasepool {
