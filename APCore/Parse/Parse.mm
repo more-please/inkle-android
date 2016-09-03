@@ -68,6 +68,8 @@ typedef VoidBlock (^Thunk)();
 //}
 
 struct write_context {
+    write_context() : chunks([NSMutableArray array]) {}
+
     void add(NSData* data) {
         [chunks addObject:data];
     }
@@ -85,7 +87,7 @@ struct write_context {
     }
 
 private:
-    NSMutableArray* chunks = [NSMutableArray array];
+    NSMutableArray* chunks;
 };
 
 static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userdata) {

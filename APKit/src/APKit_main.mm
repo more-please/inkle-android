@@ -26,8 +26,8 @@
 #import <unicode/udata.h>
 #import <unicode/uloc.h>
 
-#import <client/linux/handler/exception_handler.h>
-#import <client/linux/handler/minidump_descriptor.h>
+#include <objc/blocks_runtime.h>
+#include <objc/hooks.h>
 
 #import "APKit.h"
 
@@ -81,69 +81,6 @@ static JavaMethod kGetAssets = {
 static JavaMethod kFindClass = {
     "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", NULL
 };
-static JavaMethod kParseInit = {
-    "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
-};
-static JavaMethod kParseCallFunction = {
-    "parseCallFunction", "(ILjava/lang/String;Ljava/lang/String;)V", NULL
-};
-static JavaMethod kParseNewObject = {
-    "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
-};
-static JavaMethod kParseNewObjectId = {
-    "parseNewObjectId", "(Ljava/lang/String;Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
-};
-static JavaMethod kParseObjectId = {
-    "parseObjectId", "(Lcom/parse/ParseObject;)Ljava/lang/String;", NULL
-};
-static JavaMethod kParseAddKey = {
-    "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/Object;)V", NULL
-};
-static JavaMethod kParseRemoveKey = {
-    "parseRemoveKey", "(Lcom/parse/ParseObject;Ljava/lang/String;)V", NULL
-};
-static JavaMethod kParseSave = {
-    "parseSave", "(ILcom/parse/ParseObject;)V", NULL
-};
-static JavaMethod kParseSaveEventually = {
-    "parseSaveEventually", "(ILcom/parse/ParseObject;)V", NULL
-};
-static JavaMethod kParseFetch = {
-    "parseFetch", "(ILcom/parse/ParseObject;)V", NULL
-};
-static JavaMethod kParseRefresh = {
-    "parseRefresh", "(ILcom/parse/ParseObject;)V", NULL
-};
-static JavaMethod kParseNewQuery = {
-    "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
-};
-static JavaMethod kParseWhereEqualTo = {
-    "parseWhereEqualTo", "(Lcom/parse/ParseQuery;Ljava/lang/String;Ljava/lang/Object;)V", NULL
-};
-static JavaMethod kParseFind = {
-    "parseFind", "(ILcom/parse/ParseQuery;)V", NULL
-};
-static JavaMethod kParseEnableAutomaticUser = {
-    "parseEnableAutomaticUser", "()V", NULL
-};
-static JavaMethod kParseCurrentUser = {
-    "parseCurrentUser", "()Lcom/parse/ParseUser;", NULL
-};
-static JavaMethod kGaiTrackerWithTrackingId = {
-    "gaiTrackerWithTrackingId", "(Ljava/lang/String;)Lcom/google/analytics/tracking/android/Tracker;", NULL
-};
-static JavaMethod kBoxLong = {
-    "boxLong", "(J)Ljava/lang/Long;", NULL
-};
-static JavaMethod kGaiEvent = {
-    "gaiEvent", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Ljava/util/Map;", NULL
-};
-static JavaMethod kGaiTrackerSet = {
-    "gaiTrackerSet", "(Lcom/google/analytics/tracking/android/Tracker;Ljava/lang/String;Ljava/lang/String;)V", NULL
-};
-static JavaMethod kGaiTrackerSend = {
-    "gaiTrackerSend", "(Lcom/google/analytics/tracking/android/Tracker;Ljava/util/Map;)V", NULL
-};
 static JavaMethod kIsCrappyDevice = {
     "isCrappyDevice", "()Z", NULL
 };
@@ -168,9 +105,6 @@ static JavaMethod kCanTweet = {
 static JavaMethod kTweet = {
     "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
-static JavaMethod kShareJourney = {
-    "shareJourney", "(Ljava/lang/String;I)V", NULL
-};
 static JavaMethod kMailTo = {
     "mailTo", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
@@ -180,54 +114,6 @@ static JavaMethod kGetLocale = {
 static JavaMethod kMaybeGetURL = {
     "maybeGetURL", "()Ljava/lang/String;", NULL
 };
-
-static void initBreakpad(JNIEnv*, jobject, jstring);
-static void parseObjResult(JNIEnv*, jobject, jint, jstring);
-static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
-static void shareJourneyResult(JNIEnv*, jobject, jint, jstring);
-
-static JNINativeMethod kNatives[] = {
-    { "initBreakpad", "(Ljava/lang/String;)V", (void *)&initBreakpad},
-    { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
-    { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
-    { "shareJourneyResult", "(ILjava/lang/String;)V", (void *)&shareJourneyResult},
-};
-
-static google_breakpad::ExceptionHandler* s_exceptionHandler;
-
-static bool breakpadFilter(void* context) {
-    // Only create a minidump if the exception handler is installed.
-    // Hopefully this will avoid creating "crash logs" for background shutdowns.
-    return s_exceptionHandler != NULL;
-}
-
-static bool breakpadMinidump(
-    const google_breakpad::MinidumpDescriptor& descriptor,
-    void* context,
-    bool succeeded) {
-  return succeeded;
-}
-
-void initBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
-#ifndef DEBUG
-    const char *path = env->GetStringUTFChars(filepath, 0);
-    google_breakpad::MinidumpDescriptor descriptor(path);
-    s_exceptionHandler = new google_breakpad::ExceptionHandler(
-        descriptor,
-        breakpadFilter,
-        breakpadMinidump,
-        NULL, // callback context
-        true, // always write minidump
-        -1);  // in-process minidump
-#endif
-}
-
-extern "C" {
-JNIEXPORT void JNICALL Java_com_inkle_common_InkleActivity_initBreakpad(
-        JNIEnv* env, jobject obj, jstring filepath) {
-    initBreakpad(env, obj, filepath);
-}
-} // "C"
 
 static int _NSLog_fd = -1;
 
@@ -353,8 +239,6 @@ public:
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
 
-    NSMutableDictionary* _blocks; // Map of int -> block
-
     jobject _gaiDefaultTracker;
     NSArray* _pakNamesCache;
 }
@@ -437,7 +321,8 @@ public:
         // In debug builds, use /sdcard/Downloads for all files for easier hacking
         self.documentsDir = self.publicDocumentsDir;
 #endif
-        [NSUserDefaults setDocumentsDir:self.documentsDir];
+        NSString* defaultsPath = [self.documentsDir stringByAppendingPathComponent:@"NSUserDefaults.plist"];
+        [AP_UserDefaults setDefaultsPath:defaultsPath];
 
         // Send NSLog to a file
         NSString* logfile = [self.documentsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld.log", time(NULL)]];
@@ -503,7 +388,6 @@ public:
         CkSetCustomFileHandler(PakSound::customFileFunc, NULL);
 
         _touches = [NSMutableDictionary dictionary];
-        _blocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -614,7 +498,7 @@ public:
     AAsset_close(asset);
 
     if (data) {
-        return [[PAK_Item alloc] initWithName:path length:data.length data:data];
+        return [[PAK_Item alloc] initWithParent:nil name:path length:data.length data:data];
     } else {
         return nil;
     }
@@ -753,339 +637,6 @@ public:
     return [self javaIntMethod:&kVersionCode];
 }
 
-- (int) pushBlock:(id)block
-{
-    static int handle = 0;
-    ++handle;
-    if (block) {
-        [_blocks setObject:block forKey:@(handle)];
-    }
-    return handle;
-}
-
-- (id) popBlock:(int)handle
-{
-    id result = [_blocks objectForKey:@(handle)];
-    if (result) {
-        [_blocks removeObjectForKey:@(handle)];
-    }
-    return result;
-}
-
-static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
-    AsyncResult* result = [[AsyncResult alloc] init];
-    result.handle = i;
-    if (s) {
-        const char* c = env->GetStringUTFChars(s, NULL);
-        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
-        env->ReleaseStringUTFChars(s, c);
-    }
-
-    // NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
-    [g_Main performSelectorOnMainThread:@selector(parseObjResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) parseObjResult:(AsyncResult*)result
-{
-    // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
-    PFIdResultBlock block = [self popBlock:result.handle];
-    if (block) {
-        NSError* error = nil;
-        id json = [self jsonDecode:result error:&error];
-        block(json, error);
-    }
-}
-
-static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
-    AsyncResult* result = [[AsyncResult alloc] init];
-    result.handle = i;
-    result.boolean = b;
-
-    // NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
-    [g_Main performSelectorOnMainThread:@selector(parseBoolResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) parseBoolResult:(AsyncResult*)result
-{
-    // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
-    PFBooleanResultBlock block = [self popBlock:result.handle];
-    if (block) {
-        NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        block(result.boolean, nil);
-    }
-}
-
-- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
-{
-    [self maybeInitJavaMethod:&kParseInit];
-
-    PushLocalFrame frame(_env);
-    jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
-    jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
-
-    _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
-}
-
-- (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
-{
-    int handle = [self pushBlock:block];
-
-    [self maybeInitJavaMethod:&kParseCallFunction];
-
-    PushLocalFrame frame(_env);
-    jstring jFunction = _env->NewStringUTF(function.UTF8String);
-    jobject jParams = [self jsonEncode:params];
-
-    _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
-}
-
-- (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
-{
-    int handle = [self pushBlock:block];
-
-    [self maybeInitJavaMethod:&kParseFetch];
-    _env->CallVoidMethod(_instance, kParseFetch.method, handle, obj);
-}
-
-- (void) parseObject:(jobject)obj refreshWithBlock:(PFObjectResultBlock)block
-{
-    int handle = [self pushBlock:block];
-
-    [self maybeInitJavaMethod:&kParseRefresh];
-    _env->CallVoidMethod(_instance, kParseRefresh.method, handle, obj);
-}
-
-- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
-{
-    int handle = [self pushBlock:block];
-
-    [self maybeInitJavaMethod:&kParseSave];
-    _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
-}
-
-- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block
-{
-    int handle = [self pushBlock:block];
-
-    [self maybeInitJavaMethod:&kParseSaveEventually];
-    _env->CallVoidMethod(_instance, kParseSaveEventually.method, handle, obj);
-}
-
-- (jobject) parseNewObject:(NSString*)className
-{
-    [self maybeInitJavaMethod:&kParseNewObject];
-
-    PushLocalFrame frame(_env);
-    jstring jName = _env->NewStringUTF(className.UTF8String);
-
-    jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
-    result = _env->NewGlobalRef(result);
-
-    return result;
-}
-
-- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId
-{
-    [self maybeInitJavaMethod:&kParseNewObjectId];
-
-    PushLocalFrame frame(_env);
-    jstring jName = _env->NewStringUTF(className.UTF8String);
-    jstring jId = _env->NewStringUTF(objectId.UTF8String);
-
-    jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
-    result = _env->NewGlobalRef(result);
-
-    return result;
-}
-
-- (NSString*) parseObjectId:(jobject)obj
-{
-    [self maybeInitJavaMethod:&kParseObjectId];
-
-    PushLocalFrame frame(_env);
-
-    jstring str = (jstring) _env->CallObjectMethod(_instance, kParseObjectId.method, obj);
-    NSString* result = nil;
-    if (str) {
-        const char* c = _env->GetStringUTFChars(str, NULL);
-        result = [NSString stringWithCString:c];
-        _env->ReleaseStringUTFChars(str, c);
-    }
-    return result;
-}
-
-- (jobject) jsonEncode:(id)value
-{
-    if (!value) {
-        return NULL;
-    }
-    if ([value isKindOfClass:[PFObject class]]) {
-        // Send PFObjects without any encoding
-        PFObject* pf = (PFObject*) value;
-        return pf.jobj;
-    }
-
-    // Otherwise, encode as JSON.
-    NSError* error = nil;
-    NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
-    if (error) {
-        NSLog(@"JSON writer error: %@", error);
-        return NULL;
-    }
-    const char zero = 0;
-    NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];
-    [nullTerminated appendBytes:&zero length:1];
-    return _env->NewStringUTF((const char*)nullTerminated.bytes);
-}
-
-- (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
-{
-    if (result.string) {
-//        NSLog(@"Decoding JSON: %@", result.string);
-        NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
-        *error = nil;
-        id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
-//        NSLog(@"Result: %@", json);
-        return json;
-    } else {
-        *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        return nil;
-    }
-}
-
-- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
-{
-    [self maybeInitJavaMethod:&kParseAddKey];
-
-    PushLocalFrame frame(_env);
-    jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jobject jValue = [self jsonEncode:value];
-
-    _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
-}
-
-- (void) parseObject:(jobject)obj removeKey:(NSString*)key
-{
-    [self maybeInitJavaMethod:&kParseRemoveKey];
-
-    PushLocalFrame frame(_env);
-    jstring jKey = _env->NewStringUTF(key.UTF8String);
-
-    _env->CallVoidMethod(_instance, kParseRemoveKey.method, obj, jKey);
-}
-
-- (jobject) parseNewQuery:(NSString*)className
-{
-    [self maybeInitJavaMethod:&kParseNewQuery];
-
-    PushLocalFrame frame(_env);
-    jstring jName = _env->NewStringUTF(className.UTF8String);
-
-    jobject result = _env->CallObjectMethod(_instance, kParseNewQuery.method, jName);
-    result = _env->NewGlobalRef(result);
-    return result;
-}
-
-- (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)value
-{
-    [self maybeInitJavaMethod:&kParseWhereEqualTo];
-
-    PushLocalFrame frame(_env);
-    jstring jKey = _env->NewStringUTF(key.UTF8String);
-    jobject jValue = [self jsonEncode:value];
-
-    _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
-}
-
-- (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
-{
-    int handle = [self pushBlock:block];
-    [self maybeInitJavaMethod:&kParseFind];
-    _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
-}
-
-- (void) parseEnableAutomaticUser
-{
-    [self javaVoidMethod:&kParseEnableAutomaticUser];
-}
-
-- (jobject) parseCurrentUser
-{
-    [self maybeInitJavaMethod:&kParseCurrentUser];
-
-    PushLocalFrame frame(_env);
-
-    jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
-    result = _env->NewGlobalRef(result);
-    return result;
-}
-
-- (jobject) gaiTrackerWithTrackingId:(NSString*)trackingId
-{
-    [self maybeInitJavaMethod:&kGaiTrackerWithTrackingId];
-
-    PushLocalFrame frame(_env);
-    jstring jName = _env->NewStringUTF(trackingId.UTF8String);
-
-    jobject result = _env->CallObjectMethod(_instance, kGaiTrackerWithTrackingId.method, jName);
-    result = _env->NewGlobalRef(result);
-    if (!_gaiDefaultTracker) {
-        _gaiDefaultTracker = result;
-    }
-
-    return result;
-}
-
-- (jobject) gaiDefaultTracker
-{
-    return _gaiDefaultTracker;
-}
-
-- (jobject) gaiEventWithCategory:(NSString *)category
-                          action:(NSString *)action
-                           label:(NSString *)label
-                           value:(NSNumber *)value
-{
-    [self maybeInitJavaMethod:&kBoxLong];
-    [self maybeInitJavaMethod:&kGaiEvent];
-    PushLocalFrame frame(_env);
-
-    jstring jCategory = _env->NewStringUTF(category.UTF8String);
-    jstring jAction = _env->NewStringUTF(label.UTF8String);
-    jstring jLabel = _env->NewStringUTF(action.UTF8String);
-    jobject jValue = NULL;
-    if (value) {
-        jValue = _env->CallObjectMethod(_instance, kBoxLong.method, (jlong) value.longLongValue);
-    }
-
-    jobject result = _env->CallObjectMethod(_instance, kGaiEvent.method, jCategory, jAction, jLabel, jValue);
-    result = _env->NewGlobalRef(result);
-    return result;
-}
-
-- (void) gaiTracker:(jobject)tracker set:(NSString*)param value:(NSString*)value
-{
-    [self maybeInitJavaMethod:&kGaiTrackerSet];
-    PushLocalFrame frame(_env);
-
-    jstring jParam = _env->NewStringUTF(param.UTF8String);
-    jstring jValue = _env->NewStringUTF(value.UTF8String);
-    _env->CallVoidMethod(_instance, kGaiTrackerSet.method, tracker, jParam, jValue);
-}
-
-- (void) gaiTracker:(jobject)tracker send:(jobject)params
-{
-    [self maybeInitJavaMethod:&kGaiTrackerSend];
-    PushLocalFrame frame(_env);
-
-    _env->CallVoidMethod(_instance, kGaiTrackerSend.method, tracker, params);
-    _env->DeleteGlobalRef(params);
-}
-
 - (AAssetManager*) getAssets
 {
     [self maybeInitJavaMethod:&kGetAssets];
@@ -1138,41 +689,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     jstring s2 = url ? _env->NewStringUTF(url.UTF8String) : NULL;
     jstring s3 = image ? _env->NewStringUTF(image.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
-}
-
-- (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
-{
-    [self maybeInitJavaMethod:&kShareJourney];
-
-    int handle = [self pushBlock:block];
-
-    PushLocalFrame frame(_env);
-    jstring s = existingName ? _env->NewStringUTF(existingName.UTF8String) : NULL;
-    _env->CallVoidMethod(_instance, kShareJourney.method, s, handle);
-}
-
-static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
-    AsyncResult* result = [[AsyncResult alloc] init];
-    result.handle = i;
-    if (s) {
-        const char* c = env->GetStringUTFChars(s, NULL);
-        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
-        env->ReleaseStringUTFChars(s, c);
-    }
-
-    NSLog(@"Posting shareJourneyResult handle:%d result:%@", result.handle, result.string);
-    [g_Main performSelectorOnMainThread:@selector(shareJourneyResult:)
-        withObject:result
-        waitUntilDone:NO];
-}
-
-- (void) shareJourneyResult:(AsyncResult*)result
-{
-    NSLog(@"shareJourneyResult handle:%d value:%@", result.handle, result.string);
-    NameResultBlock block = [self popBlock:result.handle];
-    if (block) {
-        block(result.string);
-    }
 }
 
 - (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path
@@ -1544,29 +1060,25 @@ const EGLint basicAttribs[] = {
         return;
     }
 
+    if (!eglMakeCurrent(_display, _surface, _surface, _context)) {
+        NSLog(@"*** eglMakeCurrent failed!");
+        [self teardownSurface];
+        return;
+    }
+
     Real_UIViewController* vc = self.delegate.window.rootViewController;
     AP_CHECK(vc, return);
 
-    int maxIdleCount = byForceIfNecessary ? 0 : 8;
-
-    ++_idleCount;
-    if (_idleCount < vc.idleFrameCount && _idleCount < maxIdleCount) {
-//        NSLog(@"Idling (update count %d, max %d)", _idleCount, maxIdleCount);
-        return;
+    if ([vc update]) {
+        _idleCount = 0;
+    } else {
+        ++_idleCount;
     }
-    _idleCount = 0;
-
-    if (byForceIfNecessary || !vc.paused) {
-        BOOL killSurface = NO;
-
-        if (!eglMakeCurrent(_display, _surface, _surface, _context)) {
-            NSLog(@"*** eglMakeCurrent failed!");
-            killSurface = YES;
-        } else {
-            [vc draw];
-            glFlush();
-            eglSwapBuffers(_display, _surface);
-        }
+    
+    if (byForceIfNecessary || _idleCount < 2) {
+        [vc draw];
+        _GL(Flush);
+        eglSwapBuffers(_display, _surface);
 
         GLenum err = glGetError();
         if (err != GL_NO_ERROR) {
@@ -1580,10 +1092,6 @@ const EGLint basicAttribs[] = {
             // more or less randomly. On the Galaxy Tab 3 10.1 the whole device
             // can eventually lock up. Try tearing down and lazily recreating the
             // surface to see if that helps.
-            killSurface = YES;
-        }
-
-        if (killSurface) {
             [self teardownSurface];
         }
     }
@@ -1794,7 +1302,16 @@ static void handleAppCmd(struct android_app* app, int32_t cmd) {
     [g_Main handleAppCmd:cmd];
 }
 
+extern "C" {
+    struct objc_class _NSConcreteStackBlock;
+    struct objc_class _NSConcreteGlobalBlock;
+}
+
 void android_main(struct android_app* android) {
+
+    objc_set_NSConcreteGlobalBlock((__bridge Class) &_NSConcreteGlobalBlock);
+    objc_set_NSConcreteStackBlock((__bridge Class) &_NSConcreteStackBlock);
+
     // Make sure glue isn't stripped.
     app_dummy();
 
@@ -1819,7 +1336,7 @@ void android_main(struct android_app* android) {
             if (!g_Main.inForeground) {
                 timeout = 10 * 1000;
                 [g_Main maybeAutoQuit];
-            } else if (g_Main.canDraw && g_Main.idleCount < 4) {
+            } else if (g_Main.canDraw && g_Main.idleCount < 2) {
                 timeout = 0;
             } else {
                 timeout = 30;

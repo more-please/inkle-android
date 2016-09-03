@@ -57,6 +57,20 @@ using namespace std;
     [self setNeedsDisplay];
 }
 
+- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event *)event
+{
+    for (AP_Touch* touch in touches) {
+        CGPoint p = [touch locationInView:self];
+        if (p.x < self.bounds.size.width / 2) {
+            [self setCurrentPage:_currentPage - 2 animated:YES];
+        } else {
+            [self setCurrentPage:_currentPage + 2 animated:YES];
+        }
+    }
+}
+
+#ifdef SORCERY_SDL
+
 - (BOOL) handleKeyDown:(int)key
 {
     switch (key) {
@@ -76,18 +90,6 @@ using namespace std;
     }
 }
 
-- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event *)event
-{
-    for (AP_Touch* touch in touches) {
-        CGPoint p = [touch locationInView:self];
-        if (p.x < self.bounds.size.width / 2) {
-            [self setCurrentPage:_currentPage - 2 animated:YES];
-        } else {
-            [self setCurrentPage:_currentPage + 2 animated:YES];
-        }
-    }
-}
-
 // Needs some work -- ideally it would feel like direct manipulation when
 // there's real touch input (e.g. trackpad) but turn a page at a time when
 // used with a clicky scroll wheel.
@@ -101,6 +103,8 @@ using namespace std;
     }
     return YES;
 }
+
+#endif
 
 - (void) updateGL:(float)dt
 {

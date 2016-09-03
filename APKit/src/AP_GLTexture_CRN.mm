@@ -1,5 +1,7 @@
 #import "AP_GLTexture_CRN.h"
 
+#ifdef SORCERY_SDL
+
 #import <CoreFoundation/CoreFoundation.h>
 
 #import <vector>
@@ -134,3 +136,5 @@ using namespace crnd;
 }
 
 @end
+
+#endif // SORCERY_SDL
