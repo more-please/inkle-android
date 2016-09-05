@@ -1,8 +1,6 @@
 #import "GAI.h"
 
-#ifndef ANDROID
 #import <curl/curl.h>
-#endif
 
 #import "GAITracker.h"
 #import "GAIFields.h"
@@ -17,9 +15,7 @@ static const int kTimerInterval = 20;
 
     NSThread* _thread;
     NSMutableArray* _queue; // List of dictionaries. Must only be accessed by _thread.
-#ifndef ANDROID
     CURL* _curl;
-#endif
 }
 
 + (GAI*) sharedInstance
@@ -59,7 +55,6 @@ static const int kTimerInterval = 20;
     [_queue addObject:params];
 }
 
-#ifndef ANDROID
 static NSString* escape(CURL* curl, NSObject* s) {
     const char* c = s.description.UTF8String;
     const char* e = curl_easy_escape(curl, c, 0);
@@ -71,14 +66,12 @@ static NSString* escape(CURL* curl, NSObject* s) {
 static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata) {
     return size * nmemb;
 }
-#endif
 
 - (void) timerFired:(NSTimer*)timer
 {
     NSMutableArray* queue = _queue;
     _queue = [NSMutableArray array];
 
-#ifndef ANDROID
     if (!_curl) {
         _curl = curl_easy_init();
     }
@@ -89,7 +82,6 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
 
     curl_easy_setopt(_curl, CURLOPT_URL, "https://ssl.google-analytics.com/collect");
     curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, write_devnull);
-#endif
 
     const int kMaxSize = 100;
     if (queue.count > kMaxSize) {
@@ -111,18 +103,13 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
         NSMutableArray* arr = [NSMutableArray array];
         [arr addObject:@"v=1"];
         for (NSString* key in [p.allKeys sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)]) {
-#ifdef ANDROID
-            NSString* val = [p[key] description];
-#else
             NSString* val = escape(_curl, p[key]);
-#endif
             [arr addObject:[NSString stringWithFormat:@"%@=%@", key, val]];
         }
 
         NSString* payload = [arr componentsJoinedByString:@"&"];
         NSLog(@"GAI: %@", payload);
 
-#ifndef ANDROID
         curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, payload.UTF8String);
         int err = curl_easy_perform(_curl);
         if (err) {
@@ -137,7 +124,6 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
             // Back off and try again later
             break;
         }
-#endif
     }
 }
 
