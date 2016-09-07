@@ -8,6 +8,7 @@
 #import <errno.h>
 #import <unistd.h>
 #import <sys/statfs.h>
+#import <fcntl.h>
 
 #import <EGL/egl.h>
 #import <GLES2/gl2.h>
@@ -108,9 +109,6 @@ static JavaMethod kTweet = {
 static JavaMethod kMailTo = {
     "mailTo", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
-static JavaMethod kGetLocale = {
-    "getLocale", "()Ljava/lang/String;", NULL
-};
 static JavaMethod kMaybeGetURL = {
     "maybeGetURL", "()Ljava/lang/String;", NULL
 };
@@ -119,7 +117,7 @@ static int _NSLog_fd = -1;
 
 static double timeInSeconds() {
     struct timespec t;
-    int result = clock_gettime(CLOCK_MONOTONIC, &t);
+    /* int result = */ clock_gettime(CLOCK_MONOTONIC, &t);
     return t.tv_sec + (double) t.tv_nsec / 1000000000.0;
 }
 
@@ -313,8 +311,6 @@ public:
         _class = _env->GetObjectClass(_instance);
         AP_CHECK(_class, return nil);
 
-        _env->RegisterNatives(_class, kNatives, sizeof(kNatives) / sizeof(kNatives[0]));
-
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
 #ifdef DEBUG
@@ -334,7 +330,7 @@ public:
             _NSLog_printf_handler = NSLog_handler;
         }
 
-        NSLog(@"Architecture: %s", INKLE_ARCH);
+        NSLog(@"Architecture: %s", STRINGIFY(INKLE_ARCH));
 
         // Check whether we're running on a low-end device.
         if ([self javaBoolMethod:&kIsCrappyDevice]) {
@@ -411,10 +407,6 @@ public:
 
 - (void) quit
 {
-    if (s_exceptionHandler) {
-        delete s_exceptionHandler;
-        s_exceptionHandler = NULL;
-    }
     [self javaVoidMethod:&kPleaseFinish];
 }
 
@@ -1363,10 +1355,6 @@ void android_main(struct android_app* android) {
                 // Check if we are exiting.
                 if (android->destroyRequested != 0) {
                     // Despite telling us we're shutting down, the system doesn't kill us, so...
-                    if (s_exceptionHandler) {
-                        delete s_exceptionHandler;
-                        s_exceptionHandler = NULL;
-                    }
                     CkShutdown();
                     [g_Main teardownGL];
                     [g_Main teardownJava];
