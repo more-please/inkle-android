@@ -984,6 +984,13 @@ const EGLint basicAttribs[] = {
 
         [[UIScreen mainScreen] setBounds:bounds applicationFrame:appFrame scale:scale];
 
+        int w = bounds.size.width;
+        int h = bounds.size.height;
+        if (w * h <= 1152 * 768 && !self.isCrappyDevice) {
+            NSLog(@"Screen size is %d x %d, skipping hi-res textures", w, h);
+            self.isCrappyDevice = YES;
+        }
+
         if (!CGRectEqualToRect(bounds, _oldBounds) && !CGRectEqualToRect(_oldBounds, CGRectZero)) {
             NSLog(@"*** Screen size changed, tearing down GL surface");
             [self teardownSurface];
