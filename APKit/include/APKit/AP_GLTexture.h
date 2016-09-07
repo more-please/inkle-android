@@ -24,6 +24,9 @@
 
 + (AP_GLTexture*) cubeTextureNamed:(NSString*)name;
 
+// Supply the data for the texture directly. Don't do this unless you know what you're doing.
++ (AP_GLTexture*) textureWithName:(NSString*)name data:(NSData*)data;
+
 // Estimated total memory usage for all textures.
 + (int) totalMemoryUsage;
 
