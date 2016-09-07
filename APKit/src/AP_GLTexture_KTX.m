@@ -109,28 +109,31 @@ typedef struct Header
         AP_CHECK(dataSize > 0, return NO);
         AP_CHECK((bytes + dataSize) <= maxBytes, return NO);
 
+        BOOL skip = NO;
         if (i+1 < numLevels) {
             // This isn't the last mipmap, maybe skip it
             if (crappy && i == 0 && (width > 128 || height > 128)) {
                 NSLog(@"Skipping mipmap level %d (low-end GPU)", i);
-                continue;
+                skip = YES;
             }
             if (width > maxSize || height > maxSize) {
                 NSLog(@"Skipping mipmap level %d (width %d, height %d, max %d)", i, width, height, maxSize);
-                continue;
+                skip = YES;
             }
         }
 
-        if (type == 0) {
-            [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
-        } else {
-            [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
-        }
-        ++level;
+        if (!skip) {
+            if (type == 0) {
+                [self compressedTexImage2dLevel:level format:internalFormat width:width height:height data:bytes dataSize:dataSize];
+            } else {
+                [self texImage2dLevel:level format:format width:width height:height type:type data:bytes];
+            }
+            ++level;
 
-        if (read32(header->numberOfMipmapLevels) == 0) {
-            _GL(GenerateMipmap, self.textureTarget);
-            self.memoryUsage += dataSize / 3;
+            if (read32(header->numberOfMipmapLevels) == 0) {
+                _GL(GenerateMipmap, self.textureTarget);
+                self.memoryUsage += dataSize / 3;
+            }
         }
 
         width = MAX(1, width >> 1);
