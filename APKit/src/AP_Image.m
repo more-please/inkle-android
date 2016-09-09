@@ -22,6 +22,7 @@
 @property (nonatomic) GLint texture;
 @property (nonatomic) GLint alphaTexture;
 @property (nonatomic) GLint otherTexture;
+@property (nonatomic) GLint otherAlphaTexture;
 @property (nonatomic) GLint otherRatio;
 @property (nonatomic) GLint edgePos;
 @property (nonatomic) GLint stretchPos;
@@ -43,6 +44,7 @@ AP_BAN_EVIL_INIT
         _texture = [self uniform:@"tex"];
         _alphaTexture = -1; // Lazy initialize
         _otherTexture = -1; // Lazy initialize
+        _otherAlphaTexture = -1; // Lazy initialize
         _otherRatio = -1; // Lazy initialize
         _edgePos = [self attr:@"edgePos"];
         _stretchPos = [self attr:@"stretchPos"];
@@ -65,6 +67,14 @@ AP_BAN_EVIL_INIT
         _otherTexture = [self uniform:@"otherTexture"];
     }
     return _otherTexture;
+}
+
+- (GLint) otherAlphaTexture
+{
+    if (_otherAlphaTexture < 0) {
+        _otherAlphaTexture = [self uniform:@"otherAlphaTexture"];
+    }
+    return _otherAlphaTexture;
 }
 
 - (GLint) otherRatio
@@ -154,10 +164,36 @@ static const char* kFragment4 = AP_SHADER(
     }
 );
 
+// Separate alpha, mixed with another texture
+static const char* kFragment4_mix = AP_SHADER(
+    uniform float alpha;
+    uniform vec4 tint;
+    uniform sampler2D tex;
+    uniform sampler2D otherTexture;
+    uniform sampler2D alphaTexture;
+    uniform sampler2D otherAlphaTexture;
+    uniform float otherRatio;
+    varying vec2 f_texCoord;
+    void main() {
+        vec3 pixelRgb1 = TEXTURE_2D_BIAS(tex, f_texCoord, -0.75).rgb;
+        vec3 pixelRgb2 = TEXTURE_2D_BIAS(otherTexture, f_texCoord, -0.75).rgb;
+        float pixelAlpha1 = TEXTURE_2D_BIAS(alphaTexture, f_texCoord, -0.75).g;
+        float pixelAlpha2 = TEXTURE_2D_BIAS(otherAlphaTexture, f_texCoord, -0.75).g;
+        vec4 pixel1 = vec4(pixelRgb1, pixelAlpha1);
+        vec4 pixel2 = vec4(pixelRgb2, pixelAlpha2);
+        vec4 pixel = mix(pixel1, pixel2, otherRatio);
+        vec3 tinted = mix(pixel.rgb, tint.rgb, tint.a);
+        vec4 c = vec4(tinted.rgb, pixel.a * alpha);
+        OUTPUT(c);
+    }
+);
+
+
 static AP_Image_Program* g_Prog2;
 static AP_Image_Program* g_Prog3;
 static AP_Image_Program* g_Prog3_mix;
 static AP_Image_Program* g_Prog4;
+static AP_Image_Program* g_Prog4_mix;
 
 // Contents of the .img file
 typedef struct Img {
@@ -201,6 +237,7 @@ typedef struct VertexData {
     AP_GLTexture* _texture;
     AP_GLTexture* _alphaTexture;
     AP_GLTexture* _otherTexture;
+    AP_GLTexture* _otherAlphaTexture;
     CGFloat _otherRatio;
     CGSize _size;
     NSMutableData* _quads;
@@ -282,11 +319,13 @@ typedef struct VertexData {
             g_Prog3 = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment3];
             g_Prog4 = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment4];
             g_Prog3_mix = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment3_mix];
+            g_Prog4_mix = [[AP_Image_Program alloc] initWithVertex:kVertex fragment:kFragment4_mix];
         }
         AP_CHECK(g_Prog2, abort());
         AP_CHECK(g_Prog3, abort());
         AP_CHECK(g_Prog4, abort());
         AP_CHECK(g_Prog3_mix, abort());
+        AP_CHECK(g_Prog4_mix, abort());
 
         _prog = g_Prog3;
         _insets = UIEdgeInsetsZero;
@@ -334,8 +373,9 @@ typedef struct VertexData {
         return self;
     }
     AP_Image* result = [[AP_Image alloc] initWithImage:self];
-    result->_prog = g_Prog3_mix;
+    result->_prog = _alphaTexture ? g_Prog4_mix : g_Prog3_mix;
     result->_otherTexture = other->_texture;
+    result->_otherAlphaTexture = other->_alphaTexture;
     result->_otherRatio = ratio;
     return result;
 }
@@ -851,6 +891,10 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     if (_otherTexture) {
         _GL(ActiveTexture, GL_TEXTURE2);
         _GL(BindTexture, GL_TEXTURE_2D, _otherTexture.name);
+        if (_otherAlphaTexture) {
+            _GL(ActiveTexture, GL_TEXTURE3);
+            _GL(BindTexture, GL_TEXTURE_2D, _otherAlphaTexture.name);
+        }
     }
 
     _GL(ActiveTexture, GL_TEXTURE0);
@@ -867,7 +911,11 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     if (_otherTexture) {
         _GL(Uniform1i, _prog.otherTexture, 2);
         _GL(Uniform1f, _prog.otherRatio, _otherRatio);
+        if (_otherAlphaTexture) {
+            _GL(Uniform1i, _prog.otherAlphaTexture, 3);
+        }
     }
+
     _GL(Uniform1f, _prog.alpha, alpha);
     _GL(UniformMatrix3fv, _prog.transform, 1, false, matrix.m);
     _GL(Uniform2f, _prog.stretch, stretchScale.width, stretchScale.height);
