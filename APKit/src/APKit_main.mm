@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <curl/curl.h>
 #import <PAK/PAK.h>
 
 #import <map>
@@ -1310,6 +1311,11 @@ void android_main(struct android_app* android) {
 
     objc_set_NSConcreteGlobalBlock((__bridge Class) &_NSConcreteGlobalBlock);
     objc_set_NSConcreteStackBlock((__bridge Class) &_NSConcreteStackBlock);
+
+    CURLcode curlErr = curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (curlErr) {
+        NSLog(@"*** curl_global_init() failed: %s", curl_easy_strerror(curlErr));
+    }
 
     // Make sure glue isn't stripped.
     app_dummy();
