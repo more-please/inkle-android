@@ -82,6 +82,10 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
 
     curl_easy_setopt(_curl, CURLOPT_URL, "https://ssl.google-analytics.com/collect");
     curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, write_devnull);
+#ifdef ANDROID
+    // We don't currently have a good way of storing the CA bundle on Android.
+    curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0);
+#endif
 
     const int kMaxSize = 100;
     if (queue.count > kMaxSize) {

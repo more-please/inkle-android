@@ -109,6 +109,10 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
+#ifdef ANDROID
+        // We don't currently have a good way of storing the CA bundle on Android.
+        curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0);
+#endif
 
         NSString* url = [@"https://api.parse.com/1/functions/" stringByAppendingString:function];
         curl_easy_setopt(_curl, CURLOPT_URL, url.UTF8String);
@@ -178,6 +182,10 @@ static size_t write_func(const char* ptr, size_t size, size_t nmemb, void* userd
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
+#ifdef ANDROID
+        // We don't currently have a good way of storing the CA bundle on Android.
+        curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0);
+#endif
 
         NSString* url = [@"https://api.parse.com/1/classes/" stringByAppendingString:className];
         curl_easy_setopt(_curl, CURLOPT_URL, url.UTF8String);
@@ -256,6 +264,10 @@ static NSString* escape(CURL* curl, NSObject* s) {
         curl_easy_reset(_curl);
         curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _headers);
         curl_easy_setopt(_curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate");
+#ifdef ANDROID
+        // We don't currently have a good way of storing the CA bundle on Android.
+        curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0);
+#endif
 
         NSError* error = nil;
         NSData* input = [NSJSONSerialization dataWithJSONObject:data options:0 error:&error];
