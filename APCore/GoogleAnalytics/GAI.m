@@ -142,6 +142,8 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
 
     while (!_done) {
         @autoreleasepool {
+            NSLog(@"[GAI background thread]");
+
             // Run Objective-C timers.
             NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
             NSDate* now = [NSDate date];
@@ -151,7 +153,7 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
             if (!nextTimer) {
-                nextTimer = [NSDate dateWithTimeIntervalSinceNow:1];
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
             }
 
             // Run callbacks.

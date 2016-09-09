@@ -6,6 +6,7 @@
     NSThread* _thread;
     struct curl_slist* _headers;
     CURL* _curl;
+    BOOL _done;
 }
 
 - (instancetype) initWithApplicationId:(NSString *)applicationId clientKey:(NSString *)clientKey
@@ -327,16 +328,19 @@ static NSString* escape(CURL* curl, NSObject* s) {
     }];
 }
 
+- (void) timerFired:(NSTimer*)timer
+{
+    // This timer isn't used for anything; it's just that without
+    // a timer, the runLoop seems to poll continuously...!
+}
+
 - (void) mainLoop:(id)ignored
 {
-    @autoreleasepool {
-        CURLcode err = curl_global_init(CURL_GLOBAL_DEFAULT);
-        if (err) {
-            NSLog(@"*** curl_global_init() failed: %s", curl_easy_strerror(err));
-            return;
-        }
+    NSTimer* timer;
 
+    @autoreleasepool {
         NSLog(@"Parse: starting");
+        timer = [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
 
         _curl = curl_easy_init();
         if (!_curl) {
@@ -345,8 +349,10 @@ static NSString* escape(CURL* curl, NSObject* s) {
         }
     }
 
-    while (true) {
+    while (!_done) {
         @autoreleasepool {
+            NSLog(@"[Parse background thread]");
+
             // Run Objective-C timers.
             NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
             NSDate* now = [NSDate date];
@@ -356,13 +362,17 @@ static NSString* escape(CURL* curl, NSObject* s) {
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
             if (!nextTimer) {
-                nextTimer = [NSDate dateWithTimeIntervalSinceNow:1];
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
             }
 
             // Run callbacks.
             [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:nextTimer];
         }
     }
+
+    [timer invalidate];
+
+    NSLog(@"Parse: stopping");
 }
 
 @end
