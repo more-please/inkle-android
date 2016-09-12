@@ -138,6 +138,13 @@ static inline GLKQuaternion GLKQuaternionNormalize(GLKQuaternion quaternion) {
 static inline GLKQuaternion GLKQuaternionSlerp(GLKQuaternion lhs, GLKQuaternion rhs, float t) {
     // Just using normalized linear interpolation, based on this interesting article:
     // http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
+    float dot = lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
+    if (dot < 0) {
+        rhs.x = -rhs.x;
+        rhs.y = -rhs.y;
+        rhs.z = -rhs.z;
+        rhs.w = -rhs.w;
+    }
     GLKQuaternion result = {
         lhs.x + (rhs.x - lhs.x) * t,
         lhs.y + (rhs.y - lhs.y) * t,
