@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 #import <curl/curl.h>
 #import <PAK/PAK.h>
 
@@ -141,6 +142,10 @@ static void NSLog_flush(NSString* message) {
     }
 }
 
+static void CkLog_handler(CkLogType t, const char* msg) {
+    NSLog(@"%s", msg);
+}
+
 static void logStatfs(NSString* path) {
     if (path) {
         struct statfs s;
@@ -158,6 +163,7 @@ static void logStatfs(NSString* path) {
 class PakSound : public CkCustomFile
 {
     NSString* _name;
+    PAK_Item* _item;
     NSData* _data;
     const char* _ptr;
     int _len;
@@ -166,9 +172,11 @@ class PakSound : public CkCustomFile
 public:
     PakSound(const char* name) {
         _name = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
-        _data = [NSBundle dataForResource:_name ofType:nil];
+
+        _item = [PAK_Search item:_name];
+        _data = _item.data;
         _ptr = (const char*) _data.bytes;
-        _len = _data.length;
+        _len = (int) _data.length;
         _pos = 0;
     }
 
@@ -182,6 +190,9 @@ public:
 //         NSLog(@"Reading %d bytes at %d from %@", bytes, _pos, _name);
         if (_pos + bytes > _len) {
             bytes = _len - _pos;
+        }
+        if (bytes < 0) {
+            bytes = 0;
         }
         memcpy(buf, _ptr + _pos, bytes);
         _pos += bytes;
@@ -379,10 +390,17 @@ public:
         config.audioUpdateMs = 50;
         config.streamBufferMs = 3000;
         config.streamFileUpdateMs = 600;
-        int success = CkInit(&config);
-        AP_CHECK(success, return nil);
 
-        CkSetCustomFileHandler(PakSound::customFileFunc, NULL);
+        // Intercept log output
+        config.logFunc = CkLog_handler;
+
+        int success = CkInit(&config);
+        if (success) {
+            CkSetCustomFileHandler(PakSound::customFileFunc, NULL);
+            [AVAudioPlayer setEnabled:YES];
+        } else {
+            NSLog(@"*** CkInit failed! Will continue without sound.");
+        }
 
         _touches = [NSMutableDictionary dictionary];
     }
