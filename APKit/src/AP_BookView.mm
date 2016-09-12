@@ -147,7 +147,7 @@ using namespace std;
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
 {
     static const char* kVertex = AP_SHADER(
-        uniform mat3 transform;
+        uniform mat4 transform;
         attribute vec2 pos;
         uniform float pagePos; // 0 = on right, 1 = on left
         uniform float pageFlip; // 0 = normal texture coordinates, 1 = flipped horizontally
@@ -204,12 +204,11 @@ using namespace std;
 
             vec2 p = quad_spline(t, cp0, cp1, cp2);
 
-            float kDistance = 4.0;
-            float x = kDistance * p.x;
-            float y = kDistance * (2.0 * pos.y - 1.0);
-            float z = kDistance - p.y;
+            float z = 1.0 - 0.2 * p.y;
+            float x = p.x;
+            float y = (2.0 * pos.y - 1.0);
 
-            gl_Position = vec4(transform * vec3(x, y, z), z);
+            gl_Position = transform * vec4(x, y, 0.0, z);
             _texCoord = vec2(mix(pos.x, 1.0  - pos.x, pageFlip), pos.y);
         }
     );
@@ -284,10 +283,11 @@ using namespace std;
         CGAffineTransformScale(boundsToGL, size.width / 2, size.height / 2),
         1, 1);
 
-    GLKMatrix3 matrix = GLKMatrix3Make(
-        t.a, t.b, 0,
-        t.c, t.d, 0,
-        t.tx, t.ty, 1);
+    GLKMatrix4 matrix = GLKMatrix4Make(
+        t.a,  t.b,  0, 0,
+        t.c,  t.d,  0, 0,
+        0,    0,    1, 0,
+        t.tx, t.ty, 0, 1);
 
     AP_CHECK(s_prog, return);
     [s_prog use];
@@ -301,7 +301,7 @@ using namespace std;
 
     _GL(ActiveTexture, GL_TEXTURE0);
     _GL(Uniform1i, s_texture, 0);
-    _GL(UniformMatrix3fv, s_transform, 1, false, matrix.m);
+    _GL(UniformMatrix4fv, s_transform, 1, false, matrix.m);
 
     // Draw left-hand pages
     _GL(Uniform1f, s_pageFlip, 1.0);
