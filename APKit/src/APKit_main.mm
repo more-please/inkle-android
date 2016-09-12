@@ -985,8 +985,8 @@ const EGLint basicAttribs[] = {
 
         [[UIScreen mainScreen] setBounds:bounds applicationFrame:appFrame scale:scale];
 
-        int w = bounds.size.width;
-        int h = bounds.size.height;
+        int w = bounds.size.width * scale;
+        int h = bounds.size.height * scale;
         if (w * h < 1280 * 720 && !self.isCrappyDevice) {
             NSLog(@"Screen size is %d x %d, skipping hi-res textures", w, h);
             self.isCrappyDevice = YES;
