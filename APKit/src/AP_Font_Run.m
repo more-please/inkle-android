@@ -235,7 +235,7 @@ typedef struct VertexData {
         varying vec2 _texCoord;
         void main() {
             vec3 tpos = transform * vec3(pos, 1.0);
-            gl_Position = vec4(tpos, 1.0);
+            gl_Position = vec4(tpos.xy, 0.0, 1.0);
             _texCoord = texCoord;
         }
     );
