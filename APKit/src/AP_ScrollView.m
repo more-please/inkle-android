@@ -151,6 +151,17 @@ const CGFloat UIScrollViewDecelerationRateFast = 25.0;
     }
 }
 
+- (void) setFrame:(CGRect)frame
+{
+    if (_pagingEnabled) {
+        int i = self.pageIndex;
+        [super setFrame:frame];
+        self.pageIndex = i;
+    } else {
+        [super setFrame:frame];
+    }
+}
+
 - (CGSize) contentSize
 {
     return _animatedContentSize.dest;
