@@ -2,6 +2,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "AP_GestureRecognizer.h"
+#import "AP_ScrollView.h"
 #import "AP_View.h"
 
 @class AP_GLTexture;
@@ -12,7 +14,7 @@
 
 @end
 
-@interface AP_BookView : AP_View
+@interface AP_BookView : AP_View <AP_GestureRecognizerDelegate>
 
 - (instancetype) initWithPageCount:(int)pageCount delegate:(id<AP_BookViewDelegate>)delegate frame:(CGRect)frame;
 

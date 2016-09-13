@@ -10,6 +10,7 @@
 #import "AP_GLTexture.h"
 #import "AP_Utils.h"
 #import "AP_Touch.h"
+#import "AP_ScrollView.h"
 
 #ifdef SORCERY_SDL
 #import <SDL2/SDL.h>
@@ -18,11 +19,13 @@
 using namespace std;
 
 @implementation AP_BookView {
+    AP_ScrollView* _scrollView;
     __weak id<AP_BookViewDelegate> _delegate;
-    int _currentPage;
     int _pageCount;
-    vector<float> _pos;
-    vector<float> _destPos;
+    float _bookPos; // Fractional page number, tracks the scroll view position.
+    float _bookPosLo; // Tracks low-water mark of bookPos, converges slowly.
+    float _bookPosHi; // Tracks high-water mark of bookPos, converges slowly.
+    AP_TapGestureRecognizer* _tapGesture;
 }
 
 - (instancetype) initWithPageCount:(int)pageCount delegate:(id<AP_BookViewDelegate>)delegate frame:(CGRect)frame
@@ -31,122 +34,93 @@ using namespace std;
     if (self) {
         _delegate = delegate;
         _pageCount = pageCount;
-        _pos.resize(pageCount);
-        _destPos.resize(pageCount);
 
-        [self setCurrentPage:0 animated:NO];
+        _scrollView = [[AP_ScrollView alloc] initWithFrame:self.bounds];
+        _scrollView.pagingEnabled = YES;
+        _scrollView.horizontal = YES;
+        [self addSubview:_scrollView];
+        [self layoutSubviews];
+
+        _tapGesture = [[AP_TapGestureRecognizer alloc] initWithTarget:self action:@selector(tap)];
+        [self addGestureRecognizer:_tapGesture];
     }
     return self;
 }
 
-- (int) currentPage
-{
-    return _currentPage;
+- (AP_View*) hitTest:(CGPoint) point withEvent:(AP_Event *)event {
+    if ([self pointInside:point withEvent:event]) {
+        // Send all touches to scroll view
+        return _scrollView;
+    }
+    return nil;
 }
 
-- (void) setCurrentPage:(int)currentPage animated:(BOOL)animated
+- (void) layoutSubviews
 {
-    // Round down to left-hand page
-    _currentPage = 2 * AP_CLAMP(currentPage / 2, 0, (_pos.size() - 1) / 2);
+    CGRect r = self.bounds;
+    r.size.width /= 2;
+    r.origin.x += r.size.width;
+    _scrollView.frame = r;
+    _scrollView.contentSize = CGSizeMake((_pageCount + 1) / 2 * r.size.width, r.size.height);
+}
 
-    for (int i = 0; i < _pos.size(); ++i) {
-        _destPos[i] = (i <= _currentPage) ? 1 : 0;
+- (int) currentPage
+{
+    return _scrollView.pageIndex * 2;
+}
+
+- (void) setCurrentPage:(int)i animated:(BOOL)animated
+{
+    if (animated) {
+        [AP_View animateWithDuration:0.5 delay:0
+            options:UIViewAnimationOptions(UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState)
+            animations:^{
+                _scrollView.pageIndex = i / 2;
+            }
+            completion:nil
+        ];
+    } else {
+        _scrollView.pageIndex = i / 2;
+        _bookPos = (_scrollView.contentOffset.x / _scrollView.bounds.size.width);
+        _bookPosLo = _bookPos;
+        _bookPosHi = _bookPos + 1;
     }
+}
 
-    if (!animated) {
-        _pos = _destPos;
-    }
+- (void) tap
+{
+    CGPoint pos = [_tapGesture locationInView:self];
+    int oldPage = self.currentPage;
+    int newPage = AP_CLAMP(oldPage + (pos.x < self.bounds.size.width / 2 ? -2 : 2), 0, _pageCount - 1);
+    [self setCurrentPage:newPage animated:YES];
+    [self.window resetAllGestures];
+}
 
+- (void) scrollViewDidScroll:(AP_ScrollView *)scrollView
+{
     [self setNeedsDisplay];
 }
 
-- (void) touchesBegan:(NSSet*)touches withEvent:(AP_Event *)event
-{
-    for (AP_Touch* touch in touches) {
-        CGPoint p = [touch locationInView:self];
-        if (p.x < self.bounds.size.width / 2) {
-            [self setCurrentPage:_currentPage - 2 animated:YES];
-        } else {
-            [self setCurrentPage:_currentPage + 2 animated:YES];
-        }
-    }
-}
-
-#ifdef SORCERY_SDL
-
-- (BOOL) handleKeyDown:(int)key
-{
-    switch (key) {
-        case SDLK_LEFT:
-        case SDLK_BACKSPACE:
-            [self setCurrentPage:_currentPage - 2 animated:YES];
-            return YES;
-
-        case SDLK_RIGHT:
-        case SDLK_SPACE:
-        case SDLK_RETURN:
-            [self setCurrentPage:_currentPage + 2 animated:YES];
-            return YES;
-
-        default:
-            return NO;
-    }
-}
-
-// Needs some work -- ideally it would feel like direct manipulation when
-// there's real touch input (e.g. trackpad) but turn a page at a time when
-// used with a clicky scroll wheel.
-- (BOOL) handleMouseWheelX:(float)x Y:(float)y
-{
-    float delta = -(x + y); // Polarity seems right for OS X, need to check on more platforms...
-    if (delta > 0) {
-        [self setCurrentPage:_currentPage + 2 animated:YES];
-    } else {
-        [self setCurrentPage:_currentPage - 2 animated:YES];
-    }
-    return YES;
-}
-
-#endif
-
 - (void) updateGL:(float)dt
 {
-    const float kSpeed = 2.5;
-    const float kMinGap = 0.01;
+    float oldBookPos = _bookPos;
+    float oldBookPosHi = _bookPosHi;
+    float oldBookPosLo = _bookPosLo;
 
-    const float step = dt * kSpeed;
+    _bookPos = (_scrollView.inFlightBounds.origin.x / _scrollView.bounds.size.width);
 
-    vector<float> nextPos = _pos;
-    bool needsDisplay = false;
+    const float kStandardFrameTime = 1.0/30.0;
+    const float kDamping = 0.2;
 
-    // Handle pages flipping forward, making sure they don't hit the previous page.
-    for (int i = 0; i < _pos.size(); ++i) {
-        float delta = _destPos[i] - _pos[i];
-        if (delta > 0) {
-            nextPos[i] = MIN(_pos[i] + step, _destPos[i]);
-            int prevPage = i - 1;
-            if (prevPage >= 0 && nextPos[prevPage] < 1) {
-                nextPos[i] = MIN(nextPos[i], nextPos[prevPage] - kMinGap);
-            }
-            needsDisplay = true;
-        }
-    }
+    float frames = AP_CLAMP(dt / kStandardFrameTime, 0.1, 10);
+    float k = 1 - powf(1 - kDamping, frames);
+    _bookPosLo = MIN(_bookPos, AP_Lerp(_bookPosLo, _bookPos, k));
+    _bookPosHi = MAX(_bookPos + 1, AP_Lerp(_bookPosHi, _bookPos + 1, k));
 
-    // Handle pages flipping backward, making sure they don't hit the next page.
-    for (int i = _pos.size() - 1; i >= 0; --i) {
-        float delta = _destPos[i] - _pos[i];
-        if (delta < 0) {
-            nextPos[i] = MAX(_pos[i] - step, _destPos[i]);
-            int nextPage = i + 1;
-            if (nextPage < _pos.size() && nextPos[nextPage] > 0) {
-                nextPos[i] = MAX(nextPos[i], nextPos[nextPage] + kMinGap);
-            }
-            needsDisplay = true;
-        }
-    }
-
-    if (needsDisplay) {
-        _pos.swap(nextPos);
+    if (oldBookPos != _bookPos
+     || oldBookPosHi != _bookPosHi
+     || oldBookPosLo != _bookPosLo)
+    {
         [self setNeedsDisplay];
     }
 }
@@ -310,45 +284,58 @@ using namespace std;
     _GL(Uniform1i, s_texture, 0);
     _GL(UniformMatrix4fv, s_transform, 1, false, matrix.m);
 
+    // Pages up to _bookPosLo should have position 1 (full left)
+    // Pages from _bookPosHi up should have position 0 (full right)
+    // Pages in between should have fractional positions.
+    vector<float> pagePos(_pageCount);
+    for (int i = 0; i < _pageCount; ++i) {
+        // Page position 0 = full right, 1 = full left
+        // If bookPos=0, page positions should be: 1, 0, 0 etc
+        // If bookPos=1, page positions should be: 1, 1, 0 etc
+        int physicalPage = (i + 1) / 2;
+        float t = (physicalPage - _bookPosLo) / (_bookPosHi - _bookPosLo);
+        pagePos[i] = AP_CLAMP(1 - t, 0, 1);
+    }
+
     // Draw left-hand pages
     _GL(Uniform1f, s_pageFlip, 1.0);
-    int firstLeftPage = 0;
-    for (int i = 2; i < _pageCount; i += 2) {
-        if (_pos[i] >= 1) {
+    int firstLeftPage = 2;
+    for (int i = firstLeftPage + 2; i < _pageCount; i += 2) {
+        if (pagePos[i] >= 1) {
             firstLeftPage = i;
         } else {
             break;
         }
     }
-    for (int i = firstLeftPage; i < _pageCount && _pos[i] > 0.5; i += 2) {
+    for (int i = firstLeftPage - 2; i < _pageCount && pagePos[i] > 0.5; i += 2) {
         AP_GLTexture* t = [_delegate textureForPage:i leftSide:YES];
         if (!t) {
             NSLog(@"*** No texture for left page %d", i);
             continue;
         }
         [t bind];
-        _GL(Uniform1f, s_pagePos, AP_Ease(_pos[i]));
+        _GL(Uniform1f, s_pagePos, pagePos[i]);
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
 
     // Draw right-hand pages in reverse order
     _GL(Uniform1f, s_pageFlip, 0.0);
-    int lastRightPage = (_pageCount & ~1) - 1;
+    int lastRightPage = (_pageCount & ~1) - 3;
     for (int i = lastRightPage - 2; i >= 0; i -= 2) {
-        if (_pos[i] <= 0) {
+        if (pagePos[i] <= 0) {
             lastRightPage = i;
         } else {
             break;
         }
     }
-    for (int i = lastRightPage; i >= 0 && _pos[i] < 0.5; i -= 2) {
+    for (int i = lastRightPage + 2; i >= 0 && pagePos[i] < 0.5; i -= 2) {
         AP_GLTexture* t = [_delegate textureForPage:i leftSide:NO];
         if (!t) {
             NSLog(@"*** No texture for right page %d", i);
             continue;
         }
         [t bind];
-        _GL(Uniform1f, s_pagePos, AP_Ease(_pos[i]));
+        _GL(Uniform1f, s_pagePos, pagePos[i]);
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
 
