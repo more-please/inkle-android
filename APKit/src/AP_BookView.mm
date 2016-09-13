@@ -7,6 +7,7 @@
 #import "AP_Check.h"
 #import "AP_GLBuffer.h"
 #import "AP_GLProgram.h"
+#import "AP_GLTexture.h"
 #import "AP_Utils.h"
 #import "AP_Touch.h"
 
@@ -17,19 +18,21 @@
 using namespace std;
 
 @implementation AP_BookView {
-    NSArray* _textures;
+    __weak id<AP_BookViewDelegate> _delegate;
     int _currentPage;
+    int _pageCount;
     vector<float> _pos;
     vector<float> _destPos;
 }
 
-- (instancetype) initWithPageTextures:(NSArray *)pageTextures frame:(CGRect)frame
+- (instancetype) initWithPageCount:(int)pageCount delegate:(id<AP_BookViewDelegate>)delegate frame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-        _textures = pageTextures;
-        _pos.resize(_textures.count);
-        _destPos.resize(_textures.count);
+        _delegate = delegate;
+        _pageCount = pageCount;
+        _pos.resize(pageCount);
+        _destPos.resize(pageCount);
 
         [self setCurrentPage:0 animated:NO];
     }
@@ -305,17 +308,42 @@ using namespace std;
 
     // Draw left-hand pages
     _GL(Uniform1f, s_pageFlip, 1.0);
-    for (int i = 0; i < _textures.count && _pos[i] > 0.5; i += 2) {
-        [_textures[i] bind];
+    int firstLeftPage = 0;
+    for (int i = 2; i < _pageCount; i += 2) {
+        if (_pos[i] >= 1) {
+            firstLeftPage = i;
+        } else {
+            break;
+        }
+    }
+    for (int i = firstLeftPage; i < _pageCount && _pos[i] > 0.5; i += 2) {
+        AP_GLTexture* t = [_delegate textureForPage:i leftSide:YES];
+        if (!t) {
+            NSLog(@"*** No texture for left page %d", i);
+            continue;
+        }
+        [t bind];
         _GL(Uniform1f, s_pagePos, AP_Ease(_pos[i]));
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
 
     // Draw right-hand pages in reverse order
     _GL(Uniform1f, s_pageFlip, 0.0);
-    int lastRightHandPage = (_textures.count & ~1) - 1;
-    for (int i = lastRightHandPage; i >= 0 && _pos[i] < 0.5; i -= 2) {
-        [_textures[i] bind];
+    int lastRightPage = (_pageCount & ~1) - 1;
+    for (int i = lastRightPage - 2; i >= 0; i -= 2) {
+        if (_pos[i] <= 0) {
+            lastRightPage = i;
+        } else {
+            break;
+        }
+    }
+    for (int i = lastRightPage; i >= 0 && _pos[i] < 0.5; i -= 2) {
+        AP_GLTexture* t = [_delegate textureForPage:i leftSide:NO];
+        if (!t) {
+            NSLog(@"*** No texture for right page %d", i);
+            continue;
+        }
+        [t bind];
         _GL(Uniform1f, s_pagePos, AP_Ease(_pos[i]));
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
