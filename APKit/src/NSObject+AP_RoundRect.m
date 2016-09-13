@@ -27,7 +27,8 @@
         varying vec2 f_texPos;
 
         void main() {
-            gl_Position = vec4(transform * pos, 1.0);
+            vec3 p = transform * pos;
+            gl_Position = vec4(p.xy, 0.0, 1.0);
             f_texPos = vec2(0.125, 0.125) + 0.75 * pos.xy;
         }
     );
@@ -109,7 +110,8 @@
         attribute vec3 pos;
 
         void main() {
-            gl_Position = vec4(transform * pos, 1.0);
+            vec3 p = transform * pos;
+            gl_Position = vec4(p.xy, 0.0, 1.0);
         }
     );
 
@@ -194,7 +196,8 @@
         varying vec2 f_texPos;
 
         void main() {
-            gl_Position = vec4(transform * pos, 1.0);
+            vec3 p = transform * pos;
+            gl_Position = vec4(p.xy, 0.0, 1.0);
             f_texPos = texPos;
         }
     );
@@ -342,7 +345,8 @@
         varying vec2 f_fillTexPos;
 
         void main() {
-            gl_Position = vec4(transform * pos, 1.0);
+            vec3 p = transform * pos;
+            gl_Position = vec4(p.xy, 0.0, 1.0);
             f_penTexPos = penTexPos;
             f_fillTexPos = fillTexPos;
         }

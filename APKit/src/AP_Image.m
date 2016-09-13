@@ -97,7 +97,7 @@ static const char* kVertex = AP_SHADER(
     void main() {
         vec2 pos = edgePos + stretch * stretchPos;
         vec3 tpos = transform * vec3(pos, 1.0);
-        gl_Position = vec4(tpos, 1.0);
+        gl_Position = vec4(tpos.xy, 0.0, 1.0);
         f_texCoord = texCoord;
     }
 );
