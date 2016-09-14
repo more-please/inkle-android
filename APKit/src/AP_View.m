@@ -702,12 +702,8 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) visitWithBlock:(void(^)(AP_View*))block
 {
-    AP_View* mask = self.layer.mask.view;
-    if (mask) {
-        [mask visitWithBlock:block];
-    }
+    [self.layer.mask.view visitWithBlock:block];
 
-    AP_CHECK(block, return);
     block(self);
 
     ++_iterating;
@@ -719,11 +715,7 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
 - (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block
 {
-    AP_CHECK(block, return);
-    AP_ViewController* controller = _viewDelegate;
-    if (controller) {
-        block(controller);
-    }
+    block(_viewDelegate);
 
     ++_iterating;
     for (AP_View* v in _subviews) {
