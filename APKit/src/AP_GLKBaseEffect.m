@@ -119,7 +119,6 @@ static AP_GLKit_Shader* _shaders[16];
     if (_useConstantColor) {
         c = _constantColor;
     }
-    c.a *= _alpha;
     _GL(Uniform4fv, shader->_color, 1, &c.v[0]);
 
     _GL(UniformMatrix4fv, shader->_modelviewMatrix, 1, NO, _transform->_modelviewMatrix.m);

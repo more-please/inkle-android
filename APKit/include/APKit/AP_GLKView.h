@@ -12,7 +12,6 @@
 @required
 - (void)update;
 - (void)glkView:(AP_GLKView*)view drawWithAlpha:(CGFloat)alpha;
-- (void)glkView:(AP_GLKView*)view drawInRect:(CGRect)rect;
 @end
 
 @interface AP_GLKView : AP_View
