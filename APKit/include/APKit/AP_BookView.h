@@ -16,6 +16,8 @@
 
 @interface AP_BookView : AP_View <AP_GestureRecognizerDelegate>
 
+@property(nonatomic) BOOL landscape;
+
 - (instancetype) initWithPageCount:(int)pageCount delegate:(id<AP_BookViewDelegate>)delegate frame:(CGRect)frame;
 
 - (int) currentPage;

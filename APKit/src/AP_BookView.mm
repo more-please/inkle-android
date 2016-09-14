@@ -55,32 +55,64 @@ using namespace std;
     return nil;
 }
 
+- (void) setLandscape:(BOOL)landscape
+{
+    if (landscape != _landscape) {
+        int n = self.currentPage;
+        _landscape = landscape;
+        [self layoutSubviews];
+        [self setCurrentPage:n animated:NO];
+    }
+}
+
 - (void) layoutSubviews
 {
     CGRect r = self.bounds;
     r.size.width /= 2;
     r.origin.x += r.size.width;
     _scrollView.frame = r;
-    _scrollView.contentSize = CGSizeMake((_pageCount + 1) / 2 * r.size.width, r.size.height);
+    if (_landscape) {
+        _scrollView.contentSize = CGSizeMake((_pageCount + 1) / 2 * r.size.width, r.size.height);
+    } else {
+        _scrollView.contentSize = CGSizeMake((_pageCount - 1) * r.size.width, r.size.height);
+    }
 }
 
 - (int) currentPage
 {
-    return _scrollView.pageIndex * 2;
+    if (_landscape) {
+        return _scrollView.pageIndex * 2;
+    } else {
+        return _scrollView.pageIndex;
+    }
 }
 
 - (void) setCurrentPage:(int)i animated:(BOOL)animated
 {
+    if (_landscape) {
+        i = AP_CLAMP(i, 0, _pageCount - 1);
+    } else {
+        // i is the page displayed on the left, we need to ensure the right page isn't blank.
+        i = AP_CLAMP(i, 0, _pageCount - 2);
+    }
     if (animated) {
         [AP_View animateWithDuration:0.5 delay:0
             options:UIViewAnimationOptions(UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState)
             animations:^{
-                _scrollView.pageIndex = i / 2;
+                if (_landscape) {
+                    _scrollView.pageIndex = (i + 1) / 2;
+                } else {
+                    _scrollView.pageIndex = i;
+                }
             }
             completion:nil
         ];
     } else {
-        _scrollView.pageIndex = i / 2;
+        if (_landscape) {
+            _scrollView.pageIndex = (i + 1) / 2;
+        } else {
+            _scrollView.pageIndex = i;
+        }
         _bookPos = (_scrollView.contentOffset.x / _scrollView.bounds.size.width);
         _bookPosLo = _bookPos;
         _bookPosHi = _bookPos + 1;
@@ -90,8 +122,12 @@ using namespace std;
 - (void) tap
 {
     CGPoint pos = [_tapGesture locationInView:self];
+    float threshold = _landscape ? 0.5 : 0.75;
+    int K = _landscape ? 2 : 1;
+    int delta = (pos.x < self.bounds.size.width * threshold) ? -K : K;
     int oldPage = self.currentPage;
-    int newPage = AP_CLAMP(oldPage + (pos.x < self.bounds.size.width / 2 ? -2 : 2), 0, _pageCount - 1);
+    int newPage = AP_CLAMP(oldPage + delta, 0, _pageCount - 1);
+
     [self setCurrentPage:newPage animated:YES];
     [self.window resetAllGestures];
 }
@@ -123,6 +159,21 @@ using namespace std;
     {
         [self setNeedsDisplay];
     }
+}
+
+- (float) pagePos:(int)i
+{
+    // Pages up to _bookPosLo should have position 1 (full left)
+    // Pages from _bookPosHi up should have position 0 (full right)
+    // Pages in between should have fractional positions.
+
+    // Page position 0 = full right, 1 = full left
+    // If bookPos=0, page positions should be: 1, 0, 0 etc
+    // If bookPos=1, page positions should be: 1, 1, 0 etc
+
+    int physicalPage = _landscape ? ((i+1) / 2) : i;
+    float t = (physicalPage - _bookPosLo) / (_bookPosHi - _bookPosLo);
+    return AP_CLAMP(1 - t, 0, 1);
 }
 
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha
@@ -284,58 +335,47 @@ using namespace std;
     _GL(Uniform1i, s_texture, 0);
     _GL(UniformMatrix4fv, s_transform, 1, false, matrix.m);
 
-    // Pages up to _bookPosLo should have position 1 (full left)
-    // Pages from _bookPosHi up should have position 0 (full right)
-    // Pages in between should have fractional positions.
-    vector<float> pagePos(_pageCount);
-    for (int i = 0; i < _pageCount; ++i) {
-        // Page position 0 = full right, 1 = full left
-        // If bookPos=0, page positions should be: 1, 0, 0 etc
-        // If bookPos=1, page positions should be: 1, 1, 0 etc
-        int physicalPage = (i + 1) / 2;
-        float t = (physicalPage - _bookPosLo) / (_bookPosHi - _bookPosLo);
-        pagePos[i] = AP_CLAMP(1 - t, 0, 1);
-    }
+    const int K = _landscape ? 2 : 1;
 
     // Draw left-hand pages
     _GL(Uniform1f, s_pageFlip, 1.0);
-    int firstLeftPage = 2;
-    for (int i = firstLeftPage + 2; i < _pageCount; i += 2) {
-        if (pagePos[i] >= 1) {
+    int firstLeftPage = K;
+    for (int i = firstLeftPage + K; i < _pageCount; i += K) {
+        if ([self pagePos:i] >= 1) {
             firstLeftPage = i;
         } else {
             break;
         }
     }
-    for (int i = firstLeftPage - 2; i < _pageCount && pagePos[i] > 0.5; i += 2) {
+    for (int i = firstLeftPage - K; i < _pageCount && [self pagePos:i] > 0.5; i += K) {
         AP_GLTexture* t = [_delegate textureForPage:i leftSide:YES];
         if (!t) {
             NSLog(@"*** No texture for left page %d", i);
             continue;
         }
         [t bind];
-        _GL(Uniform1f, s_pagePos, pagePos[i]);
+        _GL(Uniform1f, s_pagePos, [self pagePos:i]);
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
 
     // Draw right-hand pages in reverse order
     _GL(Uniform1f, s_pageFlip, 0.0);
-    int lastRightPage = (_pageCount & ~1) - 3;
-    for (int i = lastRightPage - 2; i >= 0; i -= 2) {
-        if (pagePos[i] <= 0) {
+    int lastRightPage = (_pageCount/K -1) * K - 1;
+    for (int i = lastRightPage - K; i >= 0; i -= K) {
+        if ([self pagePos:i] <= 0) {
             lastRightPage = i;
         } else {
             break;
         }
     }
-    for (int i = lastRightPage + 2; i >= 0 && pagePos[i] < 0.5; i -= 2) {
+    for (int i = lastRightPage + K; i >= 0 && [self pagePos:i] < 0.5; i -= K) {
         AP_GLTexture* t = [_delegate textureForPage:i leftSide:NO];
         if (!t) {
             NSLog(@"*** No texture for right page %d", i);
             continue;
         }
         [t bind];
-        _GL(Uniform1f, s_pagePos, pagePos[i]);
+        _GL(Uniform1f, s_pagePos, [self pagePos:i]);
         _GL(DrawElements, GL_TRIANGLES, 6 * (kSegmentsX - 1) * (kSegmentsY - 1), GL_UNSIGNED_SHORT, 0);
     }
 
