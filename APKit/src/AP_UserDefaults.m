@@ -36,12 +36,10 @@ static AP_UserDefaults* g_Defaults = nil;
         NSAssert(g_DefaultsPath, @"AP_UserDefaults path wasn't set");
         _path = g_DefaultsPath;
 
-        NSDictionary* data = nil;
-        if ([[NSFileManager defaultManager] fileExistsAtPath:_path]) {
-            data = [NSDictionary dictionaryWithContentsOfFile:_path];
-            if (!data) {
-                NSLog(@"Failed to load %@!", _path.lastPathComponent);
-            }
+        NSLog(@"Loading %@...", _path);
+        NSDictionary* data = [NSDictionary dictionaryWithContentsOfFile:_path];
+        if (!data) {
+            NSLog(@"Failed to load %@!", _path.lastPathComponent);
         }
         _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
 
