@@ -27,13 +27,13 @@ static const Range kRanges[] = {
     { 192, 255 }, // Latin-1
 
     // Extra characters found in 80days.inkcontent
-    { 163, 163 }, // Pound sign
-    { 167, 167 }, // Section sign
-    { 256, 257 }, // A/a with macron
-    { 333, 333 }, // o with macron
-    { 339, 339 }, // oe
-    { 363, 363 }, // u with macron
-    { 537, 537 }, // s with comma below
+//     { 163, 163 }, // Pound sign
+//     { 167, 167 }, // Section sign
+//     { 256, 257 }, // A/a with macron
+//     { 333, 333 }, // o with macron
+//     { 339, 339 }, // oe
+//     { 363, 363 }, // u with macron
+//     { 537, 537 }, // s with comma below
 
     // Misc extras
     { 0x00a9, 0x00a9 }, // (c)
@@ -48,6 +48,19 @@ static const Range kRanges[] = {
     { 0x10411, 0x10411 }, // Deseret Capital Pee (alias for Increment)
     { 0x10422, 0x10422 }, // Deseret Capital El (alias for Gamma)
     { 0x10424, 0x10424 }, // Deseret Capital En (alias for Iota)
+
+    // Russian characters used in Sorcery 4 credits
+    { 1053, 1053 },
+    { 1056, 1056 },
+    { 1072, 1072 },
+    { 1074, 1074 },
+    { 1076, 1076 },
+    { 1077, 1077 },
+    { 1080, 1080 },
+    { 1082, 1082 },
+    { 1086, 1086 },
+    { 1089, 1089 },
+    { 1090, 1090 },
 
     { 0, 0 }
 };
