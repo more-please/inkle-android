@@ -638,6 +638,11 @@ public:
     return result;
 }
 
+- (void) stayAwake
+{
+    [self javaVoidMethod:&kHideStatusBar];
+}
+
 - (NSString*) versionName
 {
     return [self javaStringMethod:&kVersionName];

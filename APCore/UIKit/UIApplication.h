@@ -27,6 +27,8 @@
 - (BOOL) canTweet;
 - (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image;
 
+- (void) stayAwake; // Stop the screen auto-locking, on Android
+
 // Rather specific to 80 Days...
 typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == cancel
 - (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block;

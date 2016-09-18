@@ -32,6 +32,11 @@ static UIApplication* g_Application;
     GLUE_NOT_IMPLEMENTED;
 }
 
+- (void) stayAwake
+{
+    GLUE_NOT_IMPLEMENTED;
+}
+
 - (NSString*) versionName
 {
     GLUE_NOT_IMPLEMENTED;
