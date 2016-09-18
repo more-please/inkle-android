@@ -7,6 +7,8 @@
 + (void) setDefaultsPath:(NSString*)path;
 + (AP_UserDefaults*) standardUserDefaults;
 
+- (void) startSyncTimer;
+
 - (id) objectForKey:(NSString*)defaultName;
 - (void) setObject:(id)value forKey:(NSString*)defaultName;
 

@@ -42,10 +42,16 @@ static AP_UserDefaults* g_Defaults = nil;
             NSLog(@"Failed to load %@!", _path.lastPathComponent);
         }
         _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
-
-        _timer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
     }
     return self;
+}
+
+- (void) startSyncTimer
+{
+    if (_timer) {
+        [_timer invalidate];
+    }
+    _timer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
 }
 
 - (void) timerFired:(NSTimer*)timer
@@ -57,17 +63,31 @@ static AP_UserDefaults* g_Defaults = nil;
 {
     if (_dirty) {
         _dirty = NO;
-        [self performSelectorInBackground:@selector(saveDictionary:) withObject:[_contents copy]];
+        NSError* err = nil;
+        NSData* data = [NSJSONSerialization dataWithJSONObject:_contents options:0 error:&err];
+        if (err) {
+            NSLog(@"Error serializing NSUserDefaults: %@", err);
+        } else {
+            [self performSelectorInBackground:@selector(saveData:) withObject:data];
+        }
     }
     return YES;
 }
 
-- (void) saveDictionary:(NSDictionary*)data
+- (void) saveData:(NSData*)data
 {
+    NSError* err = nil;
+    NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+    if (err) {
+        NSLog(@"Error deserializing NSUserDefaults: %@", err);
+        return;
+    }
+    NSLog(@"%@", dict);
+
     [[UIApplication sharedApplication] lockQuit];
     {
         NSLog(@"Writing %@...", _path);
-        BOOL success = [data writeToFile:_path atomically:YES];
+        BOOL success = [dict writeToFile:_path atomically:YES];
         NSLog(@"Writing %@... Done!", _path);
         if (!success) {
             NSLog(@"Failed to save AP_UserDefaults to path: %@", _path);
