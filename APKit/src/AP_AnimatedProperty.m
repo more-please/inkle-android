@@ -25,7 +25,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     if (self) {
         _name = name;
         _view = view;
-        [_view animatedPropertyWasAdded:self];
+        [view animatedPropertyWasAdded:self];
         [AP_Window performAfterFrame:^{
             _hasBeenSet = YES;
         }];
