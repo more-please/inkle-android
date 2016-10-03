@@ -332,6 +332,8 @@ public:
         NSString* defaultsPath = [self.documentsDir stringByAppendingPathComponent:@"NSUserDefaults.plist"];
         [AP_UserDefaults setDefaultsPath:defaultsPath];
 
+        [[AP_UserDefaults standardUserDefaults] startSyncTimer];
+
         // Send NSLog to a file
         NSString* logfile = [self.documentsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld.log", time(NULL)]];
         _NSLog_fd = open(logfile.UTF8String, O_CREAT | O_WRONLY | O_APPEND, 644);
