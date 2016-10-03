@@ -76,12 +76,26 @@
             return NO;
         }
     }
-    BOOL result = NO;
+
+    BOOL found = NO;
     for (AP_Control_Action* ack in _actions) {
         if (ack.events & mask) {
             id target = ack.target;
             if (target) {
-                result = YES;
+                found = YES;
+            }
+        }
+    }
+    if (!found) {
+        return NO;
+    }
+
+    // Copy the action list, to defend against concurrent modification
+    NSArray* actions = [NSArray arrayWithArray:_actions];
+    for (AP_Control_Action* ack in actions) {
+        if (ack.events & mask) {
+            id target = ack.target;
+            if (target) {
                 if (ack.numArgs == 2) {
                     void (*func)(id, SEL) = (void*) (ack.imp);
                     func(target, ack.action);
@@ -96,7 +110,7 @@
             }
         }
     }
-    return result;
+    return YES;
 }
 
 - (BOOL) handleAndroidBackButton
