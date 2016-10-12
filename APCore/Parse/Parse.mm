@@ -362,7 +362,7 @@ static NSString* escape(CURL* curl, NSObject* s) {
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
             if (!nextTimer) {
-                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:300];
             }
 
             // Run callbacks.

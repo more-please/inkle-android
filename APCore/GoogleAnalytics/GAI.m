@@ -7,7 +7,7 @@
 
 static GAI* g_shared = nil;
 
-static const int kTimerInterval = 20;
+static const int kTimerInterval = 60;
 
 @implementation GAI {
     AP_GAITracker* _defaultTracker;
@@ -153,7 +153,7 @@ static size_t write_devnull(char *ptr, size_t size, size_t nmemb, void *userdata
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
             if (!nextTimer) {
-                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:300];
             }
 
             // Run callbacks.
