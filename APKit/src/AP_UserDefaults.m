@@ -7,6 +7,9 @@
     NSMutableDictionary* _contents;
     NSTimer* _timer;
     NSString* _path;
+
+    NSThread* _thread;
+    BOOL _done;
 }
 
 static NSString* g_DefaultsPath = nil;
@@ -15,9 +18,6 @@ static AP_UserDefaults* g_Defaults = nil;
 + (void) setDefaultsPath:(NSString*)path
 {
     g_DefaultsPath = path;
-#ifndef APPLE_RUNTIME
-    [NSUserDefaults setDocumentsDir:g_DefaultsPath.stringByDeletingLastPathComponent];
-#endif
 }
 
 + (AP_UserDefaults*) standardUserDefaults
@@ -42,6 +42,9 @@ static AP_UserDefaults* g_Defaults = nil;
             NSLog(@"Failed to load %@!", _path.lastPathComponent);
         }
         _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
+
+        _thread = [[NSThread alloc] initWithTarget:self selector:@selector(backgroundLoop:) object:nil];
+        [_thread start];
     }
     return self;
 }
@@ -68,7 +71,7 @@ static AP_UserDefaults* g_Defaults = nil;
         if (err) {
             NSLog(@"Error serializing NSUserDefaults: %@", err);
         } else {
-            [self performSelectorInBackground:@selector(saveData:) withObject:data];
+            [self performSelector:@selector(saveData:) onThread:_thread withObject:data waitUntilDone:NO];
         }
     }
     return YES;
@@ -95,6 +98,7 @@ static AP_UserDefaults* g_Defaults = nil;
     }
     [[UIApplication sharedApplication] unlockQuit];
 }
+
 
 - (id) objectForKey:(NSString*)defaultName
 {
@@ -149,9 +153,47 @@ static AP_UserDefaults* g_Defaults = nil;
     return [_contents objectForKey:defaultName];
 }
 
-- (NSDictionary*) dictionaryRepresentation
+// ----------------------------------------------------------
+
+- (void) backgroundTimerFired:(NSTimer*)timer
 {
-    return _contents;
+    // This timer isn't used for anything; it's just that without
+    // a timer, the runLoop seems to poll continuously...!
+}
+
+- (void) backgroundLoop:(id)ignored
+{
+    NSTimer* timer;
+
+    @autoreleasepool {
+        NSLog(@"AP_UserDefaults: starting");
+        timer = [NSTimer scheduledTimerWithTimeInterval:60 target:self selector:@selector(backgroundTimerFired:) userInfo:nil repeats:YES];
+    }
+
+    while (!_done) {
+        @autoreleasepool {
+            NSLog(@"[AP_UserDefaults background thread]");
+
+            // Run Objective-C timers.
+            NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
+            NSDate* now = [NSDate date];
+            NSDate* nextTimer;
+            do {
+                nextTimer = [runLoop limitDateForMode:NSDefaultRunLoopMode];
+            } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
+
+            if (!nextTimer) {
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
+            }
+
+            // Run callbacks.
+            [runLoop acceptInputForMode:NSDefaultRunLoopMode beforeDate:nextTimer];
+        }
+    }
+
+    [timer invalidate];
+
+    NSLog(@"AP_UserDefaults: stopping");
 }
 
 @end

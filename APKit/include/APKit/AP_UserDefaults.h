@@ -25,6 +25,4 @@
 
 - (BOOL) synchronize;
 
-- (NSDictionary*) dictionaryRepresentation;
-
 @end
