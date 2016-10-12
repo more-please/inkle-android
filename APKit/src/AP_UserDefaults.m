@@ -125,9 +125,11 @@ static AP_UserDefaults* g_Defaults = nil;
 
 - (void) setBool:(BOOL)value forKey:(NSString*)defaultName
 {
-    NSNumber* number = [NSNumber numberWithBool:value];
-    [_contents setObject:number forKey:defaultName];
-    _dirty = YES;
+    if ([self boolForKey:defaultName] != value) {
+        NSNumber* number = [NSNumber numberWithBool:value];
+        [_contents setObject:number forKey:defaultName];
+        _dirty = YES;
+    }
 }
 
 - (NSInteger) integerForKey:(NSString*)defaultName
@@ -138,9 +140,11 @@ static AP_UserDefaults* g_Defaults = nil;
 
 - (void) setInteger:(NSInteger)value forKey:(NSString*)defaultName
 {
-    NSNumber* number = [NSNumber numberWithInteger:value];
-    [_contents setObject:number forKey:defaultName];
-    _dirty = YES;
+    if ([self integerForKey:defaultName] != value) {
+        NSNumber* number = [NSNumber numberWithInteger:value];
+        [_contents setObject:number forKey:defaultName];
+        _dirty = YES;
+    }
 }
 
 - (NSString*) stringForKey:(NSString*)defaultName
