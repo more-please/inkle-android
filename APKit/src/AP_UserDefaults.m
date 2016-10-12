@@ -167,7 +167,7 @@ static AP_UserDefaults* g_Defaults = nil;
 
     @autoreleasepool {
         NSLog(@"AP_UserDefaults: starting");
-        timer = [NSTimer scheduledTimerWithTimeInterval:60 target:self selector:@selector(backgroundTimerFired:) userInfo:nil repeats:YES];
+        timer = [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(backgroundTimerFired:) userInfo:nil repeats:YES];
     }
 
     while (!_done) {
@@ -183,7 +183,7 @@ static AP_UserDefaults* g_Defaults = nil;
             } while (nextTimer && [now compare:nextTimer] != NSOrderedAscending);
 
             if (!nextTimer) {
-                nextTimer = [NSDate dateWithTimeIntervalSinceNow:30];
+                nextTimer = [NSDate dateWithTimeIntervalSinceNow:300];
             }
 
             // Run callbacks.
