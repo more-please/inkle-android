@@ -44,7 +44,13 @@ static GLuint compileShader(BOOL mask, const GLchar* ptr, GLenum type)
 
     } else {
 
-        AP_VERTEX_PREFIX = "precision highp float;\n";
+        AP_VERTEX_PREFIX =
+            "precision highp float;\n"
+            "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+            "#define varying varying highp\n"
+            "#else\n"
+            "#define varying varying mediump\n"
+            "#endif\n";
 
         AP_FRAGMENT_PREFIX =
             "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"

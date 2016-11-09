@@ -3,7 +3,15 @@
 #import "AP_Check.h"
 #import "NSObject+AP_PerformBlock.h"
 
-@implementation AP_Application
+#ifdef SORCERY_SDL
+#import <SDL2/SDL.h>
+#endif
+
+@implementation AP_Application {
+#ifdef SORCERY_SDL
+    Uint32 _sdl_noop_event;
+#endif
+}
 
 static AP_Application* g_Application;
 
@@ -18,6 +26,9 @@ static AP_Application* g_Application;
     if (self) {
         AP_CHECK(!g_Application, return nil);
         g_Application = self;
+#ifdef SORCERY_SDL
+        _sdl_noop_event = SDL_RegisterEvents(1);
+#endif
     }
     return self;
 }
@@ -66,6 +77,11 @@ static AP_Application* g_Application;
     [self performBlock:^{
         [self performBlock:block() onThread:caller waitUntilDone:NO];
     } onThread:_uiThread waitUntilDone:NO];
+#ifdef SORCERY_SDL
+    SDL_Event e = {};
+    e.type = _sdl_noop_event;
+    SDL_PushEvent(&e);
+#endif
 }
 
 - (void) performOnGameThread:(GameThreadBlock)block
