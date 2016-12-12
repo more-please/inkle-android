@@ -15,6 +15,7 @@
 #import "AP_Checkbox.h"
 #import "AP_Control.h"
 #import "AP_Event.h"
+#import "AP_FileUtils.h"
 #import "AP_Font.h"
 #import "AP_GestureRecognizer.h"
 #import "AP_GLKBaseEffect.h"
