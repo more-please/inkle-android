@@ -81,6 +81,9 @@ static AP_UserDefaults* g_Defaults = nil;
                 NSString* f = validFiles[seq];
                 [_files addObject:f];
                 _nextSeq = seq.intValue + 1;
+
+                NSString* path = [_dir stringByAppendingPathComponent:f];
+                [[UIApplication sharedApplication] addCrashReportPath:path description:@"User defaults"];
             }
         }
 
