@@ -1,12 +1,17 @@
 #import "AP_UserDefaults.h"
 
+#import "AP_FileUtils.h"
+
 #import <UIKit/UIKit.h>
 
 @implementation AP_UserDefaults {
     BOOL _dirty;
     NSMutableDictionary* _contents;
     NSTimer* _timer;
-    NSString* _path;
+    NSString* _dir;
+    NSString* _basename;
+    NSMutableArray* _files;
+    int _nextSeq;
 
     NSThread* _thread;
     BOOL _done;
@@ -34,19 +39,114 @@ static AP_UserDefaults* g_Defaults = nil;
     self = [super init];
     if (self) {
         NSAssert(g_DefaultsPath, @"AP_UserDefaults path wasn't set");
-        _path = g_DefaultsPath;
+        _dir = g_DefaultsPath.stringByDeletingLastPathComponent;
+        _basename = g_DefaultsPath.lastPathComponent;
 
-        NSLog(@"Loading %@...", _path);
-        NSDictionary* data = [NSDictionary dictionaryWithContentsOfFile:_path];
-        if (!data) {
-            NSLog(@"Failed to load %@!", _path.lastPathComponent);
-        }
-        _contents = data ? [data mutableCopy] : [NSMutableDictionary dictionary];
-
+        // Kick off background thread
         _thread = [[NSThread alloc] initWithTarget:self selector:@selector(backgroundLoop:) object:nil];
         [_thread start];
+
+        NSLog(@"Scanning for UserDefaults...");
+        {
+            NSMutableDictionary* validFiles = [NSMutableDictionary dictionary];
+
+            NSArray* allFiles = getDirectoryContents(_dir);
+            for (NSString* f in allFiles) {
+                if ([f isEqualToString:_basename]) {
+                    // This is an old-style uncompressed file. Give it sequence number 0.
+                    [validFiles setObject:f forKey:@(0)];
+                    NSLog(@"  * %@", f);
+                    continue;
+                }
+
+                NSScanner* scanner = [NSScanner scannerWithString:f];
+                int seq;
+                if ([scanner scanString:_basename intoString:NULL]
+                    && [scanner scanString:@"." intoString:NULL]
+                    && [scanner scanInt:&seq]
+                    && [scanner scanString:@".gz" intoString:NULL]) {
+                    // New-style compressed file with a sequence number.
+                    [validFiles setObject:f forKey:@(seq)];
+                    NSLog(@"  * %@", f);
+                    continue;
+                }
+            }
+
+            _files = [NSMutableArray array];
+            _nextSeq = 1;
+
+            NSArray* seqs = validFiles.allKeys;
+            seqs = [seqs sortedArrayUsingSelector:@selector(compare:)];
+            for (NSNumber* seq in seqs) {
+                NSString* f = validFiles[seq];
+                [_files addObject:f];
+                _nextSeq = seq.intValue + 1;
+            }
+        }
+
+        // Attempt to load the file with the highest sequence number
+        while (_files.count) {
+            NSString* path = [_dir stringByAppendingPathComponent:_files.lastObject];
+            NSLog(@"Loading %@...", path);
+
+            NSDictionary* dict;
+            if ([path.pathExtension isEqualToString:@"gz"]) {
+                NSData* data = [NSData dataWithContentsOfFile:path];
+                data = gunzip(data);
+                NSError *error = nil;
+                dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+                if (error) {
+                    NSLog(@"Error loading JSON data: %@", error);
+                    dict = nil;
+                }
+            } else {
+                dict = [NSDictionary dictionaryWithContentsOfFile:path];
+            }
+
+            if (!dict) {
+                NSLog(@"Failed to load %@!", path.lastPathComponent);
+            } else if (![dict isKindOfClass:[NSDictionary class]]) {
+                NSLog(@"Error: root structure is not a dictionary");
+            } else {
+                NSLog(@"Loading %@... Success!", path);
+                _contents = [dict mutableCopy];
+                break;
+            }
+
+            // Failed -- discard this file and try the previous one
+            [_files removeLastObject];
+            continue;
+        }
+
+        if (!_contents) {
+            _contents = [NSMutableDictionary dictionary];
+        }
     }
     return self;
+}
+
+typedef void (^VoidBlock)();
+typedef VoidBlock (^Thunk)();
+
+- (void) doInBackground:(Thunk)thunk
+{
+    NSThread* caller = [NSThread currentThread];
+    [self runOnThread:_thread block:^{
+        VoidBlock block = thunk();
+        [self runOnThread:caller block:block];
+    }];
+}
+
+- (void) runBlock:(VoidBlock)block
+{
+    if (block) {
+        block();
+    }
+}
+
+- (void) runOnThread:(NSThread*)thread block:(VoidBlock)block
+{
+    [self performSelector:@selector(runBlock:) onThread:thread withObject:block waitUntilDone:NO];
 }
 
 - (void) startSyncTimer
@@ -70,35 +170,56 @@ static AP_UserDefaults* g_Defaults = nil;
         NSData* data = [NSJSONSerialization dataWithJSONObject:_contents options:0 error:&err];
         if (err) {
             NSLog(@"Error serializing NSUserDefaults: %@", err);
-        } else {
-            [self performSelector:@selector(saveData:) onThread:_thread withObject:data waitUntilDone:NO];
+            return NO;
         }
+        int seq = _nextSeq++;
+        NSString* filename = [NSString stringWithFormat:@"%@.%d.gz", _basename, seq];
+        [_files addObject:filename];
+
+        NSString* path = [_dir stringByAppendingPathComponent:filename];
+        [self doInBackground:^{
+            [[UIApplication sharedApplication] lockQuit];
+            {
+                NSLog(@"Writing %@...", path);
+                [gzip(data) writeToFile:path atomically:NO];
+                NSLog(@"Writing %@... Done", path);
+            }
+            [[UIApplication sharedApplication] unlockQuit];
+            return ^{
+                [self maybeEraseOldestFile];
+            };
+        }];
     }
     return YES;
 }
 
-- (void) saveData:(NSData*)data
+- (void) maybeEraseOldestFile
 {
-    NSError* err = nil;
-    NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
-    if (err) {
-        NSLog(@"Error deserializing NSUserDefaults: %@", err);
-        return;
+    if (_files.count > 10) {
+        NSString* f = _files.firstObject;
+        [_files removeObjectAtIndex:0];
+        [self eraseFile:[_dir stringByAppendingPathComponent:f]];
     }
-    NSLog(@"%@", dict);
-
-    [[UIApplication sharedApplication] lockQuit];
-    {
-        NSLog(@"Writing %@...", _path);
-        BOOL success = [dict writeToFile:_path atomically:YES];
-        NSLog(@"Writing %@... Done!", _path);
-        if (!success) {
-            NSLog(@"Failed to save AP_UserDefaults to path: %@", _path);
-        }
-    }
-    [[UIApplication sharedApplication] unlockQuit];
 }
 
+- (void) eraseFile:(NSString*)f
+{
+    [self doInBackground:^{
+        [[UIApplication sharedApplication] lockQuit];
+        {
+            NSLog(@"UserDefaults: deleting %@...", f);
+            NSError* err = nil;
+            [[NSFileManager defaultManager] removeItemAtPath:f error:&err];
+            if (err) {
+                NSLog(@"Error deleting %@: %@", f, err);
+            } else {
+                NSLog(@"UserDefaults: deleting %@... Done", f);
+            }
+        }
+        [[UIApplication sharedApplication] unlockQuit];
+        return ^{};
+    }];
+}
 
 - (id) objectForKey:(NSString*)defaultName
 {
