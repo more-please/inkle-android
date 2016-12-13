@@ -114,7 +114,7 @@ NSData* gunzip(NSData* compressed)
         return nil;
     }
     
-    while (zerr != Z_STREAM_END) {
+    while (zerr == Z_OK) {
         z.next_out = (unsigned char*) buffer.bytes;
         z.avail_out = (uInt) buffer.length;
         zerr = inflate(&z, Z_SYNC_FLUSH);
