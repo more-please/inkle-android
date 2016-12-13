@@ -2,6 +2,10 @@
 
 #import <zlib.h>
 
+#ifdef ANDROID
+#include <dirent.h>
+#endif
+
 #ifdef WINDOWS
 static NSString* getLastWindowsError() {
     DWORD err = GetLastError();
@@ -45,6 +49,19 @@ NSArray* getDirectoryContents(NSString* dir)
             [result addObject:s];
         } while (FindNextFile(h, &data));
     }
+#elif defined(ANDROID)
+    NSMutableArray* result = [NSMutableArray array];
+	DIR* d = opendir(dir.UTF8String);
+	if (d) {
+		for (struct dirent* e = readdir(d); e; e = readdir(d)) {
+			NSString* f = [NSString stringWithFormat:@"%s", e->d_name];
+			[result addObject:f];
+		}
+		closedir(d);
+	} else {
+		NSLog(@"Warning: opendir() failed on directory: %@ error: %s", dir, strerror(errno));
+	}
+	return result;
 #else
     NSError* err;
     NSArray* result = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:&err];
