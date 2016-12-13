@@ -2,6 +2,26 @@
 
 #import <zlib.h>
 
+#ifdef WINDOWS
+static NSString* getLastWindowsError() {
+    DWORD err = GetLastError();
+    static char buffer[1000];
+    int len = FormatMessage(
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL,
+        err,
+        LANG_NEUTRAL,
+        buffer,
+        999,
+        NULL);
+    if (len <= 0) {
+        return nil;
+    }
+    buffer[len] = 0;
+    return [NSString stringWithFormat:@"%s (code: %d)", buffer, (int)err];
+}
+#endif
+
 NSArray* getDirectoryContents(NSString* dir)
 {
 #ifdef WINDOWS
