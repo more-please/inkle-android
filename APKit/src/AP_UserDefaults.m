@@ -92,15 +92,17 @@ static AP_UserDefaults* g_Defaults = nil;
             NSString* path = [_dir stringByAppendingPathComponent:_files.lastObject];
             NSLog(@"Loading %@...", path);
 
-            NSDictionary* dict;
+            NSDictionary* dict = nil;
             if ([path.pathExtension isEqualToString:@"gz"]) {
                 NSData* data = [NSData dataWithContentsOfFile:path];
                 data = gunzip(data);
-                NSError *error = nil;
-                dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-                if (error) {
-                    NSLog(@"Error loading JSON data: %@", error);
-                    dict = nil;
+                if (data) {
+                    NSError *error = nil;
+                    dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+                    if (error) {
+                        NSLog(@"Error loading JSON data: %@", error);
+                        dict = nil;
+                    }
                 }
             } else {
                 dict = [NSDictionary dictionaryWithContentsOfFile:path];
@@ -220,7 +222,9 @@ typedef VoidBlock (^Thunk)();
             }
         }
         [[UIApplication sharedApplication] unlockQuit];
-        return ^{};
+        return ^{
+            [self maybeEraseOldestFile];
+        };
     }];
 }
 
