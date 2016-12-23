@@ -3,6 +3,31 @@
 #import <zlib.h>
 
 #ifdef WINDOWS
+
+#include <io.h>
+#include <fcntl.h>
+#include <shlobj.h>
+#include <sys/stat.h>
+
+// For heaven's sake Microsoft, open() is perfectly fine
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+#define open _open
+#define close _close
+#define write _write
+#define fsync(fd) _flushall
+
+#define O_CREAT _O_CREAT
+#define O_WRONLY _O_WRONLY
+#define O_APPEND _O_APPEND
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE
+#define S_IRGRP _S_IREAD
+#define S_IROTH _S_IREAD
+
+#endif
+
+#ifdef WINDOWS
 static NSString* getLastWindowsError() {
     DWORD err = GetLastError();
     static char buffer[1000];
@@ -21,6 +46,23 @@ static NSString* getLastWindowsError() {
     return [NSString stringWithFormat:@"%s (code: %d)", buffer, (int)err];
 }
 #endif
+
+void ffsync(NSString* path)
+{
+    int fd = open(path.UTF8String, O_RDONLY);
+    if (fd < 0) {
+        NSLog(@"open(%@) failed: %s", path, strerror(errno));
+        return;
+    }
+    if (fsync(fd) < 0) {
+        NSLog(@"fsync(%@) failed: %s", path, strerror(errno));
+        // Continue anyway
+    }
+    if (close(fd) < 0) {
+        NSLog(@"close(%@) failed: %s", path, strerror(errno));
+        // Continue anyway
+    }
+}
 
 NSArray* getDirectoryContents(NSString* dir)
 {
