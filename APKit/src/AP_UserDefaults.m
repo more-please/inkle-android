@@ -187,7 +187,11 @@ typedef VoidBlock (^Thunk)();
             {
                 NSLog(@"Writing %@...", path);
                 [gzip(data) writeToFile:path atomically:NO];
-                NSLog(@"Writing %@... Done", path);
+                NSLog(@"Writing %@... Syncing...", path);
+                NSString* dir = path.stringByDeletingLastPathComponent;
+                ffsync(path);
+                ffsync(dir);
+                NSLog(@"Writing %@... Syncing... Done", path);
             }
             [[UIApplication sharedApplication] unlockQuit];
             return ^{
