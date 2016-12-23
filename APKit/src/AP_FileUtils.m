@@ -4,6 +4,7 @@
 
 #ifdef ANDROID
 #include <dirent.h>
+#include <fcntl.h>
 #endif
 
 #ifdef WINDOWS
