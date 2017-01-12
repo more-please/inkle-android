@@ -989,24 +989,36 @@ const EGLint basicAttribs[] = {
 - (void) updateScreenSize
 {
     AP_CHECK(_display, return);
-    // eglQuerySurface(_display, _surface, EGL_WIDTH, &w);
-    // eglQuerySurface(_display, _surface, EGL_HEIGHT, &h);
 
     float f[9];
     if ([self javaFloatsMethod:&kGetScreenInfo ptr:f size:9]) {
+        // The method used by the Java code (getDecorView.getWindowVisibleDisplayFrame)
+        // sadly returns incorrect values on some fucking Samsung devices due to some
+        // stupid fucking broken battery life optimization they try to do.
+        // Try to work around this, based on two assumptions:
+        //  - eglQuerySurface gives the real value we need (GL framebuffer size in pixels)
+        //  - eglQuerySurface doesn't include the status bar, which is always at the top
+        // To do this we calculate a fudge factor based on the reported screen width.
+        EGLint realWidth;
+        eglQuerySurface(_display, _surface, EGL_WIDTH, &realWidth);
+        float k = (realWidth > 0 && f[3] > 0) ? (realWidth / f[3]) : 1;
+
         float scale = f[0];
+        if (scale <= 0) {
+            return;
+        }
 
         CGRect bounds;
-        bounds.origin.x = f[1] / scale;
-        bounds.origin.y = f[2] / scale;
-        bounds.size.width = f[3] / scale;
-        bounds.size.height = f[4] / scale;
+        bounds.origin.x = k * f[1] / scale;
+        bounds.origin.y = k * f[2] / scale;
+        bounds.size.width = k * f[3] / scale;
+        bounds.size.height = k * f[4] / scale;
 
-        CGRect appFrame;
-        appFrame.origin.x = f[5] / scale;
-        appFrame.origin.y = f[6] / scale;
-        appFrame.size.width = f[7] / scale;
-        appFrame.size.height = f[8] / scale;
+        CGRect appFrame = bounds;
+        appFrame.origin.x = k * f[5] / scale;
+        appFrame.origin.y = k * f[6] / scale;
+        appFrame.size.width = k * f[7] / scale;
+        appFrame.size.height = k * f[8] / scale;
 
         [[UIScreen mainScreen] setBounds:bounds applicationFrame:appFrame scale:scale];
 
