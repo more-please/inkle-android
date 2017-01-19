@@ -271,9 +271,9 @@ using namespace std;
                 *iPtr++ = indexAt(i, j);
                 *iPtr++ = indexAt(i+1, j);
                 *iPtr++ = indexAt(i, j+1);
-                *iPtr++ = indexAt(i, j+1);
                 *iPtr++ = indexAt(i+1, j+1);
                 *iPtr++ = indexAt(i+1, j);
+                *iPtr++ = indexAt(i, j+1);
             }
         }
 
