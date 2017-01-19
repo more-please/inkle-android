@@ -123,9 +123,9 @@ typedef struct VertexData {
             *iPtr++ = bottomRight;
             *iPtr++ = bottomLeft;
             *iPtr++ = topLeft;
-            *iPtr++ = topLeft;
             *iPtr++ = topRight;
             *iPtr++ = bottomRight;
+            *iPtr++ = topLeft;
         }
         *posPtr++ = xPos;
         AP_CHECK(posPtr == (float*)_glyphs, abort());

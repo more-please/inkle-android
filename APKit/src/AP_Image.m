@@ -855,9 +855,9 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
                     *iPtr++ = bottomRight;
                     *iPtr++ = bottomLeft;
                     *iPtr++ = topLeft;
-                    *iPtr++ = topLeft;
                     *iPtr++ = topRight;
                     *iPtr++ = bottomRight;
+                    *iPtr++ = topLeft;
                 }
             }
         }
