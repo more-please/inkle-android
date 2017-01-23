@@ -799,6 +799,9 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
         (yTile > 0) ? (displaySize.height / stretchSize.height) : 0,
     };
 
+    // Scale numbers down in case we're hitting accuracy problems on some shitty GPUs
+    const float K = 1.0 / MAX(_size.width, _size.height);
+
     int cacheKey = (xTile * 1000) + yTile;
     AP_Image_CacheEntry* e = [_cache get:@(cacheKey) withLoader:^{
         // Calculate how many quads we have. This depends on the tiling.
@@ -836,12 +839,12 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
                     // Generate four vertices for the corners.
                     for (int y = 0; y <= 1; y++) {
                         for (int x = 0; x <= 1; x++) {
-                            vPtr->xEdge = q->edge.origin.x + x * q->edge.size.width;
-                            vPtr->yEdge = q->edge.origin.y + y * q->edge.size.height;
-                            vPtr->xStretch = hOrigin + q->stretch.origin.x + x * q->stretch.size.width;
-                            vPtr->yStretch = vOrigin + q->stretch.origin.y + y * q->stretch.size.height;
-                            vPtr->xTex = q->tex.origin.x + x * q->tex.size.width;
-                            vPtr->yTex = q->tex.origin.y + y * q->tex.size.height;
+                            vPtr->xEdge     = K * (q->edge.origin.x + x * q->edge.size.width);
+                            vPtr->yEdge     = K * (q->edge.origin.y + y * q->edge.size.height);
+                            vPtr->xStretch  = K * (hOrigin + q->stretch.origin.x + x * q->stretch.size.width);
+                            vPtr->yStretch  = K * (vOrigin + q->stretch.origin.y + y * q->stretch.size.height);
+                            vPtr->xTex      = q->tex.origin.x + x * q->tex.size.width;
+                            vPtr->yTex      = q->tex.origin.y + y * q->tex.size.height;
                             ++vPtr;
                         }
                     }
@@ -876,7 +879,7 @@ static int countTilesInQuads(NSData* data, int xTile, int yTile) {
     }];
 
     transform = CGAffineTransformConcat(_imageTransform, transform);
-    transform = CGAffineTransformScale(transform, edgeScale.width / _scale, edgeScale.height / _scale);
+    transform = CGAffineTransformScale(transform, edgeScale.width / (_scale * K), edgeScale.height / (_scale * K));
 
     GLKMatrix3 matrix = GLKMatrix3Make(
         transform.a, transform.b, 0,

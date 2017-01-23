@@ -129,6 +129,43 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 
 // ---------------------------------------------------------------------------------------
 
+#ifdef WINDOWS
+
+#include <shlobj.h>
+#include <shlwapi.h>
+
+static BOOL cdToDataDir() {
+    uint16_t* wpath;
+    HRESULT err = SHGetKnownFolderPath(
+        &FOLDERID_LocalAppData,
+        KF_FLAG_CREATE | KF_FLAG_INIT,
+        NULL,
+        &wpath);
+    if (err) {
+        return NO;
+    }
+    if (!SetCurrentDirectoryW(wpath)) {
+        return NO;
+    }
+    return YES;
+}
+
+static BOOL cdToExeDir() {
+    uint16_t path[512];
+    if (!GetModuleFileNameW(NULL, path, 512)) {
+        return NO;
+    }
+    PathRemoveFileSpecW(path);
+    if (!SetCurrentDirectoryW(path)) {
+        return NO;
+    }
+    return YES;
+}
+
+#endif
+
+// ---------------------------------------------------------------------------------------
+
 @implementation PAK {
     BOOL _isMemoryMapped;
     NSDictionary* _names; // Map of name -> pos
@@ -145,6 +182,18 @@ NSString* const PAK_SearchPathChangedNotification = @"PAK_SearchPathChangedNotif
 #ifdef OSX
     filename = [[NSBundle mainBundle] pathForResource:filename ofType:nil];
 #endif
+#ifdef WINDOWS
+    cdToExeDir();
+#endif
+    PAK* result = [self pakWithMemoryMappedFile_internal:filename];
+#ifdef WINDOWS
+    cdToDataDir();
+#endif
+    return result;
+}
+
++ (PAK*) pakWithMemoryMappedFile_internal:(NSString*)filename
+{
     if (![[NSFileManager defaultManager] fileExistsAtPath:filename]) {
         NSLog(@"Missing expansion file: %@", filename);
         return nil;
