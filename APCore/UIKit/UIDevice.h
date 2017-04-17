@@ -34,7 +34,7 @@ UIUserInterfaceIdiom;
 @interface UIDevice : NSObject
 
 @property(nonatomic,readonly) UIDeviceOrientation orientation;
-//@property(nonatomic,readonly) UIUserInterfaceIdiom userInterfaceIdiom;
+@property(nonatomic,readonly) UIUserInterfaceIdiom userInterfaceIdiom;
 @property(nonatomic,strong,readonly) NSString* name;
 
 + (UIDevice*) currentDevice;
