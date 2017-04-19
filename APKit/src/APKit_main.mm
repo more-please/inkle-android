@@ -756,12 +756,12 @@ public:
     delegate.window = [[Real_UIWindow alloc] init];
     delegate.window.rootViewController = window; // Err, yes, well
 
-#ifdef SORCERY
-    AP_Image* logo = [AP_Image imageNamed:@"sorcery-title"];
-    logo = [logo imageScaledBy:0.75];
-#else
+#ifdef EIGHTY_DAYS
     AP_Image* logo = [AP_Image imageNamed:@"80-days-logo"];
     logo = [logo imageWithWidth:[AP_Window widthForIPhone:150 iPad:250]];
+#else
+    AP_Image* logo = [AP_Image imageNamed:@"sorcery-title"];
+    logo = [logo imageScaledBy:0.75];
 #endif
 
     AP_ImageView* view = [[AP_ImageView alloc] initWithImage:logo];
@@ -878,7 +878,7 @@ static EGLattr EGLattrs[] = {
     // More RGB is better
     score = 100 * score + red + green + blue;
 
-#ifdef SORCERY
+#ifndef EIGHTY_DAYS
     // For Sorcery, MSAA isn't worth the performance hit -- less is better.
     score = 100 * score - samples;
 #else

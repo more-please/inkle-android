@@ -58,14 +58,14 @@ AP_BAN_EVIL_INIT;
         _alert.layer.cornerRadius = kCornerRadius;
         [self addSubview:_alert];
 
-#ifdef SORCERY
-        AP_Font* headerFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(18, 24)];
-        AP_Font* bodyFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(15, 20)];
-        AP_Font* buttonFont = [AP_Font fontWithName:@"Helvetica-Bold" size:SIZE(18, 24)];
-#else
+#ifdef EIGHTY_DAYS
         AP_Font* headerFont = [AP_Font fontWithName:@"Futura-Medium" size:SIZE(18, 24)];
         AP_Font* bodyFont = [AP_Font fontWithName:@"Futura-Medium" size:SIZE(15, 20)];
         AP_Font* buttonFont = [AP_Font fontWithName:@"Futura-CondensedMedium" size:SIZE(18, 24)];
+#else
+        AP_Font* headerFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(18, 24)];
+        AP_Font* bodyFont = [AP_Font fontWithName:@"Helvetica" size:SIZE(15, 20)];
+        AP_Font* buttonFont = [AP_Font fontWithName:@"Helvetica-Bold" size:SIZE(18, 24)];
 #endif
 
         if (title) {

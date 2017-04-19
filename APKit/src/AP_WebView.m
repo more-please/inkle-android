@@ -85,7 +85,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
             attributes:attrs];
     }
 
-#ifdef SORCERY
+#ifndef EIGHTY_DAYS
     // Sorcery! styles. TODO: extract this into game-specific code.
     if (isTag(n, "strong")) {
         AP_Font* font = [attrs objectForKey:NSFontAttributeName];
@@ -166,7 +166,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
 
         UIColor* color = [attrs objectForKey:NSForegroundColorAttributeName];
         AP_TextTransform textTransform = nil;
-#ifdef SORCERY
+#ifndef EIGHTY_DAYS
         // Sorcery! styles. TODO: extract this into game-specific code.
         if (isTags(n, "h1", "h2", NULL)) {
             font = @"Baskerville-Bold";
@@ -336,7 +336,7 @@ static BOOL isTag(xmlNode* n, const char* tag) {
     [super layoutSubviews];
 
     if (_label) {
-#ifdef SORCERY
+#ifndef EIGHTY_DAYS
         CGFloat margin = [AP_Window scaleForIPhone:50 iPad:100];
 #else
         CGFloat margin = [AP_Window scaleForIPhone:25 iPad:50];
