@@ -386,6 +386,8 @@ public:
         _class = _env->GetObjectClass(_instance);
         AP_CHECK(_class, return nil);
 
+        _env->RegisterNatives(_class, kNatives, sizeof(kNatives) / sizeof(kNatives[0]));
+
         self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
         self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
 #ifdef DEBUG
@@ -781,7 +783,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     PFBooleanResultBlock block = [self popBlock:result.handle];
     if (block) {
         NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        block(result.boolean, nil);
+        block(result.boolean, error);
     }
 }
 
@@ -892,7 +894,7 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     if ([value isKindOfClass:[PFObject class]]) {
         // Send PFObjects without any encoding
         PFObject* pf = (PFObject*) value;
-        return pf.jobj;
+        return (jobject)pf.jobj;
     }
 
     // Otherwise, encode as JSON.
