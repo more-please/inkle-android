@@ -1,6 +1,7 @@
 #pragma once
 
 #import <Foundation/Foundation.h>
+#import <Parse/Parse.h>
 
 #ifdef ANDROID
 #import <jni.h>
@@ -45,5 +46,33 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 
 // Register a file to be included in crash reports
 - (void) addCrashReportPath:(NSString*)path description:(NSString*)desc;
+
+#ifdef ANDROID
+// Wrappers for Parse.
+// TODO (URGENT!) - split these off from SorceryActivity.
+- (JNIEnv*) jniEnv;
+- (jobject) jniContext;
+- (jclass) jniFindClass:(NSString*)name;
+
+- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
+- (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)parameters block:(PFIdResultBlock)block;
+
+- (jobject) parseNewObject:(NSString*)className;
+- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId;
+- (NSString*) parseObjectId:(jobject)jobj;
+- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value;
+- (void) parseObject:(jobject)obj removeKey:(NSString*)key;
+- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block;
+- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block;
+- (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block;
+- (void) parseObject:(jobject)obj refreshWithBlock:(PFObjectResultBlock)block;
+
+- (jobject) parseNewQuery:(NSString*)className;
+- (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)vaue;
+- (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block;
+
+- (void) parseEnableAutomaticUser;
+- (jobject) parseCurrentUser;
+#endif
 
 @end
