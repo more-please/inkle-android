@@ -1,13 +1,20 @@
 #pragma once
 
-#import <Foundation/Foundation.h>
+#import "PFAnalytics.h"
+#import "PFCloud.h"
+#import "PFInstallation.h"
+#import "PFObject.h"
+#import "PFQuery.h"
+#import "PFUser.h"
+#import "PFACL.h"
 
 @interface Parse : NSObject
 
-- (instancetype) initWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
++ (void) setApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
++ (NSString*) getApplicationId;
++ (NSString*) getClientKey;
 
-- (void) call:(NSString*)function args:(NSDictionary*)args block:(void(^)(NSError*, NSString*)) block;
-- (void) save:(NSString*)className data:(NSDictionary*)data block:(void(^)(NSError*))block;
-- (void) query:(NSString*)className where:(NSDictionary*)data block:(void(^)(NSError*, NSArray*))block;
+//+ (void) offlineMessagesEnabled:(BOOL)enabled;
+//+ (void) errorMessagesEnabled:(BOOL)enabled;
 
 @end
