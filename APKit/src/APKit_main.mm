@@ -84,6 +84,54 @@ static JavaMethod kGetAssets = {
 static JavaMethod kFindClass = {
     "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", NULL
 };
+static JavaMethod kParseInit = {
+    "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseCallFunction = {
+    "parseCallFunction", "(ILjava/lang/String;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseNewObject = {
+    "parseNewObject", "(Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
+};
+static JavaMethod kParseNewObjectId = {
+    "parseNewObjectId", "(Ljava/lang/String;Ljava/lang/String;)Lcom/parse/ParseObject;", NULL
+};
+static JavaMethod kParseObjectId = {
+    "parseObjectId", "(Lcom/parse/ParseObject;)Ljava/lang/String;", NULL
+};
+static JavaMethod kParseAddKey = {
+    "parseAddKey", "(Lcom/parse/ParseObject;Ljava/lang/String;Ljava/lang/Object;)V", NULL
+};
+static JavaMethod kParseRemoveKey = {
+    "parseRemoveKey", "(Lcom/parse/ParseObject;Ljava/lang/String;)V", NULL
+};
+static JavaMethod kParseSave = {
+    "parseSave", "(ILcom/parse/ParseObject;)V", NULL
+};
+static JavaMethod kParseSaveEventually = {
+    "parseSaveEventually", "(ILcom/parse/ParseObject;)V", NULL
+};
+static JavaMethod kParseFetch = {
+    "parseFetch", "(ILcom/parse/ParseObject;)V", NULL
+};
+static JavaMethod kParseRefresh = {
+    "parseRefresh", "(ILcom/parse/ParseObject;)V", NULL
+};
+static JavaMethod kParseNewQuery = {
+    "parseNewQuery", "(Ljava/lang/String;)Lcom/parse/ParseQuery;", NULL
+};
+static JavaMethod kParseWhereEqualTo = {
+    "parseWhereEqualTo", "(Lcom/parse/ParseQuery;Ljava/lang/String;Ljava/lang/Object;)V", NULL
+};
+static JavaMethod kParseFind = {
+    "parseFind", "(ILcom/parse/ParseQuery;)V", NULL
+};
+static JavaMethod kParseEnableAutomaticUser = {
+    "parseEnableAutomaticUser", "()V", NULL
+};
+static JavaMethod kParseCurrentUser = {
+    "parseCurrentUser", "()Lcom/parse/ParseUser;", NULL
+};
 static JavaMethod kIsCrappyDevice = {
     "isCrappyDevice", "()Z", NULL
 };
@@ -108,11 +156,24 @@ static JavaMethod kCanTweet = {
 static JavaMethod kTweet = {
     "tweet", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
+static JavaMethod kShareJourney = {
+    "shareJourney", "(Ljava/lang/String;I)V", NULL
+};
 static JavaMethod kMailTo = {
     "mailTo", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
 static JavaMethod kMaybeGetURL = {
     "maybeGetURL", "()Ljava/lang/String;", NULL
+};
+
+static void parseObjResult(JNIEnv*, jobject, jint, jstring);
+static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
+static void shareJourneyResult(JNIEnv*, jobject, jint, jstring);
+
+static JNINativeMethod kNatives[] = {
+    { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
+    { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
+    { "shareJourneyResult", "(ILjava/lang/String;)V", (void *)&shareJourneyResult},
 };
 
 static int _NSLog_fd = -1;
@@ -248,6 +309,8 @@ public:
     NSDate* _autoQuitTime;
 
     NSMutableDictionary* _touches; // Map of ID -> UITouch
+
+    NSMutableDictionary* _blocks; // Map of int -> block
 
     jobject _gaiDefaultTracker;
     NSArray* _pakNamesCache;
@@ -405,6 +468,7 @@ public:
         }
 
         _touches = [NSMutableDictionary dictionary];
+        _blocks = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -655,6 +719,277 @@ public:
     return [self javaIntMethod:&kVersionCode];
 }
 
+- (int) pushBlock:(id)block
+{
+    static int handle = 0;
+    ++handle;
+    if (block) {
+        [_blocks setObject:block forKey:@(handle)];
+    }
+    return handle;
+}
+
+- (id) popBlock:(int)handle
+{
+    id result = [_blocks objectForKey:@(handle)];
+    if (result) {
+        [_blocks removeObjectForKey:@(handle)];
+    }
+    return result;
+}
+
+static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    AsyncResult* result = [[AsyncResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    // NSLog(@"Posting parseCallResult handle:%d string:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(parseObjResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseObjResult:(AsyncResult*)result
+{
+    // NSLog(@"parseCallResult handle:%d string:%@", result.handle, result.string);
+    PFIdResultBlock block = [self popBlock:result.handle];
+    if (block) {
+        NSError* error = nil;
+        id json = [self jsonDecode:result error:&error];
+        block(json, error);
+    }
+}
+
+static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
+    AsyncResult* result = [[AsyncResult alloc] init];
+    result.handle = i;
+    result.boolean = b;
+
+    // NSLog(@"Posting parseSaveResult handle:%d result:%d", result.handle, result.boolean);
+    [g_Main performSelectorOnMainThread:@selector(parseBoolResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) parseBoolResult:(AsyncResult*)result
+{
+    // NSLog(@"parseSaveResult handle:%d value:%d", result.handle, result.boolean);
+    PFBooleanResultBlock block = [self popBlock:result.handle];
+    if (block) {
+        NSError* error = result.boolean ? nil : [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        block(result.boolean, nil);
+    }
+}
+
+- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
+{
+    [self maybeInitJavaMethod:&kParseInit];
+
+    PushLocalFrame frame(_env);
+    jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
+    jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
+
+    _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
+}
+
+- (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseCallFunction];
+
+    PushLocalFrame frame(_env);
+    jstring jFunction = _env->NewStringUTF(function.UTF8String);
+    jobject jParams = [self jsonEncode:params];
+
+    _env->CallVoidMethod(_instance, kParseCallFunction.method, handle, jFunction, jParams);
+}
+
+- (void) parseObject:(jobject)obj fetchWithBlock:(PFObjectResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseFetch];
+    _env->CallVoidMethod(_instance, kParseFetch.method, handle, obj);
+}
+
+- (void) parseObject:(jobject)obj refreshWithBlock:(PFObjectResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseRefresh];
+    _env->CallVoidMethod(_instance, kParseRefresh.method, handle, obj);
+}
+
+- (void) parseObject:(jobject)obj saveWithBlock:(PFBooleanResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseSave];
+    _env->CallVoidMethod(_instance, kParseSave.method, handle, obj);
+}
+
+- (void) parseObject:(jobject)obj saveEventuallyWithBlock:(PFBooleanResultBlock)block
+{
+    int handle = [self pushBlock:block];
+
+    [self maybeInitJavaMethod:&kParseSaveEventually];
+    _env->CallVoidMethod(_instance, kParseSaveEventually.method, handle, obj);
+}
+
+- (jobject) parseNewObject:(NSString*)className
+{
+    [self maybeInitJavaMethod:&kParseNewObject];
+
+    PushLocalFrame frame(_env);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewObject.method, jName);
+    result = _env->NewGlobalRef(result);
+
+    return result;
+}
+
+- (jobject) parseNewObject:(NSString*)className objectId:(NSString*)objectId
+{
+    [self maybeInitJavaMethod:&kParseNewObjectId];
+
+    PushLocalFrame frame(_env);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
+    jstring jId = _env->NewStringUTF(objectId.UTF8String);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewObjectId.method, jName, jId);
+    result = _env->NewGlobalRef(result);
+
+    return result;
+}
+
+- (NSString*) parseObjectId:(jobject)obj
+{
+    [self maybeInitJavaMethod:&kParseObjectId];
+
+    PushLocalFrame frame(_env);
+
+    jstring str = (jstring) _env->CallObjectMethod(_instance, kParseObjectId.method, obj);
+    NSString* result = nil;
+    if (str) {
+        const char* c = _env->GetStringUTFChars(str, NULL);
+        result = [NSString stringWithCString:c];
+        _env->ReleaseStringUTFChars(str, c);
+    }
+    return result;
+}
+
+- (jobject) jsonEncode:(id)value
+{
+    if (!value) {
+        return NULL;
+    }
+    if ([value isKindOfClass:[PFObject class]]) {
+        // Send PFObjects without any encoding
+        PFObject* pf = (PFObject*) value;
+        return pf.jobj;
+    }
+
+    // Otherwise, encode as JSON.
+    NSError* error = nil;
+    NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
+    if (error) {
+        NSLog(@"JSON writer error: %@", error);
+        return NULL;
+    }
+    const char zero = 0;
+    NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];
+    [nullTerminated appendBytes:&zero length:1];
+    return _env->NewStringUTF((const char*)nullTerminated.bytes);
+}
+
+- (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
+{
+    if (result.string) {
+//        NSLog(@"Decoding JSON: %@", result.string);
+        NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
+        *error = nil;
+        id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+//        NSLog(@"Result: %@", json);
+        return json;
+    } else {
+        *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        return nil;
+    }
+}
+
+- (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
+{
+    [self maybeInitJavaMethod:&kParseAddKey];
+
+    PushLocalFrame frame(_env);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+    jobject jValue = [self jsonEncode:value];
+
+    _env->CallVoidMethod(_instance, kParseAddKey.method, obj, jKey, jValue);
+}
+
+- (void) parseObject:(jobject)obj removeKey:(NSString*)key
+{
+    [self maybeInitJavaMethod:&kParseRemoveKey];
+
+    PushLocalFrame frame(_env);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+
+    _env->CallVoidMethod(_instance, kParseRemoveKey.method, obj, jKey);
+}
+
+- (jobject) parseNewQuery:(NSString*)className
+{
+    [self maybeInitJavaMethod:&kParseNewQuery];
+
+    PushLocalFrame frame(_env);
+    jstring jName = _env->NewStringUTF(className.UTF8String);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseNewQuery.method, jName);
+    result = _env->NewGlobalRef(result);
+    return result;
+}
+
+- (void) parseQuery:(jobject)obj whereKey:(NSString*)key equalTo:(id)value
+{
+    [self maybeInitJavaMethod:&kParseWhereEqualTo];
+
+    PushLocalFrame frame(_env);
+    jstring jKey = _env->NewStringUTF(key.UTF8String);
+    jobject jValue = [self jsonEncode:value];
+
+    _env->CallVoidMethod(_instance, kParseWhereEqualTo.method, obj, jKey, jValue);
+}
+
+- (void) parseQuery:(jobject)obj findWithBlock:(PFArrayResultBlock)block
+{
+    int handle = [self pushBlock:block];
+    [self maybeInitJavaMethod:&kParseFind];
+    _env->CallVoidMethod(_instance, kParseFind.method, handle, obj);
+}
+
+- (void) parseEnableAutomaticUser
+{
+    [self javaVoidMethod:&kParseEnableAutomaticUser];
+}
+
+- (jobject) parseCurrentUser
+{
+    [self maybeInitJavaMethod:&kParseCurrentUser];
+
+    PushLocalFrame frame(_env);
+
+    jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
+    result = _env->NewGlobalRef(result);
+    return result;
+}
+
 - (AAssetManager*) getAssets
 {
     [self maybeInitJavaMethod:&kGetAssets];
@@ -707,6 +1042,41 @@ public:
     jstring s2 = url ? _env->NewStringUTF(url.UTF8String) : NULL;
     jstring s3 = image ? _env->NewStringUTF(image.UTF8String) : NULL;
     _env->CallVoidMethod(_instance, kTweet.method, s1, s2, s3);
+}
+
+- (void) shareJourneyWithName:(NSString*)existingName block:(NameResultBlock)block
+{
+    [self maybeInitJavaMethod:&kShareJourney];
+
+    int handle = [self pushBlock:block];
+
+    PushLocalFrame frame(_env);
+    jstring s = existingName ? _env->NewStringUTF(existingName.UTF8String) : NULL;
+    _env->CallVoidMethod(_instance, kShareJourney.method, s, handle);
+}
+
+static void shareJourneyResult(JNIEnv* env, jobject obj, jint i, jstring s) {
+    AsyncResult* result = [[AsyncResult alloc] init];
+    result.handle = i;
+    if (s) {
+        const char* c = env->GetStringUTFChars(s, NULL);
+        result.string = [NSString stringWithCString:c encoding:NSUTF8StringEncoding];
+        env->ReleaseStringUTFChars(s, c);
+    }
+
+    NSLog(@"Posting shareJourneyResult handle:%d result:%@", result.handle, result.string);
+    [g_Main performSelectorOnMainThread:@selector(shareJourneyResult:)
+        withObject:result
+        waitUntilDone:NO];
+}
+
+- (void) shareJourneyResult:(AsyncResult*)result
+{
+    NSLog(@"shareJourneyResult handle:%d value:%@", result.handle, result.string);
+    NameResultBlock block = [self popBlock:result.handle];
+    if (block) {
+        block(result.string);
+    }
 }
 
 - (void) mailTo:(NSString*)to message:(NSString*)message attachment:(NSString*)path
