@@ -452,7 +452,12 @@ public:
 
         // Initialize Cricket Audio
         CkConfig config(_env, _android->activity->clazz);
-        config.useJavaAudio = true; // OpenSLES is totally broken.
+        
+        // Let's be optimistic... maybe SLES isn't broken any more?
+        if (self.isCrappyDevice) {
+        	config.useJavaAudio = true; // OpenSLES *was* totally broken...
+        }
+
         // Nice big audio buffers, to prevent any glitches.
         config.audioUpdateMs = 50;
         config.streamBufferMs = 3000;
