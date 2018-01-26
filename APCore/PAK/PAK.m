@@ -2,6 +2,7 @@
 
 #import <fcntl.h>
 #import <sys/mman.h>
+#import <unistd.h>
 #import <zlib.h>
 
 #ifdef WINDOWS
