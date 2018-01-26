@@ -12,6 +12,9 @@
 #import "GLKVector3.h"
 #import "GLKMatrix3.h"
 
+// Iain hack
+#undef __ARM_NEON__
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
 

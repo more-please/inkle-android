@@ -5,6 +5,9 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
+// Iain hack
+#undef __ARM_NEON__
+
 union _GLKVector4
 {
     struct { float x, y, z, w; };
