@@ -1,6 +1,6 @@
 #pragma once
 
-#import <Foundation/NSObjcRuntime.h>
+#import <Foundation/NSObjCRuntime.h>
 
 #ifdef __cplusplus
 extern "C" {
