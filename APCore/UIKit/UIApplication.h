@@ -54,7 +54,7 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 - (jobject) jniContext;
 - (jclass) jniFindClass:(NSString*)name;
 
-- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
+- (void) parseInitWithApplicationId:(NSString*)applicationId host:(NSString*)host;
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)parameters block:(PFIdResultBlock)block;
 
 - (jobject) parseNewObject:(NSString*)className;

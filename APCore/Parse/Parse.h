@@ -10,9 +10,9 @@
 
 @interface Parse : NSObject
 
-+ (void) setApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey;
++ (void) setApplicationId:(NSString*)applicationId host:(NSString*)host;
 + (NSString*) getApplicationId;
-+ (NSString*) getClientKey;
++ (NSString*) getHost;
 
 //+ (void) offlineMessagesEnabled:(BOOL)enabled;
 //+ (void) errorMessagesEnabled:(BOOL)enabled;

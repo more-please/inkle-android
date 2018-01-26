@@ -7,14 +7,14 @@
 @implementation Parse
 
 static NSString* s_applicationId;
-static NSString* s_clientKey;
+static NSString* s_host;
 
-+ (void)setApplicationId:(NSString *)applicationId clientKey:(NSString *)clientKey
++ (void)setApplicationId:(NSString *)applicationId host:(NSString*)host
 {
     s_applicationId = applicationId;
-    s_clientKey = clientKey;
+    s_host = host;
 #ifdef ANDROID
-    [[UIApplication sharedApplication] parseInitWithApplicationId:applicationId clientKey:clientKey];
+    [[UIApplication sharedApplication] parseInitWithApplicationId:applicationId host:host];
 #endif
 }
 
@@ -23,9 +23,9 @@ static NSString* s_clientKey;
     return s_applicationId;
 }
 
-+ (NSString *)getClientKey
++ (NSString *)getHost
 {
-    return s_clientKey;
+    return s_host;
 }
 
 @end

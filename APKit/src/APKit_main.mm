@@ -792,15 +792,15 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     }
 }
 
-- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
+- (void) parseInitWithApplicationId:(NSString*)applicationId host:(NSString*)host
 {
     [self maybeInitJavaMethod:&kParseInit];
 
     PushLocalFrame frame(_env);
     jstring jApplicationId = _env->NewStringUTF(applicationId.UTF8String);
-    jstring jClientKey = _env->NewStringUTF(clientKey.UTF8String);
+    jstring jHost = _env->NewStringUTF(host.UTF8String);
 
-    _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jClientKey);
+    _env->CallVoidMethod(_instance, kParseInit.method, jApplicationId, jHost);
 }
 
 - (void) parseCallFunction:(NSString*)function parameters:(NSDictionary*)params block:(PFIdResultBlock)block

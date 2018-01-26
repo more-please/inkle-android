@@ -124,7 +124,7 @@ static UIApplication* g_Application;
     return NULL;
 }
 
-- (void) parseInitWithApplicationId:(NSString*)applicationId clientKey:(NSString*)clientKey
+- (void) parseInitWithApplicationId:(NSString*)applicationId host:(NSString*)host
 {
     GLUE_NOT_IMPLEMENTED;
 }
