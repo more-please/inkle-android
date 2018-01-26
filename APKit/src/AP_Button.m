@@ -57,7 +57,7 @@
     _backgroundColor = [NSMutableDictionary dictionary];
 
     _highlightProgress = [[AP_AnimatedFloat alloc] initWithName:@"highlightProgress" view:self];
-    [_highlightProgress setAll:0];
+    [_highlightProgress setAllFloats:0];
 }
 
 - (id) init
