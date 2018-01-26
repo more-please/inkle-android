@@ -51,13 +51,13 @@ static inline CGPoint CGRectGetCenter(CGRect rect)
         _animatedBackgroundColor = [[AP_AnimatedVector4 alloc] initWithName:@"backgroundColor" view:self];
         AP_CHECK(_animatedProperties.count == 7, return nil);
 
-        [_animatedBoundsOrigin setAll:CGPointZero];
-        [_animatedFrameCenter setAll:CGRectGetCenter(frame)];
-        [_animatedBoundsSize setAll:frame.size];
-        [_animatedAnchor setAll:CGPointMake(0.5, 0.5)];
-        [_animatedAlpha setAll:1];
-        [_animatedTransform setAll:CGAffineTransformIdentity];
-        [_animatedBackgroundColor setAll:GLKVector4Make(0, 0, 0, 0)];
+        [_animatedBoundsOrigin setAllPoints:CGPointZero];
+        [_animatedFrameCenter setAllPoints:CGRectGetCenter(frame)];
+        [_animatedBoundsSize setAllSizes:frame.size];
+        [_animatedAnchor setAllPoints:CGPointMake(0.5, 0.5)];
+        [_animatedAlpha setAllFloats:1];
+        [_animatedTransform setAllTransforms:CGAffineTransformIdentity];
+        [_animatedBackgroundColor setAllVectors:GLKVector4Make(0, 0, 0, 0)];
 
         _autoresizesSubviews = YES;
         _autoresizingMask = UIViewAutoresizingNone;

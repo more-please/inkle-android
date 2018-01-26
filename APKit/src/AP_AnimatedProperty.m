@@ -96,7 +96,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGFloat _src;
 }
 
-- (void) setAll:(CGFloat)value
+- (void) setAllFloats:(CGFloat)value
 {
     _src = _inFlight = _dest = value;
     [self.view setNeedsDisplay];
@@ -155,7 +155,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGPoint _src;
 }
 
-- (void) setAll:(CGPoint)value
+- (void) setAllPoints:(CGPoint)value
 {
     _src = _inFlight = _dest = value;
     [self.view setNeedsDisplay];
@@ -217,7 +217,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGSize _src;
 }
 
-- (void) setAll:(CGSize)value
+- (void) setAllSizes:(CGSize)value
 {
     _src = _inFlight = _dest = value;
     [self.view setNeedsDisplay];
@@ -280,7 +280,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     GLKVector4 _src;
 }
 
-- (void) setAll:(GLKVector4)value
+- (void) setAllVectors:(GLKVector4)value
 {
     _src = _inFlight = _dest = value;
     [self.view setNeedsDisplay];
@@ -337,7 +337,7 @@ static AP_Animation* g_CurrentAnimation = nil;
     CGAffineTransform _src;
 }
 
-- (void) setAll:(CGAffineTransform)value
+- (void) setAllTransforms:(CGAffineTransform)value
 {
     _src = _inFlight = _dest = value;
     [self.view setNeedsDisplay];
