@@ -104,7 +104,7 @@ static UIApplication* g_Application;
     abort();
 }
 
-#ifdef ANDROID
+#if 0
 
 - (JNIEnv*) jniEnv
 {
