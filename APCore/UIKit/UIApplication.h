@@ -1,7 +1,7 @@
 #pragma once
 
 #import <Foundation/Foundation.h>
-// #import <Parse/Parse.h>
+#import <Parse/Parse.h>
 
 #ifdef ANDROID
 #import <jni.h>
@@ -47,7 +47,7 @@ typedef void (^NameResultBlock)(NSString *chosenName); // nil chosen name == can
 // Register a file to be included in crash reports
 - (void) addCrashReportPath:(NSString*)path description:(NSString*)desc;
 
-#if 0
+#ifdef ANDROID
 // Wrappers for Parse.
 // TODO (URGENT!) - split these off from SorceryActivity.
 - (JNIEnv*) jniEnv;

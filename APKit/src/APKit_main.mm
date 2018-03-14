@@ -84,8 +84,6 @@ static JavaMethod kGetAssets = {
 static JavaMethod kFindClass = {
     "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", NULL
 };
-
-#if 0
 static JavaMethod kParseInit = {
     "parseInit", "(Ljava/lang/String;Ljava/lang/String;)V", NULL
 };
@@ -134,8 +132,6 @@ static JavaMethod kParseEnableAutomaticUser = {
 static JavaMethod kParseCurrentUser = {
     "parseCurrentUser", "()Lcom/parse/ParseUser;", NULL
 };
-#endif
-
 static JavaMethod kIsCrappyDevice = {
     "isCrappyDevice", "()Z", NULL
 };
@@ -170,13 +166,13 @@ static JavaMethod kMaybeGetURL = {
     "maybeGetURL", "()Ljava/lang/String;", NULL
 };
 
-// static void parseObjResult(JNIEnv*, jobject, jint, jstring);
-// static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
+static void parseObjResult(JNIEnv*, jobject, jint, jstring);
+static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
 static void shareJourneyResult(JNIEnv*, jobject, jint, jstring);
 
 static JNINativeMethod kNatives[] = {
-//     { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
-//     { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
+    { "parseObjResult", "(ILjava/lang/String;)V", (void *)&parseObjResult},
+    { "parseBoolResult", "(IZ)V", (void *)&parseBoolResult},
     { "shareJourneyResult", "(ILjava/lang/String;)V", (void *)&shareJourneyResult},
 };
 
@@ -744,8 +740,6 @@ public:
     return result;
 }
 
-#if 0
-
 static void parseObjResult(JNIEnv* env, jobject obj, jint i, jstring s) {
     AsyncResult* result = [[AsyncResult alloc] init];
     result.handle = i;
@@ -892,6 +886,45 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     return result;
 }
 
+- (jobject) jsonEncode:(id)value
+{
+    if (!value) {
+        return NULL;
+    }
+    if ([value isKindOfClass:[PFObject class]]) {
+        // Send PFObjects without any encoding
+        PFObject* pf = (PFObject*) value;
+        return (jobject)pf.jobj;
+    }
+
+    // Otherwise, encode as JSON.
+    NSError* error = nil;
+    NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
+    if (error) {
+        NSLog(@"JSON writer error: %@", error);
+        return NULL;
+    }
+    const char zero = 0;
+    NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];
+    [nullTerminated appendBytes:&zero length:1];
+    return _env->NewStringUTF((const char*)nullTerminated.bytes);
+}
+
+- (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
+{
+    if (result.string) {
+//        NSLog(@"Decoding JSON: %@", result.string);
+        NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
+        *error = nil;
+        id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+//        NSLog(@"Result: %@", json);
+        return json;
+    } else {
+        *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
+        return nil;
+    }
+}
+
 - (void) parseObject:(jobject)obj addKey:(NSString*)key value:(id)value
 {
     [self maybeInitJavaMethod:&kParseAddKey];
@@ -957,47 +990,6 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     jobject result = _env->CallObjectMethod(_instance, kParseCurrentUser.method);
     result = _env->NewGlobalRef(result);
     return result;
-}
-
-#endif
-
-- (jobject) jsonEncode:(id)value
-{
-    if (!value) {
-        return NULL;
-    }
-//     if ([value isKindOfClass:[PFObject class]]) {
-//         // Send PFObjects without any encoding
-//         PFObject* pf = (PFObject*) value;
-//         return (jobject)pf.jobj;
-//     }
-
-    // Otherwise, encode as JSON.
-    NSError* error = nil;
-    NSData* valueData = [NSJSONSerialization dataWithJSONObject:value options:0 error:&error];
-    if (error) {
-        NSLog(@"JSON writer error: %@", error);
-        return NULL;
-    }
-    const char zero = 0;
-    NSMutableData* nullTerminated = [NSMutableData dataWithData:valueData];
-    [nullTerminated appendBytes:&zero length:1];
-    return _env->NewStringUTF((const char*)nullTerminated.bytes);
-}
-
-- (id) jsonDecode:(AsyncResult*)result error:(NSError**)error
-{
-    if (result.string) {
-//        NSLog(@"Decoding JSON: %@", result.string);
-        NSData* data = [result.string dataUsingEncoding:NSUTF8StringEncoding];
-        *error = nil;
-        id json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
-//        NSLog(@"Result: %@", json);
-        return json;
-    } else {
-        *error = [NSError errorWithDomain:@"Parse" code:-1 userInfo:nil];
-        return nil;
-    }
 }
 
 - (AAssetManager*) getAssets
