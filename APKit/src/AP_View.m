@@ -496,14 +496,16 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     AP_Window* oldWindow = self.window;
     if (!oldWindow && window) {
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewWillAppear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
     }
     if (oldWindow && !window) {
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
     }
 
     [self willMoveToWindow:window];
@@ -513,14 +515,16 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     [self didMoveToWindow];
 
     if (!oldWindow && window) {
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewDidAppear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
     }
     if (oldWindow && !window) {
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewDidDisappear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
     }
 }
 
@@ -594,9 +598,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     BOOL willAppear = willChangeWindow && !oldWindow;
 
     if (willAppear) {
-        [view visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewWillAppear:NO];
-        }];
+        };
+        [view visitControllersWithBlock:&vcb];
     }
 
     if (willChangeWindow) {
@@ -630,9 +635,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     }
 
     if (willAppear) {
-        [view visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewDidAppear:NO];
-        }];
+        };
+        [view visitControllersWithBlock:&vcb];
     }
 }
 
@@ -647,9 +653,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     BOOL willDisappear = (self.window != nil);
     if (willDisappear) {
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewWillDisappear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
         [self willMoveToWindow:nil];
     }
 
@@ -666,9 +673,10 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
 
     if (willDisappear) {
         [self didMoveToWindow];
-        [self visitControllersWithBlock:^(AP_ViewController* vc){
+        VoidViewControllerBlock vcb = ^(AP_ViewController* vc){
             [vc viewDidDisappear:NO];
-        }];
+        };
+        [self visitControllersWithBlock:&vcb];
     }
 }
 
@@ -700,11 +708,11 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     }
 }
 
-- (void) visitWithBlock:(void(^)(AP_View*))block
+- (void) visitWithBlock:(VoidViewBlock*)block
 {
     [self.layer.mask.view visitWithBlock:block];
 
-    block(self);
+    (*block)(self);
 
     ++_iterating;
     for (AP_View* v in _subviews) {
@@ -713,9 +721,12 @@ static inline CGAffineTransform viewToViewInFlight(AP_View* src, AP_View* dest) 
     --_iterating;
 }
 
-- (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block
+- (void) visitControllersWithBlock:(VoidViewControllerBlock*)block
 {
-    block(_viewDelegate);
+    AP_ViewController* c = _viewDelegate;
+    if (c) {
+        (*block)(_viewDelegate);
+    }
 
     ++_iterating;
     for (AP_View* v in _subviews) {

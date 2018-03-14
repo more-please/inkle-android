@@ -139,9 +139,12 @@
 - (void) renderWithBoundsToGL:(CGAffineTransform)boundsToGL alpha:(CGFloat)alpha;
 - (void) renderSelfAndChildrenWithFrameToGL:(CGAffineTransform)frameToGL alpha:(CGFloat)alpha;
 
+typedef void (^VoidViewBlock)(AP_View*);
+typedef void (^VoidViewControllerBlock)(AP_ViewController*);
+
 // Traversing the view hierarchy
-- (void) visitWithBlock:(void(^)(AP_View*))block;
-- (void) visitControllersWithBlock:(void(^)(AP_ViewController*))block;
+- (void) visitWithBlock:(VoidViewBlock*)block;
+- (void) visitControllersWithBlock:(VoidViewControllerBlock*)block;
 
 // Event dispatch. Visible subviews get first dibs, then self, then view controller.
 - (BOOL) dispatchEvent:(EventHandlerBlock)handler;

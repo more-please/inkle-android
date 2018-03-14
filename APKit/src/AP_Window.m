@@ -321,13 +321,16 @@ static NSMutableArray* s_afterFrameBlocks;
         g_AppFrame = appFrame;
         [[NSNotificationCenter defaultCenter] postNotificationName:AP_ScreenSizeChangedNotification object:nil];
         if (_rootViewController) {
-            [_rootViewController.view visitControllersWithBlock:^(AP_ViewController* c) {
+            VoidViewControllerBlock vcb = ^(AP_ViewController* c) {
                 [c willRotateToInterfaceOrientation:c.interfaceOrientation duration:0];
-            }];
+            };
+            [_rootViewController.view visitControllersWithBlock:&vcb];
+
             _rootViewController.view.frame = bounds;
-            [_rootViewController.view visitWithBlock:^(AP_View* v) {
+            VoidViewBlock vb = ^(AP_View* v) {
                 [v setNeedsLayout];
-            }];
+            };
+            [_rootViewController.view visitWithBlock:&vb];
         }
     }
 
@@ -346,15 +349,19 @@ static NSMutableArray* s_afterFrameBlocks;
     BOOL* needsDisplayPtr = &needsDisplay;
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
-        [v visitControllersWithBlock:^(AP_ViewController* c) {
+
+        VoidViewControllerBlock vcb = ^(AP_ViewController*c) {
             [c updateGL:dt];
-        }];
-        [v visitWithBlock:^(AP_View* view) {
+        };
+        [v visitControllersWithBlock:&vcb];
+
+        VoidViewBlock vb = ^(AP_View* view) {
             [view updateGL:dt];
             if (view.takeNeedsDisplay) {
                 *needsDisplayPtr = YES;
             }
-        }];
+        };
+        [v visitWithBlock:&vb];
     }
 
     return needsDisplay;
@@ -434,7 +441,9 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         || (state == UIGestureRecognizerStateChanged);
 }
 
-- (void) dispatchGestureWithBlock:(void(^)(AP_GestureRecognizer*))block
+typedef void (^GestureBlock)(AP_GestureRecognizer*);
+
+- (void) dispatchGestureWithBlock:(GestureBlock*)block
 {
     if (_hitTestView && _hitTestView.window != self) {
         NSLog(@"*** lost the hit test view! ***");
@@ -444,7 +453,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
         for (AP_GestureRecognizer* g in v.gestureRecognizers) {
             if (g == _hitTestGesture) {
                 // This is the hit test gesture. It always gets to run.
-                block(g);
+                (*block)(g);
                 if (!isActive(g)) {
                     _hitTestGesture = nil;
                 }
@@ -458,7 +467,7 @@ static BOOL isActive(AP_GestureRecognizer* g) {
                     }
                     continue;
                 }
-                block(g);
+                (*block)(g);
                 if (!_hitTestGesture && isActive(g)) {
                     _hitTestGesture = g;
                 }
@@ -490,9 +499,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
             _hitTestView = [_rootViewController.view hitTest:touch.windowPos withEvent:event];
         }
     }
-    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+    GestureBlock b = ^(AP_GestureRecognizer*g) {
         [g touchesBegan:touches withEvent:event];
-    }];
+    };
+    [self dispatchGestureWithBlock:&b];
     if (_hitTestView) {
         [_hitTestView touchesBegan:touches withEvent:event];
     }
@@ -514,9 +524,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
-    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+    GestureBlock b = ^(AP_GestureRecognizer*g) {
         [g touchesCancelled:touches withEvent:event];
-    }];
+    };
+    [self dispatchGestureWithBlock:&b];
     if (_hitTestView) {
         [_hitTestView touchesCancelled:touches withEvent:event];
     }
@@ -546,9 +557,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
-    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+    GestureBlock b = ^(AP_GestureRecognizer*g) {
         [g touchesEnded:touches withEvent:event];
-    }];
+    };
+    [self dispatchGestureWithBlock:&b];
     if (_hitTestView) {
         [_hitTestView touchesEnded:touches withEvent:event];
     }
@@ -583,9 +595,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
     event.timestamp = e.timestamp;
     event.allTouches = _activeTouches;
 
-    [self dispatchGestureWithBlock:^(AP_GestureRecognizer*g) {
+    GestureBlock b = ^(AP_GestureRecognizer*g) {
         [g touchesMoved:touches withEvent:event];
-    }];
+    };
+    [self dispatchGestureWithBlock:&b];
     if (_hitTestView) {
         [_hitTestView touchesMoved:touches withEvent:event];
     }
@@ -621,9 +634,10 @@ static BOOL isActive(AP_GestureRecognizer* g) {
 {
     if (_rootViewController) {
         AP_View* v = _rootViewController.view;
-        [v visitControllersWithBlock:^(AP_ViewController* c) {
+        VoidViewControllerBlock vcb = ^(AP_ViewController* c) {
             [c didReceiveMemoryWarning];
-        }];
+        };
+        [v visitControllersWithBlock:&vcb];
     }
 }
 
