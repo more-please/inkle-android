@@ -89,12 +89,12 @@ static UIApplication* g_Application;
 
 - (void) lockQuit
 {
-    GLUE_NOT_IMPLEMENTED;
+//     GLUE_NOT_IMPLEMENTED;
 }
 
 - (void) unlockQuit
 {
-    GLUE_NOT_IMPLEMENTED;
+//     GLUE_NOT_IMPLEMENTED;
 }
 
 - (void) fatalError:(NSString*)message
@@ -261,7 +261,7 @@ static UIApplication* g_Application;
 
 - (void) addCrashReportPath:(NSString*)path description:(NSString*)desc
 {
-    GLUE_NOT_IMPLEMENTED;
+//     GLUE_NOT_IMPLEMENTED;
 }
 
 @end
