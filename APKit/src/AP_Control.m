@@ -1,5 +1,6 @@
 #import "AP_Control.h"
 
+#import "AP_Application.h"
 #import "AP_Check.h"
 #import "AP_Touch.h"
 
@@ -90,6 +91,10 @@
         return NO;
     }
 
+	if (mask & UIControlEventTouchUpInside) {
+		[[AP_Application sharedApplication] hapticFeedback: 1];
+	}
+	
     // Copy the action list, to defend against concurrent modification
     NSArray* actions = [NSArray arrayWithArray:_actions];
     for (AP_Control_Action* ack in actions) {

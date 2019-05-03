@@ -51,6 +51,11 @@ static AP_Application* g_Application;
     return NO;
 }
 
+- (void) hapticFeedback:(int)type
+{
+	AP_NOT_IMPLEMENTED;
+}
+
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types
 {
     // AP_NOT_IMPLEMENTED;

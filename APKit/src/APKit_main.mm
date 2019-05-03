@@ -168,6 +168,9 @@ static JavaMethod kMailTo = {
 static JavaMethod kMaybeGetURL = {
     "maybeGetURL", "()Ljava/lang/String;", NULL
 };
+static JavaMethod kHapticFeedback = {
+    "hapticFeedback", "(I)V", NULL
+};
 
 static void parseObjResult(JNIEnv*, jobject, jint, jstring);
 static void parseBoolResult(JNIEnv*, jobject, jint, jboolean);
@@ -639,6 +642,14 @@ public:
     _env->CallVoidMethod(_instance, m->method, jstr);
 }
 
+- (void) javaVoidMethod:(JavaMethod*)m withInt:(int)type
+{
+    [self maybeInitJavaMethod:m];
+
+    PushLocalFrame frame(_env);
+    _env->CallVoidMethod(_instance, m->method, type);
+}
+
 - (BOOL) javaBoolMethod:(JavaMethod*)m
 {
     [self maybeInitJavaMethod:m];
@@ -1012,6 +1023,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
     }
 
     return result;
+}
+
+- (void) hapticFeedback:(int)type
+{
+	[self javaVoidMethod:&kHapticFeedback withInt:type];
 }
 
 - (BOOL) openURL:(NSURL*)url

@@ -34,6 +34,8 @@
 - (BOOL) openURL:(NSURL*)url;
 - (BOOL) canOpenURL:(NSURL*)url;
 
+- (void) hapticFeedback:(int)type;
+
 - (void) registerForRemoteNotificationTypes:(UIRemoteNotificationType)types;
 
 typedef void (^GameThreadBlock)(void);
