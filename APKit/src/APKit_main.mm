@@ -60,12 +60,15 @@ typedef struct JavaMethod {
     jmethodID method;
 } JavaMethod;
 
-static JavaMethod kGetDocumentsDir = {
-    "getDocumentsDir", "()Ljava/lang/String;", NULL
-};
+#ifdef DEBUG
 static JavaMethod kGetPublicDocumentsDir = {
     "getPublicDocumentsDir", "()Ljava/lang/String;", NULL
 };
+#else
+static JavaMethod kGetDocumentsDir = {
+    "getDocumentsDir", "()Ljava/lang/String;", NULL
+};
+#endif
 static JavaMethod kGetExpansionFilePath = {
     "getExpansionFilePath", "()Ljava/lang/String;", NULL
 };
@@ -388,12 +391,14 @@ public:
 
         _env->RegisterNatives(_class, kNatives, sizeof(kNatives) / sizeof(kNatives[0]));
 
-        self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
-        self.publicDocumentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
 #ifdef DEBUG
         // In debug builds, use /sdcard/Downloads for all files for easier hacking
-        self.documentsDir = self.publicDocumentsDir;
+        self.documentsDir = [self javaStringMethod:&kGetPublicDocumentsDir];
+#else
+		self.documentsDir = [self javaStringMethod:&kGetDocumentsDir];
 #endif
+        self.publicDocumentsDir = self.documentsDir;
+
         NSString* defaultsPath = [self.documentsDir stringByAppendingPathComponent:@"NSUserDefaults.plist"];
         [AP_UserDefaults setDefaultsPath:defaultsPath];
 
