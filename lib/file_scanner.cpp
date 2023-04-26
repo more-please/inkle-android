@@ -63,16 +63,15 @@ void FileScanner::addDir(const string& base, const string& name) {
         cerr << dirname << endl;
     }
     DIR* dir = opendir(dirname.c_str());
-    dirent entry;
     dirent* result;
-    for (readdir_r(dir, &entry, &result); result; readdir_r(dir, &entry, &result)) {
-        if (entry.d_namlen == 0 || entry.d_name[0] == '.') {
+    for (result = readdir(dir); result; result = readdir(dir)) {
+        if (result->d_name[0] == '\0' || result->d_name[0] == '.') {
             continue;
         }
         if (stripDirectories) {
-            addFileOrDir(join(base, name), string(entry.d_name));
+            addFileOrDir(join(base, name), string(result->d_name));
         } else {
-            addFileOrDir(base, join(name, entry.d_name));
+            addFileOrDir(base, join(name, result->d_name));
         }
     }
     closedir(dir);

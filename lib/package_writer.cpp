@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <zlib.h>
+#include <string.h>
 
 using namespace std;
 
