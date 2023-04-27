@@ -8,7 +8,7 @@
 #import <ck/ck.h>
 #endif
 
-const int NUM_FRAME_TIMES = 16;
+#define NUM_FRAME_TIMES 16
 
 @implementation AP_FPSCounter {
     unsigned _count;
