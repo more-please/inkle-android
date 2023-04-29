@@ -31,6 +31,9 @@
 @property(nonatomic,readonly) AP_Window *keyWindow;
 @property(nonatomic,readonly) UIInterfaceOrientation statusBarOrientation;
 
+// Sorcery! hack: stashed spell name (send by the previous game)
+@property(nonatomic,strong) NSString* stashedSpell;
+
 - (BOOL) openURL:(NSURL*)url;
 - (BOOL) canOpenURL:(NSURL*)url;
 

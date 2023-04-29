@@ -81,6 +81,11 @@ static JavaMethod kPleaseFinish = {
 static JavaMethod kOpenURL = {
     "openURL", "(Ljava/lang/String;)V", NULL
 };
+#ifndef EIGHTY_DAYS
+static JavaMethod kSendSpell = {
+    "sendSpell", "(Ljava/lang/String;)V", NULL
+};
+#endif
 static JavaMethod kGetAssets = {
     "getAssets", "()Landroid/content/res/AssetManager;", NULL
 };
@@ -1521,6 +1526,7 @@ const EGLint basicAttribs[] = {
         // App isn't initialized yet
     }
 
+#ifdef EIGHTY_DAYS
     NSString* urlStr = [self javaStringMethod:&kMaybeGetURL];
     if (urlStr) {
         NSURL* url = [NSURL URLWithString:urlStr];
@@ -1529,6 +1535,22 @@ const EGLint basicAttribs[] = {
             [self.delegate application:self openURL:url sourceApplication:nil annotation:nil];
         }
     }
+#else
+    NSString* url = [self javaStringMethod:&kMaybeGetURL];
+	if (url) {
+		NSString* path = [url componentsSeparatedByString:@":"][1];
+		NSLog(@"Opening URL: %@", url);
+		if ([path isEqualToString:@"send"]) {
+			NSString* spell = [[AP_UserDefaults standardUserDefaults] objectForKey:@"ParseSaveToken"];
+			NSLog(@"Sending spell -> %@", spell);
+			[self javaVoidMethod:&kSendSpell withString:spell];
+			sleep(3);
+		} else {
+			NSLog(@"Receiving spell <- %@", path);
+			self.stashedSpell = path;
+		}
+	}
+#endif
 }
 
 - (Real_UITouch*) touchForPointerID:(int32_t)pointerID x:(float)x y:(float)y
@@ -1750,6 +1772,8 @@ void android_main(struct android_app* android) {
 
     // loop waiting for stuff to do.
     while (1) {
+		[g_Main maybeDisplayURL];
+
         @autoreleasepool {
             // If not animating, we will block forever waiting for events.
             // If animating, we loop until all events are read, then continue
@@ -1767,6 +1791,8 @@ void android_main(struct android_app* android) {
 
             BOOL gotInput = NO;
             while (1) {
+				[g_Main maybeDisplayURL];
+
                 // Read all pending events.
                 struct android_poll_source* source;
                 int events;
@@ -1819,9 +1845,6 @@ void android_main(struct android_app* android) {
                 // Let's just poll it every frame.
                 [g_Main updateScreenSize];
                 [g_Main updateGL:gotInput];
-
-                // Check whether we need to display a URL.
-                [g_Main maybeDisplayURL];
             }
         }
     }
