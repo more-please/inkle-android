@@ -44,24 +44,24 @@ static const Range kRanges[] = {
     { 0x2026, 0x2026 }, // Ellipsis
 
     // Weird characters used in Sorcery 2
-//     { 0x10409, 0x10409 }, // Deseret Capital Short Ah (alias for Right Tack)
-//     { 0x1040b, 0x1040b }, // Desert Capital Short Oo (alias for There Exists)
-//     { 0x10411, 0x10411 }, // Deseret Capital Pee (alias for Increment)
-//     { 0x10422, 0x10422 }, // Deseret Capital El (alias for Gamma)
-//     { 0x10424, 0x10424 }, // Deseret Capital En (alias for Iota)
+    { 0x10409, 0x10409 }, // Deseret Capital Short Ah (alias for Right Tack)
+    { 0x1040b, 0x1040b }, // Desert Capital Short Oo (alias for There Exists)
+    { 0x10411, 0x10411 }, // Deseret Capital Pee (alias for Increment)
+    { 0x10422, 0x10422 }, // Deseret Capital El (alias for Gamma)
+    { 0x10424, 0x10424 }, // Deseret Capital En (alias for Iota)
 
     // Russian characters used in Sorcery 4 credits
-//     { 1053, 1053 },
-//     { 1056, 1056 },
-//     { 1072, 1072 },
-//     { 1074, 1074 },
-//     { 1076, 1076 },
-//     { 1077, 1077 },
-//     { 1080, 1080 },
-//     { 1082, 1082 },
-//     { 1086, 1086 },
-//     { 1089, 1089 },
-//     { 1090, 1090 },
+    { 1053, 1053 },
+    { 1056, 1056 },
+    { 1072, 1072 },
+    { 1074, 1074 },
+    { 1076, 1076 },
+    { 1077, 1077 },
+    { 1080, 1080 },
+    { 1082, 1082 },
+    { 1086, 1086 },
+    { 1089, 1089 },
+    { 1090, 1090 },
 
     { 0, 0 }
 };
