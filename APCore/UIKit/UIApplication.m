@@ -59,6 +59,12 @@ static UIApplication* g_Application;
     return self;
 }
 
+- (BOOL) canShare
+{
+    GLUE_NOT_IMPLEMENTED;
+    return NO;
+}
+
 - (BOOL) canTweet
 {
     GLUE_NOT_IMPLEMENTED;

@@ -26,6 +26,8 @@
 - (void) openPart:(int)part;
 - (int) defaultPart;
 
+- (BOOL) canShare;
+
 - (BOOL) canTweet;
 - (void) tweet:(NSString*)text url:(NSString*)url image:(NSString*)image;
 

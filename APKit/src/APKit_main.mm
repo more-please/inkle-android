@@ -158,6 +158,9 @@ static JavaMethod kVersionName = {
 static JavaMethod kVersionCode = {
     "versionCode", "()I", NULL
 };
+static JavaMethod kCanShare = {
+    "canShare", "()Z", NULL
+};
 static JavaMethod kCanTweet = {
     "canTweet", "()Z", NULL
 };
@@ -1054,6 +1057,11 @@ static void parseBoolResult(JNIEnv* env, jobject obj, jint i, jboolean b) {
 {
     [self maybeInitJavaMethod:&kOpenPart];
     _env->CallVoidMethod(_instance, kOpenPart.method, part);
+}
+
+- (BOOL) canShare
+{
+    return [self javaBoolMethod:&kCanShare];
 }
 
 - (BOOL) canTweet
