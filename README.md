@@ -18,6 +18,8 @@ When bootstrapping this codebase, I started on iOS and gradually converted the U
 
 When I finally got it running on Android, I never fully removed this two-layer structure; so confusingly, there are _two_ UIKit layers in this code. `APKit` is the real UIKit emulator that the game talks to; `APCore/UIKit` emulates the iOS host environment. This may help explain some of the [strange code](https://github.com/more-please/inkle-android/blob/899b622b289ca83355e7c320fabe353f2f708d42/APKit/src/APKit_main.mm#L1163) and apologetic comments. 😅
 
+A lot of the code is written to support very low-end GPUs. For example, inkle's games make heavy use of large images with alpha channels, which many Android phones struggled with 10 years ago. Therefore, I render images in multiple horizontal strips, so we can a) assemble them into power-of-two sized texture atlases; and b) minimise the number of fully-transparent pixels that need to be drawn. This gave decent performance at the time, but seriously complicates the code, and isn't necessary or desirable today.
+
 `.mm` files are Objective-C++. This sounds like a Frankenstein nightmare of a language, but I found it incredibly useful to bridge between inkle's Objective-C code and the Android platform (which uses C/C++). I generally used C++ when adding my own utilities.
 
 I went through a number of build systems and wasn't happy with any of them. The games currently use a custom Python-based build script generating [Ninja](https://ninja-build.org) files (not included). If there's any interest in building a working example with this repo, let me know.
